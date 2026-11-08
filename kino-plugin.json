@@ -1,10 +1,10 @@
 {
   "id": "anijing",
   "name": "AniJing",
-  "version": "0.3.0",
-  "apiVersion": 14,
+  "version": "0.4.0",
+  "apiVersion": 19,
   "entry": "plugin.js",
-  "description": "Anime en español desde AnimeAV1, MonosChinos y LataAnime: catálogo, búsqueda, fichas y episodios con 13 extractores de servidores (Voe, MP4Upload, MixDrop, UPNShare, StreamTape, Dood, Ok.ru y más) y reproducción directa HLS. El anime con la firma de Susejing.",
+  "description": "Anime en español desde AnimeAV1, MonosChinos y LataAnime, con pantalla propia de Inicio (destacado del día, rieles con su Ver más y selector de fuentes), búsqueda, fichas, episodios y 13 extractores de servidores. El anime con la firma de Susejing.",
   "author": "Susejing",
   "homepage": "https://github.com/Susejing/AniJing",
   "hosts": [
@@ -159,8 +159,16 @@
     "home",
     "browse",
     "episodes",
-    "resolve"
+    "resolve",
+    "screen"
   ],
+  "screen": {
+    "label": "AniJing",
+    "labelEn": "AniJing",
+    "icon": "movie",
+    "menuOpens": "screen",
+    "opensFrom": ["menu", "settings"]
+  },
   "categories": [
     "anime"
   ],
