@@ -4,17 +4,17 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.1.0)
+## Qué hace (v0.2.0)
 
-- **search** — busca en el catálogo de AnimeAV1.
-- **home** — una fila con lo más reciente del catálogo de AnimeAV1.
-- **browse** — «Ver más» de la fila, página por página.
-- **episodes** — los episodios de cada serie, con su sinopsis, géneros, año, nota y el id de MyAnimeList (que otros plugins de la familia, como AniTrack, pueden aprovechar).
-- **details** — la ficha completa de cada serie.
+- **home** — siete filas: últimos episodios (con su número y captura), últimos agregados, populares, mejor puntuados, películas, acción y fantasía, todas con carátula y fondo.
+- **search** — busca en el catálogo de AnimeAV1, con carátulas; si Kino conoce el título original o alternativos, también los prueba.
+- **browse** — «Ver más» de cada fila, página por página.
+- **episodes** — los episodios de cada serie, con captura, sinopsis, géneros, año, nota y el id de MyAnimeList (que otros plugins de la familia, como AniTrack, pueden aprovechar).
+- **details** — la ficha completa de cada serie con su carátula.
 - **resolve** — reproduce el HLS directo de AnimeAV1 (Zilla), con las demás copias etiquetadas como alternativas.
 
-Honesto: esta primera versión reproduce solo los reproductores directos (HLS). Los que
-necesitan extractor (VOE, MP4Upload) y más fuentes (JKAnime, AnimeFLV) llegan en las
+Honesto: esta versión reproduce solo los reproductores directos (HLS). Los que
+necesitan extractor (VOE, MP4Upload) y más fuentes (MonosChinos, LataAnime) llegan en las
 siguientes versiones.
 
 ## Instalación
