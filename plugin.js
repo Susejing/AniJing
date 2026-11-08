@@ -17,26 +17,26 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 //
-// AniJing v0.1.1 «El catálogo por la puerta de datos» — anime puro para Kino.
+// AniJing v0.2.0 «Con carátulas» — anime puro para Kino.
 // Fuente: AnimeAV1 (https://animeav1.com): TODO por su API interna __data.json (catálogo,
-// búsqueda, fichas y episodios) y su reproductor Zilla (HLS) para la reproducción. Los ref
-// son «av1:<slug>» (serie o película) y «av1:<slug>:<número>» (episodio). El esqueleto de
-// fuentes aisladas se tomó como patrón del plugin comunitario YojaTV (GPL-3.0); este
-// código también es GPL-3.0.
+// búsqueda, fichas y episodios) y su reproductor Zilla (HLS) para la reproducción. Las
+// carátulas, fondos y capturas viven en el CDN de la propia fuente (cdn.animeav1.com, ya
+// cubierto por el host comodín *.animeav1.com). Los ref son «av1:<slug>» (serie o
+// película) y «av1:<slug>:<número>» (episodio). El esqueleto de fuentes aisladas se tomó
+// como patrón del plugin comunitario YojaTV (GPL-3.0); este código también es GPL-3.0.
 //
-// v0.1.0 rascaba el HTML del catálogo y las tarjetas no viven ahí: la página las pinta
-// después con los datos de /catalogo/__data.json. Esta versión usa ese endpoint directo.
 // HONESTO: solo se reproduce lo que AnimeAV1 sirve directo (Zilla/HLS o un .m3u8/.mp4
 // contundente). Los reproductores que necesitan extractor (VOE, MP4Upload, Mega) llegan
-// en la 0.2, más fuentes después, y los pósters de la cuadrícula con AniList (los datos de
-// AnimeAV1 no los traen).
+// en la 0.3, más fuentes después.
 
-const VERSION = '0.1.1';
+const VERSION = '0.2.0';
 const BASE = 'https://animeav1.com';
+const CDN = 'https://cdn.animeav1.com';
 const REFERER = BASE + '/';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 const FETCH_TIMEOUT_MS = 10000;
 const MAX_ITEMS = 40;
+const FILAS_EN_PARALELO = 4;
 
 /* ---------- utilidades ---------- */
 
@@ -62,6 +62,18 @@ function slugATitulo(slug) {
     .filter(Boolean)
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
+}
+
+function cover(id) {
+  return CDN + '/covers/' + id + '.jpg';
+}
+
+function backdropDe(id) {
+  return CDN + '/backdrops/' + id + '.jpg';
+}
+
+function captura(id, n) {
+  return CDN + '/screenshots/' + id + '/' + n + '.jpg';
 }
 
 async function traer(url, timeoutMs) {
@@ -137,17 +149,21 @@ async function datosDe(camino) {
 }
 
 /* ---------- catálogo: la puerta de datos ----------
- * /catalogo/__data.json acepta ?search=<q> y ?page=<n> y devuelve {results, total,
- * pagination:{currentPage, recordsPerPage, totalPages, totalRecords}}. Cada resultado es
- * {id, title, synopsis, categoryId, slug, category:{name, malId}} — sin póster (esa es la
- * tarea de AniList en la 0.2). Las películas traen category.malId = "Movie".
+ * /catalogo/__data.json acepta ?search=<q>, ?order=<latest_added|popular|score>,
+ * ?category=<pelicula|tv-anime|ova|especial|ona>, ?genre=<slug> y ?page=<n>, y devuelve
+ * {results, total, pagination:{currentPage, recordsPerPage, totalPages, totalRecords}}.
+ * Cada resultado es {id, title, synopsis, categoryId, slug, category:{name, malId}}.
  */
-async function catalogoDatos(busqueda, pagina) {
-  let camino = '/catalogo/__data.json';
-  const params = [];
-  if (busqueda) params.push('search=' + encodeURIComponent(busqueda));
-  if (pagina && pagina > 1) params.push('page=' + pagina);
-  if (params.length) camino += '?' + params.join('&');
+async function catalogoDatos(params, pagina) {
+  const partes = [];
+  const p = params || {};
+  if (p.busqueda) partes.push('search=' + encodeURIComponent(p.busqueda));
+  if (p.orden) partes.push('order=' + encodeURIComponent(p.orden));
+  if (p.categoria) partes.push('category=' + encodeURIComponent(p.categoria));
+  if (p.genero) partes.push('genre=' + encodeURIComponent(p.genero));
+  const num = Math.max(1, parseInt(String(pagina || '1'), 10) || 1);
+  if (num > 1) partes.push('page=' + num);
+  const camino = '/catalogo/__data.json' + (partes.length ? '?' + partes.join('&') : '');
   const r = await traer(BASE + camino);
   if (!r.ok) {
     log('catálogo: AnimeAV1 respondió ' + r.status);
@@ -163,16 +179,20 @@ async function catalogoDatos(busqueda, pagina) {
 
 function itemDeCatalogo(res) {
   const slug = String(res && res.slug ? res.slug : '').trim();
-  if (!slug) return null;
+  if (!slug || !(res && res.id != null)) return null;
   const cat = res.category && typeof res.category === 'object' ? res.category : null;
   const item = {
     id: slug,
     ref: 'av1:' + slug,
     title: limpio(res.title) || slugATitulo(slug),
-    kind: cat && cat.malId === 'Movie' ? 'movie' : 'series'
+    kind: cat && cat.malId === 'Movie' ? 'movie' : 'series',
+    poster: cover(res.id),
+    backdrop: backdropDe(res.id)
   };
   const sinopsis = limpio(res.synopsis);
   if (sinopsis) item.overview = sinopsis.slice(0, 250);
+  const anho = String(res.startDate || '').slice(0, 4);
+  if (/^\d{4}$/.test(anho)) item.year = anho;
   return item;
 }
 
@@ -200,24 +220,71 @@ registrarFuente({
   id: 'av1',
   etiqueta: 'AnimeAV1',
 
-  async buscar(q) {
-    const raiz = await catalogoDatos(q, 1);
-    return itemsDeCatalogo(raiz).slice(0, MAX_ITEMS);
+  async buscar(q, query) {
+    // Probamos el texto de la persona y, si no suelta nada, los títulos que Kino conoce.
+    const intentos = [];
+    const meter = (s) => { const t = String(s || '').trim(); if (t && intentos.indexOf(t) === -1) intentos.push(t); };
+    meter(q);
+    if (query) {
+      meter(query.originalTitle);
+      for (const alt of (query.altTitles || []).slice(0, 5)) meter(alt);
+    }
+    for (const intento of intentos) {
+      const raiz = await catalogoDatos({ busqueda: intento }, 1);
+      let items = itemsDeCatalogo(raiz);
+      if (!items.length) continue;
+      if (query && (query.type === 'movie' || query.type === 'series')) {
+        items = items.slice().sort((a, b) => (a.kind === query.type ? 0 : 1) - (b.kind === query.type ? 0 : 1));
+      }
+      return items.slice(0, MAX_ITEMS);
+    }
+    return [];
   },
 
   async portada() {
-    const raiz = await catalogoDatos('', 1);
-    return { id: 'av1-catalogo', title: 'AnimeAV1 · Catálogo', ref: 'av1-catalogo', items: itemsDeCatalogo(raiz) };
+    const defs = [
+      { id: 'av1-row-eps', titulo: 'Últimos episodios', ref: null, episodios: true },
+      { id: 'av1-latest', titulo: 'Últimos agregados', ref: 'av1-latest', params: { orden: 'latest_added' } },
+      { id: 'av1-populares', titulo: 'Populares', ref: 'av1-populares', params: { orden: 'popular' } },
+      { id: 'av1-score', titulo: 'Mejor puntuados', ref: 'av1-score', params: { orden: 'score' } },
+      { id: 'av1-peliculas', titulo: 'Películas', ref: 'av1-peliculas', params: { categoria: 'pelicula' } },
+      { id: 'av1-gen-accion', titulo: 'Acción', ref: 'av1-gen:accion', params: { genero: 'accion' } },
+      { id: 'av1-gen-fantasia', titulo: 'Fantasía', ref: 'av1-gen:fantasia', params: { genero: 'fantasia' } }
+    ];
+    const filas = [];
+    for (let i = 0; i < defs.length; i += FILAS_EN_PARALELO) {
+      const lote = defs.slice(i, i + FILAS_EN_PARALELO);
+      const hechas = await Promise.all(lote.map(async (def) => {
+        try {
+          if (def.episodios) return await filaEpisodios(def);
+          const raiz = await catalogoDatos(def.params, 1);
+          const items = itemsDeCatalogo(raiz).slice(0, 20);
+          if (!items.length) return null;
+          return { id: def.id, title: def.titulo, ref: def.ref, items: items };
+        } catch (e) {
+          log('fila «' + def.titulo + '» falló', (e && e.message) || String(e));
+          return null;
+        }
+      }));
+      for (const fila of hechas) if (fila) filas.push(fila);
+    }
+    if (!filas.length) {
+      throw kino.error('unavailable', 'AnimeAV1 no armó ninguna fila', {
+        userMessage: 'AnimeAV1 no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    return filas;
   },
 
-  async hoja(cursor) {
-    const pagina = Math.max(1, parseInt(String(cursor || '1'), 10) || 1);
-    const raiz = await catalogoDatos('', pagina);
+  async hoja(ref, cursor) {
+    const params = paramsDeFila(ref);
+    if (!params) return null;
+    const raiz = await catalogoDatos(params, cursor);
     const items = itemsDeCatalogo(raiz);
     let next = undefined;
     const pag = raiz.pagination && typeof raiz.pagination === 'object' ? raiz.pagination : null;
     if (pag && pag.currentPage < pag.totalPages) next = String(pag.currentPage + 1);
-    else if (!pag && items.length >= 20) next = String(pagina + 1);
+    else if (!pag && items.length >= 20) next = String((Math.max(1, parseInt(String(cursor || '1'), 10) || 1)) + 1);
     return { items: items, next: next };
   },
 
@@ -226,12 +293,14 @@ registrarFuente({
     const media = raiz && raiz.media && typeof raiz.media === 'object' ? raiz.media : null;
     if (!media || !media.title) return null;
     const out = { title: String(media.title) };
-    if (media.poster && String(media.poster).indexOf('http') === 0) out.poster = String(media.poster);
+    if (media.id != null) {
+      out.poster = cover(media.id);
+    }
     if (media.synopsis) out.overview = limpio(media.synopsis).slice(0, 400);
     if (media.startDate) out.year = String(media.startDate).slice(0, 4);
     if (Array.isArray(media.genres)) {
       const g = media.genres.map((x) => (x && x.name ? String(x.name) : '')).filter(Boolean);
-      if (g.length) out.genres = g.slice(0, 6);
+      if (g.length) out.genres = g.slice(0, 5);
     }
     if (typeof media.score === 'number' && media.score > 0 && media.score <= 10) {
       out.rating = Math.round(media.score * 100) / 100;
@@ -248,25 +317,30 @@ registrarFuente({
         userMessage: 'No se pudieron leer los episodios de esta serie en AnimeAV1'
       });
     }
-    const numeros = [];
+    const mediaId = media.id != null ? media.id : null;
     const vistos = new Set();
+    const episodios = [];
     for (const e of media.episodes) {
       const n = e && typeof e.number === 'number' ? e.number : 0;
-      if (n >= 1 && n <= 99999 && !vistos.has(n)) { vistos.add(n); numeros.push(n); }
-    }
-    numeros.sort((a, b) => a - b);
-    const serie = { title: String(media.title || slugATitulo(slug)) };
-    if (media.poster && String(media.poster).indexOf('http') === 0) serie.poster = String(media.poster);
-    if (media.synopsis) serie.overview = limpio(media.synopsis).slice(0, 400);
-    return {
-      series: serie,
-      episodes: numeros.map((n) => ({
-        season: 1,
+      if (n < 1 || n > 99999 || vistos.has(n)) continue;
+      vistos.add(n);
+      let temporada = 1;
+      if (e && typeof e.season === 'number' && e.season >= 1 && e.season <= 999) temporada = e.season;
+      const ep = {
+        season: temporada,
         number: n,
-        title: 'Episodio ' + n,
+        title: (e && e.title && limpio(e.title)) || 'Episodio ' + n,
         ref: 'av1:' + slug + ':' + n
-      }))
-    };
+      };
+      if (mediaId != null) ep.still = captura(mediaId, n);
+      if (e && e.synopsis) ep.overview = limpio(e.synopsis).slice(0, 250);
+      episodios.push(ep);
+    }
+    episodios.sort((a, b) => a.season - b.season || a.number - b.number);
+    const serie = { title: String(media.title || slugATitulo(slug)) };
+    if (mediaId != null) serie.poster = cover(mediaId);
+    if (media.synopsis) serie.overview = limpio(media.synopsis).slice(0, 400);
+    return { series: serie, episodes: episodios };
   },
 
   async resolver(slug, ep) {
@@ -318,6 +392,53 @@ registrarFuente({
   }
 });
 
+/* ---------- filas del home ---------- */
+
+async function filaEpisodios(def) {
+  const datos = await datosDe('/__data.json');
+  const lista = datos && Array.isArray(datos.latestEpisodes) ? datos.latestEpisodes : [];
+  const items = [];
+  const vistos = new Set();
+  for (const e of lista) {
+    const m = e && e.media;
+    if (!m || m.id == null || !m.slug || !m.title) continue;
+    if (vistos.has(m.slug)) continue;
+    vistos.add(m.slug);
+    const cat = m.category && typeof m.category === 'object' ? m.category : null;
+    const item = {
+      id: m.slug,
+      ref: 'av1:' + m.slug,
+      title: limpio(m.title),
+      kind: cat && cat.malId === 'Movie' ? 'movie' : 'series',
+      poster: cover(m.id)
+    };
+    if (typeof e.number === 'number' && e.number >= 1) {
+      item.badges = ['EP ' + e.number];
+      item.backdrop = captura(m.id, e.number);
+    } else {
+      item.backdrop = backdropDe(m.id);
+    }
+    if (m.synopsis) item.overview = limpio(m.synopsis).slice(0, 250);
+    const anho = String(m.startDate || '').slice(0, 4);
+    if (/^\d{4}$/.test(anho)) item.year = anho;
+    if (m.mature === true) item.adult = true;
+    items.push(item);
+  }
+  if (!items.length) return null;
+  return { id: def.id, title: def.titulo, items: items.slice(0, 20) };
+}
+
+function paramsDeFila(ref) {
+  const r = String(ref || '');
+  if (r === 'av1-catalogo') return {};
+  if (r === 'av1-latest') return { orden: 'latest_added' };
+  if (r === 'av1-populares') return { orden: 'popular' };
+  if (r === 'av1-score') return { orden: 'score' };
+  if (r === 'av1-peliculas') return { categoria: 'pelicula' };
+  if (r.indexOf('av1-gen:') === 0) return { genero: r.slice(8) };
+  return null;
+}
+
 /* ---------- exportaciones de Kino (el abanico del agregador) ---------- */
 
 function partirRef(ref) {
@@ -331,11 +452,11 @@ function partirRef(ref) {
 
 async function search(query) {
   const q = query && typeof query.q === 'string' ? query.q.trim() : '';
-  if (!q) return [];
+  if (!q && !(query && (query.originalTitle || (query.altTitles || []).length))) return [];
   const fuentes = Object.values(FUENTES);
   const respuestas = await Promise.all(fuentes.map(async (f) => {
     try {
-      return { items: await f.buscar(q), fallo: false };
+      return { items: await f.buscar(q || (query && query.originalTitle), query), fallo: false };
     } catch (e) {
       log('buscar falló en ' + f.id, (e && e.message) || String(e));
       return { items: [], fallo: true, error: e };
@@ -367,8 +488,8 @@ async function home() {
   const errores = [];
   for (const f of Object.values(FUENTES)) {
     try {
-      const fila = await f.portada();
-      if (fila && Array.isArray(fila.items) && fila.items.length) filas.push(fila);
+      const propias = await f.portada();
+      for (const fila of propias) filas.push(fila);
     } catch (e) {
       log('portada falló en ' + f.id, (e && e.message) || String(e));
       errores.push(e);
@@ -386,7 +507,10 @@ async function home() {
 
 async function browse(ref, cursor) {
   for (const f of Object.values(FUENTES)) {
-    if (ref === f.id + '-catalogo') return f.hoja(cursor);
+    if (String(ref).indexOf(f.id + '-') === 0) {
+      const hoja = await f.hoja(ref, cursor);
+      if (hoja) return hoja;
+    }
   }
   throw kino.error('not_found', 'esa fila ya no existe');
 }
