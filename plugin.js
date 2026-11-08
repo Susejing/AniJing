@@ -1,14 +1,37 @@
-// AniJing v0.1.0 «Hola mundo» — anime puro para Kino.
-// Fuente: AnimeAV1 (https://animeav1.com), su API interna __data.json para metadatos y
-// episodios, y su reproductor Zilla (HLS) para la reproducción. Los ref son «av1:<slug>»
-// (serie o película) y «av1:<slug>:<número>» (episodio). El esqueleto de fuentes aisladas
-// se tomó como patrón del plugin comunitario YojaTV (GPL-3.0); este código también es GPL-3.0.
+// AniJing — anime puro para Kino: catálogo, búsqueda, fichas, episodios y reproducción
+// desde AnimeAV1, con la sinopsis, los géneros y el id de MyAnimeList de cada serie.
+// Repositorio: https://github.com/Susejing/AniJing
 //
-// HONESTO v0.1.0: solo se reproduce lo que AnimeAV1 sirve directo (Zilla/HLS o un archivo
-// .m3u8/.mp4 contundente). Los reproductores que necesitan extractor (VOE, MP4Upload, Mega)
-// llegan en la 0.2, y más fuentes después.
+// Copyright (C) 2026 Susejing
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+//
+// AniJing v0.1.1 «El catálogo por la puerta de datos» — anime puro para Kino.
+// Fuente: AnimeAV1 (https://animeav1.com): TODO por su API interna __data.json (catálogo,
+// búsqueda, fichas y episodios) y su reproductor Zilla (HLS) para la reproducción. Los ref
+// son «av1:<slug>» (serie o película) y «av1:<slug>:<número>» (episodio). El esqueleto de
+// fuentes aisladas se tomó como patrón del plugin comunitario YojaTV (GPL-3.0); este
+// código también es GPL-3.0.
+//
+// v0.1.0 rascaba el HTML del catálogo y las tarjetas no viven ahí: la página las pinta
+// después con los datos de /catalogo/__data.json. Esta versión usa ese endpoint directo.
+// HONESTO: solo se reproduce lo que AnimeAV1 sirve directo (Zilla/HLS o un .m3u8/.mp4
+// contundente). Los reproductores que necesitan extractor (VOE, MP4Upload, Mega) llegan
+// en la 0.2, más fuentes después, y los pósters de la cuadrícula con AniList (los datos de
+// AnimeAV1 no los traen).
 
-const VERSION = '0.1.0';
+const VERSION = '0.1.1';
 const BASE = 'https://animeav1.com';
 const REFERER = BASE + '/';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
@@ -53,6 +76,12 @@ async function traer(url, timeoutMs) {
   } catch (e) {
     return { ok: false, status: 0, text: '', error: e };
   }
+}
+
+function noRespondio(status) {
+  throw kino.error('unavailable', 'AnimeAV1 no respondió (status ' + status + ')', {
+    userMessage: 'AnimeAV1 no respondió. Revisa tu conexión o inténtalo en un rato.'
+  });
 }
 
 /* ---------- lector del __data.json de AnimeAV1 ----------
@@ -107,34 +136,53 @@ async function datosDe(camino) {
   return raiz;
 }
 
-/* ---------- tarjetas del catálogo HTML de AnimeAV1 ----------
- * Cada tarjeta es un enlace a /media/<slug> con su <h3> de título y, cuando la portada
- * no es perezosa, el <img> en la misma ventana. v0.1.0 lista todo como «series»: el
- * catálogo mezcla películas y el HTML no las distingue en la tarjeta.
+/* ---------- catálogo: la puerta de datos ----------
+ * /catalogo/__data.json acepta ?search=<q> y ?page=<n> y devuelve {results, total,
+ * pagination:{currentPage, recordsPerPage, totalPages, totalRecords}}. Cada resultado es
+ * {id, title, synopsis, categoryId, slug, category:{name, malId}} — sin póster (esa es la
+ * tarea de AniList en la 0.2). Las películas traen category.malId = "Movie".
  */
-function tarjetasAv1(html) {
+async function catalogoDatos(busqueda, pagina) {
+  let camino = '/catalogo/__data.json';
+  const params = [];
+  if (busqueda) params.push('search=' + encodeURIComponent(busqueda));
+  if (pagina && pagina > 1) params.push('page=' + pagina);
+  if (params.length) camino += '?' + params.join('&');
+  const r = await traer(BASE + camino);
+  if (!r.ok) {
+    log('catálogo: AnimeAV1 respondió ' + r.status);
+    noRespondio(r.status);
+  }
+  const raiz = leerDataJson(r.text);
+  if (!raiz || !Array.isArray(raiz.results)) {
+    log('catálogo: datos ilegibles');
+    noRespondio(0);
+  }
+  return raiz;
+}
+
+function itemDeCatalogo(res) {
+  const slug = String(res && res.slug ? res.slug : '').trim();
+  if (!slug) return null;
+  const cat = res.category && typeof res.category === 'object' ? res.category : null;
+  const item = {
+    id: slug,
+    ref: 'av1:' + slug,
+    title: limpio(res.title) || slugATitulo(slug),
+    kind: cat && cat.malId === 'Movie' ? 'movie' : 'series'
+  };
+  const sinopsis = limpio(res.synopsis);
+  if (sinopsis) item.overview = sinopsis.slice(0, 250);
+  return item;
+}
+
+function itemsDeCatalogo(raiz) {
   const items = [];
   const vistos = new Set();
-  const re = /href="\/media\/([^"\/?#]+)/g;
-  let m;
-  while ((m = re.exec(html)) !== null) {
-    const slug = m[1];
-    if (vistos.has(slug)) continue;
-    const ventana = html.slice(m.index, m.index + 700);
-    const t = /<h3[^>]*>([^<]+)<\/h3>/.exec(ventana) || /alt="Portada de ([^"]+)"/.exec(ventana);
-    if (!t || !limpio(t[1])) continue;
-    const posterM = /<img[^>]+(?:data-src|src)="([^"]+)"/.exec(ventana);
-    let poster = posterM ? posterM[1] : null;
-    if (poster && poster.indexOf('//') === 0) poster = 'https:' + poster;
-    else if (poster && poster.indexOf('/') === 0) poster = BASE + poster;
-    vistos.add(slug);
-    const item = {
-      id: slug,
-      ref: 'av1:' + slug,
-      title: limpio(t[1]) || slugATitulo(slug),
-      kind: 'series'
-    };
-    if (poster && poster.indexOf('http') === 0) item.poster = poster;
+  for (const res of raiz.results) {
+    const item = itemDeCatalogo(res);
+    if (!item || vistos.has(item.ref)) continue;
+    vistos.add(item.ref);
     items.push(item);
   }
   return items;
@@ -153,23 +201,24 @@ registrarFuente({
   etiqueta: 'AnimeAV1',
 
   async buscar(q) {
-    const r = await traer(BASE + '/catalogo?search=' + encodeURIComponent(q));
-    if (!r.ok) throw new Error('AnimeAV1 respondió ' + r.status);
-    return tarjetasAv1(r.text);
+    const raiz = await catalogoDatos(q, 1);
+    return itemsDeCatalogo(raiz).slice(0, MAX_ITEMS);
   },
 
   async portada() {
-    const r = await traer(BASE + '/catalogo');
-    if (!r.ok) throw new Error('AnimeAV1 respondió ' + r.status);
-    return { id: 'av1-catalogo', title: 'AnimeAV1 · Catálogo', ref: 'av1-catalogo', items: tarjetasAv1(r.text).slice(0, 30) };
+    const raiz = await catalogoDatos('', 1);
+    return { id: 'av1-catalogo', title: 'AnimeAV1 · Catálogo', ref: 'av1-catalogo', items: itemsDeCatalogo(raiz) };
   },
 
   async hoja(cursor) {
     const pagina = Math.max(1, parseInt(String(cursor || '1'), 10) || 1);
-    const r = await traer(BASE + '/catalogo?page=' + pagina);
-    if (!r.ok) throw new Error('AnimeAV1 respondió ' + r.status);
-    const items = tarjetasAv1(r.text);
-    return { items: items, next: items.length >= 12 ? String(pagina + 1) : undefined };
+    const raiz = await catalogoDatos('', pagina);
+    const items = itemsDeCatalogo(raiz);
+    let next = undefined;
+    const pag = raiz.pagination && typeof raiz.pagination === 'object' ? raiz.pagination : null;
+    if (pag && pag.currentPage < pag.totalPages) next = String(pag.currentPage + 1);
+    else if (!pag && items.length >= 20) next = String(pagina + 1);
+    return { items: items, next: next };
   },
 
   async detalle(slug) {
@@ -194,7 +243,11 @@ registrarFuente({
   async episodios(slug) {
     const raiz = await datosDe('/media/' + slug + '/__data.json');
     const media = raiz && raiz.media && typeof raiz.media === 'object' ? raiz.media : null;
-    if (!media || !Array.isArray(media.episodes)) return { episodes: [] };
+    if (!media || !Array.isArray(media.episodes)) {
+      throw kino.error('not_found', 'AnimeAV1 no entregó la serie', {
+        userMessage: 'No se pudieron leer los episodios de esta serie en AnimeAV1'
+      });
+    }
     const numeros = [];
     const vistos = new Set();
     for (const e of media.episodes) {
@@ -285,21 +338,23 @@ async function search(query) {
       return { items: await f.buscar(q), fallo: false };
     } catch (e) {
       log('buscar falló en ' + f.id, (e && e.message) || String(e));
-      return { items: [], fallo: true };
+      return { items: [], fallo: true, error: e };
     }
   }));
   const salida = [];
   const vistos = new Set();
   let fallos = 0;
+  let ultimoError = null;
   for (const rta of respuestas) {
-    if (rta.fallo) fallos++;
+    if (rta.fallo) { fallos++; ultimoError = rta.error; }
     for (const it of rta.items || []) {
       if (!it || !it.ref || vistos.has(it.ref)) continue;
       vistos.add(it.ref);
       salida.push(it);
     }
   }
-  if (!salida.length && fallos === fuentes.length) {
+  if (fallos === fuentes.length) {
+    if (ultimoError && ultimoError.userMessage) throw ultimoError;
     throw kino.error('unavailable', 'ninguna fuente respondió', {
       userMessage: 'Ninguna fuente de anime respondió la búsqueda'
     });
@@ -309,13 +364,22 @@ async function search(query) {
 
 async function home() {
   const filas = [];
+  const errores = [];
   for (const f of Object.values(FUENTES)) {
     try {
       const fila = await f.portada();
       if (fila && Array.isArray(fila.items) && fila.items.length) filas.push(fila);
     } catch (e) {
       log('portada falló en ' + f.id, (e && e.message) || String(e));
+      errores.push(e);
     }
+  }
+  if (!filas.length && errores.length) {
+    const e = errores[0];
+    if (e && e.userMessage) throw e;
+    throw kino.error('unavailable', 'ninguna fuente armó portada', {
+      userMessage: 'AnimeAV1 no respondió. Revisa tu conexión o inténtalo en un rato.'
+    });
   }
   return filas;
 }
