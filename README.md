@@ -4,9 +4,11 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.4.0 «La pantalla propia»)
+## Qué hace (v0.5.0 «El Inicio ordenado»)
 
 **Pantalla propia de Inicio**: al abrir AniJing ya no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes (Todas / AnimeAV1 / MonosChinos / LataAnime) cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
+
+**Orden por secciones**: en «Todas», cada fuente ocupa su propia sección con un encabezado grande (AnimeAV1, MonosChinos, LataAnime) y sus rieles debajo — nada de filas revueltas: el scroll se lee por partes. Tocar el nombre de una fuente la muestra sola. AnimeAV1 aporta su núcleo a «Todas» (últimos episodios, últimos agregados, populares y mejor puntuados); sus otras filas (películas, acción, fantasía) viven en su sección propia, al tocar su nombre.
 
 **Tres fuentes**:
 
@@ -14,7 +16,7 @@ Su nombre une «anime» con la terminación «jing» de su autor.
 - **MonosChinos** — en emisión y animes completos, con sus películas y especiales.
 - **LataAnime** — novedades y anime en latino y en castellano.
 
-Todas las filas llevan su «Ver más» (las de episodios y las de LataAnime lo estrenan en esta versión).
+Todas las filas llevan su «Ver más».
 
 **La búsqueda** consulta las tres fuentes a la vez y marca de dónde viene cada resultado; **los episodios** se leen de la fuente elegida. La pantalla usa el detalle, los episodios y los extractores del catálogo: tocar una tarjeta abre la serie, igual que siempre.
 
