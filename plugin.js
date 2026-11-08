@@ -34,7 +34,22 @@
 // cifrados o piden captcha. Si un servidor cambia su baile, ese servidor
 // falla con mensaje honesto y quedan los demás en el menú Servidor.
 
-const VERSION = '0.3.0';
+// AniJing v0.4.0 «La pantalla propia» — el Inicio deja de ser el genérico:
+// una pantalla de canvas completa estilo MangaTrack, con su barrita única
+// (flechita para salir, lupa para buscar y el selector de fuentes), un
+// destacado que rota por día (el featured de AnimeAV1) y los rieles de Home
+// con su «Ver más». El selector de fuentes (Todas / AnimeAV1 / MonosChinos /
+// LataAnime) cambia el contenido al toque y su elección se recuerda. La
+// pantalla salta al detalle y a la búsqueda de Kino con go (title, search,
+// close), así que el catálogo queda intacto: búsqueda global, fichas,
+// episodios, resolve y los 13 extractores de la 0.3.0. Además «Ver más»
+// para la fila de Últimos episodios (ref av1-ultimos-eps) y para las tres
+// filas de LataAnime (novedades, en latino y en castellano), que antes no
+// lo llevaban. La pantalla pide apiVersion 19 por la barrita única
+// (mergeWithKinoBar); el selector y el destacado viven en el estado de la
+// pantalla (tope 64 KB: 12 títulos por riel, sin sinopsis).
+
+const VERSION = '0.4.0';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -1106,7 +1121,7 @@ registrarFuente({
 
   async portada() {
     const defs = [
-      { id: 'av1-row-eps', titulo: 'Últimos episodios', ref: null, episodios: true },
+      { id: 'av1-row-eps', titulo: 'Últimos episodios', ref: 'av1-ultimos-eps', episodios: true },
       { id: 'av1-latest', titulo: 'Últimos agregados', ref: 'av1-latest', params: { orden: 'latest_added' } },
       { id: 'av1-populares', titulo: 'Populares', ref: 'av1-populares', params: { orden: 'popular' } },
       { id: 'av1-score', titulo: 'Mejor puntuados', ref: 'av1-score', params: { orden: 'score' } },
@@ -1140,6 +1155,11 @@ registrarFuente({
   },
 
   async hoja(ref, cursor) {
+    if (ref === 'av1-ultimos-eps') {
+      const items = await itemsUltimosEps();
+      if (!items.length) return { items: [], next: null };
+      return { items: items, next: null };
+    }
     const params = paramsDeFila(ref);
     if (!params) return null;
     const raiz = await catalogoDatos(params, cursor);
@@ -1268,7 +1288,7 @@ registrarFuente({
 
 /* ---------- filas del home de AnimeAV1 ---------- */
 
-async function filaEpisodios(def) {
+async function itemsUltimosEps() {
   const datos = await datosDe('/__data.json');
   const lista = datos && Array.isArray(datos.latestEpisodes) ? datos.latestEpisodes : [];
   const items = [];
@@ -1298,8 +1318,15 @@ async function filaEpisodios(def) {
     if (m.mature === true) item.adult = true;
     items.push(item);
   }
+  return items;
+}
+
+async function filaEpisodios(def) {
+  const items = await itemsUltimosEps();
   if (!items.length) return null;
-  return { id: def.id, title: def.titulo, items: items.slice(0, 20) };
+  const fila = { id: def.id, title: def.titulo, items: items.slice(0, 20) };
+  if (def.ref) fila.ref = def.ref;
+  return fila;
 }
 
 function paramsDeFila(ref) {
@@ -1721,17 +1748,17 @@ registrarFuente({
       (async () => {
         const pagina = await traerLat('/', 9000);
         const items = latTarjetas(pagina.text).slice(0, 20);
-        return items.length ? { id: 'lat-novedades', title: 'Novedades · LataAnime', items: items } : null;
+        return items.length ? { id: 'lat-novedades', title: 'Novedades · LataAnime', ref: 'lat-novedades', items: items } : null;
       })(),
       (async () => {
         const pagina = await traerLat('/buscar?q=latino', 9000);
         const items = latTarjetas(pagina.text).slice(0, 20);
-        return items.length ? { id: 'lat-latino', title: 'En latino · LataAnime', items: items } : null;
+        return items.length ? { id: 'lat-latino', title: 'En latino · LataAnime', ref: 'lat-latino', items: items } : null;
       })(),
       (async () => {
         const pagina = await traerLat('/buscar?q=castellano', 9000);
         const items = latTarjetas(pagina.text).slice(0, 20);
-        return items.length ? { id: 'lat-castellano', title: 'En castellano · LataAnime', items: items } : null;
+        return items.length ? { id: 'lat-castellano', title: 'En castellano · LataAnime', ref: 'lat-castellano', items: items } : null;
       })()
     ];
     const rtas = await Promise.all(tareas.map((t) => t.catch((e) => { log('lat fila', (e && e.message) || e); return null; })));
@@ -1740,8 +1767,20 @@ registrarFuente({
     return filas;
   },
 
-  async hoja() {
-    return null;
+  async hoja(ref) {
+    let camino = null;
+    if (ref === 'lat-novedades') camino = '/';
+    else if (ref === 'lat-latino') camino = '/buscar?q=latino';
+    else if (ref === 'lat-castellano') camino = '/buscar?q=castellano';
+    if (!camino) return null;
+    const pagina = await traerLat(camino, 12000);
+    if (!pagina.ok) {
+      throw kino.error('unavailable', 'LataAnime no respondió (status ' + pagina.status + ')', {
+        userMessage: 'LataAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    const items = latTarjetas(pagina.text).slice(0, 60);
+    return { items: items, next: null };
   },
 
   async detalle(slug) {
@@ -1978,4 +2017,221 @@ async function resolve(ref, options) {
   return f.resolver(p.partes[0], Number.isFinite(n) && n >= 1 ? n : 1, Number.isFinite(idx) && idx >= 0 ? idx : null);
 }
 
-export { search, home, browse, episodes, details, resolve };
+/* ---------- la pantalla propia (el Inicio de verdad, estilo MangaTrack) ---------- */
+
+const CLAVE_FUENTE_PANTALLA = 'ajFuente';
+const FUENTES_PANTALLA = [
+  { id: 'todas', nombre: 'Todas las fuentes' },
+  { id: 'av1', nombre: 'AnimeAV1' },
+  { id: 'mc', nombre: 'MonosChinos' },
+  { id: 'lat', nombre: 'LataAnime' }
+];
+
+function fuenteValida(id) {
+  const s = String(id || '');
+  for (const x of FUENTES_PANTALLA) if (x.id === s) return s;
+  return '';
+}
+
+function fuenteDePantalla(state) {
+  const s = state && typeof state.fuente === 'string' ? fuenteValida(state.fuente) : '';
+  if (s) return s;
+  try {
+    const g = kino.storage.get(CLAVE_FUENTE_PANTALLA);
+    const v = g ? fuenteValida(String(g)) : '';
+    if (v) return v;
+  } catch (e) {}
+  return 'todas';
+}
+
+function compactarItem(it) {
+  const o = {
+    id: String(it.id || it.ref),
+    ref: String(it.ref || ''),
+    title: String(it.title || '').slice(0, 200),
+    kind: it.kind === 'movie' ? 'movie' : 'series'
+  };
+  if (it.poster) o.poster = it.poster;
+  if (it.backdrop) o.backdrop = it.backdrop;
+  if (it.year) o.year = it.year;
+  if (Array.isArray(it.badges) && it.badges.length) o.badges = it.badges.slice(0, 2);
+  if (it.adult === true) o.adult = true;
+  return o;
+}
+
+async function heroDeAv1() {
+  try {
+    const datos = await datosDe('/__data.json');
+    const feat = datos && Array.isArray(datos.featured) ? datos.featured : [];
+    if (!feat.length) return null;
+    const dia = Math.floor(Date.now() / 86400000);
+    for (let i = 0; i < feat.length; i++) {
+      const m = feat[(dia + i) % feat.length];
+      if (m && m.slug && m.title && m.id != null) {
+        return {
+          ref: 'av1:' + m.slug,
+          title: limpio(m.title).slice(0, 120),
+          texto: m.synopsis ? limpio(m.synopsis).slice(0, 220) : 'Anime destacado de hoy en AnimeAV1.',
+          imagen: backdropDe(m.id)
+        };
+      }
+    }
+  } catch (e) {
+    log('el destacado falló', (e && e.message) || String(e));
+  }
+  return null;
+}
+
+function sinSufijoFuente(titulo, etiqueta) {
+  const cola = ' · ' + etiqueta;
+  if (titulo && titulo.length > cola.length && titulo.slice(titulo.length - cola.length) === cola) {
+    return titulo.slice(0, titulo.length - cola.length);
+  }
+  return titulo;
+}
+
+async function cargarPantalla(fuente) {
+  let filas = [];
+  if (fuente === 'todas') {
+    const fuentes = Object.values(FUENTES);
+    const rtas = await Promise.all(fuentes.map(async (f) => {
+      try {
+        return await f.portada();
+      } catch (e) {
+        log('portada de ' + f.id + ' falló', (e && e.message) || String(e));
+        return null;
+      }
+    }));
+    for (let i = 0; i < fuentes.length; i++) {
+      if (rtas[i]) for (const fila of rtas[i]) filas.push(fila);
+    }
+    if (!filas.length) {
+      throw kino.error('unavailable', 'ninguna fuente armó la portada', {
+        userMessage: 'Ninguna fuente respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+  } else {
+    const f = FUENTES[fuente];
+    if (!f) return { filas: [], hero: null };
+    filas = await f.portada();
+    if (!Array.isArray(filas) || !filas.length) return { filas: [], hero: null };
+    for (const fila of filas) fila.title = sinSufijoFuente(fila.title, f.etiqueta);
+  }
+  const hero = fuente === 'todas' || fuente === 'av1' ? await heroDeAv1() : null;
+  const fuera = [];
+  for (const fila of filas) {
+    const items = (fila.items || []).slice(0, 12).map(compactarItem);
+    if (!items.length) continue;
+    fuera.push({ id: fila.id, title: fila.title, ref: fila.ref || null, items: items });
+  }
+  return { filas: fuera, hero: hero };
+}
+
+function esqueletoRiel() {
+  const tarjetas = [];
+  for (let i = 0; i < 4; i++) tarjetas.push({ type: 'Skeleton', shape: 'card', width: 96, height: 160 });
+  return {
+    type: 'Column', gap: 12, children: [
+      { type: 'Skeleton', shape: 'line', width: 160, height: 24 },
+      { type: 'Row', gap: 12, children: tarjetas }
+    ]
+  };
+}
+
+async function screen(arg) {
+  const a = arg || {};
+  const state = a.state && typeof a.state === 'object' ? a.state : {};
+  const filas = Array.isArray(state.filas) ? state.filas : null;
+  const hero = state.hero && state.hero.ref ? state.hero : null;
+  const cuerpo = [];
+  if (state.errorPantalla === true) {
+    cuerpo.push({ type: 'errorState', title: 'No se pudo cargar', text: 'Ninguna fuente respondió. Revisa tu conexión y vuelve a probar.' });
+    cuerpo.push({ type: 'Button', labelText: 'Reintentar', onPressed: 'recargar', alignSelf: 'center' });
+  } else if (filas && !filas.length) {
+    cuerpo.push({ type: 'emptyState', title: 'Nada por ahora', text: 'Esta fuente no trajo nada en este momento. Prueba con otra o vuelve más tarde.', icon: 'movie' });
+    cuerpo.push({ type: 'Button', labelText: 'Reintentar', onPressed: 'recargar', alignSelf: 'center' });
+  } else if (!filas) {
+    cuerpo.push({ type: 'Skeleton', shape: 'block', height: 240 });
+    cuerpo.push(esqueletoRiel());
+    cuerpo.push(esqueletoRiel());
+    cuerpo.push(esqueletoRiel());
+  } else {
+    if (hero) {
+      const heroNodo = { type: 'heroCard', title: hero.title, text: hero.texto };
+      if (hero.imagen) heroNodo.image = hero.imagen;
+      heroNodo.buttons = [{ type: 'ElevatedButton', labelText: 'Ver la serie', onPressed: { go: { title: { ref: hero.ref, kind: 'series' } } } }];
+      cuerpo.push(heroNodo);
+    }
+    for (const fila of filas) {
+      const riel = { type: 'titleRail', title: fila.title, items: fila.items };
+      if (fila.ref) riel.ref = fila.ref;
+      cuerpo.push(riel);
+    }
+  }
+  return {
+    type: 'Scaffold',
+    appBar: {
+      type: 'AppBar', dense: true, divider: false, mergeWithKinoBar: true,
+      leading: { type: 'IconButton', icon: 'arrow_back', labelText: 'Cerrar', onPressed: { go: { close: true } } },
+      title: 'AniJing',
+      actions: [
+        { type: 'IconButton', icon: 'search', labelText: 'Buscar', onPressed: { go: { search: { q: '' } } } },
+        { type: 'IconButton', icon: 'tune', labelText: 'Elegir fuente', onPressed: 'fuentes' }
+      ]
+    },
+    body: {
+      type: 'SingleChildScrollView',
+      children: [{
+        type: 'Column',
+        gap: 16,
+        padding: { compact: 12, medium: 16, expanded: 24 },
+        children: cuerpo
+      }]
+    }
+  };
+}
+
+async function screenEvent(e) {
+  const ev = e || {};
+  const state = ev.state && typeof ev.state === 'object' ? ev.state : {};
+  const nombre = String(ev.name || '');
+  if (nombre === 'open' || nombre === 'recargar') {
+    const fuente = fuenteDePantalla(state);
+    try {
+      const datos = await cargarPantalla(fuente);
+      return { state: { fuente: fuente, filas: datos.filas, hero: datos.hero, errorPantalla: false } };
+    } catch (err) {
+      log('cargar la pantalla falló', (err && err.message) || String(err));
+      return { state: { fuente: fuente, errorPantalla: true } };
+    }
+  }
+  if (nombre === 'fuentes') {
+    const fuente = fuenteDePantalla(state);
+    const items = FUENTES_PANTALLA.map((x) => ({
+      label: x.id === fuente ? '✓ ' + x.nombre : x.nombre,
+      onTap: { event: 'fuente', arg: x.id }
+    }));
+    return { menu: { title: 'Elegir fuente', items: items } };
+  }
+  if (nombre === 'fuente') {
+    const nueva = fuenteValida(ev.arg) || 'todas';
+    try {
+      kino.storage.set(CLAVE_FUENTE_PANTALLA, nueva);
+    } catch (eS) {
+      log('no se pudo guardar la fuente', (eS && eS.message) || String(eS));
+    }
+    try {
+      const datos = await cargarPantalla(nueva);
+      const rta = { state: { fuente: nueva, filas: datos.filas, hero: datos.hero, errorPantalla: false } };
+      const nom = FUENTES_PANTALLA.filter((x) => x.id === nueva)[0];
+      if (nom) rta.toast = nom.nombre;
+      return rta;
+    } catch (err) {
+      log('cargar «' + nueva + '» falló', (err && err.message) || String(err));
+      return { state: { fuente: nueva, errorPantalla: true } };
+    }
+  }
+  return null;
+}
+
+export { search, home, browse, episodes, details, resolve, screen, screenEvent };
