@@ -1,10 +1,10 @@
 {
   "id": "anijing",
   "name": "AniJing",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "apiVersion": 19,
   "entry": "plugin.js",
-  "description": "Anime en español desde AnimeAV1, MonosChinos y LataAnime, con pantalla propia de Inicio (destacado del día, rieles con su Ver más y selector de fuentes), búsqueda, fichas, episodios y 13 extractores de servidores. El anime con la firma de Susejing.",
+  "description": "Anime en español desde AnimeAV1, MonosChinos y LataAnime, con pantalla propia de Inicio (destacado del día, secciones por fuente, rieles con su Ver más y selector de fuentes), búsqueda, fichas, episodios y 13 extractores de servidores. El anime con la firma de Susejing.",
   "author": "Susejing",
   "homepage": "https://github.com/Susejing/AniJing",
   "hosts": [
