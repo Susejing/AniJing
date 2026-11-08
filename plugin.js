@@ -60,7 +60,19 @@
 // partes, como el Inicio de MangaTrack: destacado, secciones, y cada
 // riel con su «Ver más».
 
-const VERSION = '0.5.0';
+// v0.6.0 «La cosecha» — cinco fuentes nuevas se suman al agregador:
+// OtakusTV (directorio en /animes, pósters derivables del slug,
+// reproductores Filemoon/Byse/MP4Upload), AnimeYT (buscador propio /?s=,
+// catálogo /tv/ con películas, ok.ru y filemoon), EstrenosAnime (listados
+// de últimos episodios, sub y latino; sin buscador de texto propio, se
+// dice con honestidad), AnimeOnline (género /genero/ver-anime, fichas
+// temporada/online, episodios /episodio/) e IvAnime (vive en .buzz,
+// porque .com es descargas). Las dos con multiserver propio caen a la
+// captura del navegador oculto cuando el HTML no alcanza. La pantalla
+// propia crece a 9 fuentes en su menú y «Todas» respira: cada fuente
+// aporta su núcleo, el resto vive en su sección.
+
+const VERSION = '0.6.0';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -460,13 +472,13 @@ const TIPO_ETIQUETA = {
   zilla: 'Zilla', directo: 'Directo', voe: 'Voe', mp4upload: 'MP4Upload', mixdrop: 'MixDrop',
   uqload: 'Uqload', streamtape: 'StreamTape', yourupload: 'YourUpload', upnshare: 'UPNShare',
   dood: 'Doodstream', okru: 'Ok.ru', hexload: 'Hexload', savefiles: 'SaveFiles', filemoon: 'Filemoon',
-  streamwish: 'StreamWish', lulu: 'LuluStream', vidhide: 'Vidhide', generic: 'Servidor'
+  streamwish: 'StreamWish', lulu: 'LuluStream', vidhide: 'Vidhide', multi: 'Multiserver', generic: 'Servidor'
 };
 
 const TIPO_ORDEN = {
   zilla: 1, directo: 2, voe: 3, upnshare: 4, mixdrop: 5, mp4upload: 6, uqload: 7,
   yourupload: 8, streamtape: 9, okru: 10, savefiles: 11, dood: 12, hexload: 13,
-  lulu: 14, streamwish: 15, vidhide: 16, filemoon: 17, generic: 20
+  lulu: 14, streamwish: 15, vidhide: 16, filemoon: 17, multi: 18, generic: 20
 };
 
 function detectarTipo(nombre, url) {
@@ -489,6 +501,9 @@ function detectarTipo(nombre, url) {
   if (/streamwish|obeywish|\bwish\b|embedwish|hlswish|awish/i.test(nu)) return 'streamwish';
   if (/yourupload/i.test(nu)) return 'yourupload';
   if (/streamtape/i.test(nu)) return 'streamtape';
+  /* v0.6.0: los agregadores propios (saidochesto y compañía) se abren con el
+     navegador oculto: la captura pesca el video aunque el player no se deje leer. */
+  if (/saidochesto\.?top|multiserver/i.test(nu)) return 'multi';
   return 'generic';
 }
 
@@ -898,12 +913,19 @@ async function exGenerico(u) {
   return { url: file, mime: mimeDe(file), headers: { Referer: origenDe(pagina.url || u) + '/', 'User-Agent': UA } };
 }
 
+/* --- Multiserver (saidochesto y parientes): opaco al rascado, se captura --- */
+
+async function exMulti(u) {
+  if (!puedeCapturar()) throw new Error('Multiserver sin navegador oculto');
+  return await capturar(u, 'Multiserver');
+}
+
 const EXTRACTORES = {
   voe: exVoe, mp4upload: exMp4Upload, mixdrop: exMixdrop, uqload: exUqload,
   streamtape: exStreamtape, yourupload: exYourUpload, upnshare: exUpnshare,
   dood: exDood, okru: exOkru, hexload: exHexload, savefiles: exSavefiles,
   filemoon: exFilemoon, streamwish: exGenerico, lulu: exGenerico, vidhide: exGenerico,
-  generic: exGenerico
+  multi: exMulti, generic: exGenerico
 };
 
 async function abrirServidor(server) {
@@ -1914,6 +1936,938 @@ function latServidores(html) {
   return servers;
 }
 
+/* ---------- utilidades de las fuentes nuevas (v0.6.0) ---------- */
+
+/* Saca reproductores de una página de episodio a lo defensivo: iframes con
+ * src, data-player/data-link en base64 (el patrón de MonosChinos, LataAnime
+ * y el tema Dooplay) y enlaces de embed. Los agregadores propios caen en
+ * 'multi', que abre con el navegador oculto: la captura pesca el video
+ * aunque el player no se deje leer. */
+function servidoresDePagina(html) {
+  const texto = String(html || '');
+  const candidatos = [];
+  const ifRe = /<iframe[^>]+src\s*=\s*["']([^"']+)["'][^>]*>/gi;
+  let m;
+  while ((m = ifRe.exec(texto))) candidatos.push({ url: m[1], nombre: '' });
+  const dpRe = /\bdata-(?:player|link)\s*=\s*["']([^"']+)["']/gi;
+  while ((m = dpRe.exec(texto))) {
+    const dec = b64Texto(m[1]).trim();
+    if (/^https?:\/\//i.test(dec) && !/\.(?:jpg|jpeg|png|webp|gif)(?:$|\?)/i.test(dec)) {
+      candidatos.push({ url: dec, nombre: '' });
+    }
+  }
+  const aRe = /<a\b[^>]*href\s*=\s*["']([^"']*(?:embed|\/e\/|player|videoembed)[^"']*)["'][^>]*>([^<]{0,50})</gi;
+  while ((m = aRe.exec(texto))) candidatos.push({ url: m[1], nombre: m[2] });
+  const servers = [];
+  const vistos = {};
+  const propios = /(animeonline\.ninja|otakustv2?\.com|otakustv\.net|animeyt\.(?:cc|one|org)|estrenosanime\.net|ivanime\.(?:top|buzz))/i;
+  for (let i = 0; i < candidatos.length; i++) {
+    const c = candidatos[i];
+    let u = String(c.url || '').trim();
+    if (u.indexOf('//') === 0) u = 'https:' + u;
+    if (!/^https?:\/\//i.test(u)) continue;
+    if (propios.test(u)) continue;
+    const tipo = detectarTipo(c.nombre, u);
+    if (!tipo) continue;
+    if (tipo === 'generic' && !/embed|\/e\/|player|video|stream/i.test(u)) continue;
+    const clave = tipo + '|' + u;
+    if (vistos[clave]) continue;
+    vistos[clave] = true;
+    servers.push({ nombre: String(c.nombre || '').replace(/\s+/g, ' ').trim() || 'Servidor', url: u, tipo: tipo });
+  }
+  servers.sort(function (a, b) {
+    return (TIPO_ORDEN[a.tipo] || 20) - (TIPO_ORDEN[b.tipo] || 20);
+  });
+  return servers;
+}
+
+/* El resolve de las fuentes nuevas: primero los servidores de verdad y, si
+ * ninguno abre (o lo único que hay es un multiserver opaco), la captura del
+ * episodio entero con el navegador oculto. */
+async function probarConCaptura(epUrl, servers, idx, refDe, etiqueta) {
+  try {
+    return await probarServidores(servers, idx, refDe);
+  } catch (e) {
+    if (puedeCapturar() && queda() > 8000) {
+      try {
+        const st = await capturar(epUrl, etiqueta);
+        const out = { url: st.url, label: etiqueta + ' (captura)', expiresInSeconds: 1800 };
+        if (st.mime) out.mime = st.mime;
+        out.headers = st.headers || { 'User-Agent': UA };
+        log('resolve por captura:', etiqueta);
+        return out;
+      } catch (e2) {
+        log('la captura del episodio falló', (e2 && e2.message) || e2);
+      }
+    }
+    throw e;
+  }
+}
+
+function sinAcentos(s) {
+  return String(s || '').toLowerCase()
+    .replace(/[áàäâ]/g, 'a').replace(/[éèëê]/g, 'e').replace(/[íìïî]/g, 'i')
+    .replace(/[óòöô]/g, 'o').replace(/[úùüû]/g, 'u').replace(/ñ/g, 'n').trim();
+}
+
+function titulosParecen(q, titulo) {
+  const a = sinAcentos(q);
+  const b = sinAcentos(titulo);
+  return a.length >= 2 && b.indexOf(a) >= 0;
+}
+
+/* ---------- fuente: OtakusTV (otakustv.net) ---------- */
+
+const BASE_OTV = 'https://www.otakustv.net';
+
+function otvPoster(slug, clase) {
+  return 'https://www.otakustv.net/cdn/img/' + (clase === 'portada' ? 'portada' : 'anime') + '/' + slug + '.webp';
+}
+
+function otvTarjetas(html, clase) {
+  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/anime\/([^"\/?#]+)[^>]*>([\s\S]{0,900}?)<\/a>/gi;
+  const items = [];
+  const vistos = new Set();
+  let m;
+  while ((m = re.exec(String(html || ''))) && items.length < 40) {
+    const slug = m[1];
+    if (!slug || vistos.has(slug)) continue;
+    vistos.add(slug);
+    const ventana = m[2];
+    let titulo = '';
+    const al = /alt\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
+    const tt = /title\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
+    if (tt) titulo = decHtml(tt[1]);
+    else if (al) titulo = decHtml(al[1]);
+    if (!titulo) {
+      const h = /<h[1-6][^>]*>([^<]{2,})</i.exec(ventana);
+      if (h) titulo = limpio(h[1]);
+    }
+    if (!titulo || titulo.length < 2) titulo = slugATitulo(slug);
+    const item = {
+      id: 'otv-' + slug,
+      ref: 'otv:' + slug,
+      title: titulo.slice(0, 200),
+      kind: 'series',
+      poster: otvPoster(slug, clase)
+    };
+    items.push(item);
+  }
+  return items;
+}
+
+/* Los episodios del Inicio: anclas /ver/<slug>-<n> con su capturita al lado. */
+function otvEpisodiosDe(html) {
+  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/ver\/([a-z0-9-]+)-(\d+)[^>]*>([\s\S]{0,600}?)<\/a>/gi;
+  const items = [];
+  const vistos = new Set();
+  let m;
+  while ((m = re.exec(String(html || ''))) && items.length < 25) {
+    const slug = m[1];
+    const n = parseInt(m[2], 10);
+    if (!slug || !n || vistos.has(slug)) continue;
+    vistos.add(slug);
+    const ventana = m[3];
+    const im = /\/cdn\/img\/episodios\/(\d+)-(\d+)\.webp/i.exec(ventana);
+    const item = {
+      id: 'otv-ep-' + slug,
+      ref: 'otv:' + slug,
+      title: slugATitulo(slug),
+      kind: 'series',
+      poster: otvPoster(slug, 'anime')
+    };
+    item.badges = ['EP ' + n];
+    if (im) item.backdrop = 'https://www.otakustv.net/cdn/img/episodios/' + im[1] + '-' + im[2] + '.webp';
+    items.push(item);
+  }
+  return items;
+}
+
+registrarFuente({
+  id: 'otv',
+  etiqueta: 'OtakusTV',
+
+  /* Sin buscador público conocido (el ?s= lo ignora): se buscan las primeras
+   * páginas del directorio y se filtra por título, sin acentos ni mayúsculas. */
+  async buscar(q) {
+    const texto = String(q || '').trim();
+    if (texto.length < 2) return [];
+    const paginas = await Promise.all([1, 2, 3, 4].map(async (p) => {
+      try {
+        const r = await traer(BASE_OTV + '/animes?pag=' + p, { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 9000 });
+        return r.ok ? otvTarjetas(r.text, 'anime') : [];
+      } catch (e) { return []; }
+    }));
+    const out = [];
+    const vistos = new Set();
+    for (const items of paginas) {
+      for (const it of items) {
+        if (vistos.has(it.ref)) continue;
+        vistos.add(it.ref);
+        if (titulosParecen(texto, it.title)) {
+          it.badges = ['OtakusTV'];
+          out.push(it);
+        }
+      }
+    }
+    return out.slice(0, 25);
+  },
+
+  async portada() {
+    const tareas = [
+      (async () => {
+        const r = await traer(BASE_OTV + '/animes-en-emision', { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 9000 });
+        const items = otvTarjetas(r.text, 'portada').slice(0, 20);
+        return items.length ? { id: 'otv-emision', title: 'En emisión · OtakusTV', ref: 'otv-emision', items: items } : null;
+      })(),
+      (async () => {
+        const r = await traer(BASE_OTV + '/', { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 9000 });
+        const items = otvEpisodiosDe(r.text).slice(0, 20);
+        return items.length ? { id: 'otv-eps', title: 'Últimos episodios · OtakusTV', ref: 'otv-eps', items: items } : null;
+      })(),
+      (async () => {
+        const r = await traer(BASE_OTV + '/animes?pag=1', { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 9000 });
+        const items = otvTarjetas(r.text, 'anime').slice(0, 20);
+        return items.length ? { id: 'otv-animes', title: 'Directorio · OtakusTV', ref: 'otv-animes', items: items } : null;
+      })()
+    ];
+    const rtas = await Promise.all(tareas.map((t) => t.catch((e) => { log('otv fila', (e && e.message) || e); return null; })));
+    const filas = [];
+    for (const fila of rtas) if (fila) filas.push(fila);
+    return filas;
+  },
+
+  async hoja(ref, cursor) {
+    const num = Math.max(1, parseInt(String(cursor || '1'), 10) || 1);
+    if (ref === 'otv-emision') {
+      const r = await traer(BASE_OTV + '/animes-en-emision', { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 10000 });
+      const items = otvTarjetas(r.text, 'portada').slice(0, 40);
+      return { items: items, next: null };
+    }
+    if (ref === 'otv-eps') {
+      const r = await traer(BASE_OTV + '/', { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 10000 });
+      const items = otvEpisodiosDe(r.text).slice(0, 40);
+      return { items: items, next: null };
+    }
+    if (ref === 'otv-animes') {
+      const r = await traer(BASE_OTV + '/animes?pag=' + num, { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 10000 });
+      const items = otvTarjetas(r.text, 'anime');
+      if (!items.length) return { items: [], next: null };
+      return { items: items.slice(0, 40), next: String(num + 1) };
+    }
+    return null;
+  },
+
+  async detalle(slug) {
+    const r = await traer(BASE_OTV + '/anime/' + slug, { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 10000 });
+    if (!r.ok || !r.text) return null;
+    const serie = { title: slugATitulo(slug) };
+    const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
+    if (h) serie.title = limpio(h[1]) || serie.title;
+    const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(r.text) ||
+      /content=["']([^"']+)["'][^>]*property=["']og:image["']/i.exec(r.text);
+    if (og) serie.poster = og[1];
+    if (!serie.poster) serie.poster = otvPoster(slug, 'portada');
+    const sinM = /<p[^>]*>([^<]{30,600})<\/p>/i.exec(r.text);
+    if (sinM) serie.overview = limpio(sinM[1]).slice(0, 400);
+    return serie;
+  },
+
+  async episodios(slug) {
+    const r = await traer(BASE_OTV + '/anime/' + slug, { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 10000 });
+    if (!r.ok || !r.text) {
+      throw kino.error('unavailable', 'OtakusTV no entregó la serie', {
+        userMessage: 'OtakusTV no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    const re = /\/ver\/([a-z0-9-]+)-(\d+)/gi;
+    const numeros = new Set();
+    let m;
+    while ((m = re.exec(r.text))) {
+      if (m[1] === slug) numeros.add(parseInt(m[2], 10));
+    }
+    if (!numeros.size) {
+      throw kino.error('not_found', 'OtakusTV: 0 capítulos', {
+        userMessage: 'No se pudieron leer los capítulos de esta serie en OtakusTV.'
+      });
+    }
+    const lista = [];
+    for (const n of numeros) {
+      if (n < 1 || n > 9999) continue;
+      lista.push({ season: 1, number: n, ref: 'otv:' + slug + ':' + n, title: 'Episodio ' + n });
+    }
+    lista.sort((a, b) => a.number - b.number);
+    return { series: { title: slugATitulo(slug) }, episodes: lista };
+  },
+
+  async resolver(slug, n, idx) {
+    const num = n || 1;
+    const r = await traer(BASE_OTV + '/ver/' + slug + '-' + num, { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 10000 });
+    if (!r.ok || !r.text) {
+      throw kino.error('not_found', 'OtakusTV no entregó el episodio', {
+        userMessage: 'No se pudo abrir este episodio en OtakusTV.'
+      });
+    }
+    const servers = servidoresDePagina(r.text);
+    if (!servers.length) {
+      throw kino.error('not_found', 'OtakusTV: sin reproductores legibles', {
+        userMessage: 'Este episodio no dejó ver sus reproductores en OtakusTV. Prueba otro episodio o más tarde.'
+      });
+    }
+    return await probarConCaptura(BASE_OTV + '/ver/' + slug + '-' + num, servers, idx, function (i) {
+      return 'otv:' + slug + ':' + num + ':' + i;
+    }, 'OtakusTV');
+  }
+});
+
+/* ---------- fuente: AnimeYT (animeyt.cc) ---------- */
+
+const BASE_AYT = 'https://animeyt.cc';
+
+function aytTarjetas(html) {
+  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/(?:tv|anime)\/([^"\/?#]+)[^>]*>([\s\S]{0,900}?)<\/a>/gi;
+  const items = [];
+  const vistos = new Set();
+  let m;
+  while ((m = re.exec(String(html || ''))) && items.length < 40) {
+    const slug = m[1];
+    if (!slug || /^(?:page|anime|tv|peliculas|movies)$/i.test(slug) || vistos.has(slug)) continue;
+    vistos.add(slug);
+    const ventana = m[2];
+    let titulo = '';
+    const al = /alt\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
+    const tt = /title\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
+    if (tt) titulo = decHtml(tt[1]);
+    else if (al) titulo = decHtml(al[1]);
+    if (!titulo) {
+      const h = /<h[1-6][^>]*>([\s\S]{1,200}?)<\/h[1-6]>/i.exec(ventana);
+      if (h) titulo = limpio(h[1]);
+    }
+    if (!titulo || titulo.length < 2) titulo = slugATitulo(slug);
+    const item = {
+      id: 'ayt-' + slug,
+      ref: 'ayt:' + slug,
+      title: titulo.slice(0, 200),
+      kind: /pel[íi]cula|movie/i.test(ventana) ? 'movie' : 'series'
+    };
+    const im = /(?:src|data-src)\s*=\s*["']([^"']+\.(?:jpg|jpeg|png|webp)[^"']*)["']/i.exec(ventana);
+    if (im) item.poster = im[1].indexOf('//') === 0 ? 'https:' + im[1] : im[1];
+    const ym = /\b(19\d{2}|20\d{2})\b/.exec(ventana);
+    if (ym) item.year = ym[1];
+    items.push(item);
+  }
+  return items;
+}
+
+registrarFuente({
+  id: 'ayt',
+  etiqueta: 'AnimeYT',
+
+  async buscar(q) {
+    const texto = String(q || '').trim().slice(0, 100);
+    if (texto.length < 2) return [];
+    try {
+      const r = await traer(BASE_AYT + '/?s=' + encodeURIComponent(texto), { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 10000 });
+      if (!r.ok) return [];
+      const items = aytTarjetas(r.text).slice(0, 25);
+      for (const it of items) it.badges = ['AnimeYT'];
+      return items;
+    } catch (e) {
+      log('ayt buscar', (e && e.message) || String(e));
+      return [];
+    }
+  },
+
+  async portada() {
+    const tareas = [
+      (async () => {
+        const r = await traer(BASE_AYT + '/tv/', { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 9000 });
+        const items = aytTarjetas(r.text).slice(0, 20);
+        return items.length ? { id: 'ayt-latest', title: 'Últimos agregados · AnimeYT', ref: 'ayt-latest', items: items } : null;
+      })(),
+      (async () => {
+        const r = await traer(BASE_AYT + '/tv/?tipo=pelicula', { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 9000 });
+        const items = aytTarjetas(r.text).slice(0, 20);
+        return items.length ? { id: 'ayt-peliculas', title: 'Películas · AnimeYT', ref: 'ayt-peliculas', items: items } : null;
+      })()
+    ];
+    const rtas = await Promise.all(tareas.map((t) => t.catch((e) => { log('ayt fila', (e && e.message) || e); return null; })));
+    const filas = [];
+    for (const fila of rtas) if (fila) filas.push(fila);
+    return filas;
+  },
+
+  async hoja(ref, cursor) {
+    const num = Math.max(1, parseInt(String(cursor || '1'), 10) || 1);
+    let camino = null;
+    if (ref === 'ayt-latest') camino = '/tv/' + (num > 1 ? 'page/' + num + '/' : '');
+    else if (ref === 'ayt-peliculas') camino = '/tv/' + (num > 1 ? 'page/' + num + '/' : '') + '?tipo=pelicula';
+    if (!camino) return null;
+    const r = await traer(BASE_AYT + camino, { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 10000 });
+    if (!r.ok) {
+      throw kino.error('unavailable', 'AnimeYT no respondió (status ' + r.status + ')', {
+        userMessage: 'AnimeYT no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    const items = aytTarjetas(r.text);
+    if (!items.length) return { items: [], next: null };
+    return { items: items.slice(0, 30), next: String(num + 1) };
+  },
+
+  async detalle(slug) {
+    const r = await traer(BASE_AYT + '/tv/' + slug, { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 10000 });
+    if (!r.ok || !r.text) return null;
+    const serie = { title: slugATitulo(slug) };
+    const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
+    if (h) serie.title = limpio(h[1]) || serie.title;
+    const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(r.text);
+    if (og) serie.poster = og[1].indexOf('//') === 0 ? 'https:' + og[1] : og[1];
+    const sinM = /<p[^>]*>([\s\S]{30,600}?)<\/p>/i.exec(r.text);
+    if (sinM) serie.overview = limpio(sinM[1]).slice(0, 400);
+    return serie;
+  },
+
+  async episodios(slug) {
+    const r = await traer(BASE_AYT + '/tv/' + slug, { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 10000 });
+    if (!r.ok || !r.text) {
+      throw kino.error('unavailable', 'AnimeYT no entregó la serie', {
+        userMessage: 'AnimeYT no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    /* Los episodios viven en /<id>/anime/<algo>-capitulo-N/ dentro de la ficha. */
+    const re = /href\s*=\s*["'][^"']*\/(\d+)\/anime\/([^"\/?#]+)-capitulo-(\d+)/gi;
+    const numeros = new Set();
+    let m;
+    while ((m = re.exec(r.text))) numeros.add(parseInt(m[3], 10));
+    if (!numeros.size) {
+      throw kino.error('not_found', 'AnimeYT: 0 capítulos', {
+        userMessage: 'No se pudieron leer los capítulos de esta serie en AnimeYT.'
+      });
+    }
+    const lista = [];
+    for (const n of numeros) {
+      if (n < 1 || n > 9999) continue;
+      lista.push({ season: 1, number: n, ref: 'ayt:' + slug + ':' + n, title: 'Episodio ' + n });
+    }
+    lista.sort((a, b) => a.number - b.number);
+    return { series: { title: slugATitulo(slug) }, episodes: lista };
+  },
+
+  async resolver(slug, n, idx) {
+    const num = n || 1;
+    /* La página del episodio lleva un id propio: se relee la ficha para dar
+     * con el enlace justo del capítulo pedido. */
+    const ficha = await traer(BASE_AYT + '/tv/' + slug, { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 10000 });
+    const re = new RegExp('href\\s*=\\s*["\'][^"\']*\\/(\\d+)\\/anime\\/([^"\\/?#]+)-capitulo-' + num, 'i');
+    const am = ficha.ok ? re.exec(ficha.text) : null;
+    if (!am) {
+      throw kino.error('not_found', 'AnimeYT: capítulo no hallado', {
+        userMessage: 'No se halló el enlace de este capítulo en AnimeYT.'
+      });
+    }
+    const epUrl = BASE_AYT + '/' + am[1] + '/anime/' + am[2] + '-capitulo-' + num;
+    const r = await traer(epUrl, { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 10000 });
+    if (!r.ok || !r.text) {
+      throw kino.error('not_found', 'AnimeYT no entregó el capítulo', {
+        userMessage: 'No se pudo abrir este capítulo en AnimeYT.'
+      });
+    }
+    const servers = servidoresDePagina(r.text);
+    if (!servers.length) {
+      throw kino.error('not_found', 'AnimeYT: sin reproductores legibles', {
+        userMessage: 'Este capítulo no dejó ver sus reproductores en AnimeYT. Prueba otro episodio o más tarde.'
+      });
+    }
+    return await probarConCaptura(epUrl, servers, idx, function (i) {
+      return 'ayt:' + slug + ':' + num + ':' + i;
+    }, 'AnimeYT');
+  }
+});
+
+/* ---------- fuente: EstrenosAnime (estrenosanime.net) ---------- */
+
+const BASE_EAS = 'https://estrenosanime.net';
+
+/* Las tarjetas de los listados: anclas /anime/<slug> con su ventanita. */
+function easFichas(html) {
+  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/anime\/([^"\/?#]+)[^>]*>([\s\S]{0,900}?)<\/a>/gi;
+  const items = [];
+  const vistos = new Set();
+  let m;
+  while ((m = re.exec(String(html || ''))) && items.length < 40) {
+    const slug = m[1];
+    if (!slug || vistos.has(slug)) continue;
+    vistos.add(slug);
+    const ventana = m[2];
+    let titulo = '';
+    const al = /alt\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
+    const tt = /title\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
+    if (tt) titulo = decHtml(tt[1]);
+    else if (al) titulo = decHtml(al[1]);
+    if (!titulo) {
+      const h = /<h[1-6][^>]*>([\s\S]{1,200}?)<\/h[1-6]>/i.exec(ventana);
+      if (h) titulo = limpio(h[1]);
+    }
+    if (!titulo || titulo.length < 2) titulo = slugATitulo(slug);
+    const item = {
+      id: 'eas-' + slug,
+      ref: 'eas:' + slug,
+      title: titulo.slice(0, 200),
+      kind: /pel[íi]cula|movie/i.test(ventana) ? 'movie' : 'series'
+    };
+    const im = /(?:src|data-src)\s*=\s*["']([^"']+\.(?:jpg|jpeg|png|webp)[^"']*)["']/i.exec(ventana);
+    if (im) item.poster = im[1].indexOf('//') === 0 ? 'https:' + im[1] : im[1];
+    items.push(item);
+  }
+  return items;
+}
+
+/* El feed de últimos episodios: anclas /ver/<slug>/episodio-N. */
+function easEpisodiosDe(html) {
+  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/ver\/([^"\/?#]+)\/episodio-(\d+)[^>]*>([\s\S]{0,600}?)<\/a>/gi;
+  const items = [];
+  const vistos = new Set();
+  let m;
+  while ((m = re.exec(String(html || ''))) && items.length < 25) {
+    const slug = m[1];
+    const n = parseInt(m[2], 10);
+    if (!slug || !n || vistos.has(slug)) continue;
+    vistos.add(slug);
+    const ventana = m[3];
+    const item = {
+      id: 'eas-ep-' + slug,
+      ref: 'eas:' + slug,
+      title: slugATitulo(slug),
+      kind: 'series'
+    };
+    item.badges = ['EP ' + n];
+    const im = /(?:src|data-src)\s*=\s*["']([^"']+\.(?:jpg|jpeg|png|webp)[^"']*)["']/i.exec(ventana);
+    if (im) {
+      const u = im[1].indexOf('//') === 0 ? 'https:' + im[1] : im[1];
+      item.backdrop = u;
+      item.poster = u;
+    }
+    items.push(item);
+  }
+  return items;
+}
+
+registrarFuente({
+  id: 'eas',
+  etiqueta: 'EstrenosAnime',
+
+  /* HONESTO: el sitio no ofrece búsqueda de texto pública (su página de
+   * filtro solo tiene géneros y estados); la búsqueda global de Kino sigue
+   * cubriendo con las demás fuentes. */
+  async buscar(q) {
+    log('eas: sin buscador propio, la búsqueda global sigue con las demás fuentes');
+    return [];
+  },
+
+  async portada() {
+    const defs = [
+      { id: 'eas-eps', titulo: 'Últimos episodios · EstrenosAnime', ref: 'eas-eps', camino: '/ultimo-episodios', eps: true },
+      { id: 'eas-sub', titulo: 'Sub español · EstrenosAnime', ref: 'eas-sub', camino: '/ultimo-subtitulado' },
+      { id: 'eas-lat', titulo: 'Latino · EstrenosAnime', ref: 'eas-lat', camino: '/ultimo-latino' },
+      { id: 'eas-popular', titulo: 'Popular · EstrenosAnime', ref: 'eas-popular', camino: '/popular' }
+    ];
+    const rtas = await Promise.all(defs.map(async (def) => {
+      try {
+        const r = await traer(BASE_EAS + def.camino, { headers: { Referer: BASE_EAS + '/' }, timeoutMs: 9000 });
+        const items = (def.eps ? easEpisodiosDe(r.text) : easFichas(r.text)).slice(0, 20);
+        return items.length ? { id: def.id, title: def.titulo, ref: def.ref, items: items } : null;
+      } catch (e) {
+        log('eas fila «' + def.titulo + '» falló', (e && e.message) || String(e));
+        return null;
+      }
+    }));
+    const filas = [];
+    for (const fila of rtas) if (fila) filas.push(fila);
+    return filas;
+  },
+
+  async hoja(ref) {
+    let camino = null;
+    let eps = false;
+    if (ref === 'eas-eps') { camino = '/ultimo-episodios'; eps = true; }
+    else if (ref === 'eas-sub') camino = '/ultimo-subtitulado';
+    else if (ref === 'eas-lat') camino = '/ultimo-latino';
+    else if (ref === 'eas-popular') camino = '/popular';
+    if (!camino) return null;
+    const r = await traer(BASE_EAS + camino, { headers: { Referer: BASE_EAS + '/' }, timeoutMs: 12000 });
+    if (!r.ok) {
+      throw kino.error('unavailable', 'EstrenosAnime no respondió (status ' + r.status + ')', {
+        userMessage: 'EstrenosAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    const items = (eps ? easEpisodiosDe(r.text) : easFichas(r.text)).slice(0, 60);
+    /* La paginación de sus listados no se pudo verificar: se entrega una
+     * página por hoja, sin inventar ?page= que no existe. */
+    return { items: items, next: null };
+  },
+
+  async detalle(slug) {
+    const r = await traer(BASE_EAS + '/anime/' + slug, { headers: { Referer: BASE_EAS + '/' }, timeoutMs: 10000 });
+    if (!r.ok || !r.text) return null;
+    const serie = { title: slugATitulo(slug) };
+    const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
+    if (h) serie.title = limpio(h[1]) || serie.title;
+    const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(r.text);
+    if (og) serie.poster = og[1].indexOf('//') === 0 ? 'https:' + og[1] : og[1];
+    const sinM = /<p[^>]*>([\s\S]{30,600}?)<\/p>/i.exec(r.text);
+    if (sinM) serie.overview = limpio(sinM[1]).slice(0, 400);
+    return serie;
+  },
+
+  async episodios(slug) {
+    const r = await traer(BASE_EAS + '/anime/' + slug, { headers: { Referer: BASE_EAS + '/' }, timeoutMs: 10000 });
+    if (!r.ok || !r.text) {
+      throw kino.error('unavailable', 'EstrenosAnime no entregó la serie', {
+        userMessage: 'EstrenosAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    const re = /\/ver\/([^"\/?#]+)\/episodio-(\d+)/gi;
+    const numeros = new Set();
+    let m;
+    while ((m = re.exec(r.text))) {
+      if (m[1] === slug) numeros.add(parseInt(m[2], 10));
+    }
+    if (!numeros.size) {
+      throw kino.error('not_found', 'EstrenosAnime: 0 capítulos', {
+        userMessage: 'No se pudieron leer los capítulos de esta serie en EstrenosAnime.'
+      });
+    }
+    const lista = [];
+    for (const n of numeros) {
+      if (n < 1 || n > 9999) continue;
+      lista.push({ season: 1, number: n, ref: 'eas:' + slug + ':' + n, title: 'Episodio ' + n });
+    }
+    lista.sort((a, b) => a.number - b.number);
+    return { series: { title: slugATitulo(slug) }, episodes: lista };
+  },
+
+  async resolver(slug, n, idx) {
+    const num = n || 1;
+    const epUrl = BASE_EAS + '/ver/' + slug + '/episodio-' + num;
+    const r = await traer(epUrl, { headers: { Referer: BASE_EAS + '/' }, timeoutMs: 10000 });
+    if (!r.ok || !r.text) {
+      throw kino.error('not_found', 'EstrenosAnime no entregó el episodio', {
+        userMessage: 'No se pudo abrir este episodio en EstrenosAnime.'
+      });
+    }
+    /* Su reproductor es un multiserver propio que carga por JavaScript; lo
+     * que se deje leer se prueba, y si no, la captura del episodio entero. */
+    const servers = servidoresDePagina(r.text);
+    return await probarConCaptura(epUrl, servers, idx, function (i) {
+      return 'eas:' + slug + ':' + num + ':' + i;
+    }, 'EstrenosAnime');
+  }
+});
+
+/* ---------- fuente: AnimeOnline (animeonline.ninja) ---------- */
+
+const BASE_AON = 'https://ww3.animeonline.ninja';
+
+/* Dooplay: las fichas pueden salir como /online/<slug>/ o como
+ * /temporada/<slug>-temporada-N/; ambas se normalizan al slug base. */
+function aonTarjetas(html) {
+  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/(?:online|temporada)\/([^"\/?#]+)[^>]*>([\s\S]{0,900}?)<\/a>/gi;
+  const items = [];
+  const vistos = new Set();
+  let m;
+  while ((m = re.exec(String(html || ''))) && items.length < 40) {
+    let slug = m[1];
+    slug = slug.replace(/-temporada-\d+$/i, '');
+    if (!slug || vistos.has(slug)) continue;
+    vistos.add(slug);
+    const ventana = m[2];
+    let titulo = '';
+    const al = /alt\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
+    const tt = /(?:oldtitle|title)\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
+    if (tt) titulo = decHtml(tt[1]);
+    else if (al) titulo = decHtml(al[1]);
+    if (!titulo) {
+      const h = /<h[1-6][^>]*>([\s\S]{1,200}?)<\/h[1-6]>/i.exec(ventana);
+      if (h) titulo = limpio(h[1]);
+    }
+    if (!titulo || titulo.length < 2) titulo = slugATitulo(slug);
+    const item = {
+      id: 'aon-' + slug,
+      ref: 'aon:' + slug,
+      title: titulo.slice(0, 200),
+      kind: 'series'
+    };
+    const im = /(?:src|data-litespeed-src|data-src)\s*=\s*["']([^"']+\.(?:jpg|jpeg|png|webp)[^"']*)["']/i.exec(ventana);
+    if (im) item.poster = im[1].indexOf('//') === 0 ? 'https:' + im[1] : im[1];
+    items.push(item);
+  }
+  return items;
+}
+
+async function aonPaginaDeSerie(slug) {
+  /* La ficha de la temporada 1 manda; si no existe, la página /online/. */
+  const t = await traer(BASE_AON + '/temporada/' + slug + '-temporada-1/', { headers: { Referer: BASE_AON + '/' }, timeoutMs: 10000 });
+  if (t.ok && t.text) return t;
+  const o = await traer(BASE_AON + '/online/' + slug + '/', { headers: { Referer: BASE_AON + '/' }, timeoutMs: 10000 });
+  return o;
+}
+
+registrarFuente({
+  id: 'aon',
+  etiqueta: 'AnimeOnline',
+
+  async buscar(q) {
+    const texto = String(q || '').trim().slice(0, 100);
+    if (texto.length < 2) return [];
+    try {
+      /* Dooplay busca en /?s=<q>; las fichas salen con sus enlaces de siempre. */
+      const r = await traer(BASE_AON + '/?s=' + encodeURIComponent(texto), { headers: { Referer: BASE_AON + '/' }, timeoutMs: 10000 });
+      if (!r.ok) return [];
+      const items = aonTarjetas(r.text).slice(0, 25);
+      for (const it of items) it.badges = ['AnimeOnline'];
+      return items;
+    } catch (e) {
+      log('aon buscar', (e && e.message) || String(e));
+      return [];
+    }
+  },
+
+  async portada() {
+    try {
+      const r = await traer(BASE_AON + '/genero/ver-anime/', { headers: { Referer: BASE_AON + '/' }, timeoutMs: 10000 });
+      const items = aonTarjetas(r.text).slice(0, 20);
+      if (items.length) return [{ id: 'aon-anime', title: 'Anime · AnimeOnline', ref: 'aon-anime', items: items }];
+    } catch (e) {
+      log('aon fila', (e && e.message) || e);
+    }
+    return [];
+  },
+
+  async hoja(ref) {
+    if (ref !== 'aon-anime') return null;
+    const r = await traer(BASE_AON + '/genero/ver-anime/', { headers: { Referer: BASE_AON + '/' }, timeoutMs: 12000 });
+    if (!r.ok) {
+      throw kino.error('unavailable', 'AnimeOnline no respondió (status ' + r.status + ')', {
+        userMessage: 'AnimeOnline no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    const items = aonTarjetas(r.text).slice(0, 60);
+    return { items: items, next: null };
+  },
+
+  async detalle(slug) {
+    const r = await aonPaginaDeSerie(slug);
+    if (!r.ok || !r.text) return null;
+    const serie = { title: slugATitulo(slug) };
+    const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
+    if (h) serie.title = limpio(h[1]) || serie.title;
+    const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(r.text);
+    if (og) serie.poster = og[1].indexOf('//') === 0 ? 'https:' + og[1] : og[1];
+    const sinM = /<p[^>]*>([\s\S]{30,600}?)<\/p>/i.exec(r.text);
+    if (sinM) serie.overview = limpio(sinM[1]).slice(0, 400);
+    return serie;
+  },
+
+  async episodios(slug) {
+    const r = await aonPaginaDeSerie(slug);
+    if (!r.ok || !r.text) {
+      throw kino.error('unavailable', 'AnimeOnline no entregó la serie', {
+        userMessage: 'AnimeOnline no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    /* Los episodios de Dooplay: anclas /episodio/<epslug>/ con el número en
+     * la propia dirección (…-cap-9) o en la fila de la tabla. */
+    const re = /href\s*=\s*["'][^"']*\/episodio\/([^"\/?#]+)/gi;
+    const vistos = new Set();
+    const lista = [];
+    let m;
+    let pos = 0;
+    while ((m = re.exec(r.text))) {
+      const epslug = m[1];
+      if (vistos.has(epslug)) continue;
+      vistos.add(epslug);
+      pos++;
+      const nm = /-(?:cap-?|episodio-?|ep-?)(\d+)$/i.exec(epslug);
+      const n = nm ? parseInt(nm[1], 10) : pos;
+      if (n < 1 || n > 9999) continue;
+      lista.push({ season: 1, number: n, ref: 'aon:' + epslug + ':' + n, title: 'Episodio ' + n });
+    }
+    if (!lista.length) {
+      throw kino.error('not_found', 'AnimeOnline: 0 capítulos', {
+        userMessage: 'No se pudieron leer los capítulos de esta serie en AnimeOnline.'
+      });
+    }
+    lista.sort((a, b) => a.number - b.number);
+    return { series: { title: slugATitulo(slug) }, episodes: lista };
+  },
+
+  async resolver(epslug, n, idx) {
+    const epUrl = BASE_AON + '/episodio/' + epslug + '/';
+    const r = await traer(epUrl, { headers: { Referer: BASE_AON + '/' }, timeoutMs: 10000 });
+    if (!r.ok || !r.text) {
+      throw kino.error('not_found', 'AnimeOnline no entregó el episodio', {
+        userMessage: 'No se pudo abrir este episodio en AnimeOnline.'
+      });
+    }
+    /* Su único streaming es el multiserver (saidochesto.top): la captura
+     * del navegador oculto es la red de seguridad de siempre. */
+    const servers = servidoresDePagina(r.text);
+    return await probarConCaptura(epUrl, servers, idx, function (i) {
+      return 'aon:' + epslug + ':' + (n || 1) + ':' + i;
+    }, 'AnimeOnline');
+  }
+});
+
+/* ---------- fuente: IvAnime (ivanime.buzz, espejo de ivanime.top) ---------- */
+
+const BASE_IVA = 'https://ivanime.buzz';
+
+function ivaTarjetas(html) {
+  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/anime\/([^"\/?#]+)[^>]*>([\s\S]{0,900}?)<\/a>/gi;
+  const items = [];
+  const vistos = new Set();
+  let m;
+  while ((m = re.exec(String(html || ''))) && items.length < 40) {
+    const slug = m[1];
+    if (!slug || vistos.has(slug)) continue;
+    vistos.add(slug);
+    const ventana = m[2];
+    let titulo = '';
+    const al = /alt\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
+    const tt = /title\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
+    if (tt) titulo = decHtml(tt[1]);
+    else if (al) titulo = decHtml(al[1]);
+    if (!titulo) {
+      const h = /<h[1-6][^>]*>([\s\S]{1,200}?)<\/h[1-6]>/i.exec(ventana);
+      if (h) titulo = limpio(h[1]);
+    }
+    if (!titulo || titulo.length < 2) titulo = slugATitulo(slug);
+    const item = {
+      id: 'iva-' + slug,
+      ref: 'iva:' + slug,
+      title: titulo.slice(0, 200),
+      kind: 'series'
+    };
+    const im = /(?:src|data-src)\s*=\s*["']([^"']+\.(?:jpg|jpeg|png|webp)[^"']*)["']/i.exec(ventana);
+    if (im) item.poster = im[1].indexOf('//') === 0 ? 'https:' + im[1] : im[1];
+    items.push(item);
+  }
+  return items;
+}
+
+registrarFuente({
+  id: 'iva',
+  etiqueta: 'IvAnime',
+
+  async buscar(q) {
+    const texto = String(q || '').trim().slice(0, 100);
+    if (texto.length < 2) return [];
+    try {
+      /* Se prueba el ?s= de siempre; si el sitio lo ignora, se filtra el
+       * Inicio por título como plan B honesto. */
+      const r = await traer(BASE_IVA + '/?s=' + encodeURIComponent(texto), { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 10000 });
+      if (r.ok) {
+        const items = aytTarjetas(r.text).concat(ivaTarjetas(r.text)).slice(0, 40)
+          .filter((it) => titulosParecen(texto, it.title));
+        for (const it of items) it.badges = ['IvAnime'];
+        if (items.length) return items.slice(0, 25);
+      }
+    } catch (e) {
+      log('iva buscar', (e && e.message) || String(e));
+    }
+    try {
+      const r2 = await traer(BASE_IVA + '/', { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 10000 });
+      const items = ivaTarjetas(r2.text).filter((it) => titulosParecen(texto, it.title));
+      for (const it of items) it.badges = ['IvAnime'];
+      return items.slice(0, 25);
+    } catch (e2) {
+      return [];
+    }
+  },
+
+  async portada() {
+    try {
+      const r = await traer(BASE_IVA + '/', { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 10000 });
+      const items = ivaTarjetas(r.text).slice(0, 20);
+      if (items.length) return [{ id: 'iva-emision', title: 'En emisión · IvAnime', ref: 'iva-emision', items: items }];
+    } catch (e) {
+      log('iva fila', (e && e.message) || e);
+    }
+    return [];
+  },
+
+  async hoja(ref) {
+    if (ref !== 'iva-emision') return null;
+    const r = await traer(BASE_IVA + '/', { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 12000 });
+    if (!r.ok) {
+      throw kino.error('unavailable', 'IvAnime no respondió (status ' + r.status + ')', {
+        userMessage: 'IvAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    const items = ivaTarjetas(r.text).slice(0, 60);
+    return { items: items, next: null };
+  },
+
+  async detalle(slug) {
+    const r = await traer(BASE_IVA + '/anime/' + slug + '/', { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 10000 });
+    if (!r.ok || !r.text) return null;
+    const serie = { title: slugATitulo(slug) };
+    const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
+    if (h) serie.title = limpio(h[1]) || serie.title;
+    const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(r.text);
+    if (og) serie.poster = og[1].indexOf('//') === 0 ? 'https:' + og[1] : og[1];
+    const sinM = /<p[^>]*>([\s\S]{30,600}?)<\/p>/i.exec(r.text);
+    if (sinM) serie.overview = limpio(sinM[1]).slice(0, 400);
+    return serie;
+  },
+
+  async episodios(slug) {
+    const r = await traer(BASE_IVA + '/anime/' + slug + '/', { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 10000 });
+    if (!r.ok || !r.text) {
+      throw kino.error('unavailable', 'IvAnime no entregó la serie', {
+        userMessage: 'IvAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    /* La ficha lista sus capítulos como anclas /ver/<slug>-<n>/. */
+    const re = new RegExp('href\\s*=\\s*["\'][^"\']*\\/ver\\/' + slug + '-(\\d+)', 'gi');
+    const numeros = new Set();
+    let m;
+    while ((m = re.exec(r.text))) numeros.add(parseInt(m[1], 10));
+    if (!numeros.size) {
+      throw kino.error('not_found', 'IvAnime: 0 capítulos', {
+        userMessage: 'No se pudieron leer los capítulos de esta serie en IvAnime.'
+      });
+    }
+    const lista = [];
+    for (const n of numeros) {
+      if (n < 1 || n > 9999) continue;
+      lista.push({ season: 1, number: n, ref: 'iva:' + slug + ':' + n, title: 'Episodio ' + n });
+    }
+    lista.sort((a, b) => a.number - b.number);
+    return { series: { title: slugATitulo(slug) }, episodes: lista };
+  },
+
+  async resolver(slug, n, idx) {
+    const num = n || 1;
+    const epUrl = BASE_IVA + '/ver/' + slug + '-' + num + '/';
+    const r = await traer(epUrl, { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 10000 });
+    if (!r.ok || !r.text) {
+      throw kino.error('not_found', 'IvAnime no entregó el episodio', {
+        userMessage: 'No se pudo abrir este episodio en IvAnime.'
+      });
+    }
+    const servers = servidoresDePagina(r.text);
+    if (!servers.length) {
+      throw kino.error('not_found', 'IvAnime: sin reproductores legibles', {
+        userMessage: 'Este episodio no dejó ver sus reproductores en IvAnime. Prueba otro episodio o más tarde.'
+      });
+    }
+    return await probarConCaptura(epUrl, servers, idx, function (i) {
+      return 'iva:' + slug + ':' + num + ':' + i;
+    }, 'IvAnime');
+  }
+});
+
 /* ---------- exportaciones de Kino (el abanico del agregador) ---------- */
 
 function partirRef(ref) {
@@ -2035,7 +2989,12 @@ const FUENTES_PANTALLA = [
   { id: 'todas', nombre: 'Todas las fuentes' },
   { id: 'av1', nombre: 'AnimeAV1' },
   { id: 'mc', nombre: 'MonosChinos' },
-  { id: 'lat', nombre: 'LataAnime' }
+  { id: 'lat', nombre: 'LataAnime' },
+  { id: 'otv', nombre: 'OtakusTV' },
+  { id: 'ayt', nombre: 'AnimeYT' },
+  { id: 'eas', nombre: 'EstrenosAnime' },
+  { id: 'aon', nombre: 'AnimeOnline' },
+  { id: 'iva', nombre: 'IvAnime' }
 ];
 
 function fuenteValida(id) {
@@ -2106,7 +3065,20 @@ function sinSufijoFuente(titulo, etiqueta) {
    retira de los títulos (el nombre ya vive en el encabezado). AnimeAV1
    aporta su núcleo de cuatro filas; sus otras filas (Películas, Acción,
    Fantasía) se ven al tocar su nombre, en su propia sección. */
-const NUCLEO_AV1_EN_TODAS = ['av1-row-eps', 'av1-latest', 'av1-populares', 'av1-score'];
+/* v0.6.0 — la cosecha: cinco fuentes nuevas (OtakusTV, AnimeYT,
+   EstrenosAnime, AnimeOnline, IvAnime). En «Todas», cada fuente nueva
+   aporta su núcleo (una o dos filas) y el resto vive en su sección
+   propia, al tocar su nombre. Los multiservers propios (los «Multiserver»
+   opacos que cargan por JavaScript) se abren con la captura del navegador
+   oculto; la honestidad manda: sin reproductor legible, mensaje claro. */
+const NUCLEO_TODAS = {
+  av1: ['av1-row-eps', 'av1-latest', 'av1-populares', 'av1-score'],
+  otv: ['otv-emision', 'otv-eps'],
+  ayt: ['ayt-latest'],
+  eas: ['eas-eps', 'eas-sub'],
+  aon: ['aon-anime'],
+  iva: ['iva-emision']
+};
 
 async function cargarPantalla(fuente) {
   let filas = [];
@@ -2124,7 +3096,8 @@ async function cargarPantalla(fuente) {
       if (!rtas[i]) continue;
       const f = fuentes[i];
       for (const fila of rtas[i]) {
-        if (f.id === 'av1' && NUCLEO_AV1_EN_TODAS.indexOf(fila.id) < 0) continue;
+        const nucleo = NUCLEO_TODAS[f.id];
+        if (nucleo && nucleo.indexOf(fila.id) < 0) continue;
         filas.push({
           id: fila.id,
           title: sinSufijoFuente(fila.title, f.etiqueta),
