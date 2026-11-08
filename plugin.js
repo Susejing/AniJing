@@ -48,8 +48,19 @@
 // lo llevaban. La pantalla pide apiVersion 19 por la barrita única
 // (mergeWithKinoBar); el selector y el destacado viven en el estado de la
 // pantalla (tope 64 KB: 12 títulos por riel, sin sinopsis).
+//
+// AniJing v0.5.0 «El Inicio ordenado» — «Todas» deja de ser un revoltijo:
+// cada fuente ocupa su propia sección con un encabezado grande arriba
+// (AnimeAV1, MonosChinos, LataAnime; tocar el nombre pasa a ver solo esa
+// fuente) y debajo solo sus rieles, sin el sufijo «· Fuente» que doblaba
+// el nombre. En «Todas», AnimeAV1 aporta su núcleo (Últimos episodios,
+// Últimos agregados, Populares y Mejor puntuados): sus otras filas
+// (Películas, Acción, Fantasía) viven en su sección propia, al tocar su
+// nombre. Las secciones dan aire entre bloques y el scroll se lee por
+// partes, como el Inicio de MangaTrack: destacado, secciones, y cada
+// riel con su «Ver más».
 
-const VERSION = '0.4.0';
+const VERSION = '0.5.0';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -2090,6 +2101,13 @@ function sinSufijoFuente(titulo, etiqueta) {
   return titulo;
 }
 
+/* v0.5.0 — en «Todas» cada fuente ocupa su sección: el encabezado nombra
+   a la fuente (y se toca para verla sola) y el sufijo «· Fuente» se
+   retira de los títulos (el nombre ya vive en el encabezado). AnimeAV1
+   aporta su núcleo de cuatro filas; sus otras filas (Películas, Acción,
+   Fantasía) se ven al tocar su nombre, en su propia sección. */
+const NUCLEO_AV1_EN_TODAS = ['av1-row-eps', 'av1-latest', 'av1-populares', 'av1-score'];
+
 async function cargarPantalla(fuente) {
   let filas = [];
   if (fuente === 'todas') {
@@ -2103,7 +2121,18 @@ async function cargarPantalla(fuente) {
       }
     }));
     for (let i = 0; i < fuentes.length; i++) {
-      if (rtas[i]) for (const fila of rtas[i]) filas.push(fila);
+      if (!rtas[i]) continue;
+      const f = fuentes[i];
+      for (const fila of rtas[i]) {
+        if (f.id === 'av1' && NUCLEO_AV1_EN_TODAS.indexOf(fila.id) < 0) continue;
+        filas.push({
+          id: fila.id,
+          title: sinSufijoFuente(fila.title, f.etiqueta),
+          ref: fila.ref || null,
+          fuente: f.id,
+          items: fila.items || []
+        });
+      }
     }
     if (!filas.length) {
       throw kino.error('unavailable', 'ninguna fuente armó la portada', {
@@ -2115,14 +2144,17 @@ async function cargarPantalla(fuente) {
     if (!f) return { filas: [], hero: null };
     filas = await f.portada();
     if (!Array.isArray(filas) || !filas.length) return { filas: [], hero: null };
-    for (const fila of filas) fila.title = sinSufijoFuente(fila.title, f.etiqueta);
+    for (const fila of filas) {
+      fila.title = sinSufijoFuente(fila.title, f.etiqueta);
+      fila.fuente = f.id;
+    }
   }
   const hero = fuente === 'todas' || fuente === 'av1' ? await heroDeAv1() : null;
   const fuera = [];
   for (const fila of filas) {
     const items = (fila.items || []).slice(0, 12).map(compactarItem);
     if (!items.length) continue;
-    fuera.push({ id: fila.id, title: fila.title, ref: fila.ref || null, items: items });
+    fuera.push({ id: fila.id, title: fila.title, ref: fila.ref || null, fuente: fila.fuente || '', items: items });
   }
   return { filas: fuera, hero: hero };
 }
@@ -2162,10 +2194,42 @@ async function screen(arg) {
       heroNodo.buttons = [{ type: 'ElevatedButton', labelText: 'Ver la serie', onPressed: { go: { title: { ref: hero.ref, kind: 'series' } } } }];
       cuerpo.push(heroNodo);
     }
-    for (const fila of filas) {
+    const rielDe = function (fila) {
       const riel = { type: 'titleRail', title: fila.title, items: fila.items };
       if (fila.ref) riel.ref = fila.ref;
-      cuerpo.push(riel);
+      return riel;
+    };
+    if (state.fuente === 'todas') {
+      /* v0.5.0 — «Todas» se lee por secciones: un encabezado por fuente
+         (tocarlo pasa a esa fuente) y debajo sus rieles; cada bloque con
+         su aire para que el scroll se lea por partes, no amontonado. */
+      const bloques = [];
+      const vistos = {};
+      for (const fila of filas) {
+        const fid = fila.fuente || 'av1';
+        if (!vistos[fid]) {
+          vistos[fid] = true;
+          bloques.push({ fuente: fid, rieles: [] });
+        }
+        for (let b = 0; b < bloques.length; b++) {
+          if (bloques[b].fuente === fid) bloques[b].rieles.push(rielDe(fila));
+        }
+      }
+      for (const b of bloques) {
+        const f = FUENTES[b.fuente];
+        const hijos = [{
+          type: 'Text',
+          text: f ? f.etiqueta : b.fuente,
+          style: 'h3',
+          tooltip: 'Ver solo esta fuente',
+          tooltipEn: 'Show this source only',
+          onTap: { event: 'fuente', arg: b.fuente }
+        }];
+        for (const riel of b.rieles) hijos.push(riel);
+        cuerpo.push({ type: 'Column', gap: 12, children: hijos });
+      }
+    } else {
+      for (const fila of filas) cuerpo.push(rielDe(fila));
     }
   }
   return {
