@@ -1,18 +1,159 @@
 {
   "id": "anijing",
   "name": "AniJing",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "apiVersion": 14,
   "entry": "plugin.js",
-  "description": "Anime en español desde AnimeAV1: catálogo con carátulas, siete filas de portada (últimos episodios, populares, mejor puntuados, películas y más), búsqueda, fichas y episodios con capturas. El anime con la firma de Susejing.",
+  "description": "Anime en español desde AnimeAV1, MonosChinos y LataAnime: catálogo, búsqueda, fichas y episodios con 13 extractores de servidores (Voe, MP4Upload, MixDrop, UPNShare, StreamTape, Dood, Ok.ru y más) y reproducción directa HLS. El anime con la firma de Susejing.",
   "author": "Susejing",
   "homepage": "https://github.com/Susejing/AniJing",
   "hosts": [
+    "*.mp4upload.com",
+    "*.mxcontent.net",
+    "*.tapecontent.net",
+    "*.uns.bio",
+    "*.vidcache.net",
+    "*.voe.sx",
+    "*.yourupload.com",
+    "*.zilla-networks.com",
+    "a3.mp4upload.com",
+    "a4.mp4upload.com",
+    "a5.mp4upload.com",
+    "a6.mp4upload.com",
+    "ahvsh.com",
+    "andreagrabinduce.com",
     "animeav1.com",
-    "*.animeav1.com",
+    "asnwish.com",
+    "awish.pro",
+    "byse.sx",
+    "bysebuho.com",
+    "bysedikamoum.com",
+    "bysejikuar.com",
+    "bysekoze.com",
+    "byselapuix.com",
+    "bysesayeveum.com",
+    "bysevepoin.com",
+    "bysewihe.com",
+    "bysezoxexe.com",
+    "cdn.animeav1.com",
+    "charlestoughrace.com",
+    "cloudwindow-route.com",
+    "d-s.io",
+    "d0000d.com",
+    "d000d.com",
+    "derricknationtop.com",
+    "donaldlineelse.com",
+    "dood.cx",
+    "dood.la",
+    "dood.li",
+    "dood.pm",
+    "dood.re",
+    "dood.sh",
+    "dood.so",
+    "dood.stream",
+    "dood.to",
+    "dood.watch",
+    "dood.wf",
+    "dood.work",
+    "dood.ws",
+    "dood.yt",
+    "doodstream.com",
+    "dooood.com",
+    "ds2play.com",
+    "ds2video.com",
+    "dsvplay.com",
+    "embedwish.com",
+    "f16px.com",
+    "filemoon.eu",
+    "filemoon.in",
+    "filemoon.link",
+    "filemoon.nl",
+    "filemoon.sx",
+    "filemoon.to",
+    "filemoon.wf",
+    "hexload.com",
+    "hexload.net",
+    "hlswish.com",
+    "jeremyparticipantanything.com",
+    "jilliandescribecompany.com",
+    "latanime.org",
+    "lulucdn.com",
+    "lulustream.com",
+    "luluvdo.com",
+    "m.ok.ru",
+    "mdbekjwqa.pw",
+    "mdfx9dc8n.net",
+    "metagnathtuggers.com",
+    "mixdrop.ag",
+    "mixdrop.ch",
+    "mixdrop.co",
+    "mixdrop.ps",
+    "mixdrop.sb",
+    "mixdrop.to",
+    "mixdrop.top",
+    "monoschinos.st",
+    "mp4upload.com",
+    "mxcontent.net",
+    "mxdrop.click",
+    "mxdrop.to",
+    "myvidplay.com",
+    "n1mwq.org",
+    "nathanfromsubject.com",
+    "obeywish.com",
+    "odnoklassniki.ru",
+    "ok.ru",
     "player.zilla-networks.com",
-    "*.zilla-networks.com"
+    "playmogo.com",
+    "s1.savefiles.com",
+    "s2.savefiles.com",
+    "s3.savefiles.com",
+    "s4.savefiles.com",
+    "s5.savefiles.com",
+    "savefiles.com",
+    "simpulumlamerop.com",
+    "streamhls.com",
+    "streamhls.to",
+    "streamlyplayer.online",
+    "streamlyplayero.online",
+    "streamtape.com",
+    "streamwish.com",
+    "streamwish.to",
+    "strwish.com",
+    "tapecontent.net",
+    "teresapoliticallearn.com",
+    "tnmr.org",
+    "tubelessceliolymph.com",
+    "upn.one",
+    "upnshare.com",
+    "uqload.bz",
+    "uqload.co",
+    "uqload.com",
+    "uqload.cx",
+    "uqload.io",
+    "uqload.is",
+    "uqload.net",
+    "uqload.to",
+    "uqload.vc",
+    "uqload.ws",
+    "urochsunloath.com",
+    "vidcache.net",
+    "vide0.net",
+    "vidhide.com",
+    "vidhidepro.com",
+    "voe-network.net",
+    "voe-unblock.com",
+    "voe.sx",
+    "voeunblock.com",
+    "wishfast.top",
+    "www.monoschinos.st",
+    "www.mp4upload.com",
+    "www.ok.ru",
+    "www1.mp4upload.com",
+    "yip.su",
+    "yourupload.com"
   ],
+  "streamHosts": "any",
+  "browser": true,
   "capabilities": [
     "search",
     "home",
@@ -24,5 +165,113 @@
     "anime"
   ],
   "color": "#7C3AED",
-  "icon": "icon.png"
+  "icon": "icon.png",
+  "settings": [
+    {
+      "key": "idioma",
+      "type": "select",
+      "label": "Idioma preferido",
+      "hint": "Filtra los servidores por idioma (solo AnimeAV1)",
+      "default": "auto",
+      "options": [
+        {
+          "value": "auto",
+          "label": "Automático (todos)"
+        },
+        {
+          "value": "sub",
+          "label": "Subtitulado"
+        },
+        {
+          "value": "dub",
+          "label": "Doblado"
+        },
+        {
+          "value": "dub-sub",
+          "label": "Doblado o subtitulado"
+        }
+      ]
+    },
+    {
+      "key": "servidor",
+      "type": "select",
+      "label": "Servidor preferido",
+      "hint": "Lo primero que se prueba al abrir un episodio",
+      "default": "auto",
+      "options": [
+        {
+          "value": "auto",
+          "label": "Automático (mejor primero)"
+        },
+        {
+          "value": "zilla",
+          "label": "Zilla"
+        },
+        {
+          "value": "directo",
+          "label": "Enlace directo"
+        },
+        {
+          "value": "voe",
+          "label": "Voe"
+        },
+        {
+          "value": "upnshare",
+          "label": "UPNShare"
+        },
+        {
+          "value": "mixdrop",
+          "label": "MixDrop"
+        },
+        {
+          "value": "mp4upload",
+          "label": "MP4Upload"
+        },
+        {
+          "value": "uqload",
+          "label": "Uqload"
+        },
+        {
+          "value": "yourupload",
+          "label": "YourUpload"
+        },
+        {
+          "value": "streamtape",
+          "label": "StreamTape"
+        },
+        {
+          "value": "okru",
+          "label": "Ok.ru"
+        },
+        {
+          "value": "savefiles",
+          "label": "SaveFiles"
+        },
+        {
+          "value": "dood",
+          "label": "Doodstream"
+        },
+        {
+          "value": "hexload",
+          "label": "Hexload"
+        },
+        {
+          "value": "streamwish",
+          "label": "StreamWish"
+        },
+        {
+          "value": "filemoon",
+          "label": "Filemoon/Byse"
+        },
+        {
+          "value": "vidhide",
+          "label": "Vidhide"
+        },
+        {
+          "value": "lulu",
+          "label": "LuluStream"
+        }
+      ]
+    }
+  ]
 }
