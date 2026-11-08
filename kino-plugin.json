@@ -1,98 +1,28 @@
 {
-  "id": "archive-org",
-  "name": "Internet Archive",
-  "version": "1.4.2",
-  "apiVersion": 3,
+  "id": "anijing",
+  "name": "AniJing",
+  "version": "0.1.0",
+  "apiVersion": 14,
   "entry": "plugin.js",
-  "description": "Películas de dominio público y televisión clásica de archive.org",
-  "author": "kinotvapp",
-  "homepage": "https://github.com/kinotvapp/kino-plugin-archive",
+  "description": "Anime en español desde AnimeAV1: catálogo, búsqueda, episodios y reproducción HLS directa, con la sinopsis, los géneros y el id de MyAnimeList de cada serie. El anime con la firma de Susejing.",
+  "author": "Susejing",
+  "homepage": "https://github.com/Susejing/AniJing",
   "hosts": [
-    "archive.org",
-    "*.archive.org"
+    "animeav1.com",
+    "*.animeav1.com",
+    "player.zilla-networks.com",
+    "*.zilla-networks.com"
   ],
   "capabilities": [
     "search",
     "home",
     "browse",
     "episodes",
-    "resolve",
-    "download"
+    "resolve"
   ],
-  "color": "#E0A030",
-  "icon": "icon.png",
-  "settings": [
-    {
-      "key": "url1",
-      "label": "Dirección 1",
-      "type": "url",
-      "hint": "https://archive.org/details/… o una búsqueda"
-    },
-    {
-      "key": "cat1",
-      "label": "Categoría 1",
-      "type": "text",
-      "hint": "Opcional: nombre de la fila en el Home"
-    },
-    {
-      "key": "url2",
-      "label": "Dirección 2",
-      "type": "url",
-      "hint": "https://archive.org/details/… o una búsqueda"
-    },
-    {
-      "key": "cat2",
-      "label": "Categoría 2",
-      "type": "text",
-      "hint": "Opcional: nombre de la fila en el Home"
-    },
-    {
-      "key": "url3",
-      "label": "Dirección 3",
-      "type": "url",
-      "hint": "https://archive.org/details/… o una búsqueda"
-    },
-    {
-      "key": "cat3",
-      "label": "Categoría 3",
-      "type": "text",
-      "hint": "Opcional: nombre de la fila en el Home"
-    },
-    {
-      "key": "url4",
-      "label": "Dirección 4",
-      "type": "url",
-      "hint": "https://archive.org/details/… o una búsqueda"
-    },
-    {
-      "key": "cat4",
-      "label": "Categoría 4",
-      "type": "text",
-      "hint": "Opcional: nombre de la fila en el Home"
-    },
-    {
-      "key": "url5",
-      "label": "Dirección 5",
-      "type": "url",
-      "hint": "https://archive.org/details/… o una búsqueda"
-    },
-    {
-      "key": "cat5",
-      "label": "Categoría 5",
-      "type": "text",
-      "hint": "Opcional: nombre de la fila en el Home"
-    },
-    {
-      "key": "url6",
-      "label": "Dirección 6",
-      "type": "url",
-      "hint": "https://archive.org/details/… o una búsqueda"
-    },
-    {
-      "key": "cat6",
-      "label": "Categoría 6",
-      "type": "text",
-      "hint": "Opcional: nombre de la fila en el Home"
-    }
-  ]
+  "categories": [
+    "anime"
+  ],
+  "color": "#7C3AED",
+  "icon": "icon.png"
 }
