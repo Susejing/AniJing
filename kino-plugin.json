@@ -1,7 +1,7 @@
 {
   "id": "anijing",
   "name": "AniJing",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "apiVersion": 14,
   "entry": "plugin.js",
   "description": "Anime en español desde AnimeAV1: catálogo, búsqueda, episodios y reproducción HLS directa, con la sinopsis, los géneros y el id de MyAnimeList de cada serie. El anime con la firma de Susejing.",
