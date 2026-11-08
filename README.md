@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.0 «La cosecha»)
+## Qué hace (v0.6.1 «La compostura»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -30,6 +30,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.1 «La compostura»
+
+La 0.6.0 salió al teléfono y el teléfono mandó: cuatro reparaciones hechas con las capturas en la mano. **OtakusTV**: su página de episodio carga los reproductores con JavaScript (opciones sin URLs legibles), así que ya no hay guard que impida la captura — el navegador oculto abre el reproductor por defecto. **AnimeYT**: los pósters vienen en atributos de carga perezosa (ahora se leen) y sus reproductores se esconden tras un contenedor propio (mytsumi.com) que ahora se sondea para cosechar los servidores de adentro. **EstrenosAnime**: en sus listados la imagen va antes del enlace; ahora se mira también hacia atrás y las filas ya no quedan grises. **AnimeOnline**: las tarjetas del directorio enlazan a `/anime/<slug>/`, camino que ahora se acepta en ficha, episodios y portada (con respaldo en la home del sitio). IvAnime recibe el mismo ajuste del guard. Nada de promesas vacías: si un episodio no abre, cae a la captura y, si aún no, mensaje honesto.
 
 ## Instalación
 
