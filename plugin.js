@@ -72,7 +72,21 @@
 // propia crece a 9 fuentes en su menú y «Todas» respira: cada fuente
 // aporta su núcleo, el resto vive en su sección.
 
-const VERSION = '0.6.0';
+// v0.6.1 «La compostura» — la 0.6.0 salió al teléfono y el teléfono mandó:
+// cuatro reparaciones. OtakusTV: su página de episodio carga los players
+// con JavaScript (opciones sin URLs legibles), así que ya no hay guard que
+// impida la captura: el navegador oculto abre el player por defecto.
+// AnimeYT: los pósters vienen en atributos perezosos (data-lazy-src…) y
+// sus players se esconden tras un contenedor propio (mytsumi.com) que
+// ahora se sondea: se carga y se cosechan los servidores de adentro.
+// EstrenosAnime: en sus listados la imagen va antes del ancla; ahora se
+// mira también hacia atrás. AnimeOnline: las tarjetas del directorio
+// enlazan a /anime/<slug>/, camino que ahora se acepta (ficha, episodios
+// y portada con respaldo en la home). IvAnime: mismo guard fuera. Nada
+// de mentiras: si un episodio no abre, cae a la captura y si aún no,
+// mensaje honesto.
+
+const VERSION = '0.6.1';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -2004,6 +2018,78 @@ async function probarConCaptura(epUrl, servers, idx, refDe, etiqueta) {
   }
 }
 
+/* v0.6.1: el póster de una tarjeta puede venir en cualquier atributo de
+ * carga perezosa; se prueban en orden de prioridad (los data- primero:
+ * el src crudo suele ser un marcador de posición). */
+function posterEnVentana(ventana) {
+  const v = String(ventana || '');
+  const atributos = ['data-lazy-src', 'data-src', 'data-original', 'data-litespeed-src', 'src'];
+  for (let i = 0; i < atributos.length; i++) {
+    const re = new RegExp('\\b' + atributos[i] + '\\s*=\\s*["\']([^"\']*(?:\\.jpe?g|\\.png|\\.webp)[^"\']*)["\']', 'i');
+    const m = re.exec(v);
+    if (m && !/^data:/i.test(m[1])) {
+      return m[1].indexOf('//') === 0 ? 'https:' + m[1] : m[1];
+    }
+  }
+  return '';
+}
+
+/* v0.6.1: en algunos listados (EstrenosAnime) la imagen de la tarjeta va
+ * ANTES del ancla, fuera de la ventana del <a>: se mira hacia atrás y se
+ * toma el <img> más cercano. */
+function posterAntesDe(html, idx) {
+  const antes = String(html || '').slice(Math.max(0, idx - 600), idx);
+  const tags = antes.match(/<img\b[^>]*>/gi) || [];
+  for (let i = tags.length - 1; i >= 0; i--) {
+    const p = posterEnVentana(tags[i]);
+    if (p) return p;
+  }
+  return '';
+}
+
+/* v0.6.1: contenedores propios tipo mytsumi.com/container.php (AnimeYT):
+ * un iframe que no parece player pero que adentro enlaza los servidores
+ * de verdad (ok.ru, byse→filemoon…). Se sondea: se carga y se cosecha. */
+async function sondearContenedores(html) {
+  const texto = String(html || '');
+  const candidatos = [];
+  const ifRe = /<iframe[^>]+src\s*=\s*["']([^"']+)["'][^>]*>/gi;
+  let m;
+  while ((m = ifRe.exec(texto))) {
+    let u = m[1].trim();
+    if (u.indexOf('//') === 0) u = 'https:' + u;
+    if (!/^https?:\/\//i.test(u)) continue;
+    if (/(animeonline\.ninja|otakustv2?\.com|otakustv\.net|animeyt\.(?:cc|one|org)|estrenosanime\.net|ivanime\.(?:top|buzz)|saidochesto)/i.test(u)) continue;
+    candidatos.push(u);
+  }
+  const servers = [];
+  const vistos = {};
+  let sondeos = 0;
+  for (const u of candidatos) {
+    if (sondeos >= 2 || queda() < 6000) break;
+    if (detectarTipo('', u) !== 'generic') continue; /* ya es un player directo */
+    sondeos++;
+    try {
+      const r = await traer(u, { headers: { Referer: BASE_AYT + '/', 'User-Agent': UA }, timeoutMs: 8000 });
+      if (!r.ok || !r.text) continue;
+      const dentro = servidoresDePagina(r.text);
+      for (const s of dentro) {
+        const clave = s.tipo + '|' + s.url;
+        if (vistos[clave]) continue;
+        vistos[clave] = true;
+        servers.push(s);
+      }
+      if (dentro.length) log('sondeo de contenedor:', u, '->', dentro.length, 'servidores');
+    } catch (e) {
+      log('sondeo de contenedor falló:', u, (e && e.message) || e);
+    }
+  }
+  servers.sort(function (a, b) {
+    return (TIPO_ORDEN[a.tipo] || 20) - (TIPO_ORDEN[b.tipo] || 20);
+  });
+  return servers;
+}
+
 function sinAcentos(s) {
   return String(s || '').toLowerCase()
     .replace(/[áàäâ]/g, 'a').replace(/[éèëê]/g, 'e').replace(/[íìïî]/g, 'i')
@@ -2209,11 +2295,10 @@ registrarFuente({
       });
     }
     const servers = servidoresDePagina(r.text);
-    if (!servers.length) {
-      throw kino.error('not_found', 'OtakusTV: sin reproductores legibles', {
-        userMessage: 'Este episodio no dejó ver sus reproductores en OtakusTV. Prueba otro episodio o más tarde.'
-      });
-    }
+    /* v0.6.1: la página del episodio trae sus opciones (filemoon, byse,
+     * uqload…) pero las carga con JavaScript: sin URLs legibles en el HTML.
+     * Sin guard: con o sin servidores a la vista, probarConCaptura cae a
+     * la captura del navegador oculto, que abre el player por defecto. */
     return await probarConCaptura(BASE_OTV + '/ver/' + slug + '-' + num, servers, idx, function (i) {
       return 'otv:' + slug + ':' + num + ':' + i;
     }, 'OtakusTV');
@@ -2250,8 +2335,10 @@ function aytTarjetas(html) {
       title: titulo.slice(0, 200),
       kind: /pel[íi]cula|movie/i.test(ventana) ? 'movie' : 'series'
     };
-    const im = /(?:src|data-src)\s*=\s*["']([^"']+\.(?:jpg|jpeg|png|webp)[^"']*)["']/i.exec(ventana);
-    if (im) item.poster = im[1].indexOf('//') === 0 ? 'https:' + im[1] : im[1];
+    /* v0.6.1: póster con atributos de carga perezosa en orden de prioridad
+     * (antes solo src|data-src y las tarjetas quedaban grises). */
+    const poster = posterEnVentana(ventana);
+    if (poster) item.poster = poster;
     const ym = /\b(19\d{2}|20\d{2})\b/.exec(ventana);
     if (ym) item.year = ym[1];
     items.push(item);
@@ -2373,12 +2460,13 @@ registrarFuente({
       });
     }
     const servers = servidoresDePagina(r.text);
-    if (!servers.length) {
-      throw kino.error('not_found', 'AnimeYT: sin reproductores legibles', {
-        userMessage: 'Este capítulo no dejó ver sus reproductores en AnimeYT. Prueba otro episodio o más tarde.'
-      });
-    }
-    return await probarConCaptura(epUrl, servers, idx, function (i) {
+    /* v0.6.1: AnimeYT esconde sus players tras un contenedor propio
+     * (mytsumi.com/container.php) que no parece player: se sondea ese
+     * iframe y se cosechan los servidores de adentro. Sin guard: si ni
+     * así aparecen, probarConCaptura cae a la captura del navegador. */
+    const extra = await sondearContenedores(r.text);
+    const todos = servers.concat(extra);
+    return await probarConCaptura(epUrl, todos, idx, function (i) {
       return 'ayt:' + slug + ':' + num + ':' + i;
     }, 'AnimeYT');
   }
@@ -2415,8 +2503,11 @@ function easFichas(html) {
       title: titulo.slice(0, 200),
       kind: /pel[íi]cula|movie/i.test(ventana) ? 'movie' : 'series'
     };
-    const im = /(?:src|data-src)\s*=\s*["']([^"']+\.(?:jpg|jpeg|png|webp)[^"']*)["']/i.exec(ventana);
-    if (im) item.poster = im[1].indexOf('//') === 0 ? 'https:' + im[1] : im[1];
+    /* v0.6.1: la imagen de las tarjetas va ANTES del ancla en los listados
+     * del sitio; si no está dentro, se mira hacia atrás. */
+    let poster = posterEnVentana(ventana);
+    if (!poster) poster = posterAntesDe(String(html || ''), m.index);
+    if (poster) item.poster = poster;
     items.push(item);
   }
   return items;
@@ -2441,11 +2532,12 @@ function easEpisodiosDe(html) {
       kind: 'series'
     };
     item.badges = ['EP ' + n];
-    const im = /(?:src|data-src)\s*=\s*["']([^"']+\.(?:jpg|jpeg|png|webp)[^"']*)["']/i.exec(ventana);
-    if (im) {
-      const u = im[1].indexOf('//') === 0 ? 'https:' + im[1] : im[1];
-      item.backdrop = u;
-      item.poster = u;
+    /* v0.6.1: en el feed la imagen va ANTES del ancla del episodio. */
+    let poster = posterEnVentana(ventana);
+    if (!poster) poster = posterAntesDe(String(html || ''), m.index);
+    if (poster) {
+      item.backdrop = poster;
+      item.poster = poster;
     }
     items.push(item);
   }
@@ -2571,7 +2663,9 @@ const BASE_AON = 'https://ww3.animeonline.ninja';
 /* Dooplay: las fichas pueden salir como /online/<slug>/ o como
  * /temporada/<slug>-temporada-N/; ambas se normalizan al slug base. */
 function aonTarjetas(html) {
-  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/(?:online|temporada)\/([^"\/?#]+)[^>]*>([\s\S]{0,900}?)<\/a>/gi;
+  /* v0.6.1: las tarjetas del directorio enlazan a /anime/<slug>/ (además
+   * de las fichas /online/ y /temporada/ de siempre). */
+  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/(?:online|temporada|anime)\/([^"\/?#]+)[^>]*>([\s\S]{0,900}?)<\/a>/gi;
   const items = [];
   const vistos = new Set();
   let m;
@@ -2605,11 +2699,14 @@ function aonTarjetas(html) {
 }
 
 async function aonPaginaDeSerie(slug) {
-  /* La ficha de la temporada 1 manda; si no existe, la página /online/. */
+  /* La ficha de la temporada 1 manda; si no existe, la página /online/ y
+   * por último la ficha /anime/ (v0.6.1: las tarjetas del directorio
+   * enlazan ahí). */
   const t = await traer(BASE_AON + '/temporada/' + slug + '-temporada-1/', { headers: { Referer: BASE_AON + '/' }, timeoutMs: 10000 });
   if (t.ok && t.text) return t;
   const o = await traer(BASE_AON + '/online/' + slug + '/', { headers: { Referer: BASE_AON + '/' }, timeoutMs: 10000 });
-  return o;
+  if (o.ok && o.text) return o;
+  return await traer(BASE_AON + '/anime/' + slug + '/', { headers: { Referer: BASE_AON + '/' }, timeoutMs: 10000 });
 }
 
 registrarFuente({
@@ -2633,13 +2730,24 @@ registrarFuente({
   },
 
   async portada() {
+    let items = [];
     try {
       const r = await traer(BASE_AON + '/genero/ver-anime/', { headers: { Referer: BASE_AON + '/' }, timeoutMs: 10000 });
-      const items = aonTarjetas(r.text).slice(0, 20);
-      if (items.length) return [{ id: 'aon-anime', title: 'Anime · AnimeOnline', ref: 'aon-anime', items: items }];
+      items = aonTarjetas(r.text).slice(0, 20);
     } catch (e) {
       log('aon fila', (e && e.message) || e);
     }
+    /* v0.6.1: si el directorio no trajo nada, la home del tema Dooplay
+     * también trae tarjetas de series. */
+    if (!items.length) {
+      try {
+        const r2 = await traer(BASE_AON + '/', { headers: { Referer: BASE_AON + '/' }, timeoutMs: 10000 });
+        items = aonTarjetas(r2.text).slice(0, 20);
+      } catch (e) {
+        log('aon fila home', (e && e.message) || e);
+      }
+    }
+    if (items.length) return [{ id: 'aon-anime', title: 'Anime · AnimeOnline', ref: 'aon-anime', items: items }];
     return [];
   },
 
@@ -2767,8 +2875,21 @@ registrarFuente({
        * Inicio por título como plan B honesto. */
       const r = await traer(BASE_IVA + '/?s=' + encodeURIComponent(texto), { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 10000 });
       if (r.ok) {
-        const items = aytTarjetas(r.text).concat(ivaTarjetas(r.text)).slice(0, 40)
-          .filter((it) => titulosParecen(texto, it.title));
+        /* v0.6.1: las anclas de IvAnime también casan con el patrón de
+         * AnimeYT (ambos son /anime/<slug>/); esas tarjetas son de aquí:
+         * se reetiquetan para no mandarlas al resolver equivocado. */
+        const brutos = aytTarjetas(r.text).concat(ivaTarjetas(r.text)).slice(0, 40);
+        const items = [];
+        const vistos = new Set();
+        for (const it of brutos) {
+          const ref = 'iva:' + String(it.ref || '').slice(3);
+          if (!ref || vistos.has(ref)) continue;
+          vistos.add(ref);
+          it.ref = ref;
+          if (String(it.id || '').indexOf('ayt-') === 0) it.id = 'iva-' + String(it.id).slice(4);
+          if (!titulosParecen(texto, it.title)) continue;
+          items.push(it);
+        }
         for (const it of items) it.badges = ['IvAnime'];
         if (items.length) return items.slice(0, 25);
       }
@@ -2857,11 +2978,8 @@ registrarFuente({
       });
     }
     const servers = servidoresDePagina(r.text);
-    if (!servers.length) {
-      throw kino.error('not_found', 'IvAnime: sin reproductores legibles', {
-        userMessage: 'Este episodio no dejó ver sus reproductores en IvAnime. Prueba otro episodio o más tarde.'
-      });
-    }
+    /* v0.6.1: mismo criterio que OtakusTV: sin guard, la captura del
+     * navegador oculto queda como red de seguridad. */
     return await probarConCaptura(epUrl, servers, idx, function (i) {
       return 'iva:' + slug + ':' + num + ':' + i;
     }, 'IvAnime');
