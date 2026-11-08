@@ -1,10 +1,10 @@
 {
   "id": "anijing",
   "name": "AniJing",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "apiVersion": 14,
   "entry": "plugin.js",
-  "description": "Anime en español desde AnimeAV1: catálogo, búsqueda, episodios y reproducción HLS directa, con la sinopsis, los géneros y el id de MyAnimeList de cada serie. El anime con la firma de Susejing.",
+  "description": "Anime en español desde AnimeAV1: catálogo con carátulas, siete filas de portada (últimos episodios, populares, mejor puntuados, películas y más), búsqueda, fichas y episodios con capturas. El anime con la firma de Susejing.",
   "author": "Susejing",
   "homepage": "https://github.com/Susejing/AniJing",
   "hosts": [
