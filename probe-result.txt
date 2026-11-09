@@ -1,47 +1,28 @@
-=== IVA: home desktop, poster por nombre (regex del maestro) ===
-HOME status 200 bytes 110442 secs 1.1
-slugs /anime/ (primeros 12): []
-URLs /portada/ del html (primeras 12):
-   https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg
-   https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg
-   https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg
-   https://ivanime.buzz/assets/img/serie/portada/tantei-wa-mo-shindeiru-temporada-2-portada-1791392078.jpg
-   https://ivanime.buzz/assets/img/serie/portada/kanojo-no-tomodachi-portada-1791253718.jpg
-   https://ivanime.buzz/assets/img/serie/portada/black-clover-portada-1777582817.jpg
-   https://ivanime.buzz/assets/img/serie/portada/yasei-no-last-boss-ga-arawareta-temporada-2-portada-1790439553.jpg
-   https://ivanime.buzz/assets/img/serie/portada/seitokai-ni-mo-ana-wa-aru-portada-1791141404.jpg
-   https://ivanime.buzz/assets/img/serie/portada/tokyo-revengers-santen-sensou-hen-1791143214.jpg
-   https://ivanime.buzz/assets/thumbs/portada/psyren-portada-1791217377.jpg.webp
-   https://ivanime.buzz/assets/thumbs/portada/doumo-suki-na-hito-ni-horegusuri-wo-irai-sareta-majo-desu-portada-1791216945.jpg.webp
-   https://ivanime.buzz/assets/thumbs/portada/kanojo-no-tomodachi-portada-1791253718.jpg.webp
-contexto primera /portada/ (idx 11765 ):
-'"search-results-list search-results-list-mob m-0 p-0"></ul>\n      <a href="#" class="search-results-footer d-none" id="searchViewAllMob">Ver todos los resultados</a>\n    </div>\n  </div>\n</header>\n\n<div class="flex justify-center my-2 empty:my-0"></div>\n\n<div class="flex-1">\n\n<link rel="preload" as="image" href="https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg" media="(min-width: 768px)">\n\n\n<section id="hero" class="hero-section relative w-full overflow-hidden hidden md:block" style="height: clamp(460px, 72vh, 700px)" aria-label="Destacados">\n  <div id="h'
+=== v34: ivanime ventanas e imagenes ===
+--- home: 110180 bytes
+anclas /anime/ comillas dobles: 19
+anclas /anime/ comillas simples: 0
+data-src totales: 41
+--- emi: 5562 bytes
+anclas /anime/ comillas dobles: 0
+anclas /anime/ comillas simples: 0
+data-src totales: 0
+--- ani: 5559 bytes
+anclas /anime/ comillas dobles: 0
+anclas /anime/ comillas simples: 0
+data-src totales: 0
+--- primer card-wrap de emi:
+offset card-wrap: 
+cierre </a> del card-wrap a:  chars
+<!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="content-security-policy" content="default-src &#39;none&#39;; script-src &#39;nonce-OSf00FCmKfnrgJEXjrqTA5&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-src-attr &#39;none&#39;; style-src &#39;unsafe-inline&#39;; img-src &#39;self&#39; https://challenges.cloudflare.com; connect-src &#39;self&#39; https://challenges.cloudflare.com; frame-src &#39;self&#39; https://challenges.cloudflare.com blob:; child-src &#39;self&#39; https://challenges.cloudflare.com blob:; worker-src blob:; form-action http: https:; base-uri &#39;self&#39;"><style>*{box-sizing:border-box;margin:0;padding:0}html{line-height:1.15;-webkit-text-size-adjust:100%;color:#313131;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"}body{display:flex;flex-direction:column;height:100vh;min-height:100vh}.main-content{margin:8rem auto;padding-left:1.5rem;max-width:60rem}@media (width <= 720px){.main-content{margin-top:4rem}}#challenge-error-text{background-image:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgZmlsbD0ibm9uZSI+PHBhdGggZmlsbD0iI0IyMEYwMyIgZD0iTTE2IDNhMTMgMTMgMCAxIDAgMTMgMTNBMTMuMDE1IDEzLjAxNSAwIDAgMCAxNiAzbTAgMjRhMTEgMTEgMCAxIDEgMTEtMTEgMTEuMDEgMTEuMDEgMCAwI
+--- data-src del trozo:
+=== IMAGENES ===
+thumb: 
 
-=== IVA: /emision y /animes crudos ===
-/emision -> status 200 bytes 60456 secs 0.7 anclas anime 0 data-src 24
-  primera tarjeta: '      </div>\n    </div>\n  </div>\n</section>\n\n<main class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 pt-7 pb-10">\n    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3.5 gap-y-7 sm:gap-x-4 sm:gap-y-8">\n        <article>\n  <a href="https://ivanime.buzz/anime/demons-crest-sub-espanol" class="card-wrap block group">\n    <div class="relative rounded-xl overflow-hidden" style="aspect'
-/animes -> status 200 bytes 114901 secs 0.8 anclas anime 0 data-src 24
-  primera tarjeta: '  </div>\n\n    \n      </div>\n</div>\n</form>\n\n\n<main class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 pt-7 pb-10">\n    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3.5 gap-y-7 sm:gap-x-4 sm:gap-y-8">\n        <article>\n  <a href="https://ivanime.buzz/anime/demons-crest-sub-espanol" class="card-wrap block group">\n    <div class="relative rounded-xl overflow-hidden" style="aspect'
-/emision/ -> status 200 bytes 60456 secs 0.7 anclas anime 0 data-src 24
-  primera tarjeta: '      </div>\n    </div>\n  </div>\n</section>\n\n<main class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 pt-7 pb-10">\n    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3.5 gap-y-7 sm:gap-x-4 sm:gap-y-8">\n        <article>\n  <a href="https://ivanime.buzz/anime/demons-crest-sub-espanol" class="card-wrap block group">\n    <div class="relative rounded-xl overflow-hidden" style="aspect'
-/animes/ -> status 200 bytes 114901 secs 0.7 anclas anime 0 data-src 24
-  primera tarjeta: '  </div>\n\n    \n      </div>\n</div>\n</form>\n\n\n<main class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 pt-7 pb-10">\n    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3.5 gap-y-7 sm:gap-x-4 sm:gap-y-8">\n        <article>\n  <a href="https://ivanime.buzz/anime/demons-crest-sub-espanol" class="card-wrap block group">\n    <div class="relative rounded-xl overflow-hidden" style="aspect'
 
-=== IVA: las imagenes cargan sin galleta? ===
-https://ivanime.buzz/assets/thumbs/imagen/demons-crest-1793996605.jpg.webp?v=6 -> SIN referer: 0 HTTP Error 403: Forbidden -1 bytes 0.1 s
-https://ivanime.buzz/assets/thumbs/imagen/demons-crest-1793996605.jpg.webp?v=6 -> SIN referer: 0 HTTP Error 403: Forbidden -1 bytes 0.1 s
 
-=== IVA: home con UA Android (como el telefono) ===
-HOME movil status 200 bytes 110442 secs 0.6
-slugs moviles (primeros 8): []
-URLs /portada/ moviles (primeras 8):
-   https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg
-   https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg
-   https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg
-   https://ivanime.buzz/assets/img/serie/portada/tantei-wa-mo-shindeiru-temporada-2-portada-1791392078.jpg
-   https://ivanime.buzz/assets/img/serie/portada/kanojo-no-tomodachi-portada-1791253718.jpg
-   https://ivanime.buzz/assets/img/serie/portada/black-clover-portada-1777582817.jpg
-   https://ivanime.buzz/assets/img/serie/portada/yasei-no-last-boss-ga-arawareta-temporada-2-portada-1790439553.jpg
-   https://ivanime.buzz/assets/img/serie/portada/seitokai-ni-mo-ana-wa-aru-portada-1791141404.jpg
-contexto primera /portada/ movil (idx 11765 ):
-'"search-results-list search-results-list-mob m-0 p-0"></ul>\n      <a href="#" class="search-results-footer d-none" id="searchViewAllMob">Ver todos los resultados</a>\n    </div>\n  </div>\n</header>\n\n<div class="flex justify-center my-2 empty:my-0"></div>\n\n<div class="flex-1">\n\n<link rel="preload" as="image" href="https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg" media="(min-width: 768px)">\n\n\n<section id="hero" class="hero-section relative w-full overflow-hidden hidden md:block" style="height: clamp(460px, 72vh, 700px)" aria-label="Destacados">\n  <div id="h'
+
+portada home: https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg
+portada sin referer: 403 text/html; charset=UTF-8 5593 bytes
+portada via i0.wp.com: 403 text/html; charset=utf-8 65 bytes
+=== fin v34 ===
