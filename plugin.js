@@ -292,8 +292,24 @@
 // (portada/<base>-portada-<numero>.jpg): el póster se busca por
 // nombre, verificado contra el HTML real. Sus lecturas ganan tiempo
 // (13 s) y bitácora con estado y tamaño, que el teléfono manda.
+//
+// v0.6.14 «La ventana ancha» — el teléfono dejó la lista: VerAnime ya
+// reproduce y trae sus siete rieles; IvAnime es el que cojea. Sus
+// tarjetas de /emision y /animes son anclas «card-wrap» con TODO
+// dentro (div, imagen, insignias, título) y cierran a ~1600 letras
+// del href: la ventana de 900 las dejaba fuera y las filas salían
+// vacías. La ventana del ancla crece a 3000 y el riel de la home gana
+// las series de sus listados (la home real trae 19 anclas). HONESTO:
+// los pósters de IvAnime siguen grises POR DECISIÓN DEL SITIO: sus
+// imágenes responden 403 a todo cliente que no sea un navegador
+// (probado con y sin Referer, y también vía el proxy i0.wp.com, que
+// también recibe 403) — las URLs que arma el plugin son las correctas
+// y cargarán el día que el sitio suelte el bloqueo; títulos, fichas,
+// capítulos y reproducción van de sobra. Y si /emision o /animes
+// algún día sale vacía con el olor a Cloudflare en el log, es el
+// reto del sitio, no del plugin: la bitácora lo cuenta.
 
-const VERSION = '0.6.13';
+const VERSION = '0.6.14';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -782,6 +798,7 @@ const TIPO_ETIQUETA = {
   uqload: 'Uqload', streamtape: 'StreamTape', yourupload: 'YourUpload', upnshare: 'UPNShare',
   dood: 'Doodstream', okru: 'Ok.ru', hexload: 'Hexload', savefiles: 'SaveFiles', filemoon: 'Filemoon',
   streamwish: 'StreamWish', lulu: 'LuluStream', vidhide: 'Vidhide', wolfstream: 'WolfStream',
+
   multi: 'Multiserver', generic: 'Servidor'
 };
 
@@ -798,7 +815,6 @@ function detectarTipo(nombre, url) {
   const nu = n + ' ' + u;
   if (/mega\.nz|\bmega\b|netu|hqq|waaw/i.test(nu)) return null;
   if (/mixdrop|mxdrop|mxcontent/i.test(nu)) return 'mixdrop';
-
   if (/mp4upload/i.test(nu)) return 'mp4upload';
   if (/lulu/i.test(nu)) return 'lulu';
   if (/uqload/i.test(nu)) return 'uqload';
@@ -1583,6 +1599,7 @@ registrarFuente({
     if (typeof media.score === 'number' && media.score > 0 && media.score <= 10) {
       out.rating = Math.round(media.score * 100) / 100;
     }
+
     if (typeof media.malId === 'number' && media.malId > 0) out.ids = { mal: media.malId };
     return out;
   },
@@ -1599,7 +1616,6 @@ registrarFuente({
     const vistos = new Set();
     const episodios = [];
     for (const e of media.episodes) {
-
       const n = e && typeof e.number === 'number' ? e.number : 0;
       if (n < 1 || n > 99999 || vistos.has(n)) continue;
       vistos.add(n);
@@ -2384,6 +2400,7 @@ function posterEnVentana(ventana) {
      * atributo así no es póster, es su ausencia. */
     if (m && !/^data:/i.test(m[1]) && !/no_poster|capblank|placeholder/i.test(m[1])) {
       return m[1].indexOf('//') === 0 ? 'https:' + m[1] : m[1];
+
     }
   }
   /* v0.6.2: último recurso — cualquier URL de imagen con extensión que
@@ -2400,7 +2417,6 @@ function posterEnVentana(ventana) {
  * de episodios las insignias SUB/EP N alejan la imagen del ancla y con
  * 600 se quedaba fuera. */
 function posterAntesDe(html, idx) {
-
   const antes = String(html || '').slice(Math.max(0, idx - 1500), idx);
   const tags = antes.match(/<img\b[^>]*>/gi) || [];
   for (let i = tags.length - 1; i >= 0; i--) {
@@ -3185,6 +3201,7 @@ async function easMulti(link) {
     }
   }
   /* el doblado y el castellano van primero, que es lo que se busca */
+
   servers.sort(function (a, b) {
     const la = /latino|castellano/i.test(a.idioma) ? 0 : 1;
     const lb = /latino|castellano/i.test(b.idioma) ? 0 : 1;
@@ -3201,7 +3218,6 @@ async function easServersDeViejo(texto) {
   const frRe = /<iframe\b[^>]*?\b(?:data-src|src)\s*=\s*["']([^"']+)["'][^>]*>/gi;
   while ((m = frRe.exec(texto))) {
     let u = desescapar(m[1].trim());
-
     if (u.indexOf('//') === 0) u = 'https:' + u;
     if (!/^https?:\/\//i.test(u)) continue;
     const antes = texto.slice(Math.max(0, m.index - 300), m.index);
@@ -3986,6 +4002,7 @@ registrarFuente({
             log('van home falló', (e2 && e2.message) || String(e2));
           }
         }
+
         if (!items.length) {
           if (r && r.text) {
             log('van fila «' + def.genero + '»: status ' + r.status + ', ' + r.text.length + ' letras, 0 tarjetas' +
@@ -4002,7 +4019,6 @@ registrarFuente({
     }));
     const filas = [];
     for (const fila of rtas) if (fila) filas.push(fila);
-
     return filas;
   },
 
@@ -4144,7 +4160,13 @@ function ivaPosterDe(html, slug) {
 }
 
 function ivaTarjetas(html) {
-  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/anime\/([^"\/?#]+)[^>]*>([\s\S]{0,900}?)<\/a>/gi;
+  /* v0.6.14: las tarjetas de /emision y /animes son anclas «card-wrap»
+   * que llevan TODO dentro (div, imagen, insignias y título) y su
+   * cierre </a> cae a ~1600 letras del href — la ventana de 900 las
+   * dejaba fuera y las filas salían vacías. La ventana crece a 3000
+   * (sonda v33: la longitud del ancla real); en la home los héroes
+   * cierran pronto y siguen casando igual. */
+  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/anime\/([^"\/?#]+)[^>]*>([\s\S]{0,3000}?)<\/a>/gi;
   const items = [];
   const vistos = new Set();
   let m;
@@ -4781,6 +4803,7 @@ async function screen(arg) {
 }
 
 async function screenEvent(e) {
+
   const ev = e || {};
   const state = ev.state && typeof ev.state === 'object' ? ev.state : {};
   const nombre = String(ev.name || '');
@@ -4803,7 +4826,6 @@ async function screenEvent(e) {
     /* v0.6.11: ya no es el menú nativo (corta en 8) sino el selector del
      * lienzo: el botón de arriba lo abre y lo cierra. */
     const ns = Object.assign({}, state);
-
     ns.elegirFuentes = !ns.elegirFuentes;
     return { state: ns };
   }

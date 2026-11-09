@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.13 «El escaparate»)
+## Qué hace (v0.6.14 «La ventana ancha»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -31,6 +31,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.14 «La ventana ancha»
+
+El teléfono dio su veredicto a la 0.6.13: VerAnime ya funciona de verdad (sus siete rieles cargan, abre vídeos y su «Ver más» pagina); el que cojeaba era IvAnime, con una fila sola de 7 series y pósters grises. La sonda encontró dos verdades. **Las tarjetas de sus directorios son anclas gigantes**: en `/emision` y `/animes` cada tarjeta lleva todo dentro (contenedor, imagen, insignias y título) y cierra a ~1600 letras de su enlace — la ventana de lectura era de 900, así que las filas salían vacías y solo la home (cuyos héroes cierran pronto) ponía algo; la ventana crece a 3000 y los rieles «En emisión» y «Directorio» llenan, y el riel de la home gana las series de sus listados (la home real trae 19 enlaces de series, no 7). **Y los pósters grises son bloqueo del sitio, no del plugin**: las imágenes de IvAnime responden 403 Forbidden a todo cliente que no sea un navegador — probado con Referer, sin él, e incluso a través del proxy de imágenes i0.wp.com (403 también) — así que la app no puede mostrarlas y no hay cura limpia mientras el sitio lo decida; las URLs que arma el plugin son las correctas y cargarán el día que aflojen el bloqueo. Todo lo demás de IvAnime (títulos, fichas, capítulos y reproducción por Voe y compañía) va de sobra. Y si alguna fila sale vacía, el log lo dice con estado, tamaño y olor a reto de Cloudflare (el sitio intercala su reto «Just a moment» en los directorios de vez en cuando).
 
 ## v0.6.13 «El escaparate»
 
