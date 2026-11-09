@@ -1,0 +1,34 @@
+== probe v36: muro abierto? y cuánto pesan las imágenes (tope de Kino: 262144 bytes) ==
+home: 110180 bytes
+-- pulgares (rieles):
+   1: 200 image/webp 92496 https://ivanime.buzz/assets/thumbs/imagen/dark-machine-the-animation-1791917944.jpg.webp
+   2: 200 image/webp 72540 https://ivanime.buzz/assets/thumbs/imagen/demons-crest-1793996605.jpg.webp
+   3: 200 image/webp 71834 https://ivanime.buzz/assets/thumbs/imagen/doragon-boru-supa-birusu-1791735914.jpg.webp
+   4: 200 image/webp 56662 https://ivanime.buzz/assets/thumbs/imagen/dreamland-1792258097.jpg.webp
+   5: 200 image/webp 85180 https://ivanime.buzz/assets/thumbs/imagen/kyoufu-collector-1791654057.jpg.webp
+-- portadas (fichas):
+   1: 200 image/jpeg 239669 https://ivanime.buzz/assets/img/serie/portada/black-clover-portada-1777582817.jpg
+   2: 200 image/jpeg 241919 https://ivanime.buzz/assets/img/serie/portada/kanojo-no-tomodachi-portada-1791253718.jpg
+   3: 200 image/jpeg 374561 https://ivanime.buzz/assets/img/serie/portada/seitokai-ni-mo-ana-wa-aru-portada-1791141404.jpg
+   4: 200 image/jpeg 195786 https://ivanime.buzz/assets/img/serie/portada/tantei-wa-mo-shindeiru-temporada-2-portada-1791392078.jpg
+   5: 200 image/jpeg 333931 https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg
+-- cuántas pasan el tope de 262144:
+   cabe (92496): https://ivanime.buzz/assets/thumbs/imagen/dark-machine-the-animation-1791917944.jpg.webp
+   cabe (72540): https://ivanime.buzz/assets/thumbs/imagen/demons-crest-1793996605.jpg.webp
+   cabe (71834): https://ivanime.buzz/assets/thumbs/imagen/doragon-boru-supa-birusu-1791735914.jpg.webp
+   cabe (56662): https://ivanime.buzz/assets/thumbs/imagen/dreamland-1792258097.jpg.webp
+   cabe (85180): https://ivanime.buzz/assets/thumbs/imagen/kyoufu-collector-1791654057.jpg.webp
+   cabe (239669): https://ivanime.buzz/assets/img/serie/portada/black-clover-portada-1777582817.jpg
+   cabe (241919): https://ivanime.buzz/assets/img/serie/portada/kanojo-no-tomodachi-portada-1791253718.jpg
+   GRANDE (374561): https://ivanime.buzz/assets/img/serie/portada/seitokai-ni-mo-ana-wa-aru-portada-1791141404.jpg
+   cabe (195786): https://ivanime.buzz/assets/img/serie/portada/tantei-wa-mo-shindeiru-temporada-2-portada-1791392078.jpg
+   GRANDE (333931): https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg
+-- ficha demons-crest: qué imágenes trae
+ficha: 23229 bytes
+   og:image: 
+   pulgares en la ficha: https://ivanime.buzz/assets/thumbs/imagen/demons-crest-1793996605.jpg.webp
+   portadas en la ficha: 
+-- content-length por HEAD (por si conviene pedirlo antes de bajar):
+   HEAD pulgar:   HTTP/2 200  content-type: image/webp 
+   HEAD portada:  HTTP/2 200  content-type: image/jpeg 
+== fin probe v36 ==
