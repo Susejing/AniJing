@@ -1,55 +1,23 @@
 HTTP 200
-HTTP 200
-HTTP 200
-=== VAN EPISODIO ===
-bytes: 77143
-lis opcion: 1
---- LI: "<li id='player-option-1' class='dooplay_player_option' data-type='tv' data-post='7870' data-nume='1'><i class='fas fa-play-circle'></i><span class='title'>MULTISERVER</span><span class='server'>darkanimes.com</span><span class='loader'></span></li>"
-=== VAN API ===
-API https://veranime.ninja/wp-json/dooplayer/v2/7870/tv/1 -> 200 | ''
-=== VAN EMBED ===
-=== IVA FICHA ===
-bytes: 23768
-hrefs ep-ish: 1
-HREF: https://ivanime.buzz/ver/to-aru-anbu-no-item-episodio-1
---- CONTEXTO EPISODIO: '<!doctype html>\n<html lang="es"><head>\n<meta name="google-site-verification" content="VxwCTf3BIqK0eo_ddPqgKgGxdyQ8ixBqcd8mmxbomos" />\n\n<link rel="shortcut icon" href="/images/ivanime-icon.png" type="image/x-icon" />\n<link rel="apple-touch-icon" href="/images/ivanime-icon.png" />\n\n\n\n\n<meta charset="utf-8">\n\n\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>To Aru Anbu no ITEM Sub Español Online en Ivanime</title>\n<meta property="og:site_name" content="Ivanime" />\n\n\n<meta property="og:title" content="To Aru Anbu no ITEM Sub Español Online en Ivanime" />\n<meta name="description" content="Ver To Aru Anbu no ITEM online sub español gratis en Ivanime. En Ciudad Academia, los poderes psíquicos prometen un futuro más brillante. Pero debajo  Mira todos los episodios en HD.">\n<meta property="og:description" content="Ver To Aru Anbu no ITEM online sub español gratis en Ivanime. En Ciudad Academia, los poderes psíquicos prometen un futuro más brillante. Pero debajo  Mira todos los episodios en HD." />\n\n\n\n\n\n\n<meta name="robots" content="index, follow">\n\n<meta name="theme-color" content="#1e1c1b" />\n<meta name="csrf-token" content="yW8SjxMN59K9Zv9NDFtctMQS0D8rOTnuJ3PyxZJS">\n\n<link rel="preload" as="style" href="https://ivanime.buzz/build/assets/app-B5vnAjYV.css" /><link rel="modulepreload" as="script" href="https://ivanime.buzz/build/assets/app-CFHQxs1u.js" /><link rel="stylesheet" href="https://ivanime.buzz/build/assets/app-B5vnAjYV.css" /><script type="module" src="https://ivanime.buzz/build/assets/app-CFHQxs1u.js"></script>\n\n\n\n<script async src="https://www.googletagmanager.com/gtag/js?id=G-57HS68HJW3"></script>\n<script>\nwindow.dataLayer = wi'
-=== IVA HOME ===
-bytes: 109929
-hrefs ep-ish home: 31
-HREF HOME: https://ivanime.buzz/ver/to-aru-anbu-no-item-episodio-1
-HREF HOME: https://ivanime.buzz/ver/tantei-wa-mo-shindeiru-temporada-2-episodio-1
-HREF HOME: https://ivanime.buzz/ver/kanojo-no-tomodachi-episodio-1
-HREF HOME: https://ivanime.buzz/ver/black-clover-episodio-1
-HREF HOME: https://ivanime.buzz/ver/yasei-no-last-boss-ga-arawareta-temporada-2-episodio-1
-HREF HOME: https://ivanime.buzz/ver/seitokai-ni-mo-ana-wa-aru-episodio-1
-HREF HOME: https://ivanime.buzz/ver/tokyo-revengers-santen-sensou-hen-episodio-1
-HREF HOME: https://ivanime.buzz/ver/kanojo-no-tomodachi-episodio-6
-HREF HOME: https://ivanime.buzz/ver/dark-summoner-to-dekiteiru-episodio-6
-HREF HOME: https://ivanime.buzz/ver/kanata-kara-episodio-6
-HREF HOME: https://ivanime.buzz/ver/ao-no-hako-episodio-30
-HREF HOME: https://ivanime.buzz/ver/yozakura-san-chi-no-daisakusen-temporada-2-episodio-17
-HREF HOME: https://ivanime.buzz/ver/hotel-inhumans-temporada-2-episodio-6
-HREF HOME: https://ivanime.buzz/ver/shinja-zero-no-megami-sama-to-hajimeru-isekai-kouryaku-episodio-5
-HREF HOME: https://ivanime.buzz/ver/doragon-boru-supa-birusu-episodio-5
-HREF HOME: https://ivanime.buzz/ver/tank-chair-sensha-isu-episodio-6
-HREF HOME: https://ivanime.buzz/ver/tempal-item-no-chikara-episodio-7
-HREF HOME: https://ivanime.buzz/ver/yowaki-max-reijo-nanoni-ratsuwan-konyakusha-sama-no-kake-ni-notte-shimatta-episodio-6
-HREF HOME: https://ivanime.buzz/ver/tensei-kizoku-kantei-skill-de-nariagaru-s3-episodio-7
-HREF HOME: https://ivanime.buzz/ver/diamond-no-ace-act-ii-second-season-episodio-18
-HREF HOME: https://ivanime.buzz/ver/ojisan-wa-kawaii-mono-ga-osuki-episodio-6
-HREF HOME: https://ivanime.buzz/ver/mezametara-saikyo-sobi-to-uchusen-mochi-datta-no-de-ikkodate-mezashite-yohei-toshite-jiyu-ni-ikitai-episodio-6
-HREF HOME: https://ivanime.buzz/ver/ao-ashi-temporada-2-episodio-6
-HREF HOME: https://ivanime.buzz/ver/kashita-maryoku-wa-ribobarai-de-kyousei-choushuu-youzumi-to-party-tsuihousareta-ore-wa-kawaii-support-yousei-to-issho-ni-toritateta-maryoku-wo-unyou-shite-saikyou-wo-mezasu-episodio-6
-HREF HOME: https://ivanime.buzz/ver/dreamland-episodio-4
-HREF HOME: https://ivanime.buzz/ver/mahou-shoujo-ikusei-keikaku-restart-episodio-5
-HREF HOME: https://ivanime.buzz/ver/seitokai-ni-mo-ana-wa-aru-episodio-6
-HREF HOME: https://ivanime.buzz/ver/ranma-nibun-no-ichi-episodio-30
-HREF HOME: https://ivanime.buzz/ver/kyoufu-collector-episodio-5
-HREF HOME: https://ivanime.buzz/ver/magicalexplorer-episodio-7
---- IMG HOME: '<img src="https://ivanime.buzz/images/ivanime-logo.png?v=4.72" alt="Logo Ivanime" class="h-auto" style="width: 130px">'
---- IMG HOME: '<img src="https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg"\n           data-src="https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg"\n           alt="" class="hero-img absolute inset-0 w-full h-full object-cover" style="object-position: center 20%"\n           loading="lazy">'
---- IMG HOME: '<img src="https://ivanime.buzz/img/anime.png"\n           data-src="https://ivanime.buzz/assets/img/serie/portada/tantei-wa-mo-shindeiru-temporada-2-portada-1791392078.jpg"\n           alt="" class="hero-img absolute inset-0 w-full h-full object-cover" style="object-position: center 20%"\n           loading="lazy">'
---- IMG HOME: '<img src="https://ivanime.buzz/img/anime.png"\n           data-src="https://ivanime.buzz/assets/img/serie/portada/kanojo-no-tomodachi-portada-1791253718.jpg"\n           alt="" class="hero-img absolute inset-0 w-full h-full object-cover" style="object-position: center 20%"\n           loading="lazy">'
-=== IVA EPISODIO PRUEBA ===
-ep url: https://ivanime.buzz/ver/to-aru-anbu-no-item-episodio-1 -> status: 200 | bytes: 42961
---- CONTEXTO PLAYER: 'd transition">To Aru Anbu no ITEM</a>\n    <span>/</span><span class="text-brand">Capítulo 1</span>\n  </div>\n\n  <div class="grid gap-7 grid-cols-1 lg:grid-cols-[1fr_360px]">\n    \n    <div class="min-w-0">\n\n      \n      <div class="flex items-center gap-2.5 flex-wrap mb-3">\n        <span class="font-mono text-[10.5px] tracking-[0.14em] uppercase text-white/40 mr-1">Servidor</span>\n                        <button type="button" class="srv play-video inline-flex items-center gap-2 h-9 px-4 rounded-full text-[13px] font-semibold border border-white/10 text-white/60 hover:text-white capitalize" data-player="aHR0cHM6Ly9tZWdhLm56L2VtYmVkL0tlNFFIS0lLI3dCaHBQSzVaeTdZcTNXQ052UjZrdlR0bmMxSmJpU3JqR3VJc1h1Y1VmVlk=">mega</button>\n                <button type="button" class="srv play-video inline-flex items-center gap-2 h-9 px-4 rounded-full text-[13px] font-semibold border border-white/10 text-white/60 hover:text-white capitalize" data-player="aHR0cHM6Ly9ieXNla296ZS5jb20vZS83aDZna3FqcGt1OW0v">filemoon</button>\n                <button type="button" class="srv play-video inline-flex items-center gap-2 h-9 px-4 rounded-full text-[13px] font-semibold border border-white/10 text-white/60 hover:text-white capitalize" data-player="aHR0cHM6Ly9zYXZlZmlsZXMuY29tL2VtYmVkLTMwOXprMW1ndHBubS5odG1s">savefiles</button>\n                <button type="button" class="srv play-video inline-flex items-center gap-2 h-9 px-4 rounded-full text-[13px] font-semibold border border-white/10 text-white/60 hover:text-whit'
+=== VAN API VARIANTES (post 7870 tv 1) ===
+v2+xrw -> 200 | ct: application/json; charset=UTF-8 | len: 0 | ''
+v1 -> 0 | ct: ? | len: 29 | 'ERR HTTP Error 404: Not Found'
+v1post -> 0 | ct: ? | len: 29 | 'ERR HTTP Error 404: Not Found'
+v1post2 -> 0 | ct: ? | len: 29 | 'ERR HTTP Error 404: Not Found'
+ajax-get_player -> 0 | ct: ? | len: 31 | 'ERR HTTP Error 400: Bad Request'
+ajax-doo_player -> 0 | ct: ? | len: 31 | 'ERR HTTP Error 400: Bad Request'
+v2post -> 0 | ct: ? | len: 29 | 'ERR HTTP Error 404: Not Found'
+=== IVA EPISODIO kanojo (botones data-player) ===
+bytes: 41879
+PLAYER: https://bysekoze.com/e/phblbx5fudmk/
+PLAYER: https://savefiles.com/embed-i163ylhpshdm.html
+PLAYER: https://dsvplay.com/e/vnay4pl2my2l
+PLAYER: https://voe.sx/e/3ifvv4dgr56g
+PLAYER: https://mixdrop.top/e/jd9rle60sxvzeo
+PLAYER: https://luluvdo.com/e/z1z5snur35b6
+PLAYER: https://www.mp4upload.com/embed-tkg5g2276k13.html
+=== IVA FICHA kanojo (todos los hrefs /ver/) ===
+status: 200 | bytes: 23292
+hrefs /ver/: 1
+VER: https://ivanime.buzz/ver/kanojo-no-tomodachi-episodio-1
+--- CONTEXTO LISTA EPS: 'wCTf3BIqK0eo_ddPqgKgGxdyQ8ixBqcd8mmxbomos" />\n\n<link rel="shortcut icon" href="/images/ivanime-icon.png" type="image/x-icon" />\n<link rel="apple-touch-icon" href="/images/ivanime-icon.png" />\n\n\n\n\n<meta charset="utf-8">\n\n\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>Kanojo no Tomodachi Sub Español Online en Ivanime</title>\n<meta property="og:site_name" content="Ivanime" />\n\n\n<meta property="og:title" content="Kanojo no Tomodachi Sub Español Online en Ivanime" />\n<meta name="description" content="Ver Kanojo no Tomodachi online sub español gratis en Ivanime. La historia de Takeru Hidaka, un ambicioso estudiante de secundaria que aspira a estudiar  Mira todos los episodios en HD.">\n<meta property="og:description" content="Ver Kanojo no Tomodachi online sub español gratis en Ivanime. La historia de Takeru Hidaka, un ambicioso estudiante de secundaria que aspira a estudiar  Mira todos los episodios en HD." />\n\n\n\n\n\n\n<meta name="robots" content="index, follow">\n\n<meta name="theme-color" content="#1e1c1b" />\n<meta name="csrf-token" content="Y4Ad1z2UY1VJVAJtcfZeaJp2beJ04nrGOhxPfJGh">\n\n<link rel="preload" as="style" href="https://ivanime.buzz/build/assets/app-B5vnAjYV.css" /><link rel="modulepreload" as="script" href="https://ivanime.buzz/build/assets/app-CFHQxs1u.js" /><link rel="stylesheet" href="https://ivanime.buzz/build/assets/app-B5vnAjYV.css" /><script type="module" src="https://ivanime.buzz/build/assets/app-CFHQxs1u.js"></script>\n\n\n\n<script async src="https://www.googletagmanager.com/gtag/js?id=G-57HS68HJW3"></script>\n<script>\nwindow.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\ngtag("js", new Date());\ngtag("config", "G-57HS68HJW3");\n</script>\n\n<script type="text/javascript" data-cfasync="false">\n/*<![CDATA[/* */\n(function(){var b=window,l="f33e7b9425e668da364405b5853cd658",y=[["siteId",805+881+239-36+52882'
