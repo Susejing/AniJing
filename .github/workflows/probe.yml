@@ -15,98 +15,72 @@ jobs:
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
           R=probe-result.txt
           : > "$R"
-          curl -sL --compressed -A "$UA" -H "Referer: https://veranime.ninja/" -w "HTTP %{http_code}\n" "https://veranime.ninja/ver/cyberpunk-edgerunners-episodio-1/" -o /tmp/ep.html >> "$R" 2>&1
-          curl -sL --compressed -A "$UA" -H "Referer: https://ivanime.buzz/" -w "HTTP %{http_code}\n" "https://ivanime.buzz/anime/to-aru-anbu-no-item-sub-espanol/" -o /tmp/iva.html >> "$R" 2>&1
-          curl -sL --compressed -A "$UA" -H "Referer: https://ivanime.buzz/" -w "HTTP %{http_code}\n" "https://ivanime.buzz/" -o /tmp/ivahome.html >> "$R" 2>&1
+          curl -sL --compressed -A "$UA" -H "Referer: https://ivanime.buzz/" -w "HTTP %{http_code}\n" "https://ivanime.buzz/ver/kanojo-no-tomodachi-episodio-1" -o /tmp/ivep.html >> "$R" 2>&1
           python3 - <<'PY' >> "$R"
-          import re, urllib.request
+          import re, urllib.request, base64, json
           UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
-          def get(url, ref):
-              req = urllib.request.Request(url, headers={'User-Agent': UA, 'Referer': ref, 'Accept': '*/*'})
+          def get(url, ref, extra=None):
+              h = {'User-Agent': UA, 'Referer': ref, 'Accept': '*/*'}
+              if extra: h.update(extra)
+              req = urllib.request.Request(url, headers=h)
               try:
                   with urllib.request.urlopen(req, timeout=25) as r:
-                      return r.status, r.read().decode('utf-8', 'replace')
+                      return r.status, r.read().decode('utf-8', 'replace'), dict(r.headers)
               except Exception as e:
-                  return 0, 'ERR ' + str(e)
-          print('=== VAN EPISODIO ===')
-          ep = open('/tmp/ep.html', encoding='utf-8', errors='replace').read()
-          print('bytes:', len(ep))
-          lis = list(re.finditer(r'<li\b[^>]*dooplay_player_option[^>]*>.*?</li>', ep, re.S))
-          print('lis opcion:', len(lis))
-          for m in lis[:3]:
-              print('--- LI:', repr(m.group(0)[:500]))
-          for m in list(re.finditer(r'<iframe\b[^>]*>', ep))[:3]:
+                  return 0, 'ERR ' + str(e), {}
+          print('=== VAN API VARIANTES (post 7870 tv 1) ===')
+          variantes = [
+              ('v2+xrw', 'https://veranime.ninja/wp-json/dooplayer/v2/7870/tv/1', {'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json'}),
+              ('v1', 'https://veranime.ninja/wp-json/dooplayer/v1/7870/tv/1', {}),
+              ('v1post', 'https://veranime.ninja/wp-json/dooplayer/v1/post/7870?type=tv&source=1', {}),
+              ('v1post2', 'https://veranime.ninja/wp-json/dooplayer/v1/post/7870?type=tv&source=2', {}),
+              ('ajax-get_player', 'https://veranime.ninja/wp-admin/admin-ajax.php?action=get_player&post=7870&nume=1&type=tv', {'X-Requested-With': 'XMLHttpRequest'}),
+              ('ajax-doo_player', 'https://veranime.ninja/wp-admin/admin-ajax.php?action=doo_player&post=7870&nume=1&type=tv', {'X-Requested-With': 'XMLHttpRequest'}),
+              ('v2post', 'https://veranime.ninja/wp-json/dooplayer/v2/post/7870?type=tv&source=1', {}),
+          ]
+          for nombre, url, extra in variantes:
+              st, body, hs = get(url, 'https://veranime.ninja/ver/cyberpunk-edgerunners-episodio-1/', extra)
+              print(nombre, '->', st, '| ct:', hs.get('Content-Type', '?'), '| len:', len(body), '|', repr(body[:300]))
+          print('=== IVA EPISODIO kanojo (botones data-player) ===')
+          ivep = open('/tmp/ivep.html', encoding='utf-8', errors='replace').read()
+          print('bytes:', len(ivep))
+          for m in list(re.finditer(r'data-player\s*=\s*["\']([A-Za-z0-9+/=]+)["\']', ivep))[:15]:
+              try:
+                  dec = base64.b64decode(m.group(1)).decode('utf-8', 'replace')
+              except Exception:
+                  dec = '???'
+              print('PLAYER:', dec[:200])
+          for m in list(re.finditer(r'<iframe\b[^>]*>', ivep))[:5]:
               print('--- IFRAME:', repr(m.group(0)[:300]))
-          opts = []
-          for m in lis[:3]:
-              t = m.group(0)
-              dp = re.search(r'data-post\s*=\s*["\']([^"\']+)', t)
-              dn = re.search(r'data-nume\s*=\s*["\']([^"\']+)', t)
-              dt = re.search(r'data-type\s*=\s*["\']([^"\']+)', t)
-              if dp and dn:
-                  opts.append((dp.group(1), (dt.group(1) if dt else 'tv'), dn.group(1)))
-          print('=== VAN API ===')
-          embed = ''
-          for (post, tipo, nume) in opts[:2]:
-              url = 'https://veranime.ninja/wp-json/dooplayer/v2/' + post + '/' + tipo + '/' + nume
-              st, body = get(url, 'https://veranime.ninja/')
-              print('API', url, '->', st, '|', repr(body[:400]))
-              em = re.search(r'["\']embed_url["\']\s*:\s*["\']([^"\']+)', body)
-              if em:
-                  embed = em.group(1).replace('\\/', '/')
-                  print('EMBED_URL:', embed)
-          print('=== VAN EMBED ===')
-          if embed:
-              st, body = get(embed, 'https://veranime.ninja/')
-              print('status:', st, '| bytes:', len(body))
-              print('--- CABEZA:', repr(body[:2200]))
-              for m in list(re.finditer(r"\(\s*['\"](https?://[^'\"]+)['\"]\s*\)", body))[:20]:
-                  print('ONCLICK:', m.group(1))
-              for m in list(re.finditer(r'<iframe\b[^>]*>', body))[:5]:
-                  print('--- IFRAME EMBED:', repr(m.group(0)[:300]))
-          print('=== IVA FICHA ===')
-          iva = open('/tmp/iva.html', encoding='utf-8', errors='replace').read()
-          print('bytes:', len(iva))
-          hrefs = []
-          for m in re.finditer(r'href\s*=\s*["\']([^"\']+)["\']', iva):
+          print('=== IVA FICHA kanojo (todos los hrefs /ver/) ===')
+          st, body, hs = get('https://ivanime.buzz/anime/kanojo-no-tomodachi-sub-espanol/', 'https://ivanime.buzz/')
+          print('status:', st, '| bytes:', len(body))
+          vers = []
+          for m in re.finditer(r'href\s*=\s*["\']([^"\']*\/ver\/[^"\']+)["\']', body):
               u = m.group(1)
-              if re.search(r'/ver/|episodio|ep=|capitulo|-ep\b|watch', u, re.I) and u not in hrefs:
-                  hrefs.append(u)
-          print('hrefs ep-ish:', len(hrefs))
-          for u in hrefs[:30]:
-              print('HREF:', u)
-          i = iva.find('pisodio')
-          print('--- CONTEXTO EPISODIO:', repr(iva[max(0,i-900):i+900]) if i>=0 else 'no hay')
-          for m in list(re.finditer(r'<select\b[^>]*>', iva))[:3]:
-              print('--- SELECT:', m.group(0)[:200])
-          print('=== IVA HOME ===')
-          home = open('/tmp/ivahome.html', encoding='utf-8', errors='replace').read()
-          print('bytes:', len(home))
-          hhrefs = []
-          for m in re.finditer(r'href\s*=\s*["\']([^"\']+)["\']', home):
-              u = m.group(1)
-              if re.search(r'/ver/|episodio|ep=|capitulo', u, re.I) and u not in hhrefs:
-                  hhrefs.append(u)
-          print('hrefs ep-ish home:', len(hhrefs))
-          for u in hhrefs[:30]:
-              print('HREF HOME:', u)
-          for m in list(re.finditer(r'<img\b[^>]*>', home))[:4]:
-              print('--- IMG HOME:', repr(m.group(0)[:400]))
-          print('=== IVA EPISODIO PRUEBA ===')
-          if hhrefs:
-              st, body = get(hhrefs[0], 'https://ivanime.buzz/')
-              print('ep url:', hhrefs[0], '-> status:', st, '| bytes:', len(body))
-              for m in list(re.finditer(r'<iframe\b[^>]*>', body))[:5]:
-                  print('--- IFRAME EP:', repr(m.group(0)[:300]))
-              i = body.find('player')
-              if i < 0: i = body.find('iframe')
-              if i >= 0:
-                  print('--- CONTEXTO PLAYER:', repr(body[max(0,i-600):i+900]))
+              if u not in vers: vers.append(u)
+          print('hrefs /ver/:', len(vers))
+          for u in vers[:25]:
+              print('VER:', u)
+          if not vers or st != 200:
+              st2, body2, _ = get('https://ivanime.buzz/anime/kanojo-no-tomodachi/', 'https://ivanime.buzz/')
+              print('sin sufixo ->', st2, '| bytes:', len(body2))
+              vers2 = []
+              for m in re.finditer(r'href\s*=\s*["\']([^"\']*\/ver\/[^"\']+)["\']', body2):
+                  u = m.group(1)
+                  if u not in vers2: vers2.append(u)
+              print('hrefs /ver/ sin sufixo:', len(vers2))
+              for u in vers2[:25]:
+                  print('VER2:', u)
+          i = body.find('pisodio') if st == 200 else -1
+          if i < 0 and st == 200: i = body.find('/ver/')
+          if i >= 0:
+              print('--- CONTEXTO LISTA EPS:', repr(body[max(0,i-700):i+1200]))
           PY
       - name: commit
         run: |
           git config user.name "probe-bot"
           git config user.email "probe@users.noreply.github.com"
           git add probe-result.txt
-          git commit -m "probe v22: resultados [skip ci]" || echo "nada"
+          git commit -m "probe v23: resultados [skip ci]" || echo "nada"
           git push
