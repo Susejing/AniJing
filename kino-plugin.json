@@ -1,7 +1,7 @@
 {
   "id": "anijing",
   "name": "AniJing",
-  "version": "0.6.6",
+  "version": "0.6.7",
   "apiVersion": 20,
   "entry": "plugin.js",
   "description": "Anime en español desde AnimeAV1, MonosChinos, LataAnime, OtakusTV, AnimeYT, EstrenosAnime, AnimeOnline e IvAnime, con pantalla propia de Inicio (destacado del día, secciones por fuente, rieles con su Ver más y selector de fuentes), búsqueda, fichas, episodios y extractores de servidores con captura del navegador oculto para los multiservers y ventanita para pasar la revisión de seguridad de AnimeOnline. El anime con la firma de Susejing.",

@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.6 «El remiendo»)
+## Qué hace (v0.6.7 «La segunda vista»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -16,9 +16,9 @@ Su nombre une «anime» con la terminación «jing» de su autor.
 - **MonosChinos** — en emisión y animes completos, con sus películas y especiales.
 - **LataAnime** — novedades y anime en latino y en castellano.
 - **OtakusTV** — directorio de animes con pósters propios, en emisión y últimos episodios; las opciones de reproducción del capítulo viajan de fábrica en su lista `data-dwn` (byse, doodstream, voe, mixdrop, mp4upload), que se cosecha tal cual.
-- **AnimeYT** — catálogo con películas y buscador propio; sus players viven en el contenedor mytsumi.com, que entrega sus botones `data-player-url` cuando se le pide con `open=1` (ok.ru, Filemoon y hasta archivos directos).
+- **AnimeYT** — catálogo con películas y buscador propio; sus players viven en el contenedor mytsumi.com, que entrega sus botones `data-player-url` cuando se le pide con `open=1` (ok.ru, Filemoon y hasta archivos directos). Los archivos directos van primero y se verifican con un Range de 2 bytes antes de entregarse; las películas abren su propia página de reproducción (un iframe de Filemoon a bordo).
 - **EstrenosAnime** — últimos episodios, sub y latino; sin buscador de texto propio, se admite con honestidad (la búsqueda global sigue con las demás fuentes). Sus servidores se piden por AJAX (episode/servers → episode/sources) y su multiserver entrega cada opción cifrada — pero la descifra su propio endpoint `api/decrypt-stream` con solo preguntarle por POST.
-- **AnimeOnline** — género de anime y fichas de temporadas; es un sitio Dooplay: cada opción de `playeroptionsul` pregunta al endpoint `wp-json/dooplayer` y su multiserver (saidochesto.top) lista los hosters por idioma. Su puerta la guarda Cloudflare: si pide su revisión de seguridad, la pantalla de la fuente ofrece un botón «Pasar la revisión» que abre una ventanita de navegador real, la revisión se pasa con un toque y el catálogo queda abierto.
+- **AnimeOnline** — género de anime y fichas de temporadas; es un sitio Dooplay: cada opción de `playeroptionsul` pregunta al endpoint `wp-json/dooplayer` y su multiserver (saidochesto.top) lista los hosters por idioma. Sus películas también abren: las fichas `/pelicula/` cargan el player a cuestas y el resolver cae a ellas cuando la página `/episodio/` no existe. Su puerta la guarda Cloudflare: si pide su revisión de seguridad, la pantalla de la fuente ofrece un botón «Pasar la revisión» que abre una ventanita de navegador real, la revisión se pasa con un toque y el catálogo queda abierto.
 - **IvAnime** — en emisión, directorio y últimos agregados; vive en el espejo .buzz (el .com es descargas), con Voe y MP4Upload cubiertos. Sus pósters de verdad viajan en `data-src` (el `src` es un anime.png de relleno) y ya se leen bien.
 
 Todas las filas llevan su «Ver más».
@@ -30,6 +30,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.7 «La segunda vista»
+
+El teléfono probó la 0.6.6 y el balance quedó a medias: OtakusTV y EstrenosAnime finos, pero dos fuentes volvieron a toser. **AnimeYT no abría ni un video** — culpa confesa de la 0.6.5: al mandar los directos (el Omega de archive.org) al fondo, los extractores fallaban lento en el teléfono (la captura de Filemoon se toma sus 25 segundos) y el tiempo del resolve se agotaba antes de llegar al directo. Ahora el directo va primero, pero verificado: antes de entregarlo se le pide un Range de 2 bytes; si su 403 intermitente aparece, cae en segundos y el reparto sigue con los extractores. Y la fila «Películas» se llena: las fichas `/pelicula/` salían vacías porque el patrón solo conocía `/tv/` y `/anime/`; su página de reproducción es la propia `/<id>/anime/<slug>/` sin «-capitulo-N». **AnimeOnline** ganó secciones pero con tos: la fila «Películas» salía vacía (sus tarjetas enlazan fichas `/pelicula/` que el patrón no conocía), el «No se pudo abrir este episodio» se cura cayendo a la ficha de película cuando la página `/episodio/` no existe, y los `http://` de los pósters se suben a `https://`. Los pósters siguen grises en el teléfono aunque las sondas los vean sanos en ww4: se dejó un rastro en el log con la URL exacta que el sitio entrega — el siguiente paso del diagnóstico.
 
 ## v0.6.6 «El remiendo»
 

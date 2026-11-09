@@ -186,8 +186,32 @@
 // casos: protocolo relativo, absoluta, barra inicial contra el origen
 // de la base y relativa contra su directorio. Nada más cambia: la
 // cosecha fina queda como estaba, ahora sí cosida.
+//
+// v0.6.7 «La segunda vista» — el teléfono probó la cosecha y dos
+// fuentes volvieron a toser. AnimeYT no abría ni un video: el
+// remiendo de la 0.6.5 mandó los directos al fondo, tras los
+// extractores, y en el teléfono Ok.ru y Filemoon fallan LENTO
+// (la captura interna de Filemoon se toma sus ~25 segundos), así
+// que el tiempo del resolve se agotaba antes de llegar al directo
+// y la pantalla se quedaba cargando para siempre. El directo
+// vuelve al FRENTE, pero ya no a ciegas: antes de entregarlo se
+// le pide un Range de 2 bytes y si su 403 intermitente aparece,
+// cae en segundos y el reparto sigue con los extractores. Y sus
+// películas por fin existen: las fichas /pelicula/ traen sus
+// obras con póster y su página de reproducción es la propia
+// /<id>/anime/<slug>/, sin «-capitulo-N», con el player a bordo.
+// AnimeOnline estrenó secciones pero con tos: la fila
+// «Películas» salía vacía (sus tarjetas enlazan fichas
+// /pelicula/ que el patrón no conocía), el «No se pudo abrir
+// este episodio» se cura cayendo a la ficha de película cuando
+// la página /episodio/ no existe, y los pósters siguen grises en
+// el teléfono aunque las sondas los vean sanos en ww4 — se dejó
+// un rastro en el log con la URL exacta que el sitio entrega,
+// para mirar lo mismo que ve el teléfono. Y los http:// se suben
+// a https:// en absolutizar: una imagen en claro la app la pinta
+// gris.
 
-const VERSION = '0.6.6';
+const VERSION = '0.6.7';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -248,6 +272,9 @@ function absolutizar(u, base) {
   const s = String(u || '').trim();
   if (!s) return '';
   if (s.indexOf('//') === 0) return 'https:' + s;
+  /* v0.6.7: los http:// se suben a https:// — las imágenes en claro se
+   * quedan grises en la app aunque el sitio las sirva. */
+  if (/^http:\/\//i.test(s)) return 'https:' + s.slice(5);
   if (/^https?:\/\//i.test(s)) return s;
   if (s.charAt(0) === '/') return origenDe(base) + s;
   return base ? base.replace(/[^/]*$/, '') + s : s;
@@ -1119,7 +1146,25 @@ const EXTRACTORES = {
 };
 
 async function abrirServidor(server) {
-  if (server.directo) return server.directo;
+  if (server.directo) {
+    /* v0.6.7: el directo marcado fondo se verifica ANTES de entregarlo:
+     * un Range de 2 bytes responde en segundos y destapa aquí, en el
+     * resolve, el 403 intermitente del Omega (archive.org) que antes
+     * solo se veía dentro del reproductor colgado. Si no responde, se
+     * descarta y el reparto cae a los extractores. */
+    if (server.fondo === true) {
+      const vf = await traer(server.directo.url, {
+        headers: Object.assign({ Range: 'bytes=0-1' }, server.directo.headers || {}),
+        timeoutMs: 8000
+      });
+      if (!vf.ok || (vf.status && vf.status >= 400)) {
+        throw kino.error('unavailable', 'el directo no respondió (status ' + (vf.status || 0) + ')', {
+          userMessage: 'El video directo de este capítulo está caído ahora mismo. Vuelve a abrirlo y elige otro servidor del menú Servidor.'
+        });
+      }
+    }
+    return server.directo;
+  }
   const fn = EXTRACTORES[server.tipo] || exGenerico;
   return await fn(server.url);
 }
@@ -1155,12 +1200,17 @@ async function probarServidores(servers, idx, refDe) {
   const orden = servers.map(function (s, i) { return i; }).sort(function (a, b) {
     const pa = servers[a].tipo === preferido ? 0 : 1;
     const pb = servers[b].tipo === preferido ? 0 : 1;
-    /* v0.6.5: un directo marcado fondo (el Omega de mytsumi, un
-     * archive.org que a veces se queda cargando con su 403) va
-     * detrás de los extractores de verdad: antes de tocarlo se
-     * prueba con ok.ru o filemoon. */
-    const oa = servers[a].fondo === true ? 40 : (TIPO_ORDEN[servers[a].tipo] || 20);
-    const ob = servers[b].fondo === true ? 40 : (TIPO_ORDEN[servers[b].tipo] || 20);
+    /* v0.6.7: un directo marcado fondo (el Omega de mytsumi, un
+     * archive.org con su 403 intermitente) va PRIMERO, detrás solo
+     * del preferido, y antes de entregarlo lo verifica abrirServidor
+     * con un Range de 2 bytes: si está caído se descarta en segundos
+     * y el reparto sigue con los extractores. En la 0.6.5/0.6.6 iba
+     * al final tras ok.ru y filemoon, que en el teléfono fallan
+     * lento (la captura de filemoon tarda ~25 s): el tiempo del
+     * resolve se agotaba antes de llegar al directo y no abría
+     * nada. */
+    const oa = servers[a].fondo === true ? 1 : (TIPO_ORDEN[servers[a].tipo] || 20);
+    const ob = servers[b].fondo === true ? 1 : (TIPO_ORDEN[servers[b].tipo] || 20);
     return pa - pb || oa - ob || a - b;
   });
   const fallas = [];
@@ -2296,9 +2346,11 @@ async function aytSondearMytsumi(html) {
       const clave = 'dir|' + u;
       if (vistos[clave]) return;
       vistos[clave] = true;
-      /* v0.6.5: estos directos (el Omega de archive.org y parientes)
-       * van marcados fondo: intermitentemente responden 403 al
-       * reproducir, así que el reparto prueba antes los extractores. */
+      /* v0.6.7: estos directos (el Omega de archive.org y parientes)
+       * siguen marcados fondo — pero ya no significa «al final»,
+       * sino «verificar antes de aceptar»: intermitentemente
+       * responden 403 al reproducir, así que el reparto les pide un
+       * Range de 2 bytes primero y van delante de los extractores. */
       servers.push({
         nombre: nombre || 'Directo', url: u, tipo: 'directo', fondo: true,
         directo: { url: u, mime: mimeDe(u), headers: { Referer: ref, 'User-Agent': UA } }
@@ -2335,13 +2387,14 @@ async function aytSondearMytsumi(html) {
       log('sondeo mytsumi falló:', u, (e && e.message) || e);
     }
   }
-  /* v0.6.5: los directos de aquí (el Omega de archive.org y parientes)
-   * intermitentemente contestan 403 al reproducir: en el reparto van al
-   * fondo (fondo: true, tras los extractores de verdad) y en esta
-   * lista también van últimos. */
+  /* v0.6.7: los directos de aquí (el Omega de archive.org) van PRIMERO
+   * en la lista: el reparto los verifica con un Range y, si responden,
+   * son lo más rápido que hay; si su 403 intermitente aparece, caen en
+   * segundos y los extractores siguen detrás. En la 0.6.5/0.6.6 iban
+   * al final y en el teléfono el resolve moría antes de tocarlos. */
   servers.sort(function (a, b) {
-    const oa = a.tipo === 'directo' ? 40 : (TIPO_ORDEN[a.tipo] || 20);
-    const ob = b.tipo === 'directo' ? 40 : (TIPO_ORDEN[b.tipo] || 20);
+    const oa = a.tipo === 'directo' ? 0 : (TIPO_ORDEN[a.tipo] || 20);
+    const ob = b.tipo === 'directo' ? 0 : (TIPO_ORDEN[b.tipo] || 20);
     return oa - ob;
   });
   return servers;
@@ -2652,7 +2705,10 @@ registrarFuente({
 const BASE_AYT = 'https://animeyt.cc';
 
 function aytTarjetas(html) {
-  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/(?:tv|anime)\/([^"\/?#]+)[^>]*>([\s\S]{0,900}?)<\/a>/gi;
+  /* v0.6.7: las películas de AnimeYT viven en fichas /pelicula/<slug>/ y
+   * sus listados (la fila «Películas», la búsqueda) las traen así; con
+   * el patrón de solo /tv|anime/ la fila salía vacía en el teléfono. */
+  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/(?:tv|anime|pelicula)\/([^"\/?#]+)[^>]*>([\s\S]{0,900}?)<\/a>/gi;
   const items = [];
   const vistos = new Set();
   let m;
@@ -2690,6 +2746,18 @@ function aytTarjetas(html) {
     items.push(item);
   }
   return items;
+}
+
+/* v0.6.7: las fichas de AnimeYT pueden ser de serie (/tv/<slug>/) o de
+ * película (/pelicula/<slug>/): la fila «Películas» y la búsqueda traen
+ * de las dos clases, así que se prueba primero la de serie y, si el
+ * sitio no la conoce, la de película. Devuelve la respuesta que tenga
+ * cuerpo (o la primera, para que el error hable de la serie). */
+async function aytFichaDe(slug) {
+  const r = await traer(BASE_AYT + '/tv/' + slug, { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 10000 });
+  if (r.ok && r.text) return r;
+  const p = await traer(BASE_AYT + '/pelicula/' + slug + '/', { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 10000 });
+  return (p.ok && p.text) ? p : r;
 }
 
 registrarFuente({
@@ -2748,7 +2816,7 @@ registrarFuente({
   },
 
   async detalle(slug) {
-    const r = await traer(BASE_AYT + '/tv/' + slug, { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 10000 });
+    const r = await aytFichaDe(slug);
     if (!r.ok || !r.text) return null;
     const serie = { title: slugATitulo(slug) };
     const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
@@ -2761,7 +2829,7 @@ registrarFuente({
   },
 
   async episodios(slug) {
-    const r = await traer(BASE_AYT + '/tv/' + slug, { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 10000 });
+    const r = await aytFichaDe(slug);
     if (!r.ok || !r.text) {
       throw kino.error('unavailable', 'AnimeYT no entregó la serie', {
         userMessage: 'AnimeYT no respondió. Revisa tu conexión o inténtalo en un rato.'
@@ -2773,6 +2841,17 @@ registrarFuente({
     let m;
     while ((m = re.exec(r.text))) numeros.add(parseInt(m[3], 10));
     if (!numeros.size) {
+      /* v0.6.7: sin anclas -capitulo-N esta ficha puede ser una
+       * PELÍCULA: su página de reproducción es la propia
+       * /<id>/anime/<slug>/ que enlaza la ficha (el «1 publicados»
+       * de la web), y se lista como único episodio. */
+      const reM = /href\s*=\s*["'][^"']*\/(\d+)\/anime\/([^"\/?#]+)\/["']/i;
+      if (reM.test(r.text)) {
+        return {
+          series: { title: slugATitulo(slug) },
+          episodes: [{ season: 1, number: 1, ref: 'ayt:' + slug + ':1', title: 'Película' }]
+        };
+      }
       throw kino.error('not_found', 'AnimeYT: 0 capítulos', {
         userMessage: 'No se pudieron leer los capítulos de esta serie en AnimeYT.'
       });
@@ -2789,16 +2868,27 @@ registrarFuente({
   async resolver(slug, n, idx) {
     const num = n || 1;
     /* La página del episodio lleva un id propio: se relee la ficha para dar
-     * con el enlace justo del capítulo pedido. */
-    const ficha = await traer(BASE_AYT + '/tv/' + slug, { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 10000 });
+     * con el enlace justo del capítulo pedido. v0.6.7: la ficha puede ser
+     * de serie o de película (aytFichaDe prueba las dos). */
+    const ficha = await aytFichaDe(slug);
     const re = new RegExp('href\\s*=\\s*["\'][^"\']*\\/(\\d+)\\/anime\\/([^"\\/?#]+)-capitulo-' + num, 'i');
     const am = ficha.ok ? re.exec(ficha.text) : null;
-    if (!am) {
+    let epUrl = '';
+    if (am) {
+      epUrl = BASE_AYT + '/' + am[1] + '/anime/' + am[2] + '-capitulo-' + num;
+    } else {
+      /* v0.6.7: sin ancla de capítulo puede ser una PELÍCULA: su página
+       * de reproducción es la propia /<id>/anime/<slug>/ de la ficha,
+       * sin «-capitulo-N». */
+      const reM = /href\s*=\s*["'][^"']*\/(\d+)\/anime\/([^"\/?#]+)\/["']/i;
+      const mm = ficha.ok ? reM.exec(ficha.text) : null;
+      if (mm) epUrl = BASE_AYT + '/' + mm[1] + '/anime/' + mm[2] + '/';
+    }
+    if (!epUrl) {
       throw kino.error('not_found', 'AnimeYT: capítulo no hallado', {
         userMessage: 'No se halló el enlace de este capítulo en AnimeYT.'
       });
     }
-    const epUrl = BASE_AYT + '/' + am[1] + '/anime/' + am[2] + '-capitulo-' + num;
     const r = await traer(epUrl, { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 10000 });
     if (!r.ok || !r.text) {
       throw kino.error('not_found', 'AnimeYT no entregó el capítulo', {
@@ -3362,8 +3452,10 @@ async function aonPasarRevision() {
  * /temporada/<slug>-temporada-N/; ambas se normalizan al slug base. */
 function aonTarjetas(html) {
   /* v0.6.1: las tarjetas del directorio enlazan a /anime/<slug>/ (además
-   * de las fichas /online/ y /temporada/ de siempre). */
-  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/(?:online|temporada|anime)\/([^"\/?#]+)[^>]*>([\s\S]{0,900}?)<\/a>/gi;
+   * de las fichas /online/ y /temporada/ de siempre). v0.6.7: las de la
+   * fila «Películas» enlazan a fichas /pelicula/<slug>/ — con el patrón
+   * de siempre esa fila salía vacía. */
+  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/(?:online|temporada|anime|pelicula)\/([^"\/?#]+)[^>]*>([\s\S]{0,900}?)<\/a>/gi;
   const items = [];
   const vistos = new Set();
   let m;
@@ -3407,6 +3499,11 @@ function aonTarjetas(html) {
     if (poster) item.poster = absolutizar(poster, BASE_AON);
     items.push(item);
   }
+  /* v0.6.7: si las portadas de AnimeOnline siguen grises en el teléfono,
+   * este rastro deja ver en el log la URL exacta que el sitio entregó
+   * (las sondas las ven sanas en ww4; saber qué ve el teléfono es el
+   * siguiente paso del diagnóstico). */
+  if (items.length) log('aon póster muestra:', items[0].poster || '(sin póster)');
   return items;
 }
 
@@ -3421,7 +3518,12 @@ async function aonPaginaDeSerie(slug) {
   if (o.ok && o.text) return o;
   const a = await aonTraer('/anime/' + slug + '/', 10000);
   if (a.revision) throw aonErrorRevision();
-  return a;
+  if (a.ok && a.text) return a;
+  /* v0.6.7: las PELÍCULAS viven en fichas /pelicula/<slug>/ que también
+   * traen su player (el li data-post de siempre). */
+  const p = await aonTraer('/pelicula/' + slug + '/', 10000);
+  if (p.revision) throw aonErrorRevision();
+  return p;
 }
 
 /* v0.6.3: Dooplay guarda cada opción de reproducción en un li de
@@ -3630,6 +3732,16 @@ registrarFuente({
       lista.push({ season: 1, number: n, ref: 'aon:' + epslug + ':' + n, title: 'Episodio ' + n });
     }
     if (!lista.length) {
+      /* v0.6.7: sin anclas de episodio puede ser una PELÍCULA: su ficha
+       * trae el player a cuestas (el li data-post de siempre) y se
+       * lista como único episodio; el resolver cae a la ficha si la
+       * página /episodio/ no existe. */
+      if (/dooplay_player_option/.test(r.text)) {
+        return {
+          series: { title: slugATitulo(slug) },
+          episodes: [{ season: 1, number: 1, ref: 'aon:' + slug + ':1', title: 'Película' }]
+        };
+      }
       throw kino.error('not_found', 'AnimeOnline: 0 capítulos', {
         userMessage: 'No se pudieron leer los capítulos de esta serie en AnimeOnline.'
       });
@@ -3639,10 +3751,24 @@ registrarFuente({
   },
 
   async resolver(epslug, n, idx) {
-    const epUrl = BASE_AON + '/episodio/' + epslug + '/';
-    const r = await aonTraer('/episodio/' + epslug + '/', 10000);
+    let epUrl = BASE_AON + '/episodio/' + epslug + '/';
+    let r = await aonTraer('/episodio/' + epslug + '/', 10000);
     if (r.revision) {
       throw aonErrorRevision();
+    }
+    /* v0.6.7: si la página de episodio no existe, puede ser una
+     * PELÍCULA: su ficha /pelicula/<slug>/ lleva el player a cuestas
+     * (el li data-post que alimenta aonServersDe) — así no muere con
+     * el «No se pudo abrir este episodio» de siempre. */
+    if (!r.ok || !r.text) {
+      const p = await aonTraer('/pelicula/' + epslug + '/', 10000);
+      if (p.revision) {
+        throw aonErrorRevision();
+      }
+      if (p.ok && p.text) {
+        r = p;
+        epUrl = BASE_AON + '/pelicula/' + epslug + '/';
+      }
     }
     if (!r.ok || !r.text) {
       throw kino.error('not_found', 'AnimeOnline no entregó el episodio', {
@@ -4052,7 +4178,7 @@ const NUCLEO_TODAS = {
   otv: ['otv-emision', 'otv-eps', 'otv-animes'],
   ayt: ['ayt-latest', 'ayt-peliculas'],
   eas: ['eas-eps', 'eas-sub', 'eas-lat', 'eas-popular'],
-  aon: ['aon-anime', 'aon-emision', 'aon-latino'],
+  aon: ['aon-anime', 'aon-emision', 'aon-latino', 'aon-peliculas'],
   iva: ['iva-emision', 'iva-directorio']
 };
 
