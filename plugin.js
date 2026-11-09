@@ -419,8 +419,21 @@
 // Kino con el tap, el título al pie con su aire, y el fallback de
 // siempre para el día gris. Los headers se quedan tal cual: son la
 // presentación que la 0.9.83 ya honra.
+//
+// v0.6.20 «El pasaporte del título» — la 0.6.19 pintó las portadas
+// del Inicio (el teléfono lo confesó con sus capturas: IvAnime por
+// fin a color) pero el toque en las tarjetas murió con «No se pudo
+// abrir este título». La regla del contrato (ui.md, go.title): un
+// título que ESTÁ en el lienzo (titleCard, riel o grid) se abre con
+// ese mismo item; un título que NO lo está — y un Card pintado a
+// mano no lo es — necesita su PASAPORTE completo: ref, kind, id y
+// title. El go de la 0.6.19 viajaba solo con ref y kind: Kino no
+// podía abrir lo que no identifica. La cura: el tap del riel y el
+// botón del destacado llevan las cuatro señas, y el destacado gana
+// su id propio. El «Ver más» sigue bien: go.browse pide ref y
+// title, y los lleva de fábrica.
 
-const VERSION = '0.6.19';
+const VERSION = '0.6.20';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4717,6 +4730,7 @@ async function heroDeAv1() {
       const m = feat[(dia + i) % feat.length];
       if (m && m.slug && m.title && m.id != null) {
         return {
+          id: 'av1-' + m.slug,
           ref: 'av1:' + m.slug,
           title: limpio(m.title).slice(0, 120),
           texto: m.synopsis ? limpio(m.synopsis).slice(0, 220) : 'Anime destacado de hoy en AnimeAV1.',
@@ -4862,7 +4876,10 @@ async function screen(arg) {
     if (hero) {
       const heroNodo = { type: 'heroCard', title: hero.title, text: hero.texto };
       if (hero.imagen) heroNodo.image = hero.imagen;
-      heroNodo.buttons = [{ type: 'ElevatedButton', labelText: 'Ver la serie', onPressed: { go: { title: { ref: hero.ref, kind: 'series' } } } }];
+      /* v0.6.20: el go.title del destacado también viaja con su
+       * pasaporte completo (id + title) — un botón no es un item
+       * del lienzo y Kino necesita las señas para abrirlo. */
+      heroNodo.buttons = [{ type: 'ElevatedButton', labelText: 'Ver la serie', onPressed: { go: { title: { ref: hero.ref, kind: 'series', id: String(hero.id || hero.ref), title: String(hero.title || '') } } } }];
       cuerpo.push(heroNodo);
     }
     const rielDe = function (fila) {
@@ -4881,7 +4898,11 @@ async function screen(arg) {
        * no pueda llegar. v0.6.19 «El patrón del pintor»: el ancho
        * viaja EN la imagen (120) y la tarjeta es un Card flush —
        * el patrón del posterCard de MangaTrack, probado en el
-       * teléfono con la 0.9.83, donde los headers ya viven. */
+       * teléfono con la 0.9.83, donde los headers ya viven.
+       * v0.6.20 «El pasaporte del título»: un Card pintado a mano
+       * no es un titleCard del lienzo, así que su go.title necesita
+       * las cuatro señas (ref, kind, id, title) — sin ellas el
+       * toque muere con «No se pudo abrir este título». */
       const primero = fila.items && fila.items[0] ? fila.items[0] : null;
       const esIva = !!(primero && primero.poster && typeof primero.poster === 'object' && primero.poster.source === 'plugin' && String(primero.poster.handle || '').indexOf('https://ivanime.buzz/') === 0);
       if (!esIva) {
@@ -4903,7 +4924,17 @@ async function screen(arg) {
            * cero. El Card flush de Kino lleva el tap y el título
            * vive al pie con su aire. */
           type: 'Card', flush: true,
-          onTap: { go: { title: { ref: String(it.ref || ''), kind: it.kind === 'movie' ? 'movie' : 'series' } } },
+          /* v0.6.20 «El pasaporte del título»: el go de un título
+           * que no es titleCard del lienzo viaja con sus cuatro
+           * señas (ref, kind, id, title) — la regla de ui.md; con
+           * solo ref y kind Kino contesta «No se pudo abrir este
+           * título», como el teléfono confesó de la 0.6.19. */
+          onTap: { go: { title: {
+            ref: String(it.ref || ''),
+            kind: it.kind === 'movie' ? 'movie' : 'series',
+            id: String(it.id || it.ref || ''),
+            title: String(it.title || '')
+          } } },
           children: [
             {
               type: 'Image', url: u, width: 120, aspect: '2:3',

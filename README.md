@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.19 «El patrón del pintor»)
+## Qué hace (v0.6.20 «El pasaporte del título»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -31,6 +31,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.20 «El pasaporte del título»
+
+La 0.6.19 pintó por fin las portadas del Inicio — y el teléfono lo confesó con sus capturas: IvAnime a color, con el aire compacto del patrón MangaTrack. Pero el toque en las tarjetas murió con «No se pudo abrir este título»: la regla del contrato (ui.md, `go.title`) dice que un título que **está** en el lienzo (un `titleCard`, riel o grid) se abre con ese mismo item, pero un título que **no** lo está — y un `Card` pintado a mano no lo es — necesita su **pasaporte completo: `ref`, `kind`, `id` y `title`**. El `go` de la 0.6.19 viajaba solo con `ref` y `kind`: Kino no podía abrir lo que no identifica. La cura: el tap de cada tarjeta del riel y el botón «Ver la serie» del destacado llevan las cuatro señas, y el destacado gana su `id` propio. El «Ver más» no cambia: `go.browse` pide `ref` y `title`, y los lleva de fábrica.
 
 ## v0.6.19 «El patrón del pintor»
 
