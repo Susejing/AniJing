@@ -1,4 +1,38 @@
-  File "<stdin>", line 66
-    mt=re.findall(r'https?://[^\"\\' ]*mytsumi[^\"\\' ]*', epa)[:2]
-                                     ^
-SyntaxError: closing parenthesis ']' does not match opening parenthesis '('
+==== EAS bundle main JS: rutas ajax y servers ====
+status 200 len 345731
+==== EAS episodio data-epid ====
+status 200 len 76688
+data-id/epid: ('4625', '72238')
+EAS AJAX /ajax/v2/episode/servers?episodeId= -> 200 {"status":true,"html":"\n    <div class=\"ps_-status\">\n        <div class=\"content\">\n            <div class=\"server-notice\">\n               <strong>Estás viendo el <b>Episodio 7</b></strong>\n                Si el servidor actual no funciona, por favor prueba con otros servidores disponibles.\n            </div>\n        </div>\n    </div>\n      <div class=\"ps_-block ps_-block-sub servers-embed\">\n          <div class=\"ps__-title\">\n              <i class=\"fas fa-play-circle mr-2\"></i>SERVIDOR: \n          </div>\n          <div class=\"ps__-list\">\n              <div class=\"i
+server ids: [] nombres: []
+==== OTV episodio: data-dwn, encrypt y play-video ====
+status 200 len 46119
+dwn: [[&quot;xxx&quot;,&quot;https:\/\/bysesukior.com\/d\/qmfrdinabp92&quot;],[&quot;xxx&quot;,&quot;https:\/\/doodstream.com\/d\/3at0glcdfjtr&quot;],[&quot;xxx&quot;,&quot;https:\/\/dhcplay.com\/f\/c3efrv5lbuw0&quot;],[&quot;xxx&quot;,&quot;https:\/\/movearnpre.com\/file\/eqh3qrx4aeco&quot;],[&quot;xxx&quot;,&quot;https:\/\/voe.sx\/mlgqhambnbc0&quot;],[&quot;xxx&quot;,&quot;https:\/\/mixdrop.ag\/f\/xwome38xt9763m&quot;],[&quot;xxx&quot;,&quot;https:\/\/www.mp4upload.com\/y0bmiononwgs&quot;]]
+encrypt: 3238352d31313830
+encrypt decodificado: 285-1180
+OTV play-video 285-1180 -> ERR HTTP Error 404: Not Found
+OTV play-video 1 -> ERR HTTP Error 404: Not Found
+OTV play-video 2851180 -> ERR HTTP Error 404: Not Found
+OTV play-video 3238352d31313830 -> ERR HTTP Error 404: Not Found
+==== AYT home, ficha y episodio ====
+home status 200 len 241024
+tvs: ['https://animeyt.cc/tv/kashita-maryoku-wa-revo-barai-de-kyousei-choushuu/', 'https://animeyt.cc/tv/seitokai-ni-mo-ana-wa-aru/', 'https://animeyt.cc/tv/tokyo-revengers-santen-sensou-hen/', 'https://animeyt.cc/tv/dark-summoner-to-dekiteiru/', 'https://animeyt.cc/tv/tensei-shitara-ken-deshita-temporada-2/']
+ficha 200 len 136824
+eps: ['https://animeyt.cc/116579/anime/kashita-maryoku-wa-revo-barai-de-kyousei-choushuu-capitulo-1/', 'https://animeyt.cc/119437/anime/kashita-maryoku-wa-revo-barai-de-kyousei-choushuu-capitulo-6/', 'https://animeyt.cc/119437/anime/kashita-maryoku-wa-revo-barai-de-kyousei-choushuu-capitulo-6/']
+episodio 200 len 104807
+mytsumi en crudo: True
+iframes: ['https://mytsumi.com/container.php?id=x9MSVgFqorVi0vN9&#038;only=SUB&#038;lang=SUB', 'https://mytsumi.com/container.php?id=x9MSVgFqorVi0vN9&#038;only=SUB&#038;lang=SUB']
+data-player-url: []
+data-dwn: NO
+urls mytsumi: ['https://mytsumi.com/container.php?id=x9MSVgFqorVi0vN9&#038;only=SUB&#038;lang=SUB', 'https://mytsumi.com/container.php?id=x9MSVgFqorVi0vN9&#038;only=SUB&#038;lang=SUB']
+mytsumi open=1 200 len 3592
+botones: []
+descargas: [] []
+mytsumi open=1 200 len 3592
+botones: []
+descargas: [] []
+==== AON catalogo sin galleta y posters ====
+status 200 len 287690 justamoment: False
+posters: ['https://ww4.animeonline.ninja/wp-content/uploads/2025/04/1jltcsz17CkfyhpcsSlmVC6pQGh.jpg', 'https://ww4.animeonline.ninja/wp-content/uploads/2021/02/bnWxRJHWbYcAGq9HWWuKCwm7I5X-185x278.jpg', 'https://ww4.animeonline.ninja/wp-content/uploads/2025/12/qTBlcSSTauMyuuS08M6vkqJuZPx.jpg', 'https://ww4.animeonline.ninja/wp-content/uploads/2023/01/VrYTAlyK3TDa379pk20WpAHKmh-500x750.jpg', 'https://ww4.animeonline.ninja/wp-content/uploads/2022/09/rNkilVmALgaIb4SenfbaecRStDD-500x750.jpg', 'https://ww4.animeonline.ninja/wp-content/uploads/2024/04/ld8DpQKpM4T1wRAiBjgReV0mQcK.jpg']
+poster directo -> 200 CF? False
+poster via wsrv.nl -> ERR len 27 CF? False
