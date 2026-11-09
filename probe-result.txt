@@ -1,0 +1,4 @@
+  File "<stdin>", line 66
+    mt=re.findall(r'https?://[^\"\\' ]*mytsumi[^\"\\' ]*', epa)[:2]
+                                     ^
+SyntaxError: closing parenthesis ']' does not match opening parenthesis '('
