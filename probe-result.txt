@@ -1,38 +1,133 @@
-==== EAS bundle main JS: rutas ajax y servers ====
-status 200 len 345731
-==== EAS episodio data-epid ====
-status 200 len 76688
-data-id/epid: ('4625', '72238')
-EAS AJAX /ajax/v2/episode/servers?episodeId= -> 200 {"status":true,"html":"\n    <div class=\"ps_-status\">\n        <div class=\"content\">\n            <div class=\"server-notice\">\n               <strong>Estás viendo el <b>Episodio 7</b></strong>\n                Si el servidor actual no funciona, por favor prueba con otros servidores disponibles.\n            </div>\n        </div>\n    </div>\n      <div class=\"ps_-block ps_-block-sub servers-embed\">\n          <div class=\"ps__-title\">\n              <i class=\"fas fa-play-circle mr-2\"></i>SERVIDOR: \n          </div>\n          <div class=\"ps__-list\">\n              <div class=\"i
-server ids: [] nombres: []
-==== OTV episodio: data-dwn, encrypt y play-video ====
-status 200 len 46119
-dwn: [[&quot;xxx&quot;,&quot;https:\/\/bysesukior.com\/d\/qmfrdinabp92&quot;],[&quot;xxx&quot;,&quot;https:\/\/doodstream.com\/d\/3at0glcdfjtr&quot;],[&quot;xxx&quot;,&quot;https:\/\/dhcplay.com\/f\/c3efrv5lbuw0&quot;],[&quot;xxx&quot;,&quot;https:\/\/movearnpre.com\/file\/eqh3qrx4aeco&quot;],[&quot;xxx&quot;,&quot;https:\/\/voe.sx\/mlgqhambnbc0&quot;],[&quot;xxx&quot;,&quot;https:\/\/mixdrop.ag\/f\/xwome38xt9763m&quot;],[&quot;xxx&quot;,&quot;https:\/\/www.mp4upload.com\/y0bmiononwgs&quot;]]
-encrypt: 3238352d31313830
-encrypt decodificado: 285-1180
-OTV play-video 285-1180 -> ERR HTTP Error 404: Not Found
-OTV play-video 1 -> ERR HTTP Error 404: Not Found
-OTV play-video 2851180 -> ERR HTTP Error 404: Not Found
-OTV play-video 3238352d31313830 -> ERR HTTP Error 404: Not Found
-==== AYT home, ficha y episodio ====
-home status 200 len 241024
-tvs: ['https://animeyt.cc/tv/kashita-maryoku-wa-revo-barai-de-kyousei-choushuu/', 'https://animeyt.cc/tv/seitokai-ni-mo-ana-wa-aru/', 'https://animeyt.cc/tv/tokyo-revengers-santen-sensou-hen/', 'https://animeyt.cc/tv/dark-summoner-to-dekiteiru/', 'https://animeyt.cc/tv/tensei-shitara-ken-deshita-temporada-2/']
-ficha 200 len 136824
-eps: ['https://animeyt.cc/116579/anime/kashita-maryoku-wa-revo-barai-de-kyousei-choushuu-capitulo-1/', 'https://animeyt.cc/119437/anime/kashita-maryoku-wa-revo-barai-de-kyousei-choushuu-capitulo-6/', 'https://animeyt.cc/119437/anime/kashita-maryoku-wa-revo-barai-de-kyousei-choushuu-capitulo-6/']
-episodio 200 len 104807
-mytsumi en crudo: True
-iframes: ['https://mytsumi.com/container.php?id=x9MSVgFqorVi0vN9&#038;only=SUB&#038;lang=SUB', 'https://mytsumi.com/container.php?id=x9MSVgFqorVi0vN9&#038;only=SUB&#038;lang=SUB']
-data-player-url: []
-data-dwn: NO
-urls mytsumi: ['https://mytsumi.com/container.php?id=x9MSVgFqorVi0vN9&#038;only=SUB&#038;lang=SUB', 'https://mytsumi.com/container.php?id=x9MSVgFqorVi0vN9&#038;only=SUB&#038;lang=SUB']
-mytsumi open=1 200 len 3592
-botones: []
-descargas: [] []
-mytsumi open=1 200 len 3592
-botones: []
-descargas: [] []
-==== AON catalogo sin galleta y posters ====
-status 200 len 287690 justamoment: False
-posters: ['https://ww4.animeonline.ninja/wp-content/uploads/2025/04/1jltcsz17CkfyhpcsSlmVC6pQGh.jpg', 'https://ww4.animeonline.ninja/wp-content/uploads/2021/02/bnWxRJHWbYcAGq9HWWuKCwm7I5X-185x278.jpg', 'https://ww4.animeonline.ninja/wp-content/uploads/2025/12/qTBlcSSTauMyuuS08M6vkqJuZPx.jpg', 'https://ww4.animeonline.ninja/wp-content/uploads/2023/01/VrYTAlyK3TDa379pk20WpAHKmh-500x750.jpg', 'https://ww4.animeonline.ninja/wp-content/uploads/2022/09/rNkilVmALgaIb4SenfbaecRStDD-500x750.jpg', 'https://ww4.animeonline.ninja/wp-content/uploads/2024/04/ld8DpQKpM4T1wRAiBjgReV0mQcK.jpg']
-poster directo -> 200 CF? False
-poster via wsrv.nl -> ERR len 27 CF? False
+==== EAS servers html COMPLETO ====
+status 200
+LEN html 2167
+
+    <div class="ps_-status">
+        <div class="content">
+            <div class="server-notice">
+               <strong>Estás viendo el <b>Episodio 7</b></strong>
+                Si el servidor actual no funciona, por favor prueba con otros servidores disponibles.
+            </div>
+        </div>
+    </div>
+      <div class="ps_-block ps_-block-sub servers-embed">
+          <div class="ps__-title">
+              <i class="fas fa-play-circle mr-2"></i>SERVIDOR: 
+          </div>
+          <div class="ps__-list">
+              <div class="item server-item embed-item"
+                   data-type="embed"
+                   data-id="133211"
+                   data-server-id="1">
+                  <a href="javascript:;" class="btn">multiserver</a>
+              </div>
+          </div>
+          <div class="clearfix"></div>
+      </div>
+      <div class="ps_-block ps_-block-sub servers-download">
+          <div class="ps__-title">
+              <i class="fas fa-download mr-2"></i>DESCARGA: 
+          </div>
+          <div class="ps__-list">
+              <div class="item download-item" data-type="download" data-id="133207" data-server-id="99">
+                  <a href="javascript:;" class="btn" title="Descargar transfer">
+                      transfer
+                  </a>
+              </div>
+              <div class="item download-item" data-type="download" data-id="133208" data-server-id="99">
+                  <a href="javascript:;" class="btn" title="Descargar vikingfile">
+                      vikingfile
+                  </a>
+              </div>
+              <div class="item download-item" data-type="download" data-id="133209" data-server-id="99">
+                  <a href="javascript:;" class="btn" title="Descargar 1fichier">
+                      1fichier
+                  </a>
+              </div>
+              <div class="item download-item" data-type="download" data-id="133210" data-server-id="99">
+                  <a href="javascript:;" class="btn" title="Descargar gofile">
+                      gofile
+                  </a>
+              </div>
+          </div>
+          <div class="clearfix"></div>
+      </div>
+==== EAS sources con ids hallados ====
+data-id: [] data-server-id: []
+==== AYT mytsumi limpio: open=1 y sin el, con Referer episodio ====
+open=1 con Referer episodio -> 200 len 12220
+<!doctype html>
+<html lang="es" data-mytsumi-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="color-scheme" content="dark light">
+  <title>Kashita Maryoku wa &quot;Revo Barai&quot; ·</title>
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
+  <link rel="stylesheet" href="https://mytsumi.com/assets/container.css?v=1.7.76">
+  <script defer src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+  <script defer src="https://mytsumi.com/assets/container.js?v=1.7.76"></script>
+</head>
+<body class="mytsumi-embed-body">
+<main class="mytsumi-player is-runtime" id="mytsumi-player"
+      data-container="x9MSVgFqorVi0vN9"
+      data-ads-active="1"
+      data-ads-play-url="https://mytsumi.com/api/ads/play.php"
+      data-ads-play-token="38c3665266ea96e2690c8003481655f65810499620e58344359c7e5f4a9b3a51"
+      data-language="SUB"
+      data-mode="runtime"
+      data-theme-fallback="system"
+      data-own-backdrop="0"
+      data-backdrop="">
+  <div class="mytsumi-backdrop" aria-hidden="true"></div>
+  <div class="mytsumi-shade" aria-hidden="true"></div>
+
+  <section class="mytsumi-runtime" id="mytsumi-runtime">
+        <nav class="mytsumi-tabs" id="mytsumi-tabs" aria-label="Servidores del reproductor">
+            <button type="button" class="mytsumi-tab is-active" data-player-url="https://bysesukior.com/e/p2qfhic9l7r3" data-player-kind="iframe" data-player-label="Byse" title="Byse · 720p">
+        <span class="mytsumi-tab-symbol"><span class="mytsumi-tab-number">1</span></span><span class="mytsumi-tab-name">Byse</span>
+      </button>
+            <button type="button" class="mytsumi-tab" data-player-url="https://archive.org/download/u5uhyyejnm-m9c76g6z/8bbu5at5q3h8.mp4" data-player-kind="video" data-player-label="Omega" title="Omega · 720p">
+        <span class="mytsumi-tab-symbol"><span class="mytsumi-tab-number">2</span></span><span class="mytsumi-tab-name">Omega</span>
+      </button>
+            <button type="button" class="mytsumi-tab" data-player-url="https://mega.nz/embed/0BtwDSzZ#c0fnIOyCxRMR84fotiV4nISKXEcEElU-Gy6rvbEfU_c" data-player-kind="iframe" data-player-label="MEGA" title="MEGA · 720p">
+        <span class="mytsumi-tab-symbol"><span class="mytsumi-tab-number">3</span></span><span class="mytsumi-tab-name">MEGA</span>
+      </button>
+            <button type="button" class="mytsumi-tab" da
+sin open=1 -> 200 len 3618
+<!doctype html>
+<html lang="es" data-mytsumi-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="color-scheme" content="dark light">
+  <title>Kashita Maryoku wa &quot;Revo Barai&quot; ·</title>
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
+  <link rel="stylesheet" href="https://mytsumi.com/assets/container.css?v=1.7.76">
+  <script defer src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+  <script defer src="https://mytsumi.com/assets/container.js?v=1.7.76"></script>
+</head>
+<body class="mytsumi-embed-body">
+<main class="mytsumi-player is-intro" id="mytsumi-player"
+      data-container="x9MSVgFqorVi0vN9"
+      data-ads-active="1"
+      data-ads-play-url="https://mytsumi.com/api/ads/play.php"
+      data-ads-play-token=""
+      data-language="SUB"
+      data-mode="intro"
+      data-theme-fallback="system"
+      data-own-backdrop="0"
+      data-backdrop="">
+  <div class="mytsumi-backdrop" aria-hidden="true"></div>
+  <div class="mytsumi-shade" aria-hidden="true"></div>
+
+  <section class="mytsumi-intro" id="myts
+==== AON: ventana de dos tarjetas del catalogo ====
+status 200 len 287690
+n anclas: 69
+--- TARJETA ---
+<a target="_blank" href="https://www1.animeonline.ninja/online/">Géneros 🔤</a>
+--- TARJETA ---
+<a target="_blank" href="https://www1.animeonline.ninja/online/dragon-ball-super/">Dragon Ball ✴️</a>
