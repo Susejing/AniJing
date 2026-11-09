@@ -1,4 +1,3 @@
-# probe v33b - redisparo
 name: probe
 on: [push]
 permissions:
@@ -8,106 +7,57 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
       - name: sondear
         run: |
           set +e
-          python3 - <<'PY' > probe-result.txt
-          import re, urllib.request, time
-          UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
-          def get(url, ref=None, ua=UA, binaria=False):
-              h={'User-Agent': ua, 'Accept':'text/html,*/*', 'Accept-Language':'es-ES,es;q=0.9'}
-              if ref: h['Referer']=ref
-              req=urllib.request.Request(url, headers=h)
-              t0=time.time()
-              try:
-                  with urllib.request.urlopen(req, timeout=30) as r:
-                      data=r.read()
-                      dt=round(time.time()-t0,1)
-                      if binaria: return r.status, r.headers.get('Content-Type','?'), len(data), dt
-                      return r.status, data.decode('utf-8','replace'), dt
-              except Exception as e:
-                  dt=round(time.time()-t0,1)
-                  if binaria: return 0, str(e)[:90], -1, dt
-                  return 0, 'ERR '+str(e)[:120], dt
-          def poster_de(html, slug):
-              bases=[slug, re.sub(r'-(sub-)?(espanol|castellano|latino)$','',slug)]
-              for base in bases:
-                  m=re.search(r'https?://[^\s\'"<>]*/portada/[^\s\'"<>]*'+re.escape(base)+r'-[^\s\'"<>]*?\.(?:jpe?g|png|webp)', html, re.I)
-                  if m: return m.group(0)
-              return None
-          def anclas(html, ventana):
-              rx=r'<a\b[^>]*href\s*=\s*["\'][^"\']*/anime/([^"/?#]+)[^>]*>([\s\S]{0,'+str(ventana)+r'}?)</a>'
-              return list(re.finditer(rx, html, re.I))
-          print('=== SIMULACION ivaTarjetas: ventana 900 vs 3000 ===')
-          paginas={}
-          for nombre, camino in [('HOME','/'),('EMISION','/emision'),('ANIMES','/animes')]:
-              st,b,s=get('https://ivanime.buzz'+camino, ref='https://ivanime.buzz/')
-              paginas[nombre]=(st,b)
-              m900=anclas(b,900); m3000=anclas(b,3000)
-              print(nombre,'status',st,'bytes',len(b),'-> anclas ventana900:',len(m900),' ventana3000:',len(m3000))
-              slugs900=[]
-              for m in m900:
-                  if m.group(1) not in slugs900: slugs900.append(m.group(1))
-              print('  slugs ventana900 (primeros 10):', slugs900[:10])
-          print()
-          print('=== EMISION: primer ancla completo (card-wrap) ===')
-          st,b=paginas['EMISION']
-          i=b.find('card-wrap')
-          j=b.find('</a>', i)
-          print('longitud del ancla:', j+4-i if i>=0 else -1)
-          print(repr(b[i:min(j+4, i+2600)]) if i>=0 else 'NO HAY card-wrap')
-          print()
-          print('=== HOME: poster_de por slug (regex del maestro) ===')
-          st,bh=paginas['HOME']
-          slugs=[]
-          for m in re.finditer(r'href="[^"]*?/anime/([^"/?#]+)"', bh):
-              if m.group(1) not in slugs: slugs.append(m.group(1))
-          print('slugs totales de la home (primeros 14):', slugs[:14])
-          imgport=[]
-          for slug in slugs[:10]:
-              u=poster_de(bh, slug)
-              print('  ',slug,'->', u if u else 'NO HALLADO')
-              if u and '/img/serie/' in u and u not in imgport: imgport.append(u)
-          print()
-          print('=== IMAGENES: cargan sin galleta? ===')
-          for u in imgport[:3]:
-              st4,ct,n4,s4=get(u, ref=None, binaria=True)
-              print('PORTADA sin referer:',st4,ct,n4,'bytes',s4,'s',u[:100])
-              st4b,ctb,n4b,s4b=get(u, ref='https://ivanime.buzz/', binaria=True)
-              print('PORTADA con referer:',st4b,ctb,n4b,'bytes',s4b,'s')
-              w=u.replace('https://','https://i0.wp.com/')
-              st4c,ctc,n4c,s4c=get(w, ref=None, binaria=True)
-              print('PORTADA via i0.wp.com:',st4c,ctc,n4c,'bytes',s4c,'s')
-          st,be,_=paginas['EMISION']
-          mt=re.search(r'data-src="([^"]+)"', be)
-          if mt:
-              t=mt.group(1)
-              st5,ct5,n5,s5=get(t, ref=None, binaria=True)
-              print('THUMB sin referer:',st5,ct5,n5,'bytes',s5,'s',t[:100])
-              st5b,ct5b,n5b,s5b=get(t, ref='https://ivanime.buzz/', binaria=True)
-              print('THUMB con referer:',st5b,ct5b,n5b,'bytes',s5b,'s')
-              t2=re.sub(r'\?v=\d+$','',t)
-              st5c,ct5c,n5c,s5c=get(t2, ref=None, binaria=True)
-              print('THUMB sin query:',st5c,ct5c,n5c,'bytes',s5c,'s',t2[:100])
-              w2=t2.replace('https://','https://i0.wp.com/')
-              st5d,ct5d,n5d,s5d=get(w2, ref=None, binaria=True)
-              print('THUMB via i0.wp.com:',st5d,ct5d,n5d,'bytes',s5d,'s')
-          print()
-          print('=== HOME: los heroes, donde estan sus imagenes vs su ancla ===')
-          for slug in slugs[:4]:
-              i=bh.find('/anime/'+slug)
-              j=bh.find('/portada/'+slug.split('-sub')[0])
-              corto=re.sub(r'-(sub-)?(espanol|castellano|latino)$','',slug)
-              j2=bh.find('/portada/'+corto)
-              print('  ',slug,'pos ancla',i,'pos portada',j,'pos portada-corto',j2)
-          PY
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+          F=probe-result.txt
+          echo "=== v34: ivanime ventanas e imagenes ===" > $F
+          curl -sL --max-time 30 -A "$UA" "https://ivanime.buzz/" -o home.html
+          curl -sL --max-time 30 -A "$UA" "https://ivanime.buzz/emision" -o emi.html
+          curl -sL --max-time 30 -A "$UA" "https://ivanime.buzz/animes" -o ani.html
+          for N in home emi ani; do
+            echo "--- $N: $(wc -c < $N.html) bytes" >> $F
+            echo "anclas /anime/ comillas dobles: $(grep -o 'href="[^"]*/anime/[^"]*"' $N.html | wc -l)" >> $F
+            echo "anclas /anime/ comillas simples: $(grep -o "href='[^']*/anime/[^']*'" $N.html | wc -l)" >> $F
+            echo "data-src totales: $(grep -o 'data-src="[^"]*"' $N.html | wc -l)" >> $F
+          done
+          echo "--- primer card-wrap de emi:" >> $F
+          I=$(grep -bo 'card-wrap' emi.html | head -1 | cut -d: -f1)
+          echo "offset card-wrap: $I" >> $F
+          tail -c +$((I+1)) emi.html | head -c 4000 > trozo.txt
+          J=$(grep -abo '</a>' trozo.txt | head -1 | cut -d: -f1)
+          echo "cierre </a> del card-wrap a: $J chars" >> $F
+          head -c 1700 trozo.txt >> $F
+          echo "" >> $F
+          echo "--- data-src del trozo:" >> $F
+          grep -o 'data-src="[^"]*"' trozo.txt | head -3 >> $F
+          echo "=== IMAGENES ===" >> $F
+          T=$(grep -o 'data-src="[^"]*"' emi.html | head -1 | sed 's/data-src="//;s/"$//')
+          echo "thumb: $T" >> $F
+          curl -s --max-time 20 -o /dev/null -A "$UA" "$T" -w "thumb sin referer: %{http_code} %{content_type} %{size_download} bytes" >> $F
+          echo "" >> $F
+          curl -s --max-time 20 -o /dev/null -A "$UA" -e "https://ivanime.buzz/" "$T" -w "thumb con referer: %{http_code} %{content_type} %{size_download} bytes" >> $F
+          echo "" >> $F
+          T2=$(echo "$T" | sed 's/?v=.*//')
+          curl -s --max-time 20 -o /dev/null "$T2" -w "thumb sin query sin UA: %{http_code} %{content_type} %{size_download} bytes" >> $F
+          echo "" >> $F
+          W2=$(echo "$T2" | sed 's#https://#https://i0.wp.com/#')
+          curl -sL --max-time 25 -o /dev/null "$W2" -w "thumb via i0.wp.com: %{http_code} %{content_type} %{size_download} bytes" >> $F
+          echo "" >> $F
+          P=$(grep -o 'https://ivanime[^" ]*/img/serie/portada/[^" ]*' home.html | head -1)
+          echo "portada home: $P" >> $F
+          curl -s --max-time 20 -o /dev/null "$P" -w "portada sin referer: %{http_code} %{content_type} %{size_download} bytes" >> $F
+          echo "" >> $F
+          WP=$(echo "$P" | sed 's#https://#https://i0.wp.com/#')
+          curl -sL --max-time 25 -o /dev/null "$WP" -w "portada via i0.wp.com: %{http_code} %{content_type} %{size_download} bytes" >> $F
+          echo "" >> $F
+          echo "=== fin v34 ===" >> $F
+          cat $F
       - name: commit
         run: |
           git config user.name "probe-bot"
           git config user.email "probe@users.noreply.github.com"
           git add probe-result.txt
-          git commit -m "probe v33: resultados [skip ci]" || echo "nada"
+          git commit -m "probe v34: resultados [skip ci]" || echo "nada"
           git push
-
