@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.2 «El juicio del anuncio»)
+## Qué hace (v0.6.3 «El juicio de los embeds»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -15,21 +15,25 @@ Su nombre une «anime» con la terminación «jing» de su autor.
 - **AnimeAV1** — catálogo con carátulas, fichas con sinopsis, géneros, año, nota y el id de MyAnimeList; en «Todas» aporta su núcleo (últimos episodios, últimos agregados, populares, mejor puntuados).
 - **MonosChinos** — en emisión y animes completos, con sus películas y especiales.
 - **LataAnime** — novedades y anime en latino y en castellano.
-- **OtakusTV** — directorio de animes con pósters propios, en emisión y últimos episodios; sus reproductores (Filemoon, Byse, MP4Upload) ya estaban cubiertos.
-- **AnimeYT** — catálogo con películas y buscador propio; ok.ru y Filemoon cubiertos.
-- **EstrenosAnime** — últimos episodios, sub y latino; sin buscador de texto propio, se admite con honestidad (la búsqueda global sigue con las demás fuentes).
-- **AnimeOnline** — género de anime y fichas de temporadas; su streaming es un multiserver propio que se abre con la captura del navegador oculto. Su puerta la guarda Cloudflare: si pide su revisión de seguridad, la pantalla de la fuente ofrece un botón «Pasar la revisión» que abre una ventanita de navegador real, la revisión se pasa con un toque y el catálogo queda abierto.
+- **OtakusTV** — directorio de animes con pósters propios, en emisión y últimos episodios; sus opciones de reproducción (filemoon, byse, doodstream, lulustream, vidhide, uqload, mp4upload) salen de su select `#ssel` por `/play-video`, que responde la URL del embed de verdad.
+- **AnimeYT** — catálogo con películas y buscador propio; sus players viven en el contenedor mytsumi.com, que entrega sus botones `data-player-url` cuando se le pide con `open=1` (ok.ru, Filemoon y hasta archivos directos).
+- **EstrenosAnime** — últimos episodios, sub y latino; sin buscador de texto propio, se admite con honestidad (la búsqueda global sigue con las demás fuentes). Su multiserver se lee del iframe de `player-frame` y cada opción abre con `go_to_player('URL')`.
+- **AnimeOnline** — género de anime y fichas de temporadas; es un sitio Dooplay: cada opción de `playeroptionsul` pregunta al endpoint `wp-json/dooplayer` y su multiserver (saidochesto.top) lista los hosters por idioma. Su puerta la guarda Cloudflare: si pide su revisión de seguridad, la pantalla de la fuente ofrece un botón «Pasar la revisión» que abre una ventanita de navegador real, la revisión se pasa con un toque y el catálogo queda abierto.
 - **IvAnime** — en emisión; vive en el espejo .buzz (el .com es descargas), con Voe y MP4Upload cubiertos.
 
 Todas las filas llevan su «Ver más».
 
 **La búsqueda** consulta todas las fuentes a la vez y marca de dónde viene cada resultado; **los episodios** se leen de la fuente elegida. La pantalla usa el detalle, los episodios y los extractores del catálogo: tocar una tarjeta abre la serie, igual que siempre.
 
-**Reproducción**: Zilla y enlaces directos de AnimeAV1, más extractores de servidores: Voe (con su baile de cifrado), MP4Upload, MixDrop, Uqload, YourUpload, StreamTape, UPNShare (API cifrada con AES), Doodstream, Ok.ru, Hexload, SaveFiles, StreamWish y Filemoon. Los multiservers propios de las fuentes nuevas se abren con la captura del navegador oculto cuando el HTML no alcanza — y la captura elige con cabeza: descarta las URLs de anuncios y prefiere los manifiestos (m3u8/mpd) del capítulo; si lo pescado no es un manifiesto, una segunda pasada más larga recoge también las peticiones de la página, que el video del capítulo suele llegar cuando el anuncio termina. Al abrir un episodio se prueban los servidores en orden (el preferido primero) y el resto queda en el menú «Servidor»; si un servidor cambia su baile, ese falla con un mensaje honesto y quedan los demás.
+**Reproducción**: Zilla y enlaces directos de AnimeAV1, más extractores de servidores: Voe (con su baile de cifrado), MP4Upload, MixDrop, Uqload, YourUpload, StreamTape, UPNShare (API cifrada con AES), Doodstream, Ok.ru, Hexload, SaveFiles, StreamWish, Filemoon y WolfStream. Las cuatro fuentes nuevas ya entregan sus embeds de verdad sin esperar al navegador: cada una con su camino propio (el select de OtakusTV, el `open=1` de mytsumi, el `go_to_player` de EstrenosAnime y el endpoint Dooplay de AnimeOnline). La captura del navegador oculto queda de red de seguridad — con el Referer de cada fuente, descartando las URLs de anuncios y prefiriendo los manifiestos (m3u8/mpd); si lo pescado no es un manifiesto, una segunda pasada más larga recoge también las peticiones de la página. Al abrir un episodio se prueban los servidores en orden (el preferido primero) y el resto queda en el menú «Servidor»; si un servidor cambia su baile, ese falla con un mensaje honesto y quedan los demás.
 
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.3 «El juicio de los embeds»
+
+La 0.6.2 dejó un solo gran problema: los catálogos y los pósters ya funcionaban, pero **los videos no reproducían** en ninguna de las cuatro fuentes nuevas. La captura del navegador oculto es inestable porque los players no arrancan solos — hay que tocar la opción. La cura no es esperar: es leer los embeds que el HTML crudo sí trae. **OtakusTV**: las opciones del select `#ssel` abren por `/play-video?id=`, que responde un JSON con el embed de verdad (el mismo atajo que usan los bots de descarga desde hace años). **EstrenosAnime**: su multiserver vive en el iframe de `player-frame` y cada opción abre con `go_to_player('URL')`. **AnimeOnline**: el patrón Dooplay — cada `li` de `playeroptionsul` (data-post, data-nume, data-type) pregunta al endpoint `wp-json/dooplayer`, cuyo embed puede ser un server directo o el multiserver saidochesto.top, que lista sus hosters por idioma. **AnimeYT**: el contenedor mytsumi.com solo entrega sus botones `data-player-url` si se le pide con `open=1` — por eso el sondeo anterior salía siempre vacío. Además: nuevo extractor WolfStream, los iframes perezosos (`data-src`) también se leen, la captura lleva el Referer de cada fuente, y los pósters de AnimeOnline usan la misma caza libre que arregló las demás fuentes.
 
 ## v0.6.2 «El juicio del anuncio»
 
