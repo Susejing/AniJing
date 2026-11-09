@@ -1,133 +1,87 @@
-==== EAS servers html COMPLETO ====
-status 200
-LEN html 2167
-
-    <div class="ps_-status">
-        <div class="content">
-            <div class="server-notice">
-               <strong>Estás viendo el <b>Episodio 7</b></strong>
-                Si el servidor actual no funciona, por favor prueba con otros servidores disponibles.
+==== EAS sources del embed 133211 ====
+/ajax/v2/episode/sources?id= -> 200 {"status":true,"link":"https://multiserver.sbs/embed/4927c67b-0cc2-4d0a-bad7-4a15787e6d3c","server":"multiserver","type":"EMBED"}
+LINK: https://multiserver.sbs/embed/4927c67b-0cc2-4d0a-bad7-4a15787e6d3c
+multiserver fetch -> 200 len 8025
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reproductor</title>
+    <link href="/css/iframe_v2.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed:300,400,700" rel="stylesheet">
+    <meta name="robots" content="noindex,nofollow">
+</head>
+<body class="directAc" style="">
+    <div id="DisplayContent">
+        <div id="PlayerDisplay">
+            <div class="wpw" style="background-image: linear-gradient(rgba(16, 16, 23, 0.71), #000000), url('/images/wallpapers/animephoto18.webp'); background-size: 100%; background-repeat: no-repeat;"></div>
+            
+            <div class="SelectLangDisp">
+                
+                    
+                    
+                        
+                            <li onclick="SelLang(this, 'EN');" class="SLD_A">
+                                <img src="/images/lang/EN.png">
+                            </li>
+                            
+                        
+                    
+                        
+                    
+                        
+                    
+                        
+                    
+                
             </div>
-        </div>
-    </div>
-      <div class="ps_-block ps_-block-sub servers-embed">
-          <div class="ps__-title">
-              <i class="fas fa-play-circle mr-2"></i>SERVIDOR: 
-          </div>
-          <div class="ps__-list">
-              <div class="item server-item embed-item"
-                   data-type="embed"
-                   data-id="133211"
-                   data-server-id="1">
-                  <a href="javascript:;" class="btn">multiserver</a>
-              </div>
-          </div>
-          <div class="clearfix"></div>
-      </div>
-      <div class="ps_-block ps_-block-sub servers-download">
-          <div class="ps__-title">
-              <i class="fas fa-download mr-2"></i>DESCARGA: 
-          </div>
-          <div class="ps__-list">
-              <div class="item download-item" data-type="download" data-id="133207" data-server-id="99">
-                  <a href="javascript:;" class="btn" title="Descargar transfer">
-                      transfer
-                  </a>
-              </div>
-              <div class="item download-item" data-type="download" data-id="133208" data-server-id="99">
-                  <a href="javascript:;" class="btn" title="Descargar vikingfile">
-                      vikingfile
-                  </a>
-              </div>
-              <div class="item download-item" data-type="download" data-id="133209" data-server-id="99">
-                  <a href="javascript:;" class="btn" title="Descargar 1fichier">
-                      1fichier
-                  </a>
-              </div>
-              <div class="item download-item" data-type="download" data-id="133210" data-server-id="99">
-                  <a href="javascript:;" class="btn" title="Descargar gofile">
-                      gofile
-                  </a>
-              </div>
-          </div>
-          <div class="clearfix"></div>
-      </div>
-==== EAS sources con ids hallados ====
-data-id: [] data-server-id: []
-==== AYT mytsumi limpio: open=1 y sin el, con Referer episodio ====
-open=1 con Referer episodio -> 200 len 12220
-<!doctype html>
-<html lang="es" data-mytsumi-theme="dark">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="robots" content="noindex,nofollow">
-  <meta name="color-scheme" content="dark light">
-  <title>Kashita Maryoku wa &quot;Revo Barai&quot; ·</title>
-  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
-  <link rel="stylesheet" href="https://mytsumi.com/assets/container.css?v=1.7.76">
-  <script defer src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
-  <script defer src="https://mytsumi.com/assets/container.js?v=1.7.76"></script>
-</head>
-<body class="mytsumi-embed-body">
-<main class="mytsumi-player is-runtime" id="mytsumi-player"
-      data-container="x9MSVgFqorVi0vN9"
-      data-ads-active="1"
-      data-ads-play-url="https://mytsumi.com/api/ads/play.php"
-      data-ads-play-token="38c3665266ea96e2690c8003481655f65810499620e58344359c7e5f4a9b3a51"
-      data-language="SUB"
-      data-mode="runtime"
-      data-theme-fallback="system"
-      data-own-backdrop="0"
-      data-backdrop="">
-  <div class="mytsumi-backdrop" aria-hidden="true"></div>
-  <div class="mytsumi-shade" aria-hidden="true"></div>
 
-  <section class="mytsumi-runtime" id="mytsumi-runtime">
-        <nav class="mytsumi-tabs" id="mytsumi-tabs" aria-label="Servidores del reproductor">
-            <button type="button" class="mytsumi-tab is-active" data-player-url="https://bysesukior.com/e/p2qfhic9l7r3" data-player-kind="iframe" data-player-label="Byse" title="Byse · 720p">
-        <span class="mytsumi-tab-symbol"><span class="mytsumi-tab-number">1</span></span><span class="mytsumi-tab-name">Byse</span>
-      </button>
-            <button type="button" class="mytsumi-tab" data-player-url="https://archive.org/download/u5uhyyejnm-m9c76g6z/8bbu5at5q3h8.mp4" data-player-kind="video" data-player-label="Omega" title="Omega · 720p">
-        <span class="mytsumi-tab-symbol"><span class="mytsumi-tab-number">2</span></span><span class="mytsumi-tab-name">Omega</span>
-      </button>
-            <button type="button" class="mytsumi-tab" data-player-url="https://mega.nz/embed/0BtwDSzZ#c0fnIOyCxRMR84fotiV4nISKXEcEElU-Gy6rvbEfU_c" data-player-kind="iframe" data-player-label="MEGA" title="MEGA · 720p">
-        <span class="mytsumi-tab-symbol"><span class="mytsumi-tab-number">3</span></span><span class="mytsumi-tab-name">MEGA</span>
-      </button>
-            <button type="button" class="mytsumi-tab" da
-sin open=1 -> 200 len 3618
-<!doctype html>
-<html lang="es" data-mytsumi-theme="dark">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="robots" content="noindex,nofollow">
-  <meta name="color-scheme" content="dark light">
-  <title>Kashita Maryoku wa &quot;Revo Barai&quot; ·</title>
-  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
-  <link rel="stylesheet" href="https://mytsumi.com/assets/container.css?v=1.7.76">
-  <script defer src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
-  <script defer src="https://mytsumi.com/assets/container.js?v=1.7.76"></script>
-</head>
-<body class="mytsumi-embed-body">
-<main class="mytsumi-player is-intro" id="mytsumi-player"
-      data-container="x9MSVgFqorVi0vN9"
-      data-ads-active="1"
-      data-ads-play-url="https://mytsumi.com/api/ads/play.php"
-      data-ads-play-token=""
-      data-language="SUB"
-      data-mode="intro"
-      data-theme-fallback="system"
-      data-own-backdrop="0"
-      data-backdrop="">
-  <div class="mytsumi-backdrop" aria-hidden="true"></div>
-  <div class="mytsumi-shade" aria-hidden="true"></div>
-
-  <section class="mytsumi-intro" id="myts
-==== AON: ventana de dos tarjetas del catalogo ====
-status 200 len 287690
-n anclas: 69
---- TARJETA ---
-<a target="_blank" href="https://www1.animeonline.ninja/online/">Géneros 🔤</a>
---- TARJETA ---
-<a target="_blank" href="https://www1.animeonline.ninja/online/dragon-ball-super/">Dragon Ball ✴️</a>
+            <div class="OptionsLangDisp">
+                <div class="ODDIV">
+                    
+                        
+                        
+                            
+                                <div class="OD OD_EN REactiv">
+                                    
+                                        
+                                        
+                                        <li onclick="go_to_player('U2FsdGVkX18Dfp7wptLSId78uT8E0QJemb9Z+V8TVT2yp022yD95aZAEP9PeOsxdy67ESzsyrOAHLAz4cpoY3Q==')">
+                                            <img src="/images/server/byseqekaho.com.png">
+                                            <span>byseqekaho.com</span>
+                                            <p>Japonés - Subtitulado Español </p>
+                                        </li>
+                                    
+                                        
+                                        
+                                    
+==== OTV data-dwn en otros episodios ====
+https://www.otakustv.net/ver/one-piece-1179 200 dwn: [[&quot;xxx&quot;,&quot;https:\/\/bysesukior.com\/d\/ze4i33uv4jj1&quot;],[&quot;xxx&quot;,&quot;https:\/\/doodstream.com\/d\/25fgic2i444u&quot;],[&quot;xxx&quot;,&quot;https:\/\/voe.sx\/j9wdrmmrnp2j&quot;],[&quot;xxx&quot;,&quot;https:\/\/mixdrop.ag\/f\/36ndzk7mammgd84&quot;],[&quot;xxx&quot;,&quot;https:\/\/www.mp4upload.com\/ovwbgug7y6j5&quot;]]
+eps conan: ['detective-conan-1206', 'detective-conan-1206', 'detective-conan-1205']
+conan ep 200 dwn: [[&quot;xxx&quot;,&quot;https:\/\/bysesukior.com\/d\/0v7qqprbnk0h&quot;],[&quot;xxx&quot;,&quot;https:\/\/doodstream.com\/d\/5m6v6eds4kgc&quot;],[&quot;xxx&quot;,&quot;https:\/\/dhcplay.com\/f\/fegoj8mfaeto&quot;],[&quot;xxx&quot;,&quot;https:\/\/movearnpre.com\/file\/38wj2meyq003&quot;],[&quot;xxx&quot;,&quot;https:\/\/www.mp4upload.com\/ud7kukzhv
+==== AYT mytsumi: todos los botones ====
+len 12220
+BOTON: https://bysesukior.com/e/p2qfhic9l7r3 kind: iframe
+BOTON: https://archive.org/download/u5uhyyejnm-m9c76g6z/8bbu5at5q3h8.mp4 kind: video
+BOTON: https://mega.nz/embed/0BtwDSzZ#c0fnIOyCxRMR84fotiV4nISKXEcEElU-Gy6rvbEfU_c kind: iframe
+BOTON: https://ok.ru/videoembed/16370183441068 kind: iframe
+BOTON: https://ytplay.rpmvid.com/#rpmsharerpmshareyu1s66 kind: iframe
+BOTON: https://player.abyssplayer.com/aPEIRlIia kind: iframe
+DESCARGA: <a class="mytsumi-download-button" href="https://1024terabox.com/s/1_k1ROw78e90ZE8-78MJuKg" target="_blank" rel="noopener noreferrer" title="Terabox · 720p" aria-label="Terabox · 720p">
+DESCARGA: <a class="mytsumi-download-button" href="https://mega.nz/file/0BtwDSzZ#c0fnIOyCxRMR84fotiV4nISKXEcEElU-Gy6rvbEfU_c" target="_blank" rel="noopener noreferrer" title="MEGA · 720p" aria-label="MEGA · 720p">
+DESCARGA: <a class="mytsumi-download-button" href="https://bysesukior.com/d/p2qfhic9l7r3" target="_blank" rel="noopener noreferrer" title="Byse · 720p" aria-label="Byse · 720p">
+DESCARGA: <a class="mytsumi-download-button" href="https://www.mediafire.com/file/1pzm7wqtuha6asu/01.RevoBar.720p_O2637.mp4/file" target="_blank" rel="noopener noreferrer" title="Fire · 720p" aria-label="Fire · 720p">
+DESCARGA: <a class="mytsumi-download-button" href="https://www.fireload.com/1f8e4ec2f68f36bb/01.RevoBar.720p_O2637.mp4" target="_blank" rel="noopener noreferrer" title="Fireload · 720p" aria-label="Fireload · 720p">
+DESCARGA: <a class="mytsumi-download-button" href="https://gofile.io/d/NeHYTzOx" target="_blank" rel="noopener noreferrer" title="Gofile · 720p" aria-label="Gofile · 720p">
+DESCARGA: <a class="mytsumi-download-button" href="https://1024terabox.com/s/1egtPLTd_85qJ103ZKVK7hA" target="_blank" rel="noopener noreferrer" title="Terabox · 1080p" aria-label="Terabox · 1080p">
+DESCARGA: <a class="mytsumi-download-button" href="https://mega.nz/file/dI8DlR6J#bdlHgWj3ZDDjl67gx83Kobh2kdk5Ybk0b-B1Z3ZtYCU" target="_blank" rel="noopener noreferrer" title="MEGA · 1080p" aria-label="MEGA · 1080p">
+DESCARGA: <a class="mytsumi-download-button" href="https://bysesukior.com/d/bktsr1rt2d9y" target="_blank" rel="noopener noreferrer" title="Byse · 1080p" aria-label="Byse · 1080p">
+DESCARGA: <a class="mytsumi-download-button" href="https://www.mediafire.com/file/5zojhkokcznd5nf/01.RevoBar.1080p_O2637.mp4/file" target="_blank" rel="noopener noreferrer" title="Fire · 1080p" aria-label="Fire · 1080p">
+DESCARGA: <a class="mytsumi-download-button" href="https://www.fireload.com/8d04073817e13e18/01.RevoBar.1080p_O2637.mp4" target="_blank" rel="noopener noreferrer" title="Fireload · 1080p" aria-label="Fireload · 1080p">
+DESCARGA: <a class="mytsumi-download-button" href="https://gofile.io/d/NeHYTzOx" target="_blank" rel="noopener noreferrer" title="Gofile · 1080p" aria-label="Gofile · 1080p">
+==== AON tarjetas de verdad (con img) ====
+anclas: 69 con img: 5
+--- TARJETA REAL ---
+<a href="https://ww4.animeonline.ninja/online/boku-no-hero-academia-3-091625/"><div class="image"><img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201%201%22%3E%3C%2Fsvg%3E" data-src="https://image.tmdb.org/t/p/w300/jsXKG9uppnPrhqFNhImllyCfLhl.jpg" alt="Boku no Hero Academia" /><div class="mepo"> </div><div class="data"><h3>Boku no Hero Academia</h3><span class="wdate">2016</span></div></div></a>
+--- TARJETA REAL ---
+<a href="https://ww4.animeonline.ninja/online/kimetsu-no-yaiba-080425/"><div class="image"><img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201%201%22%3E%3C%2Fsvg%3E" data-src="https://image.tmdb.org/t/p/w300/nTvM4mhqNlHIvUkI1gVnW6XP7GG.jpg" alt="Kimetsu no Yaiba" /><div class="mepo"> </div><div class="data"><h3>Kimetsu no Yaiba</h3><span class="wdate">2019</span></div></div></a>
