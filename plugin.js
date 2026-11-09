@@ -446,8 +446,21 @@
 // un día aparece (en cualquiera de los dos órdenes de atributos), el
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
+//
+// v0.6.22 «La ficha en pie» — la 0.6.21 vistió el details() y el
+// teléfono confesó con su log que no bastó: al abrir la ficha desde
+// el Inicio, episodes() corrió («iva: … -> N capítulos») pero ni
+// una línea de image() — Kino nunca pidió el póster del detalle.
+// El contrato tiene la puerta que faltaba: el póster de una ficha
+// también vive en episodes().series (KinoSeriesInfo: poster acepta
+// la referencia servida, como overview) — y episodes() es el
+// llamado que el log PROBÓ que Kino hace en cada ficha. La misma
+// cosecha del 0.6.21 (ivaPosterDe) ahora sirve a los dos caminos,
+// sacada de la misma página que episodios ya baja: sin fetch
+// extra. Y el detalle gana bitácora — un export sin línea en el
+// log es indistinguible de un export muerto.
 
-const VERSION = '0.6.21';
+const VERSION = '0.6.22';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4303,6 +4316,42 @@ function ivaRefDe(url) {
   return { source: 'plugin', handle: u };
 }
 
+/* v0.6.22 «La ficha en pie»: Kino llama a episodes() en CADA ficha
+ * (el log del teléfono lo confiesa: «iva: <slug> -> N capítulos») y
+ * el contrato documenta que el póster de una ficha también vive en
+ * episodes().series (KinoSeriesInfo: poster acepta la referencia
+ * servida, igual que overview). La ficha abierta desde el Inicio
+ * llega fría — sin el póster del item — y si ni details() ni su
+ * póster pintan, episodes().series es la fuente que Kino SÍ consulta.
+ * La cosecha (misma página que episodios ya baja, sin fetch extra):
+ * og:image por si un día aparece (la sonda v38 probó que hoy NO
+ * existe, en cualquiera de los dos órdenes de atributos), el PULGAR
+ * del héroe (/assets/thumbs/imagen/…, 40–90 KB, bajo el tope), y de
+ * último una portada grande. */
+function ivaPosterDe(html) {
+  const texto = String(html || '');
+  const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(texto) ||
+    /content=["']([^"']+)["'][^>]*property=["']og:image["']/i.exec(texto);
+  if (og) {
+    const u = og[1].indexOf('//') === 0 ? 'https:' + og[1] : og[1];
+    return u || null;
+  }
+  const pul = /https?:\/\/ivanime\.buzz\/assets\/thumbs\/imagen\/[a-z0-9-]+\.jpe?g(?:\.webp)?/i.exec(texto);
+  if (pul) return pul[0];
+  const por = /https?:\/\/ivanime\.buzz\/assets\/img\/serie\/portada\/[a-z0-9-]+\.jpe?g/i.exec(texto);
+  return por ? por[0] : null;
+}
+
+/* La sinopsis de la ficha vive en el primer <p> con cuerpo DESPUÉS
+ * del h1 (antes del título hay menús y avisos que también usan <p>). */
+function ivaSinopsisDe(html) {
+  const texto = String(html || '');
+  const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(texto);
+  const zona = h ? texto.slice(h.index) : texto;
+  const sinM = /<p[^>]*>([\s\S]{30,600}?)<\/p>/i.exec(zona);
+  return sinM ? limpio(sinM[1]).slice(0, 400) : null;
+}
+
 function ivaTarjetas(html) {
   /* v0.6.14: las tarjetas de /emision y /animes son anclas «card-wrap»
    * que llevan TODO dentro (div, imagen, insignias y título) y su
@@ -4477,32 +4526,15 @@ registrarFuente({
     const serie = { title: slugATitulo(slug) };
     const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
     if (h) serie.title = limpio(h[1]) || serie.title;
-    const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(r.text) ||
-      /content=["']([^"']+)["'][^>]*property=["']og:image["']/i.exec(r.text);
-    /* v0.6.21 «El póster de la ficha»: la sonda v38 midió la ficha
-     * real y NO trae og:image — el póster vivo de la página es el
-     * PULGAR del héroe (/assets/thumbs/imagen/…jpg.webp, 40–90 KB,
-     * siempre bajo el tope de 256 KB de Kino). La cosecha va en
-     * orden: og:image por si un día aparece (en cualquiera de los
-     * dos órdenes de atributos), el pulgar del héroe, y de último
-     * una portada grande. La ficha viaja como referencia servida
-     * (v0.6.15). */
-    let img = og ? (og[1].indexOf('//') === 0 ? 'https:' + og[1] : og[1]) : '';
-    if (!img) {
-      const pul = /https?:\/\/ivanime\.buzz\/assets\/thumbs\/imagen\/[a-z0-9-]+\.jpe?g(?:\.webp)?/i.exec(r.text);
-      if (pul) img = pul[0];
-    }
-    if (!img) {
-      const por = /https?:\/\/ivanime\.buzz\/assets\/img\/serie\/portada\/[a-z0-9-]+\.jpe?g/i.exec(r.text);
-      if (por) img = por[0];
-    }
-    if (img) serie.poster = ivaRefDe(img);
-    /* v0.6.21: la sinopsis vive en el primer <p> con cuerpo, a partir
-     * del h1 (antes del título hay menús y avisos que también usan
-     * <p>). */
-    const zona = h ? r.text.slice(h.index) : r.text;
-    const sinM = /<p[^>]*>([\s\S]{30,600}?)<\/p>/i.exec(zona);
-    if (sinM) serie.overview = limpio(sinM[1]).slice(0, 400);
+    /* v0.6.21: la sonda v38 midió la ficha real y NO trae og:image.
+     * v0.6.22: la cosecha vive en ivaPosterDe (compartida con
+     * episodios) y el detalle deja bitácora — un export sin línea
+     * en el log es indistinguible de un export muerto. */
+    const poster = ivaPosterDe(r.text);
+    if (poster) serie.poster = ivaRefDe(poster);
+    const sin = ivaSinopsisDe(r.text);
+    if (sin) serie.overview = sin;
+    log('iva ficha «' + slug + '»: ' + (poster ? 'póster (' + poster.split('/').pop() + ')' : 'sin póster') + (sin ? ' + sinopsis' : ' sin sinopsis'));
     return serie;
   },
 
@@ -4556,7 +4588,19 @@ registrarFuente({
     for (let n = 1; n <= total; n++) {
       lista.push({ season: 1, number: n, ref: 'iva:' + slug + ':' + n, title: 'Episodio ' + n });
     }
-    return { series: { title: slugATitulo(slug) }, episodes: lista };
+    /* v0.6.22 «La ficha en pie»: Kino llama a episodes() en CADA
+     * ficha — el póster y la sinopsis viajan también aquí, cosechados
+     * de la MISMA página que ya se bajó para contar los capítulos
+     * (sin fetch extra). La ficha fría — abierta desde el Inicio,
+     * sin el póster del item — se viste sola: KinoSeriesInfo
+     * documenta poster (referencia servida incluida) y overview. */
+    const serie = { title: slugATitulo(slug) };
+    const poster = ivaPosterDe(r.text);
+    if (poster) serie.poster = ivaRefDe(poster);
+    const sin = ivaSinopsisDe(r.text);
+    if (sin) serie.overview = sin;
+    if (poster) log('iva ficha «' + slug + '»: póster en episodes().series (' + poster.split('/').pop() + ')');
+    return { series: serie, episodes: lista };
   },
 
   async resolver(slug, n, idx) {
