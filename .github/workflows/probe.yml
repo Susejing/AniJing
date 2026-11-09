@@ -1,0 +1,80 @@
+name: probe
+on:
+  push:
+    paths:
+      - '.github/workflows/probe.yml'
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: probes
+        run: |
+          set +e
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+          P=probe-result.txt
+          : > "$P"
+          f() { curl -sL --compressed --max-time 30 -A "$UA" -H 'Accept: text/html,application/xhtml+xml,*/*' -H 'Accept-Language: es-ES,es;q=0.9' -H "Referer: $2" "$1"; }
+          {
+          echo "===== EAS eps imgs ====="
+          f https://estrenosanime.net/ultimo-episodios https://estrenosanime.net/ | grep -oE '<img[^>]*>' | head -30
+          echo "===== EAS eps anclas contexto ====="
+          f https://estrenosanime.net/ultimo-episodios https://estrenosanime.net/ | grep -oE '<a [^>]*href="[^"]*/ver/[^"]*episodio-[0-9]+[^"]*"[^>]*>.{0,500}' | head -6
+          echo "===== EAS sub anclas contexto ====="
+          f https://estrenosanime.net/ultimo-subtitulado https://estrenosanime.net/ | grep -oE '<a [^>]*href="[^"]*/anime/[^"]*"[^>]*>.{0,500}' | head -6
+          echo "===== EAS popular imgs ====="
+          f https://estrenosanime.net/popular https://estrenosanime.net/ | grep -oE '<img[^>]*>' | head -20
+          echo "===== EAS pelicula imgs ====="
+          f https://estrenosanime.net/tipo/Pelicula https://estrenosanime.net/ | grep -oE '<img[^>]*>' | head -8
+          echo "===== EAS actualizado imgs ====="
+          f https://estrenosanime.net/ultimo-actualizado https://estrenosanime.net/ | grep -oE '<img[^>]*>' | head -8
+          echo "===== AON genero imgs ====="
+          f https://animeonline.ninja/genero/ver-anime/ https://animeonline.ninja/ | grep -oE '<img[^>]*>' | head -40
+          echo "===== AON genero anclas contexto ====="
+          f https://animeonline.ninja/genero/ver-anime/ https://animeonline.ninja/ | grep -oE '<a [^>]*href="[^"]*"[^>]*>.{0,400}' | head -12
+          echo "===== AON home ====="
+          f https://animeonline.ninja/ https://animeonline.ninja/ > aon.html
+          wc -c aon.html
+          grep -oE '<h[1-4][^>]*>[^<]{0,80}' aon.html | head -20
+          grep -oE 'href="[^"]*genero[^"]*"' aon.html | sort -u | head -20
+          echo "===== IVA home ====="
+          f https://ivanime.buzz/ https://ivanime.buzz/ > iva.html
+          wc -c iva.html
+          grep -oE '<h[1-4][^>]*>[^<]{0,80}' iva.html | head -20
+          grep -oE 'href="https?://ivanime.buzz/[^"]{1,70}"' iva.html | sort -u | head -30
+          grep -oE '<img[^>]*>' iva.html | head -15
+          echo "===== OTV animes filtros ====="
+          f 'https://www.otakustv.net/animes?pag=1' https://www.otakustv.net/ > otv.html
+          wc -c otv.html
+          grep -oE '<(option|select)[^>]*>[^<]{0,60}' otv.html | head -25
+          grep -oE 'href="[^"]*"' otv.html | grep -iE 'peli|movie|tipo|genero' | sort -u | head -20
+          echo "===== MYTSUMI YJU ====="
+          curl -sL --compressed --max-time 30 -A "$UA" -H "Referer: https://mytsumi.com/container.php?id=YJUObSrqPa4oc0lc&only=SUB&lang=SUB" 'https://mytsumi.com/container.php?id=YJUObSrqPa4oc0lc&only=SUB&lang=SUB&open=1' > mt.html
+          wc -c mt.html
+          grep -oE '<button[^>]{0,260}>' mt.html | head -14
+          grep -oE '<a [^>]{0,260}>' mt.html | head -14
+          echo "===== OMEGA test ====="
+          O=$(grep -oE 'data-player-url="[^"]*"' mt.html | grep -iE 'archive|\.mp4|omega' | head -1 | sed -e 's/^data-player-url="//' -e 's/"$//')
+          echo "url: $O"
+          curl -s -o /dev/null -w 'sin-ref: %{http_code} ct=%{content_type}\n' --max-time 25 -A "$UA" "$O"
+          curl -s -o /dev/null -w 'ref-my: %{http_code}\n' --max-time 25 -A "$UA" -H 'Referer: https://mytsumi.com/' "$O"
+          curl -s -o /dev/null -w 'ref-ayt: %{http_code}\n' --max-time 25 -A "$UA" -H 'Referer: https://animeyt.cc/' "$O"
+          curl -s -o /dev/null -w 'range: %{http_code}\n' --max-time 25 -A "$UA" -r 0-0 "$O"
+          echo "===== N1MWQ test ====="
+          N=$(grep -oE 'data-player-url="[^"]*"' mt.html | grep -i n1mwq | head -1 | sed -e 's/^data-player-url="//' -e 's/"$//')
+          echo "url: $N"
+          curl -sL --compressed --max-time 30 -A "$UA" -H 'Referer: https://mytsumi.com/' "$N" > n1.html
+          wc -c n1.html
+          head -c 1200 n1.html
+          echo
+          grep -oiE 'jwplayer|videojs|plyr|hls\.js|\.m3u8|eval\(|sources?[ :]|vidhide|streamwish|filemoon|dood|streamtape|mixdrop|abyss' n1.html | sort | uniq -c | head -15
+          } >> "$P" 2>&1
+      - name: commit
+        run: |
+          git config user.name "probe-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add probe-result.txt
+          git commit -m "probe v9: resultados [skip ci]" || echo "nada"
+          git push
