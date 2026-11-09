@@ -432,8 +432,22 @@
 // botón del destacado llevan las cuatro señas, y el destacado gana
 // su id propio. El «Ver más» sigue bien: go.browse pide ref y
 // title, y los lleva de fábrica.
+//
+// v0.6.21 «El póster de la ficha» — la 0.6.20 abrió los animes desde
+// el Inicio, pero la ficha llegaba SIN póster (gris) mientras la
+// misma serie abierta desde la sección sí lo traía: la sección le
+// da a Kino el póster del item, y el Inicio tiene que pedirlo a
+// details(). La sonda v38 midió la ficha real de IvAnime y la
+// confesión: NO trae og:image (solo site_name, título y descripción)
+// — el detalle de la 0.6.15 esperaba un og que no existe y la ficha
+// viajaba desnuda. El póster vivo de la página es el PULGAR del
+// héroe (/assets/thumbs/imagen/…jpg.webp, 40–90 KB, siempre bajo el
+// tope de 256 KB de Kino). La cosecha va en orden: og:image por si
+// un día aparece (en cualquiera de los dos órdenes de atributos), el
+// pulgar del héroe, y de último una portada grande. La sinopsis se
+// ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 
-const VERSION = '0.6.20';
+const VERSION = '0.6.21';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4463,10 +4477,31 @@ registrarFuente({
     const serie = { title: slugATitulo(slug) };
     const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
     if (h) serie.title = limpio(h[1]) || serie.title;
-    const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(r.text);
-    /* v0.6.15: la ficha también viaja como referencia servida. */
-    if (og) serie.poster = ivaRefDe(og[1].indexOf('//') === 0 ? 'https:' + og[1] : og[1]);
-    const sinM = /<p[^>]*>([\s\S]{30,600}?)<\/p>/i.exec(r.text);
+    const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(r.text) ||
+      /content=["']([^"']+)["'][^>]*property=["']og:image["']/i.exec(r.text);
+    /* v0.6.21 «El póster de la ficha»: la sonda v38 midió la ficha
+     * real y NO trae og:image — el póster vivo de la página es el
+     * PULGAR del héroe (/assets/thumbs/imagen/…jpg.webp, 40–90 KB,
+     * siempre bajo el tope de 256 KB de Kino). La cosecha va en
+     * orden: og:image por si un día aparece (en cualquiera de los
+     * dos órdenes de atributos), el pulgar del héroe, y de último
+     * una portada grande. La ficha viaja como referencia servida
+     * (v0.6.15). */
+    let img = og ? (og[1].indexOf('//') === 0 ? 'https:' + og[1] : og[1]) : '';
+    if (!img) {
+      const pul = /https?:\/\/ivanime\.buzz\/assets\/thumbs\/imagen\/[a-z0-9-]+\.jpe?g(?:\.webp)?/i.exec(r.text);
+      if (pul) img = pul[0];
+    }
+    if (!img) {
+      const por = /https?:\/\/ivanime\.buzz\/assets\/img\/serie\/portada\/[a-z0-9-]+\.jpe?g/i.exec(r.text);
+      if (por) img = por[0];
+    }
+    if (img) serie.poster = ivaRefDe(img);
+    /* v0.6.21: la sinopsis vive en el primer <p> con cuerpo, a partir
+     * del h1 (antes del título hay menús y avisos que también usan
+     * <p>). */
+    const zona = h ? r.text.slice(h.index) : r.text;
+    const sinM = /<p[^>]*>([\s\S]{30,600}?)<\/p>/i.exec(zona);
     if (sinM) serie.overview = limpio(sinM[1]).slice(0, 400);
     return serie;
   },

@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.20 «El pasaporte del título»)
+## Qué hace (v0.6.21 «El póster de la ficha»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -31,6 +31,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.21 «El póster de la ficha»
+
+La 0.6.20 abrió los animes desde el Inicio, pero la ficha llegaba sin póster — gris — mientras la misma serie abierta desde la sección sí lo traía. La diferencia: la sección le entrega a Kino el póster del item, y el Inicio tiene que pedírselo a `details()`. La sonda (un runner de GitHub Actions con la presentación del plugin) midió la ficha real de IvAnime y la confesión: **no trae `og:image`** — solo site_name, título y descripción; el `detalle` esperaba un og que no existe y la ficha viajaba desnuda. El póster vivo de la página es el **pulgar del héroe** (`/assets/thumbs/imagen/…jpg.webp`, 40–90 KB, siempre bajo el tope de 256 KB de Kino). La cosecha va en orden: `og:image` por si un día aparece (en cualquiera de los dos órdenes de atributos), el pulgar del héroe, y de último una portada grande. La sinopsis ahora se ancla al `h1`: el primer `<p>` con cuerpo *después* del título, no el primero de toda la página.
 
 ## v0.6.20 «El pasaporte del título»
 
