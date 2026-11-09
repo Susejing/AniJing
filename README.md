@@ -4,11 +4,11 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.4 «El juicio de los embeds, segunda vista»)
+## Qué hace (v0.6.5 «La cosecha fina»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
-**Orden por secciones**: en «Todas», cada fuente ocupa su propia sección con un encabezado grande y sus rieles debajo — nada de filas revueltas: el scroll se lee por partes. Tocar el nombre de una fuente la muestra sola. Cada fuente aporta su núcleo a «Todas»; el resto de sus filas vive en su sección propia.
+**Orden por secciones**: en «Todas», cada fuente ocupa su propia sección con un encabezado grande y sus rieles debajo — nada de filas revueltas: el scroll se lee por partes. Tocar el nombre de una fuente la muestra sola. Cada fuente aporta su núcleo a «Todas»; el resto de sus filas vive en su sección propia. En la 0.6.5 las secciones se llenaron: EstrenosAnime estrenó Películas y Actualizados, AnimeOnline trae En emisión, Audio Latino y Películas, IvAnime suma Directorio y Últimos agregados y AnimeYT aporta sus películas — y como el estado de la pantalla tiene un tope, cuando hay muchas filas cada riel enseña 8 tarjetas en vez de 12 para que nada se desborde.
 
 **Ocho fuentes**:
 
@@ -19,7 +19,7 @@ Su nombre une «anime» con la terminación «jing» de su autor.
 - **AnimeYT** — catálogo con películas y buscador propio; sus players viven en el contenedor mytsumi.com, que entrega sus botones `data-player-url` cuando se le pide con `open=1` (ok.ru, Filemoon y hasta archivos directos).
 - **EstrenosAnime** — últimos episodios, sub y latino; sin buscador de texto propio, se admite con honestidad (la búsqueda global sigue con las demás fuentes). Sus servidores se piden por AJAX (episode/servers → episode/sources) y su multiserver entrega cada opción cifrada — pero la descifra su propio endpoint `api/decrypt-stream` con solo preguntarle por POST.
 - **AnimeOnline** — género de anime y fichas de temporadas; es un sitio Dooplay: cada opción de `playeroptionsul` pregunta al endpoint `wp-json/dooplayer` y su multiserver (saidochesto.top) lista los hosters por idioma. Su puerta la guarda Cloudflare: si pide su revisión de seguridad, la pantalla de la fuente ofrece un botón «Pasar la revisión» que abre una ventanita de navegador real, la revisión se pasa con un toque y el catálogo queda abierto.
-- **IvAnime** — en emisión; vive en el espejo .buzz (el .com es descargas), con Voe y MP4Upload cubiertos.
+- **IvAnime** — en emisión, directorio y últimos agregados; vive en el espejo .buzz (el .com es descargas), con Voe y MP4Upload cubiertos. Sus pósters de verdad viajan en `data-src` (el `src` es un anime.png de relleno) y ya se leen bien.
 
 Todas las filas llevan su «Ver más».
 
@@ -30,6 +30,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.5 «La cosecha fina»
+
+La 0.6.4 llegó al teléfono y el balance fue bueno: casi todo reproduce. Quedaban tres detalles finos y una petición de cosecha, y esta versión los atiende. **Pósters grises**: los de EstrenosAnime e IvAnime venían en rutas RELATIVAS (`/uploads/anime/…` sin protocolo, que Kino no dibuja) o con `src` de relleno (`no_poster.jpg`, `anime.png`) que el plugin tomaba por póster de verdad; ahora las rutas se cosen con la base de su fuente y los rellenos se descartan. Los de AnimeOnline tenían otro dueño: la mitad de sus carátulas vive en `image.tmdb.org`, un host que el manifiesto no conocía (ya lo conoce, en silencio: sin permisos nuevos). **El «se queda cargando» de AnimeYT** era el botón Omega: un `.mp4` de archive.org que contesta 403 intermitente — los directos de mytsumi van ahora al fondo del reparto y los extractores de verdad (Ok.ru, Filemoon) se prueban primero. **La cosecha**: rieles nuevos por fuente (Películas y Actualizados en EstrenosAnime; En emisión, Audio Latino y Películas en AnimeOnline; Emisión, Directorio y Últimos agregados en IvAnime), cada fila en su propio try — si una cae, las demás se muestran igual; y con el estado de la pantalla topeado a 64 KB, cuando hay muchas filas cada riel muestra 8 tarjetas en vez de 12.
 
 ## v0.6.4 «El juicio de los embeds, segunda vista»
 
