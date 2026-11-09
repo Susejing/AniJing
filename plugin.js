@@ -227,7 +227,22 @@
 // manos del Cloudflare del sitio (la app los pide sin galleta
 // y él la cierra); el rastro del log queda por si hace falta.
 
-const VERSION = '0.6.8';
+// v0.6.9 «El cambiazo» — AnimeOnline se despide: el sitio mudó dos
+// veces en dos semanas (ww3, ww4), su Cloudflare cerró la puerta al
+// catálogo y a los episodios, y las portadas grises nunca se curaron —
+// de nada sirve una fuente que no funciona. En su lugar entran dos
+// veteranas: AnimeJara (la de siempre, animejara.com, puerta
+// henaojara2.com) con sus tarjetas de póster hj, sus temporadas en
+// pestañas (los episodios se sintetizan como /episode/<slug>-1x2/) y
+// su multiserver streamhj.top que lista filemoon, uqload, vidhide,
+// voe, lulustream, streamtape y mp4upload con idiomas (japonés,
+// latino, castellano); y VerAnime (veranime.ninja), un Dooplay de
+// manual con pósters de tmdb, episodios /ver/<slug>-episodio-N/ y su
+// player por el endpoint wp-json/dooplayer/v2 con multiserver
+// darkanimes.com. La ventanita de la revisión de Cloudflare se
+// retira con AnimeOnline: ninguna fuente viva la pide hoy.
+
+const VERSION = '0.6.9';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -712,7 +727,7 @@ function detectarTipo(nombre, url) {
   if (/\bvoe\b|voe\.|voe-unblock|voeunblock/i.test(nu)) return 'voe';
   if (/dood|dsvplay|d-s\.io|ds2play|ds2video|playmogo|myvidplay|vide0\.net|d0+d\.com|dooo+d/i.test(nu)) return 'dood';
   if (/filemoon|byse|moonplayer|f16px/i.test(nu)) return 'filemoon';
-  if (/vidhide|streamhide/i.test(nu)) return 'vidhide';
+  if (/vidhide|streamhide|filelions/i.test(nu)) return 'vidhide';
   if (/savefiles?|streamhls/i.test(nu)) return 'savefiles';
   if (/hexload/i.test(nu)) return 'hexload';
   if (/streamwish|obeywish|\bwish\b|embedwish|hlswish|awish/i.test(nu)) return 'streamwish';
@@ -720,8 +735,9 @@ function detectarTipo(nombre, url) {
   if (/streamtape/i.test(nu)) return 'streamtape';
   if (/wolfstream/i.test(nu)) return 'wolfstream';
   /* v0.6.0: los agregadores propios (saidochesto y compañía) se abren con el
-     navegador oculto: la captura pesca el video aunque el player no se deje leer. */
-  if (/saidochesto\.?top|multiserver/i.test(nu)) return 'multi';
+     navegador oculto: la captura pesca el video aunque el player no se deje
+     leer. v0.6.9: streamhj.top (el multiserver de AnimeJara) es de la familia. */
+  if (/saidochesto\.?top|multiserver|streamhj\.top/i.test(nu)) return 'multi';
   return 'generic';
 }
 
@@ -2224,7 +2240,7 @@ function servidoresDePagina(html) {
   while ((m = aRe.exec(texto))) candidatos.push({ url: m[1], nombre: m[2] });
   const servers = [];
   const vistos = {};
-  const propios = /(animeonline\.ninja|otakustv2?\.com|otakustv\.net|animeyt\.(?:cc|one|org)|estrenosanime\.net|ivanime\.(?:top|buzz))/i;
+  const propios = /(animejara\.com|henaojara2\.com|veranime\.ninja|otakustv2?\.com|otakustv\.net|animeyt\.(?:cc|one|org)|estrenosanime\.net|ivanime\.(?:top|buzz))/i;
   for (let i = 0; i < candidatos.length; i++) {
     const c = candidatos[i];
     let u = desescapar(String(c.url || '').trim());
@@ -2309,7 +2325,7 @@ function posterAntesDe(html, idx) {
 }
 
 /* v0.6.5: los pósters de los listados traen rutas RELATIVAS — se cosen
- * con la base de su fuente en cada llamada (eas/ayt/aon/iva), con el
+ * con la base de su fuente en cada llamada (eas/ayt/jara/van/iva), con el
  * absolutizar único de las utilidades. v0.6.6: la 0.6.5 declaró esa
  * función DOS veces (la vieja de utilidades y una nueva junto a los
  * conversores) y Kino compila el plugin como módulo, que no permite
@@ -3344,269 +3360,365 @@ registrarFuente({
   }
 });
 
-/* ---------- fuente: AnimeOnline (animeonline.ninja) ---------- */
+/* ---------- fuente: AnimeJara (henaojara2.com -> animejara.com) ---------- */
 
-/* v0.6.8 «La mudanza»: el sitio vivo es ww4 — ww3 quedó sirviendo
- * la página de aterrizaje de otro sitio y a ningún camino del
- * viejo respondía con catálogo (por eso el teléfono solo veía el
- * rescate de la ventanita y ningún episodio abría). La galleta
- * cf_clearance que gana la ventanita también es de ww4: con esta
- * base, casa. El manifiesto conoce ww4 desde la 0.6.5. */
-const BASE_AON = 'https://ww4.animeonline.ninja';
+/* v0.6.9 «El cambiazo»: entra AnimeJara (el animejara.com de siempre,
+ * conocido por su puerta henaojara2.com). Sus tarjetas enlazan fichas
+ * /anime/<slug> y el póster de verdad vive DENTRO del ancla, después
+ * de las banderitas de idioma (img japones.png y compañía): se reconoce
+ * por su dominio hj.animejara.com, no por ser el primer img. Las fichas
+ * traen pestañas de temporada («data-season» + «N episodios») y los
+ * episodios siguen el patrón /episode/<slug>-<temporada>x<numero>/; el
+ * player de cada episodio es un multiserver propio (streamhj.top) que
+ * lista sus hosters en onclick playVideo('URL'). */
+const BASE_JARA = 'https://animejara.com';
 
-/* v0.6.2 — la puerta de AnimeOnline la guarda Cloudflare: a la petición
- * del plugin le responde su página de revisión («Just a a moment…») en
- * vez del catálogo, y en el teléfono eso se veía como un «Nada por ahora»
- * falso. Ahora se detecta la revisión y se dice la verdad. La cura es la
- * ventanita de la pantalla de la fuente: la persona la pasa una vez, y la
- * galleta de acceso (cf_clearance) viaja desde entonces con cada
- * petición, amarrada al disfraz exacto del navegador que la ganó
- * (Cloudflare las ata juntas). Además la ventanita entrega el HTML de la
- * página ya cargada (renderizada, hasta 2M de caracteres): el catálogo
- * se lee de ahí y queda de respaldo un rato. */
-function aonJson(clave, def) {
-  try {
-    const crudo = kino.storage.get(clave);
-    if (!crudo) return def;
-    const val = JSON.parse(crudo);
-    return val === null || val === undefined ? def : val;
-  } catch (e) { return def; }
-}
-
-function aonJsonSet(clave, val) {
-  try { kino.storage.set(clave, JSON.stringify(val)); return true; } catch (e) { return false; }
-}
-
-function aonEsRevision(texto) {
-  return /just a moment|cf-chl|checking your browser|attention required|security verification|cf_chl/i.test(String(texto || '').slice(0, 4000));
-}
-
-function aonHeaders() {
-  const h = { Referer: BASE_AON + '/' };
-  const g = aonJson('aonCookies', null);
-  if (g && typeof g === 'object') {
-    const par = [];
-    for (const k in g) if (g[k]) par.push(k + '=' + g[k]);
-    if (par.length) h.Cookie = par.join('; ');
-    const ua = aonJson('aonUA', '');
-    if (ua) h['User-Agent'] = ua;
-  }
-  return h;
-}
-
-async function aonTraer(camino, timeoutMs) {
-  const r = await traer(BASE_AON + camino, { headers: aonHeaders(), timeoutMs: timeoutMs || 10000 });
-  if (r.ok && aonEsRevision(r.text)) {
-    log('aon: página de revisión en ' + camino);
-    return { ok: false, status: 403, revision: true, url: r.url, text: '' };
-  }
-  return r;
-}
-
-function aonErrorRevision() {
-  return kino.error('unavailable', 'AnimeOnline pide su revisión de seguridad', {
-    userMessage: 'AnimeOnline pide pasar su revisión de seguridad (Cloudflare). En la pantalla de AniJing, elige la fuente AnimeOnline y toca «Pasar la revisión»: se abre una ventanita, se pasa con un toque y el catálogo queda abierto.'
-  });
-}
-
-/* El catálogo rescatado de la ventanita vive 30 minutos: la galleta ya
- * viaja con las peticiones, esto es solo el colchón mientras arranca. */
-function aonRescatados() {
-  const r = aonJson('aonRescate', null);
-  if (!r || !Array.isArray(r.items) || !r.items.length) return [];
-  if (Date.now() - (r.ts || 0) > 1800000) return [];
-  return r.items.slice(0, 20);
-}
-
-/* «Pasar la revisión»: la ventanita de navegador de verdad que la persona
- * ve y maneja (solo tras su toque, requisito de Kino). Recoge las galletas
- * de acceso, el disfraz del navegador que las ganó y el HTML renderizado
- * de la página del catálogo. */
-async function aonPasarRevision() {
-  if (!kino.visualBrowser || !kino.visualBrowser.available) return { st: 'sin-ventanita' };
-  try {
-    const r = await kino.visualBrowser.open({
-      url: BASE_AON + '/genero/ver-anime/',
-      title: 'AnimeOnline',
-      collect: { cookies: ['cf_clearance', '__cf_bm'], html: true },
-      userAgent: 'browser',
-      timeoutMs: 120000
-    });
-    const st = (r && r.status) || 'sin-respuesta';
-    const g = {};
-    const crudas = r && r.cookies;
-    if (typeof crudas === 'string' && crudas) {
-      crudas.split(';').forEach(function (p) {
-        const i = p.indexOf('=');
-        if (i > 0) g[p.slice(0, i).trim()] = p.slice(i + 1).trim();
-      });
-    } else if (Array.isArray(crudas)) {
-      crudas.forEach(function (c) {
-        if (c && c.name && c.value !== undefined) g[String(c.name)] = String(c.value);
-      });
-    } else if (crudas && typeof crudas === 'object') {
-      for (const k in crudas) g[k] = String(crudas[k]);
-    }
-    const nombres = Object.keys(g);
-    const nHtml = (r && typeof r.html === 'string' && r.html.length) || 0;
-    log('ventanita aon: ' + st + ', galletas ' + (nombres.length ? nombres.join(',') : 'ninguna') + ', html ' + nHtml + ' chars');
-    if (st !== 'done') return { st: st };
-    let rescate = 0;
-    if (nombres.length) {
-      aonJsonSet('aonCookies', g);
-      if (r.userAgent) aonJsonSet('aonUA', r.userAgent);
-    }
-    if (nHtml > 500) {
-      const items = aonTarjetas(r.html).slice(0, 20);
-      if (items.length) {
-        aonJsonSet('aonRescate', { ts: Date.now(), items: items });
-        rescate = items.length;
-      }
-    }
-    return { st: 'done', rescate: rescate };
-  } catch (e) {
-    log('ventanita aon falló', (e && e.message) || String(e));
-    return { st: 'error' };
-  }
-}
-
-/* Dooplay: las fichas pueden salir como /online/<slug>/ o como
- * /temporada/<slug>-temporada-N/; ambas se normalizan al slug base. */
-function aonTarjetas(html) {
-  /* v0.6.1: las tarjetas del directorio enlazan a /anime/<slug>/ (además
-   * de las fichas /online/ y /temporada/ de siempre). v0.6.7: las de la
-   * fila «Películas» enlazan a fichas /pelicula/<slug>/ — con el patrón
-   * de siempre esa fila salía vacía. */
-  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/(?:online|temporada|anime|pelicula)\/([^"\/?#]+)[^>]*>([\s\S]{0,900}?)<\/a>/gi;
+function jaraTarjetas(html) {
+  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/anime\/([^"\/?#]+)[^>]*>([\s\S]{0,1600}?)<\/a>/gi;
   const items = [];
   const vistos = new Set();
   let m;
   while ((m = re.exec(String(html || ''))) && items.length < 40) {
-    let slug = m[1];
-    slug = slug.replace(/-temporada-\d+$/i, '');
+    const slug = m[1];
     if (!slug || vistos.has(slug)) continue;
     const ventana = m[2];
-    /* v0.6.4: los enlaces de navegación de la plantilla cumplen el mismo
-     * patrón que las tarjetas y llegan ANTES en el HTML: ganaban el
-     * dedupe con su título bonito y sin póster, y las tarjetas de
-     * verdad quedaban escondidas detrás — de ahí el catálogo gris del
-     * teléfono. Un ancla sin imagen cerca no es tarjeta, es menú. */
-    let poster = posterEnVentana(ventana);
-    if (!poster) poster = posterAntesDe(String(html || ''), m.index);
+    /* El póster de verdad es el img de hj.animejara.com; las banderitas
+     * de idioma (wp-content/uploads) también son img dentro del ancla y
+     * llegan primero: se saltan. */
+    let poster = '';
+    let titulo = '';
+    const imgRe = /<img\b([^>]*)>/gi;
+    let im;
+    while ((im = imgRe.exec(ventana))) {
+      const attrs = im[1];
+      const src = /src\s*=\s*["']([^"']+)["']/i.exec(attrs);
+      if (!src) continue;
+      if (/hj\.animejara\.com/i.test(src[1])) {
+        poster = src[1];
+        const alt = /alt\s*=\s*["']([^"']{2,})["']/i.exec(attrs);
+        if (alt) titulo = decHtml(alt[1]);
+        break;
+      }
+    }
     if (!poster) continue;
     vistos.add(slug);
-    let titulo = '';
-    const al = /alt\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
-    const tt = /(?:oldtitle|title)\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
-    if (tt) titulo = decHtml(tt[1]);
-    else if (al) titulo = decHtml(al[1]);
-    if (!titulo) {
-      const h = /<h[1-6][^>]*>([\s\S]{1,200}?)<\/h[1-6]>/i.exec(ventana);
-      if (h) titulo = limpio(h[1]);
-    }
     if (!titulo || titulo.length < 2) titulo = slugATitulo(slug);
-    const item = {
-      id: 'aon-' + slug,
-      ref: 'aon:' + slug,
+    items.push({
+      id: 'jara-' + slug,
+      ref: 'jara:' + slug,
       title: titulo.slice(0, 200),
+      poster: absolutizar(poster, BASE_JARA),
       kind: 'series'
-    };
-    /* v0.6.1: póster con atributos de carga perezosa en orden de prioridad
-     * (antes solo src|data-src y las tarjetas quedaban grises). v0.6.2:
-     * si la imagen no vive dentro del ancla, se mira hacia atrás, que
-     * algunos listados la dejan antes del <a>. v0.6.4: el póster ya se
-     * halló arriba (y sin póster el ancla no llega aquí: es menú). */
-    /* v0.6.5: pósters con ruta relativa o sin protocolo: se cosen con la
-     * base (absolutizar) o Kino los deja grises. */
-    if (poster) item.poster = absolutizar(poster, BASE_AON);
-    items.push(item);
+    });
   }
-  /* v0.6.7: si las portadas de AnimeOnline siguen grises en el teléfono,
-   * este rastro deja ver en el log la URL exacta que el sitio entregó
-   * (las sondas las ven sanas en ww4; saber qué ve el teléfono es el
-   * siguiente paso del diagnóstico). */
-  if (items.length) log('aon póster muestra:', items[0].poster || '(sin póster)');
   return items;
 }
 
-async function aonPaginaDeSerie(slug) {
-  /* La ficha de la temporada 1 manda; si no existe, la página /online/ y
-   * por último la ficha /anime/ (v0.6.1: las tarjetas del directorio
-   * enlazan ahí). v0.6.2: todas con galleta de acceso y revisión
-   * honesta. */
-  const t = await aonTraer('/temporada/' + slug + '-temporada-1/', 10000);
-  if (t.ok && t.text) return t;
-  const o = await aonTraer('/online/' + slug + '/', 10000);
-  if (o.ok && o.text) return o;
-  const a = await aonTraer('/anime/' + slug + '/', 10000);
-  if (a.revision) throw aonErrorRevision();
+registrarFuente({
+  id: 'jara',
+  etiqueta: 'AnimeJara',
+
+  async buscar(q) {
+    const texto = String(q || '').trim().slice(0, 100);
+    if (texto.length < 2) return [];
+    try {
+      const r = await traer(BASE_JARA + '/?s=' + encodeURIComponent(texto), { headers: { Referer: BASE_JARA + '/' }, timeoutMs: 10000 });
+      if (!r.ok) return [];
+      const items = jaraTarjetas(r.text).slice(0, 25);
+      for (const it of items) it.badges = ['AnimeJara'];
+      return items;
+    } catch (e) {
+      log('jara buscar', (e && e.message) || String(e));
+      return [];
+    }
+  },
+
+  async portada() {
+    const defs = [
+      { id: 'jara-emision', titulo: 'En emisión · AnimeJara', ref: 'jara-emision', camino: '/emision' },
+      { id: 'jara-catalogo', titulo: 'Catálogo · AnimeJara', ref: 'jara-catalogo', camino: '/catalogo' }
+    ];
+    const rtas = await Promise.all(defs.map(async (def) => {
+      try {
+        const r = await traer(BASE_JARA + def.camino, { headers: { Referer: BASE_JARA + '/' }, timeoutMs: 10000 });
+        if (!r.ok) return null;
+        const items = jaraTarjetas(r.text).slice(0, 20);
+        return items.length ? { id: def.id, title: def.titulo, ref: def.ref, items: items } : null;
+      } catch (e) {
+        log('jara fila «' + def.titulo + '» falló', (e && e.message) || String(e));
+        return null;
+      }
+    }));
+    const filas = [];
+    for (const fila of rtas) if (fila) filas.push(fila);
+    return filas;
+  },
+
+  async hoja(ref) {
+    const caminos = {
+      'jara-emision': '/emision',
+      'jara-catalogo': '/catalogo'
+    };
+    const camino = caminos[ref];
+    if (!camino) return null;
+    const r = await traer(BASE_JARA + camino, { headers: { Referer: BASE_JARA + '/' }, timeoutMs: 12000 });
+    if (!r.ok) {
+      throw kino.error('unavailable', 'AnimeJara no respondió (status ' + r.status + ')', {
+        userMessage: 'AnimeJara no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    return { items: jaraTarjetas(r.text).slice(0, 60), next: null };
+  },
+
+  async detalle(slug) {
+    const r = await traer(BASE_JARA + '/anime/' + slug, { headers: { Referer: BASE_JARA + '/' }, timeoutMs: 10000 });
+    if (!r.ok || !r.text) return null;
+    const serie = { title: slugATitulo(slug) };
+    const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
+    if (h) serie.title = limpio(h[1]) || serie.title;
+    const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(r.text);
+    if (og) serie.poster = og[1].indexOf('//') === 0 ? 'https:' + og[1] : og[1];
+    if (!serie.poster) {
+      const pj = /hj\.animejara\.com\/api-web\/img\/[^"'\s>]+/i.exec(r.text);
+      if (pj) serie.poster = 'https://' + pj[0];
+    }
+    const sinM = /<p[^>]*>([\s\S]{30,600}?)<\/p>/i.exec(r.text);
+    if (sinM) serie.overview = limpio(sinM[1]).slice(0, 400);
+    return serie;
+  },
+
+  async episodios(slug) {
+    const r = await traer(BASE_JARA + '/anime/' + slug, { headers: { Referer: BASE_JARA + '/' }, timeoutMs: 12000 });
+    if (!r.ok || !r.text) {
+      throw kino.error('unavailable', 'AnimeJara no entregó la serie', {
+        userMessage: 'AnimeJara no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    /* Los episodios se SINTETIZAN desde las pestañas de temporada: cada
+     * «data-season="N"» trae su «M episodios» cerca y los enlaces reales
+     * siguen /episode/<slug>-N×M/ sin excepción (la ficha los carga por
+     * JavaScript, así que no hay anclas que leer). */
+    const texto = r.text;
+    const pares = [];
+    const tabRe = /data-season=["'](\d+)["']/g;
+    let tm;
+    while ((tm = tabRe.exec(texto)) && pares.length < 40) {
+      const seg = texto.slice(tm.index + tm[0].length, tm.index + tm[0].length + 4000);
+      const sm = /(\d+)\s*episodios/i.exec(seg);
+      if (sm) pares.push({ season: parseInt(tm[1], 10), count: parseInt(sm[1], 10) });
+    }
+    if (!pares.length) {
+      /* sin pestañas: la cabecera de la ficha dice «N Episodios» */
+      const cm = /(\d+)\s*episodios/i.exec(texto);
+      if (cm) pares.push({ season: 1, count: Math.min(parseInt(cm[1], 10), 200) });
+    }
+    if (!pares.length) {
+      throw kino.error('not_found', 'AnimeJara: 0 capítulos', {
+        userMessage: 'No se pudieron leer los capítulos de esta serie en AnimeJara.'
+      });
+    }
+    const lista = [];
+    for (const par of pares) {
+      const total = Math.min(par.count, 400);
+      for (let n = 1; n <= total; n++) {
+        lista.push({
+          season: par.season,
+          number: n,
+          ref: 'jara:' + slug + '-' + par.season + 'x' + n + ':' + n,
+          title: 'Episodio ' + n
+        });
+      }
+    }
+    return { series: { title: slugATitulo(slug) }, episodes: lista };
+  },
+
+  async resolver(epslug, n, idx) {
+    const epUrl = BASE_JARA + '/episode/' + epslug + '/';
+    const r = await traer(epUrl, { headers: { Referer: BASE_JARA + '/' }, timeoutMs: 10000 });
+    if (!r.ok || !r.text) {
+      throw kino.error('not_found', 'AnimeJara no entregó el episodio', {
+        userMessage: 'No se pudo abrir este episodio en AnimeJara.'
+      });
+    }
+    /* El player vive en streamhj.top: la página trae el array «enlaces»
+     * (un embed por idioma; japonés, latino, castellano) y su botón
+     * correspondiente con el nombre del idioma. Cada embed lista sus
+     * hosters en onclick playVideo('URL'). */
+    let embeds = [];
+    const enlacesM = /const\s+enlaces\s*=\s*\[([\s\S]{0,4000}?)\]/.exec(r.text);
+    if (enlacesM) {
+      const uRe = /["']([^"']+)["']/g;
+      let um;
+      while ((um = uRe.exec(enlacesM[1])) && embeds.length < 4) {
+        let u = um[1].replace(/\\\//g, '/').replace(/&#0?38;/g, '&');
+        if (/streamhj\.top/i.test(u)) embeds.push(u);
+      }
+    }
+    if (!embeds.length) {
+      const ifM = /<iframe\b[^>]*src\s*=\s*["']([^"']*streamhj\.top[^"']*)["']/i.exec(r.text);
+      if (ifM) embeds.push(ifM[1].replace(/&#0?38;/g, '&'));
+    }
+    const idiomas = [];
+    const idRe = /lang-name["'][^>]*>([^<]{2,20})</gi;
+    let idm;
+    while ((idm = idRe.exec(r.text)) && idiomas.length < 4) idiomas.push(limpio(idm[1]));
+    const servers = [];
+    const vistos = {};
+    for (let e = 0; e < embeds.length; e++) {
+      if (queda() < 12000) break;
+      let txtEmb = '';
+      try {
+        const re2 = await traer(embeds[e], { headers: { Referer: BASE_JARA + '/', 'User-Agent': UA }, timeoutMs: 9000 });
+        if (re2.ok && re2.text) txtEmb = re2.text;
+      } catch (e2) {
+        log('embed de AnimeJara falló', (e2 && e2.message) || String(e2));
+      }
+      if (!txtEmb) continue;
+      const sufijo = (embeds.length > 1 && idiomas[e]) ? ' · ' + idiomas[e] : '';
+      const pvRe = /playVideo\((?:&quot;|["'])(https?:\/\/(?:[^"'<&]|\&(?!quot;))+)/gi;
+      let pm;
+      while ((pm = pvRe.exec(txtEmb))) {
+        const u = desescapar(pm[1]);
+        const tipo = detectarTipo('', u);
+        if (!tipo || tipo === 'generic' || tipo === 'multi') continue;
+        const clave = tipo + '|' + u;
+        if (vistos[clave]) continue;
+        vistos[clave] = true;
+        servers.push({ nombre: '', url: u, tipo: tipo, sufijo: sufijo });
+      }
+      log('jara embed ' + (e + 1) + ' de ' + embeds.length + ': ' + servers.length + ' servidores');
+    }
+    const todos = servers.concat(servidoresDePagina(r.text));
+    return await probarConCaptura(epUrl, todos, idx, function (i) {
+      return 'jara:' + epslug + ':' + (n || 1) + ':' + i;
+    }, 'AnimeJara', BASE_JARA);
+  }
+});
+
+/* ---------- fuente: VerAnime (veranime.ninja, tema Dooplay) ---------- */
+
+/* v0.6.9 «El cambiazo»: entra VerAnime, un Dooplay de los de siempre:
+ * tarjetas /anime/<slug>/ con pósters de tmdb, fichas con temporadas y
+ * anclas /ver/<slug>-episodio-N/. OJO: sus atributos van con comillas
+ * simples (li data-post='…'), por eso los greques dobles no los veían.
+ * El player se sirve por el endpoint wp-json/dooplayer/v2/<post>/<tipo>/
+ * <nume> y su multiserver es darkanimes.com, pariente del saidochesto:
+ * lista sus hosters en onclick('URL'). */
+const BASE_VAN = 'https://veranime.ninja';
+
+function vanTarjetas(html) {
+  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/(?:anime|pelicula)\/([^"\/?#]+)[^>]*>([\s\S]{0,900}?)<\/a>/gi;
+  const items = [];
+  const indice = {};
+  let m;
+  while ((m = re.exec(String(html || ''))) && items.length < 40) {
+    const slug = m[1];
+    if (!slug) continue;
+    let poster = posterEnVentana(m[2]);
+    if (!poster) poster = posterAntesDe(String(html || ''), m.index);
+    if (!poster) continue;
+    poster = absolutizar(poster, BASE_VAN);
+    let titulo = '';
+    const h = /<h[1-6][^>]*>([\s\S]{1,200}?)<\/h[1-6]>/i.exec(m[2]);
+    if (h) titulo = limpio(h[1]);
+    if (!titulo) {
+      const al = /alt\s*=\s*["']([^"']{2,})["']/i.exec(m[2]);
+      if (al) titulo = decHtml(al[1]);
+    }
+    if (!titulo) {
+      /* el ancla del h3 trae el título como texto pelado (Dooplay:
+       * <h3><a href>Título</a></h3>) */
+      const tx = limpio(m[2].replace(/<[^>]+>/g, ' '));
+      if (tx.length >= 2 && tx.length <= 200) titulo = tx;
+    }
+    const esPelicula = /\/pelicula\//.test(m[0]);
+    const existe = indice[slug];
+    if (!existe) {
+      if (!titulo || titulo.length < 2) titulo = slugATitulo(slug);
+      const item = {
+        id: 'van-' + slug,
+        ref: 'van:' + slug,
+        title: titulo.slice(0, 200),
+        poster: poster,
+        kind: esPelicula ? 'movie' : 'series'
+      };
+      indice[slug] = item;
+      items.push(item);
+    } else if (titulo && titulo.length >= 2) {
+      /* el ancla del h3 llega después del ancla del póster: mejora el
+       * título que el primer ancla no traía */
+      existe.title = titulo.slice(0, 200);
+      if (esPelicula) existe.kind = 'movie';
+    }
+  }
+  return items;
+}
+
+async function vanFicha(slug) {
+  const a = await traer(BASE_VAN + '/anime/' + slug + '/', { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 10000 });
   if (a.ok && a.text) return a;
-  /* v0.6.7: las PELÍCULAS viven en fichas /pelicula/<slug>/ que también
-   * traen su player (el li data-post de siempre). */
-  const p = await aonTraer('/pelicula/' + slug + '/', 10000);
-  if (p.revision) throw aonErrorRevision();
+  const o = await traer(BASE_VAN + '/online/' + slug + '/', { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 10000 });
+  if (o.ok && o.text) return o;
+  const p = await traer(BASE_VAN + '/pelicula/' + slug + '/', { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 10000 });
   return p;
 }
 
-/* v0.6.3: Dooplay guarda cada opción de reproducción en un li de
- * ul#playeroptionsul, con data-post, data-nume y data-type; el embed
- * real sale del endpoint wp-json/dooplayer — un JSON con embed_url que
- * puede ser un servidor directo (filemoon, uqload…) o el multiserver
- * saidochesto.top, que a su vez lista sus hosters por idioma con
- * onclick('URL'). Con la galleta de Cloudflare en cada petición. */
-async function aonServersDe(html) {
+/* El dooplayer de VerAnime: cada li (con comillas simples o dobles) trae
+ * data-post, data-nume y data-type; el embed sale del endpoint v2. */
+async function vanServersDe(html) {
   const texto = String(html || '');
   const servers = [];
   const vistos = {};
   const opciones = [];
-  let m;
   const liRe = /<li\b[^>]*>[\s\S]{0,400}?<\/li>/gi;
+  let m;
   while ((m = liRe.exec(texto)) && opciones.length < 8) {
     const tag = m[0];
+    if (!/dooplay_player_option/.test(tag)) continue;
     const post = /\bdata-post\s*=\s*["']([^"']+)["']/i.exec(tag);
     const nume = /\bdata-nume\s*=\s*["']([^"']+)["']/i.exec(tag);
     const tipo = /\bdata-type\s*=\s*["']([^"']+)["']/i.exec(tag);
+    const sv = /class\s*=\s*["'][^"']*server[^"']*["'][^>]*>([^<]{0,50})</i.exec(tag);
     if (!post || !nume) continue;
-    const tt = /<span\b[^>]*class\s*=\s*["'][^"']*title[^"']*["'][^>]*>([^<]{0,50})</i.exec(tag);
     opciones.push({
-      post: post[1], nume: nume[1], tipo: tipo ? tipo[1] : '',
-      nombre: tt ? tt[1].replace(/\s+/g, ' ').trim() : ''
+      post: post[1], nume: nume[1], tipo: tipo ? tipo[1] : 'tv',
+      nombre: sv ? sv[1].replace(/\s+/g, ' ').trim() : ''
     });
   }
   if (!opciones.length) return servers;
-  log('aon: ' + opciones.length + ' opciones de player');
+  log('van: ' + opciones.length + ' opciones de player');
   for (const o of opciones) {
     if (queda() < 6000) break;
     let embed = '';
     try {
-      const r = await traer(BASE_AON + '/wp-json/dooplayer/v1/post/' + encodeURIComponent(o.post) +
-        '?type=' + encodeURIComponent(o.tipo) + '&source=' + encodeURIComponent(o.nume),
-        { headers: aonHeaders(), timeoutMs: 8000 });
+      const r = await traer(BASE_VAN + '/wp-json/dooplayer/v2/' + encodeURIComponent(o.post) +
+        '/' + encodeURIComponent(o.tipo) + '/' + encodeURIComponent(o.nume),
+        { headers: { Referer: BASE_VAN + '/', 'User-Agent': UA }, timeoutMs: 8000 });
       if (!r.ok || !r.text) continue;
       const em = /["']embed_url["']\s*:\s*["']([^"']+)["']/.exec(r.text);
-      if (em) embed = desescapar(em[1]);
+      if (em) embed = desescapar(em[1]).replace(/\\\//g, '/');
     } catch (e) { continue; }
     if (!embed) continue;
     if (embed.indexOf('//') === 0) embed = 'https:' + embed;
     if (!/^https?:\/\//i.test(embed)) continue;
-    if (/saidochesto|multiserver|animeonline\.ninja/i.test(embed)) {
-      /* el multiserver: sus li abren por onclick('URL'), agrupados por
-       * idioma (OD_SUB, OD_LAT…) */
+    if (/darkanimes\.com|saidochesto|multiserver|streamhj\.top/i.test(embed)) {
+      /* el multiserver: sus li abren por onclick('URL'), como el
+       * saidochesto de siempre */
       try {
-        const r2 = await traer(embed, { headers: { Referer: BASE_AON + '/', 'User-Agent': UA }, timeoutMs: 9000 });
+        const r2 = await traer(embed, { headers: { Referer: BASE_VAN + '/', 'User-Agent': UA }, timeoutMs: 9000 });
         if (!r2.ok || !r2.text) continue;
         const odRe = /\(\s*['"](https?:\/\/[^'"]+)['"]\s*\)/gi;
         while ((m = odRe.exec(r2.text))) {
-          let u = desescapar(m[1]);
+          const u = desescapar(m[1]);
           const tipo = detectarTipo('', u);
-          if (!tipo || tipo === 'generic') continue;
+          if (!tipo || tipo === 'generic' || tipo === 'multi') continue;
           const clave = tipo + '|' + u;
           if (vistos[clave]) continue;
           vistos[clave] = true;
           servers.push({ nombre: '', url: u, tipo: tipo });
         }
       } catch (e) {
-        log('multiserver de AnimeOnline falló', (e && e.message) || String(e));
+        log('multiserver de VerAnime falló', (e && e.message) || String(e));
       }
     } else {
       const tipo = detectarTipo(o.nombre, embed);
@@ -3621,103 +3733,57 @@ async function aonServersDe(html) {
 }
 
 registrarFuente({
-  id: 'aon',
-  etiqueta: 'AnimeOnline',
+  id: 'van',
+  etiqueta: 'VerAnime',
 
   async buscar(q) {
     const texto = String(q || '').trim().slice(0, 100);
     if (texto.length < 2) return [];
     try {
-      /* Dooplay busca en /?s=<q>; las fichas salen con sus enlaces de siempre. */
-      const r = await aonTraer('/?s=' + encodeURIComponent(texto), 10000);
+      const r = await traer(BASE_VAN + '/?s=' + encodeURIComponent(texto), { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 10000 });
       if (!r.ok) return [];
-      const items = aonTarjetas(r.text).slice(0, 25);
-      for (const it of items) it.badges = ['AnimeOnline'];
+      const items = vanTarjetas(r.text).slice(0, 25);
+      for (const it of items) it.badges = ['VerAnime'];
       return items;
     } catch (e) {
-      log('aon buscar', (e && e.message) || String(e));
+      log('van buscar', (e && e.message) || String(e));
       return [];
     }
   },
 
   async portada() {
-    /* v0.6.5: la sección se llena con cuatro rieles (directorio, en
-     * emisión, audio latino y películas) y cada fila vive en su propio
-     * try: si una cae, las demás se muestran igual. */
-    const defs = [
-      { id: 'aon-anime', titulo: 'Anime · AnimeOnline', ref: 'aon-anime', camino: '/genero/ver-anime/' },
-      { id: 'aon-emision', titulo: 'En emisión · AnimeOnline', ref: 'aon-emision', camino: '/genero/en-emision-1/' },
-      { id: 'aon-latino', titulo: 'Audio Latino · AnimeOnline', ref: 'aon-latino', camino: '/genero/audio-latino/' },
-      { id: 'aon-peliculas', titulo: 'Películas · AnimeOnline', ref: 'aon-peliculas', camino: '/pelicula/' }
-    ];
-    let pideRevision = false;
-    const rtas = await Promise.all(defs.map(async (def) => {
-      try {
-        const r = await aonTraer(def.camino, 10000);
-        if (r.revision) { pideRevision = true; return null; }
-        if (!r.ok) return null;
-        const items = aonTarjetas(r.text).slice(0, 20);
-        return items.length ? { id: def.id, title: def.titulo, ref: def.ref, items: items } : null;
-      } catch (e) {
-        log('aon fila «' + def.titulo + '» falló', (e && e.message) || String(e));
-        return null;
-      }
-    }));
-    const filas = [];
-    for (const fila of rtas) if (fila) filas.push(fila);
-    if (filas.length) return filas;
-    /* v0.6.1: si ningún género trajo nada, la home del tema Dooplay
-     * también trae tarjetas de series. */
-    let items = [];
-    if (!pideRevision) {
-      try {
-        const r2 = await aonTraer('/', 10000);
-        if (r2.revision) pideRevision = true;
-        else if (r2.ok) items = aonTarjetas(r2.text).slice(0, 20);
-      } catch (e) {
-        log('aon fila home', (e && e.message) || e);
-      }
+    try {
+      const r = await traer(BASE_VAN + '/genero/ver-anime/', { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 10000 });
+      if (!r.ok) return [];
+      const items = vanTarjetas(r.text).slice(0, 20);
+      if (!items.length) return [];
+      return [{ id: 'van-anime', title: 'Anime · VerAnime', ref: 'van-anime', items: items }];
+    } catch (e) {
+      log('van fila «Anime» falló', (e && e.message) || String(e));
+      return [];
     }
-    /* v0.6.2: si Cloudflare pidió su revisión, se dice la verdad: la
-     * ventanita de la pantalla la pasa y el catálogo queda abierto. Si
-     * la persona ya la pasó y el catálogo rescatado vive aún, se usa:
-     * la galleta viaja con las peticiones pero a veces el filtro tarda
-     * en soltar la mano. */
-    if (pideRevision) {
-      const rescate = aonRescatados();
-      if (rescate.length) return [{ id: 'aon-anime', title: 'Anime · AnimeOnline', ref: 'aon-anime', items: rescate }];
-      throw aonErrorRevision();
-    }
-    if (!items.length) items = aonRescatados();
-    if (items.length) return [{ id: 'aon-anime', title: 'Anime · AnimeOnline', ref: 'aon-anime', items: items }];
-    return [];
   },
 
-  async hoja(ref) {
-    /* v0.6.5: cada riel de la portada abre su propio camino. */
-    const caminos = {
-      'aon-anime': '/genero/ver-anime/',
-      'aon-emision': '/genero/en-emision-1/',
-      'aon-latino': '/genero/audio-latino/',
-      'aon-peliculas': '/pelicula/'
-    };
-    const camino = caminos[ref];
-    if (!camino) return null;
-    const r = await aonTraer(camino, 12000);
-    if (r.revision) {
-      throw aonErrorRevision();
-    }
+  async hoja(ref, cursor) {
+    if (ref !== 'van-anime') return null;
+    const pagina = parseInt(cursor, 10);
+    const num = Number.isFinite(pagina) && pagina > 1 ? pagina : 1;
+    const camino = num > 1 ? '/genero/ver-anime/page/' + num + '/' : '/genero/ver-anime/';
+    const r = await traer(BASE_VAN + camino, { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 12000 });
     if (!r.ok) {
-      throw kino.error('unavailable', 'AnimeOnline no respondió (status ' + r.status + ')', {
-        userMessage: 'AnimeOnline no respondió. Revisa tu conexión o inténtalo en un rato.'
+      throw kino.error('unavailable', 'VerAnime no respondió (status ' + r.status + ')', {
+        userMessage: 'VerAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
       });
     }
-    const items = aonTarjetas(r.text).slice(0, 60);
-    return { items: items, next: null };
+    const items = vanTarjetas(r.text).slice(0, 60);
+    let next = null;
+    const pg = /P[áa]gina\s+(\d+)\s+de\s+(\d+)/i.exec(r.text);
+    if (pg && parseInt(pg[1], 10) < parseInt(pg[2], 10)) next = String(parseInt(pg[1], 10) + 1);
+    return { items: items, next: next };
   },
 
   async detalle(slug) {
-    const r = await aonPaginaDeSerie(slug);
+    const r = await vanFicha(slug);
     if (!r.ok || !r.text) return null;
     const serie = { title: slugATitulo(slug) };
     const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
@@ -3730,80 +3796,70 @@ registrarFuente({
   },
 
   async episodios(slug) {
-    const r = await aonPaginaDeSerie(slug);
+    const r = await vanFicha(slug);
     if (!r.ok || !r.text) {
-      throw kino.error('unavailable', 'AnimeOnline no entregó la serie', {
-        userMessage: 'AnimeOnline no respondió. Revisa tu conexión o inténtalo en un rato.'
+      throw kino.error('unavailable', 'VerAnime no entregó la serie', {
+        userMessage: 'VerAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
       });
     }
-    /* Los episodios de Dooplay: anclas /episodio/<epslug>/ con el número en
-     * la propia dirección (…-cap-9) o en la fila de la tabla. */
-    const re = /href\s*=\s*["'][^"']*\/episodio\/([^"\/?#]+)/gi;
+    /* Dooplay de siempre: cada li de temporada trae «numerando» (temp -
+     * número) y el ancla /ver/<slug>-episodio-N/. */
+    const texto = r.text;
     const vistos = new Set();
     const lista = [];
+    const liRe = /<li\b[^>]*>[\s\S]{0,700}?<\/li>/gi;
     let m;
-    let pos = 0;
-    while ((m = re.exec(r.text))) {
-      const epslug = m[1];
-      if (vistos.has(epslug)) continue;
+    while ((m = liRe.exec(texto)) && lista.length < 400) {
+      const tag = m[0];
+      const em = /href\s*=\s*["'][^"']*\/ver\/([^"'\/?#]+)-episodio-(\d+)\/?["']/i.exec(tag);
+      if (!em) continue;
+      const epslug = em[1] + '-episodio-' + em[2];
+      const num = parseInt(em[2], 10);
+      if (vistos.has(epslug) || num < 1 || num > 9999) continue;
       vistos.add(epslug);
-      pos++;
-      const nm = /-(?:cap-?|episodio-?|ep-?)(\d+)$/i.exec(epslug);
-      const n = nm ? parseInt(nm[1], 10) : pos;
-      if (n < 1 || n > 9999) continue;
-      lista.push({ season: 1, number: n, ref: 'aon:' + epslug + ':' + n, title: 'Episodio ' + n });
+      let season = 1;
+      const nm = /(\d+)\s*-\s*(\d+)/.exec(limpio(tag));
+      if (nm && parseInt(nm[2], 10) === num) season = parseInt(nm[1], 10);
+      lista.push({ season: season, number: num, ref: 'van:' + epslug + ':' + num, title: 'Episodio ' + num });
     }
     if (!lista.length) {
-      /* v0.6.7: sin anclas de episodio puede ser una PELÍCULA: su ficha
-       * trae el player a cuestas (el li data-post de siempre) y se
-       * lista como único episodio; el resolver cae a la ficha si la
-       * página /episodio/ no existe. */
-      if (/dooplay_player_option/.test(r.text)) {
+      /* sin anclas de episodio puede ser una PELÍCULA: su ficha trae el
+       * dooplayer a cuestas y se lista como único episodio. */
+      if (/dooplay_player_option/.test(texto)) {
         return {
           series: { title: slugATitulo(slug) },
-          episodes: [{ season: 1, number: 1, ref: 'aon:' + slug + ':1', title: 'Película' }]
+          episodes: [{ season: 1, number: 1, ref: 'van:' + slug + ':1', title: 'Película' }]
         };
       }
-      throw kino.error('not_found', 'AnimeOnline: 0 capítulos', {
-        userMessage: 'No se pudieron leer los capítulos de esta serie en AnimeOnline.'
+      throw kino.error('not_found', 'VerAnime: 0 capítulos', {
+        userMessage: 'No se pudieron leer los capítulos de esta serie en VerAnime.'
       });
     }
-    lista.sort((a, b) => a.number - b.number);
+    lista.sort(function (a, b) { return a.season - b.season || a.number - b.number; });
     return { series: { title: slugATitulo(slug) }, episodes: lista };
   },
 
   async resolver(epslug, n, idx) {
-    let epUrl = BASE_AON + '/episodio/' + epslug + '/';
-    let r = await aonTraer('/episodio/' + epslug + '/', 10000);
-    if (r.revision) {
-      throw aonErrorRevision();
-    }
-    /* v0.6.7: si la página de episodio no existe, puede ser una
-     * PELÍCULA: su ficha /pelicula/<slug>/ lleva el player a cuestas
-     * (el li data-post que alimenta aonServersDe) — así no muere con
-     * el «No se pudo abrir este episodio» de siempre. */
+    let epUrl = BASE_VAN + '/ver/' + epslug + '/';
+    let r = await traer(epUrl, { headers: { Referer: BASE_VAN + '/', 'User-Agent': UA }, timeoutMs: 10000 });
+    /* si la página de episodio no existe, puede ser una PELÍCULA: su
+     * ficha lleva el dooplayer a cuestas. */
     if (!r.ok || !r.text) {
-      const p = await aonTraer('/pelicula/' + epslug + '/', 10000);
-      if (p.revision) {
-        throw aonErrorRevision();
-      }
+      const p = await vanFicha(epslug);
       if (p.ok && p.text) {
         r = p;
-        epUrl = BASE_AON + '/pelicula/' + epslug + '/';
+        epUrl = p.url || epUrl;
       }
     }
     if (!r.ok || !r.text) {
-      throw kino.error('not_found', 'AnimeOnline no entregó el episodio', {
-        userMessage: 'No se pudo abrir este episodio en AnimeOnline.'
+      throw kino.error('not_found', 'VerAnime no entregó el episodio', {
+        userMessage: 'No se pudo abrir este episodio en VerAnime.'
       });
     }
-    /* v0.6.3: el player de Dooplay ya se deja leer — cada opción pregunta
-     * al endpoint wp-json/dooplayer y el multiserver saidochesto lista sus
-     * hosters. La captura del navegador queda de red de seguridad. */
-    const servers = (await aonServersDe(r.text)).concat(servidoresDePagina(r.text));
+    const servers = (await vanServersDe(r.text)).concat(servidoresDePagina(r.text));
     return await probarConCaptura(epUrl, servers, idx, function (i) {
-      return 'aon:' + epslug + ':' + (n || 1) + ':' + i;
-    }, 'AnimeOnline', BASE_AON);
+      return 'van:' + epslug + ':' + (n || 1) + ':' + i;
+    }, 'VerAnime', BASE_VAN);
   }
 });
 
@@ -4117,7 +4173,8 @@ const FUENTES_PANTALLA = [
   { id: 'otv', nombre: 'OtakusTV' },
   { id: 'ayt', nombre: 'AnimeYT' },
   { id: 'eas', nombre: 'EstrenosAnime' },
-  { id: 'aon', nombre: 'AnimeOnline' },
+  { id: 'jara', nombre: 'AnimeJara' },
+  { id: 'van', nombre: 'VerAnime' },
   { id: 'iva', nombre: 'IvAnime' }
 ];
 
@@ -4200,7 +4257,8 @@ const NUCLEO_TODAS = {
   otv: ['otv-emision', 'otv-eps', 'otv-animes'],
   ayt: ['ayt-latest', 'ayt-peliculas'],
   eas: ['eas-eps', 'eas-sub', 'eas-lat', 'eas-popular'],
-  aon: ['aon-anime', 'aon-emision', 'aon-latino', 'aon-peliculas'],
+  jara: ['jara-emision', 'jara-catalogo'],
+  van: ['van-anime'],
   iva: ['iva-emision', 'iva-directorio']
 };
 
@@ -4277,24 +4335,13 @@ async function screen(arg) {
   const filas = Array.isArray(state.filas) ? state.filas : null;
   const hero = state.hero && state.hero.ref ? state.hero : null;
   const cuerpo = [];
-  /* v0.6.2: botón de la ventanita de AnimeOnline (pasar la revisión de
-   * Cloudflare con las manos de la persona; solo tras su toque). */
-  const botonRevision = { type: 'ElevatedButton', labelText: 'Pasar la revisión de AnimeOnline', onPressed: 'revisionAon', alignSelf: 'center' };
+  /* v0.6.9: el botón de «Pasar la revisión» se retira con AnimeOnline:
+   * era su ventanita de Cloudflare y ninguna fuente viva la pide hoy. */
   if (state.errorPantalla === true) {
-    if (state.pideRevision === true) {
-      cuerpo.push({ type: 'errorState', title: 'AnimeOnline pide su revisión', text: 'Su filtro de seguridad (Cloudflare) cerró la puerta a AniJing. Toca «Pasar la revisión»: se abre una ventanita, se pasa con un toque y el catálogo queda abierto.' });
-      cuerpo.push(botonRevision);
-    } else {
-      cuerpo.push({ type: 'errorState', title: 'No se pudo cargar', text: 'Ninguna fuente respondió. Revisa tu conexión y vuelve a probar.' });
-      cuerpo.push({ type: 'Button', labelText: 'Reintentar', onPressed: 'recargar', alignSelf: 'center' });
-    }
+    cuerpo.push({ type: 'errorState', title: 'No se pudo cargar', text: 'Ninguna fuente respondió. Revisa tu conexión y vuelve a probar.' });
+    cuerpo.push({ type: 'Button', labelText: 'Reintentar', onPressed: 'recargar', alignSelf: 'center' });
   } else if (filas && !filas.length) {
-    if (state.fuente === 'aon') {
-      cuerpo.push({ type: 'emptyState', title: 'AnimeOnline no trajo nada', text: 'A veces es su filtro de seguridad. Toca «Pasar la revisión» para abrirlo con una ventanita; si sigue vacío, vuelve más tarde.', icon: 'movie' });
-      cuerpo.push(botonRevision);
-    } else {
-      cuerpo.push({ type: 'emptyState', title: 'Nada por ahora', text: 'Esta fuente no trajo nada en este momento. Prueba con otra o vuelve más tarde.', icon: 'movie' });
-    }
+    cuerpo.push({ type: 'emptyState', title: 'Nada por ahora', text: 'Esta fuente no trajo nada en este momento. Prueba con otra o vuelve más tarde.', icon: 'movie' });
     cuerpo.push({ type: 'Button', labelText: 'Reintentar', onPressed: 'recargar', alignSelf: 'center' });
   } else if (!filas) {
     cuerpo.push({ type: 'Skeleton', shape: 'block', height: 240 });
@@ -4380,31 +4427,13 @@ async function screenEvent(e) {
       return { state: { fuente: fuente, filas: datos.filas, hero: datos.hero, errorPantalla: false } };
     } catch (err) {
       log('cargar la pantalla falló', (err && err.message) || String(err));
-      /* v0.6.2: si lo que falló es la revisión de AnimeOnline, la pantalla
-       * muestra el botón de la ventanita. */
-      const pide = err && /revisi[oó]n de seguridad/i.test(String(err.userMessage || err.message || ''));
-      return { state: { fuente: fuente, errorPantalla: true, pideRevision: pide } };
+      return { state: { fuente: fuente, errorPantalla: true } };
     }
   }
-  /* v0.6.2 — «Pasar la revisión» (AnimeOnline): la ventanita de navegador
-   * que la persona ve y maneja; solo tras su toque, requisito de Kino.
-   * Al cerrar, la pantalla se recarga con la galleta ya en el bolsillo
-   * y el catálogo rescatado de la página cargada. */
+  /* v0.6.9: «revisionAon» se retira junto a AnimeOnline; si un estado
+   * viejo de la pantalla lo manda, se recarga sin ventanitas. */
   if (nombre === 'revisionAon') {
-    const rta = await aonPasarRevision();
-    if (rta.st === 'sin-ventanita') {
-      return { toast: 'Este Kino no tiene la ventanita de revisión. Actualiza Kino o vuelve más tarde.' };
-    }
-    if (rta.st === 'error') {
-      return { toast: 'La ventanita no pudo abrirse. Vuelve a intentarlo.' };
-    }
-    try {
-      const datos = await cargarPantalla('aon');
-      return { state: { fuente: 'aon', filas: datos.filas, hero: datos.hero, errorPantalla: false }, toast: 'Revisión pasada: AnimeOnline abierto' };
-    } catch (err) {
-      log('recargar aon tras la revisión falló', (err && err.message) || String(err));
-      return { state: { fuente: 'aon', errorPantalla: true }, toast: 'La revisión quedó pasada pero AnimeOnline no cargó. Reintenta.' };
-    }
+    return { toast: 'AnimeOnline ya no está en AniJing. Elige otra fuente.' };
   }
   if (nombre === 'fuentes') {
     const fuente = fuenteDePantalla(state);
@@ -4429,8 +4458,7 @@ async function screenEvent(e) {
       return rta;
     } catch (err) {
       log('cargar «' + nueva + '» falló', (err && err.message) || String(err));
-      const pide = err && /revisi[oó]n de seguridad/i.test(String(err.userMessage || err.message || ''));
-      return { state: { fuente: nueva, errorPantalla: true, pideRevision: pide } };
+      return { state: { fuente: nueva, errorPantalla: true } };
     }
   }
   return null;
