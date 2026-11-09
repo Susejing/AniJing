@@ -174,8 +174,20 @@
 // en AnimeOnline, Emisión/Directorio/Últimos en IvAnime) y como el
 // estado de la pantalla tiene un tope de 64 KB, con muchas filas
 // cada riel muestra 8 tarjetas en vez de 12.
+//
+// v0.6.6 «El remiendo» — la 0.6.5 nunca llegó a cargar en el
+// teléfono: Kino compila el plugin como módulo y un módulo no permite
+// declarar dos veces el mismo nombre — el absolutizar de las
+// utilidades y su gemelo nuevo junto a los conversores se pisaban y
+// Hermes lo dijo sin rodeos: «invalid redefinition of global
+// identifier in module code». El banco no lo cazó porque new
+// Function no es un módulo y perdona lo que un módulo no perdona.
+// La cura es una sola declaración, la de siempre, que une todos los
+// casos: protocolo relativo, absoluta, barra inicial contra el origen
+// de la base y relativa contra su directorio. Nada más cambia: la
+// cosecha fina queda como estaba, ahora sí cosida.
 
-const VERSION = '0.6.5';
+const VERSION = '0.6.6';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -228,6 +240,10 @@ function origenDe(u) {
   return m ? m[1] : '';
 }
 
+/* Une los cuatro casos: protocolo relativo (//…), absoluta, barra
+ * inicial (contra el ORIGEN de la base) y relativa de verdad (contra
+ * el directorio de la base — los saltos window.location de las
+ * fuentes usan esa forma). */
 function absolutizar(u, base) {
   const s = String(u || '').trim();
   if (!s) return '';
@@ -2226,18 +2242,14 @@ function posterAntesDe(html, idx) {
   return '';
 }
 
-/* v0.6.5: los listados traen imágenes con rutas RELATIVAS
- * (data-src="/uploads/anime/xxx.jpg" en EstrenosAnime): sin protocolo
- * Kino no las dibuja y la tarjeta queda gris aunque el póster existía.
- * Se les cose la base de su fuente. */
-function absolutizar(u, base) {
-  const s = String(u || '');
-  if (!s) return '';
-  if (s.indexOf('//') === 0) return 'https:' + s;
-  if (/^https?:\/\//i.test(s)) return s;
-  if (s.indexOf('/') === 0) return String(base || '').replace(/\/+$/, '') + s;
-  return s;
-}
+/* v0.6.5: los pósters de los listados traen rutas RELATIVAS — se cosen
+ * con la base de su fuente en cada llamada (eas/ayt/aon/iva), con el
+ * absolutizar único de las utilidades. v0.6.6: la 0.6.5 declaró esa
+ * función DOS veces (la vieja de utilidades y una nueva junto a los
+ * conversores) y Kino compila el plugin como módulo, que no permite
+ * redefinir un identificador global: la 0.6.5 no cargó en el teléfono
+ * («invalid redefinition of global identifier»). Esta versión deja una
+ * sola declaración, la de siempre, que une todos los casos. */
 
 /* v0.6.3: el contenedor mytsumi.com de AnimeYT esconde los players tras un
  * open=1: solo con ese toque entrega botones data-player-url con los
