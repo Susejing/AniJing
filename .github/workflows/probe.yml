@@ -15,72 +15,70 @@ jobs:
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
           R=probe-result.txt
           : > "$R"
-          curl -sL --compressed -A "$UA" -H "Referer: https://ivanime.buzz/" -w "HTTP %{http_code}\n" "https://ivanime.buzz/ver/kanojo-no-tomodachi-episodio-1" -o /tmp/ivep.html >> "$R" 2>&1
+          curl -sL --compressed -A "$UA" -H "Referer: https://veranime.ninja/" -w "HTTP %{http_code}\n" "https://veranime.ninja/ver/cyberpunk-edgerunners-episodio-1/" -o /tmp/ep.html >> "$R" 2>&1
+          curl -sL --compressed -A "$UA" -H "Referer: https://ivanime.buzz/" -w "HTTP %{http_code}\n" "https://ivanime.buzz/build/assets/app-CFHQxs1u.js" -o /tmp/app.js >> "$R" 2>&1
+          curl -sL --compressed -A "$UA" -H "Referer: https://ivanime.buzz/" -w "HTTP %{http_code}\n" "https://ivanime.buzz/" -o /tmp/ivahome.html >> "$R" 2>&1
           python3 - <<'PY' >> "$R"
-          import re, urllib.request, base64, json
+          import re, urllib.request, urllib.parse
           UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
-          def get(url, ref, extra=None):
+          def get(url, ref, data=None, extra=None):
               h = {'User-Agent': UA, 'Referer': ref, 'Accept': '*/*'}
               if extra: h.update(extra)
-              req = urllib.request.Request(url, headers=h)
+              req = urllib.request.Request(url, headers=h, data=data)
               try:
                   with urllib.request.urlopen(req, timeout=25) as r:
-                      return r.status, r.read().decode('utf-8', 'replace'), dict(r.headers)
+                      return r.status, r.read().decode('utf-8', 'replace')
               except Exception as e:
-                  return 0, 'ERR ' + str(e), {}
-          print('=== VAN API VARIANTES (post 7870 tv 1) ===')
-          variantes = [
-              ('v2+xrw', 'https://veranime.ninja/wp-json/dooplayer/v2/7870/tv/1', {'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json'}),
-              ('v1', 'https://veranime.ninja/wp-json/dooplayer/v1/7870/tv/1', {}),
-              ('v1post', 'https://veranime.ninja/wp-json/dooplayer/v1/post/7870?type=tv&source=1', {}),
-              ('v1post2', 'https://veranime.ninja/wp-json/dooplayer/v1/post/7870?type=tv&source=2', {}),
-              ('ajax-get_player', 'https://veranime.ninja/wp-admin/admin-ajax.php?action=get_player&post=7870&nume=1&type=tv', {'X-Requested-With': 'XMLHttpRequest'}),
-              ('ajax-doo_player', 'https://veranime.ninja/wp-admin/admin-ajax.php?action=doo_player&post=7870&nume=1&type=tv', {'X-Requested-With': 'XMLHttpRequest'}),
-              ('v2post', 'https://veranime.ninja/wp-json/dooplayer/v2/post/7870?type=tv&source=1', {}),
-          ]
-          for nombre, url, extra in variantes:
-              st, body, hs = get(url, 'https://veranime.ninja/ver/cyberpunk-edgerunners-episodio-1/', extra)
-              print(nombre, '->', st, '| ct:', hs.get('Content-Type', '?'), '| len:', len(body), '|', repr(body[:300]))
-          print('=== IVA EPISODIO kanojo (botones data-player) ===')
-          ivep = open('/tmp/ivep.html', encoding='utf-8', errors='replace').read()
-          print('bytes:', len(ivep))
-          for m in list(re.finditer(r'data-player\s*=\s*["\']([A-Za-z0-9+/=]+)["\']', ivep))[:15]:
-              try:
-                  dec = base64.b64decode(m.group(1)).decode('utf-8', 'replace')
-              except Exception:
-                  dec = '???'
-              print('PLAYER:', dec[:200])
-          for m in list(re.finditer(r'<iframe\b[^>]*>', ivep))[:5]:
-              print('--- IFRAME:', repr(m.group(0)[:300]))
-          print('=== IVA FICHA kanojo (todos los hrefs /ver/) ===')
-          st, body, hs = get('https://ivanime.buzz/anime/kanojo-no-tomodachi-sub-espanol/', 'https://ivanime.buzz/')
-          print('status:', st, '| bytes:', len(body))
-          vers = []
-          for m in re.finditer(r'href\s*=\s*["\']([^"\']*\/ver\/[^"\']+)["\']', body):
-              u = m.group(1)
-              if u not in vers: vers.append(u)
-          print('hrefs /ver/:', len(vers))
-          for u in vers[:25]:
-              print('VER:', u)
-          if not vers or st != 200:
-              st2, body2, _ = get('https://ivanime.buzz/anime/kanojo-no-tomodachi/', 'https://ivanime.buzz/')
-              print('sin sufixo ->', st2, '| bytes:', len(body2))
-              vers2 = []
-              for m in re.finditer(r'href\s*=\s*["\']([^"\']*\/ver\/[^"\']+)["\']', body2):
-                  u = m.group(1)
-                  if u not in vers2: vers2.append(u)
-              print('hrefs /ver/ sin sufixo:', len(vers2))
-              for u in vers2[:25]:
-                  print('VER2:', u)
-          i = body.find('pisodio') if st == 200 else -1
-          if i < 0 and st == 200: i = body.find('/ver/')
+                  return 0, 'ERR ' + str(e)
+          print('=== VAN EP: JS DEL LI ===')
+          ep = open('/tmp/ep.html', encoding='utf-8', errors='replace').read()
+          i = ep.find('dooplay_player_option')
           if i >= 0:
-              print('--- CONTEXTO LISTA EPS:', repr(body[max(0,i-700):i+1200]))
+              j = ep.find('playeroptionsul')
+              print('--- UL:', repr(ep[max(0,j-300):j+600]) if j>=0 else 'no ul')
+          for m in list(re.finditer(r'<script\b[^>]*>([\s\S]*?)</script>', ep))[:40]:
+              s = m.group(1)
+              if 'player' in s.lower() or 'ajax' in s.lower() or 'nonce' in s.lower():
+                  if len(s.strip()) > 20:
+                      print('--- SCRIPT:', repr(s[:1800]))
+          for m in list(re.finditer(r'ajaxurl|dooplayer|player_option|doo_', ep))[:30]:
+              i2 = m.start()
+              print('--- CTX:', repr(ep[max(0,i2-250):i2+250]))
+          print('=== VAN AJAX POST ===')
+          for acc in ['doo_player', 'get_player']:
+              d = urllib.parse.urlencode({'action': acc, 'post': '7870', 'nume': '1', 'type': 'tv'}).encode()
+              st, b = get('https://veranime.ninja/wp-admin/admin-ajax.php', 'https://veranime.ninja/ver/cyberpunk-edgerunners-episodio-1/', data=d, extra={'X-Requested-With': 'XMLHttpRequest'})
+              print('POST', acc, '->', st, '|', repr(b[:400]))
+          print('=== IVA APP.JS: rutas de episodios ===')
+          js = open('/tmp/app.js', encoding='utf-8', errors='replace').read()
+          print('bytes:', len(js))
+          pats = [r'episodio', r'/ver/', r'capitulo', r'ajax', r'fetch\(', r'\.get\(', r'axios']
+          vistos = set()
+          for p in pats:
+              for m in list(re.finditer(p, js, re.I))[:8]:
+                  i3 = m.start()
+                  key = i3 // 100
+                  if key in vistos: continue
+                  vistos.add(key)
+                  print('--- JS CTX', p, ':', repr(js[max(0,i3-200):i3+260]))
+          print('=== IVA: endpoints probables ===')
+          for u in ['https://ivanime.buzz/anime/kanojo-no-tomodachi-sub-espanol/episodios',
+                    'https://ivanime.buzz/anime/kanojo-no-tomodachi-sub-espanol/capitulos',
+                    'https://ivanime.buzz/api/anime/kanojo-no-tomodachi-sub-espanol',
+                    'https://ivanime.buzz/anime/kanojo-no-tomodachi-sub-espanol?page=2']:
+              st, b = get(u, 'https://ivanime.buzz/')
+              print(u, '->', st, '| len:', len(b), '|', repr(b[:250]))
+          print('=== IVA HOME: tarjeta de listado ===')
+          home = open('/tmp/ivahome.html', encoding='utf-8', errors='replace').read()
+          m4 = re.search(r'href\s*=\s*["\'][^"\']*/anime/[^"\']+["\']', home)
+          if m4:
+              i4 = m4.start()
+              print('--- CARD CTX:', repr(home[max(0,i4-600):i4+1200]))
           PY
       - name: commit
         run: |
           git config user.name "probe-bot"
           git config user.email "probe@users.noreply.github.com"
           git add probe-result.txt
-          git commit -m "probe v23: resultados [skip ci]" || echo "nada"
+          git commit -m "probe v24: resultados [skip ci]" || echo "nada"
           git push
