@@ -1,0 +1,47 @@
+=== IVA: home desktop, poster por nombre (regex del maestro) ===
+HOME status 200 bytes 110442 secs 1.1
+slugs /anime/ (primeros 12): []
+URLs /portada/ del html (primeras 12):
+   https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg
+   https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg
+   https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg
+   https://ivanime.buzz/assets/img/serie/portada/tantei-wa-mo-shindeiru-temporada-2-portada-1791392078.jpg
+   https://ivanime.buzz/assets/img/serie/portada/kanojo-no-tomodachi-portada-1791253718.jpg
+   https://ivanime.buzz/assets/img/serie/portada/black-clover-portada-1777582817.jpg
+   https://ivanime.buzz/assets/img/serie/portada/yasei-no-last-boss-ga-arawareta-temporada-2-portada-1790439553.jpg
+   https://ivanime.buzz/assets/img/serie/portada/seitokai-ni-mo-ana-wa-aru-portada-1791141404.jpg
+   https://ivanime.buzz/assets/img/serie/portada/tokyo-revengers-santen-sensou-hen-1791143214.jpg
+   https://ivanime.buzz/assets/thumbs/portada/psyren-portada-1791217377.jpg.webp
+   https://ivanime.buzz/assets/thumbs/portada/doumo-suki-na-hito-ni-horegusuri-wo-irai-sareta-majo-desu-portada-1791216945.jpg.webp
+   https://ivanime.buzz/assets/thumbs/portada/kanojo-no-tomodachi-portada-1791253718.jpg.webp
+contexto primera /portada/ (idx 11765 ):
+'"search-results-list search-results-list-mob m-0 p-0"></ul>\n      <a href="#" class="search-results-footer d-none" id="searchViewAllMob">Ver todos los resultados</a>\n    </div>\n  </div>\n</header>\n\n<div class="flex justify-center my-2 empty:my-0"></div>\n\n<div class="flex-1">\n\n<link rel="preload" as="image" href="https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg" media="(min-width: 768px)">\n\n\n<section id="hero" class="hero-section relative w-full overflow-hidden hidden md:block" style="height: clamp(460px, 72vh, 700px)" aria-label="Destacados">\n  <div id="h'
+
+=== IVA: /emision y /animes crudos ===
+/emision -> status 200 bytes 60456 secs 0.7 anclas anime 0 data-src 24
+  primera tarjeta: '      </div>\n    </div>\n  </div>\n</section>\n\n<main class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 pt-7 pb-10">\n    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3.5 gap-y-7 sm:gap-x-4 sm:gap-y-8">\n        <article>\n  <a href="https://ivanime.buzz/anime/demons-crest-sub-espanol" class="card-wrap block group">\n    <div class="relative rounded-xl overflow-hidden" style="aspect'
+/animes -> status 200 bytes 114901 secs 0.8 anclas anime 0 data-src 24
+  primera tarjeta: '  </div>\n\n    \n      </div>\n</div>\n</form>\n\n\n<main class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 pt-7 pb-10">\n    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3.5 gap-y-7 sm:gap-x-4 sm:gap-y-8">\n        <article>\n  <a href="https://ivanime.buzz/anime/demons-crest-sub-espanol" class="card-wrap block group">\n    <div class="relative rounded-xl overflow-hidden" style="aspect'
+/emision/ -> status 200 bytes 60456 secs 0.7 anclas anime 0 data-src 24
+  primera tarjeta: '      </div>\n    </div>\n  </div>\n</section>\n\n<main class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 pt-7 pb-10">\n    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3.5 gap-y-7 sm:gap-x-4 sm:gap-y-8">\n        <article>\n  <a href="https://ivanime.buzz/anime/demons-crest-sub-espanol" class="card-wrap block group">\n    <div class="relative rounded-xl overflow-hidden" style="aspect'
+/animes/ -> status 200 bytes 114901 secs 0.7 anclas anime 0 data-src 24
+  primera tarjeta: '  </div>\n\n    \n      </div>\n</div>\n</form>\n\n\n<main class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 pt-7 pb-10">\n    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3.5 gap-y-7 sm:gap-x-4 sm:gap-y-8">\n        <article>\n  <a href="https://ivanime.buzz/anime/demons-crest-sub-espanol" class="card-wrap block group">\n    <div class="relative rounded-xl overflow-hidden" style="aspect'
+
+=== IVA: las imagenes cargan sin galleta? ===
+https://ivanime.buzz/assets/thumbs/imagen/demons-crest-1793996605.jpg.webp?v=6 -> SIN referer: 0 HTTP Error 403: Forbidden -1 bytes 0.1 s
+https://ivanime.buzz/assets/thumbs/imagen/demons-crest-1793996605.jpg.webp?v=6 -> SIN referer: 0 HTTP Error 403: Forbidden -1 bytes 0.1 s
+
+=== IVA: home con UA Android (como el telefono) ===
+HOME movil status 200 bytes 110442 secs 0.6
+slugs moviles (primeros 8): []
+URLs /portada/ moviles (primeras 8):
+   https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg
+   https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg
+   https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg
+   https://ivanime.buzz/assets/img/serie/portada/tantei-wa-mo-shindeiru-temporada-2-portada-1791392078.jpg
+   https://ivanime.buzz/assets/img/serie/portada/kanojo-no-tomodachi-portada-1791253718.jpg
+   https://ivanime.buzz/assets/img/serie/portada/black-clover-portada-1777582817.jpg
+   https://ivanime.buzz/assets/img/serie/portada/yasei-no-last-boss-ga-arawareta-temporada-2-portada-1790439553.jpg
+   https://ivanime.buzz/assets/img/serie/portada/seitokai-ni-mo-ana-wa-aru-portada-1791141404.jpg
+contexto primera /portada/ movil (idx 11765 ):
+'"search-results-list search-results-list-mob m-0 p-0"></ul>\n      <a href="#" class="search-results-footer d-none" id="searchViewAllMob">Ver todos los resultados</a>\n    </div>\n  </div>\n</header>\n\n<div class="flex justify-center my-2 empty:my-0"></div>\n\n<div class="flex-1">\n\n<link rel="preload" as="image" href="https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg" media="(min-width: 768px)">\n\n\n<section id="hero" class="hero-section relative w-full overflow-hidden hidden md:block" style="height: clamp(460px, 72vh, 700px)" aria-label="Destacados">\n  <div id="h'
