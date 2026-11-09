@@ -1,12 +1,12 @@
 === JARA EP 1x1 COMPLETO ===
-HTTP 404 bytes:50188
+HTTP 404 bytes:50067
 --- const enlaces idx 163887
 'yle.display = "flex";\n    evt.currentTarget.className += " active";\n}\n</script></div></div></div>\n<script>\ndocument.addEventListener(\'DOMContentLoaded\', function() {\n    // Reproductor (Original)\n    const enlaces = ["https:\\/\\/multiplayer1.streamhj.top\\/player\\/multiplayer\\/embed1.php?idanime=4899&idcapitulo=1"];\n    window.cambiarIdioma = function(index, element) {\n        var iframe = document.getElementById("iframe-video");\n        if(iframe) iframe.src = enlaces[index];\n        document.querySelectorAll(".boton-idioma").forEach(function(btn) { btn.classList.remove("active"); });\n        element.classList.add("active");\n    };\n\n    // --- JS (DATABASE SYNC + AUTO 5 MIN + SWITCH PREF) ---\n    const USER_LOGGED_IN = false;\n    const KEY_DB = "animejara_visto_tensei-goblin-dakedo-shitsumon-aru_1_1";\n\n    var chk = document.getElementById("check-visto-ep");\n    var autoChk = document.getElementById("check-auto-visto");\n    \n    // Lógica para guardar preferencia de Auto-Marcar en LocalStorage\n    if (autoChk) {\n        const prefAuto = localStorage.getItem(\'animejara_auto_visto\');\n        if (prefAuto !== null) {\n            autoChk.checked = (prefAuto === \'true\');\n        }\n        autoChk.addEventListener(\'change\', function() {\n            localStorage.setItem(\'animejara_auto_visto\', this.checked);\n        });\n    }\n\n    if(chk) {\n        // Evento Manual\n        chk.addEvent'
 --- lang-name botones: ['JAPONES']
 --- iframes: ['https://multiplayer1.streamhj.top/player/multiplayer/embed1.php?idanime=4899&#038;idcapitulo=1']
 --- enlaces: ['https://multiplayer1.streamhj.top/player/multiplayer/embed1.php?idanime=4899&idcapitulo=1']
 === JARA EMBED https://multiplayer1.streamhj.top/player/multiplayer/embed1.php?idanime=4899&idcapitulo=1 ===
-HTTP 200 bytes:3950
+HTTP 200 bytes:3945
 embed bytes: 16588
 --- playVideo total: 1
 --- hosts: ['bysekoze.com']
