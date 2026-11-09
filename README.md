@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.5 «La cosecha fina»)
+## Qué hace (v0.6.6 «El remiendo»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -30,6 +30,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.6 «El remiendo»
+
+La 0.6.5 nunca cargó en el teléfono: Kino compila el plugin como módulo y un módulo no permite declarar dos veces el mismo nombre — la función que cose las rutas de los pósters (`absolutizar`) vivía en dos sitios y el motor lo dijo sin rodeos: «invalid redefinition of global identifier in module code». La cura es una sola declaración, la de siempre, que une todos los casos (protocolo relativo, absoluta, barra inicial contra el origen de la base y relativa contra su directorio). Nada más cambia: la cosecha fina queda como estaba, ahora sí cosida.
 
 ## v0.6.5 «La cosecha fina»
 
