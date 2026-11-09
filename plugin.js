@@ -154,8 +154,28 @@
 // que ganaban el dedupe — ahora un ancla sin imagen cerca no es
 // tarjeta, es menú. Y el anuncio de wingsmob ya no puede colarse
 // por la captura de respaldo.
+//
+// v0.6.5 «La cosecha fina» — la 0.6.4 llegó al teléfono y el balance
+// fue bueno: ya se reproduce en casi todo, pero quedaron tres
+// detalles finos y una petición de cosecha. Los pósters grises de
+// EstrenosAnime e IvAnime tenían dos culpables: rutas RELATIVAS
+// (/uploads/anime/… sin protocolo, que Kino no dibuja) y atributos
+// src de relleno (no_poster.jpg, anime.png) que el plugin tomaba por
+// póster de verdad — ahora las rutas se cosen con la base de su
+// fuente y los rellenos se descartan. Los pósters grises de
+// AnimeOnline tenían otro dueño: la mitad de sus carátulas vive en
+// image.tmdb.org, un host que el manifiesto no conocía (ya lo
+// conoce). Y el «se queda cargando» de AnimeYT era el botón Omega:
+// un .mp4 de archive.org que contesta 403 intermitente — los
+// directos de mytsumi ahora van al fondo del reparto y los
+// extractores de verdad (Ok.ru, Filemoon) se prueban primero. La
+// cosecha: cada fuente estrenó rieles nuevos (Películas y
+// Actualizados en EstrenosAnime, En emisión/Audio Latino/Películas
+// en AnimeOnline, Emisión/Directorio/Últimos en IvAnime) y como el
+// estado de la pantalla tiene un tope de 64 KB, con muchas filas
+// cada riel muestra 8 tarjetas en vez de 12.
 
-const VERSION = '0.6.4';
+const VERSION = '0.6.5';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -1119,7 +1139,13 @@ async function probarServidores(servers, idx, refDe) {
   const orden = servers.map(function (s, i) { return i; }).sort(function (a, b) {
     const pa = servers[a].tipo === preferido ? 0 : 1;
     const pb = servers[b].tipo === preferido ? 0 : 1;
-    return pa - pb || (TIPO_ORDEN[servers[a].tipo] || 20) - (TIPO_ORDEN[servers[b].tipo] || 20) || a - b;
+    /* v0.6.5: un directo marcado fondo (el Omega de mytsumi, un
+     * archive.org que a veces se queda cargando con su 403) va
+     * detrás de los extractores de verdad: antes de tocarlo se
+     * prueba con ok.ru o filemoon. */
+    const oa = servers[a].fondo === true ? 40 : (TIPO_ORDEN[servers[a].tipo] || 20);
+    const ob = servers[b].fondo === true ? 40 : (TIPO_ORDEN[servers[b].tipo] || 20);
+    return pa - pb || oa - ob || a - b;
   });
   const fallas = [];
   for (const i of orden) {
@@ -2170,7 +2196,10 @@ function posterEnVentana(ventana) {
   for (let i = 0; i < atributos.length; i++) {
     const re = new RegExp('\\b' + atributos[i] + '\\s*=\\s*["\']([^"\']*(?:\\.jpe?g|\\.png|\\.webp)[^"\']*)["\']', 'i');
     const m = re.exec(v);
-    if (m && !/^data:/i.test(m[1])) {
+    /* v0.6.5: el src de las tarjetas de EstrenosAnime es el genérico
+     * «no_poster.jpg» y el de IvAnime un anime.png de relleno: un
+     * atributo así no es póster, es su ausencia. */
+    if (m && !/^data:/i.test(m[1]) && !/no_poster|capblank|placeholder/i.test(m[1])) {
       return m[1].indexOf('//') === 0 ? 'https:' + m[1] : m[1];
     }
   }
@@ -2195,6 +2224,19 @@ function posterAntesDe(html, idx) {
     if (p) return p;
   }
   return '';
+}
+
+/* v0.6.5: los listados traen imágenes con rutas RELATIVAS
+ * (data-src="/uploads/anime/xxx.jpg" en EstrenosAnime): sin protocolo
+ * Kino no las dibuja y la tarjeta queda gris aunque el póster existía.
+ * Se les cose la base de su fuente. */
+function absolutizar(u, base) {
+  const s = String(u || '');
+  if (!s) return '';
+  if (s.indexOf('//') === 0) return 'https:' + s;
+  if (/^https?:\/\//i.test(s)) return s;
+  if (s.indexOf('/') === 0) return String(base || '').replace(/\/+$/, '') + s;
+  return s;
 }
 
 /* v0.6.3: el contenedor mytsumi.com de AnimeYT esconde los players tras un
@@ -2242,8 +2284,11 @@ async function aytSondearMytsumi(html) {
       const clave = 'dir|' + u;
       if (vistos[clave]) return;
       vistos[clave] = true;
+      /* v0.6.5: estos directos (el Omega de archive.org y parientes)
+       * van marcados fondo: intermitentemente responden 403 al
+       * reproducir, así que el reparto prueba antes los extractores. */
       servers.push({
-        nombre: nombre || 'Directo', url: u, tipo: 'directo',
+        nombre: nombre || 'Directo', url: u, tipo: 'directo', fondo: true,
         directo: { url: u, mime: mimeDe(u), headers: { Referer: ref, 'User-Agent': UA } }
       });
       return;
@@ -2278,8 +2323,14 @@ async function aytSondearMytsumi(html) {
       log('sondeo mytsumi falló:', u, (e && e.message) || e);
     }
   }
+  /* v0.6.5: los directos de aquí (el Omega de archive.org y parientes)
+   * intermitentemente contestan 403 al reproducir: en el reparto van al
+   * fondo (fondo: true, tras los extractores de verdad) y en esta
+   * lista también van últimos. */
   servers.sort(function (a, b) {
-    return (TIPO_ORDEN[a.tipo] || 20) - (TIPO_ORDEN[b.tipo] || 20);
+    const oa = a.tipo === 'directo' ? 40 : (TIPO_ORDEN[a.tipo] || 20);
+    const ob = b.tipo === 'directo' ? 40 : (TIPO_ORDEN[b.tipo] || 20);
+    return oa - ob;
   });
   return servers;
 }
@@ -2620,7 +2671,8 @@ function aytTarjetas(html) {
      * algunos listados la dejan antes del <a>. */
     let poster = posterEnVentana(ventana);
     if (!poster) poster = posterAntesDe(String(html || ''), m.index);
-    if (poster) item.poster = poster;
+    /* v0.6.5: pósters con ruta relativa, cosidos con la base. */
+    if (poster) item.poster = absolutizar(poster, BASE_AYT);
     const ym = /\b(19\d{2}|20\d{2})\b/.exec(ventana);
     if (ym) item.year = ym[1];
     items.push(item);
@@ -2786,10 +2838,12 @@ function easFichas(html) {
       kind: /pel[íi]cula|movie/i.test(ventana) ? 'movie' : 'series'
     };
     /* v0.6.1: la imagen de las tarjetas va ANTES del ancla en los listados
-     * del sitio; si no está dentro, se mira hacia atrás. */
+     * del sitio; si no está dentro, se mira hacia atrás.
+     * v0.6.5: sus imágenes son rutas relativas (/uploads/anime/…): se
+     * cosen con la base o Kino las deja grises. */
     let poster = posterEnVentana(ventana);
     if (!poster) poster = posterAntesDe(String(html || ''), m.index);
-    if (poster) item.poster = poster;
+    if (poster) item.poster = absolutizar(poster, BASE_EAS);
     items.push(item);
   }
   return items;
@@ -2814,10 +2868,12 @@ function easEpisodiosDe(html) {
       kind: 'series'
     };
     item.badges = ['EP ' + n];
-    /* v0.6.1: en el feed la imagen va ANTES del ancla del episodio. */
+    /* v0.6.1: en el feed la imagen va ANTES del ancla del episodio.
+     * v0.6.5: rutas relativas cosidas con la base. */
     let poster = posterEnVentana(ventana);
     if (!poster) poster = posterAntesDe(String(html || ''), m.index);
     if (poster) {
+      poster = absolutizar(poster, BASE_EAS);
       item.backdrop = poster;
       item.poster = poster;
     }
@@ -3069,7 +3125,10 @@ registrarFuente({
       { id: 'eas-eps', titulo: 'Últimos episodios · EstrenosAnime', ref: 'eas-eps', camino: '/ultimo-episodios', eps: true },
       { id: 'eas-sub', titulo: 'Sub español · EstrenosAnime', ref: 'eas-sub', camino: '/ultimo-subtitulado' },
       { id: 'eas-lat', titulo: 'Latino · EstrenosAnime', ref: 'eas-lat', camino: '/ultimo-latino' },
-      { id: 'eas-popular', titulo: 'Popular · EstrenosAnime', ref: 'eas-popular', camino: '/popular' }
+      { id: 'eas-popular', titulo: 'Popular · EstrenosAnime', ref: 'eas-popular', camino: '/popular' },
+      /* v0.6.5: dos riel más para que la sección no se sienta vacía. */
+      { id: 'eas-peliculas', titulo: 'Películas · EstrenosAnime', ref: 'eas-peliculas', camino: '/tipo/Pelicula' },
+      { id: 'eas-actualizados', titulo: 'Actualizados · EstrenosAnime', ref: 'eas-actualizados', camino: '/ultimo-actualizado' }
     ];
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
@@ -3093,6 +3152,8 @@ registrarFuente({
     else if (ref === 'eas-sub') camino = '/ultimo-subtitulado';
     else if (ref === 'eas-lat') camino = '/ultimo-latino';
     else if (ref === 'eas-popular') camino = '/popular';
+    else if (ref === 'eas-peliculas') camino = '/tipo/Pelicula';
+    else if (ref === 'eas-actualizados') camino = '/ultimo-actualizado';
     if (!camino) return null;
     const r = await traer(BASE_EAS + camino, { headers: { Referer: BASE_EAS + '/' }, timeoutMs: 12000 });
     if (!r.ok) {
@@ -3329,7 +3390,9 @@ function aonTarjetas(html) {
      * si la imagen no vive dentro del ancla, se mira hacia atrás, que
      * algunos listados la dejan antes del <a>. v0.6.4: el póster ya se
      * halló arriba (y sin póster el ancla no llega aquí: es menú). */
-    if (poster) item.poster = poster.indexOf('//') === 0 ? 'https:' + poster : poster;
+    /* v0.6.5: pósters con ruta relativa o sin protocolo: se cosen con la
+     * base (absolutizar) o Kino los deja grises. */
+    if (poster) item.poster = absolutizar(poster, BASE_AON);
     items.push(item);
   }
   return items;
@@ -3442,18 +3505,35 @@ registrarFuente({
   },
 
   async portada() {
-    let items = [];
+    /* v0.6.5: la sección se llena con cuatro rieles (directorio, en
+     * emisión, audio latino y películas) y cada fila vive en su propio
+     * try: si una cae, las demás se muestran igual. */
+    const defs = [
+      { id: 'aon-anime', titulo: 'Anime · AnimeOnline', ref: 'aon-anime', camino: '/genero/ver-anime/' },
+      { id: 'aon-emision', titulo: 'En emisión · AnimeOnline', ref: 'aon-emision', camino: '/genero/en-emision-1/' },
+      { id: 'aon-latino', titulo: 'Audio Latino · AnimeOnline', ref: 'aon-latino', camino: '/genero/audio-latino/' },
+      { id: 'aon-peliculas', titulo: 'Películas · AnimeOnline', ref: 'aon-peliculas', camino: '/pelicula/' }
+    ];
     let pideRevision = false;
-    try {
-      const r = await aonTraer('/genero/ver-anime/', 10000);
-      if (r.revision) pideRevision = true;
-      else if (r.ok) items = aonTarjetas(r.text).slice(0, 20);
-    } catch (e) {
-      log('aon fila', (e && e.message) || e);
-    }
-    /* v0.6.1: si el directorio no trajo nada, la home del tema Dooplay
+    const rtas = await Promise.all(defs.map(async (def) => {
+      try {
+        const r = await aonTraer(def.camino, 10000);
+        if (r.revision) { pideRevision = true; return null; }
+        if (!r.ok) return null;
+        const items = aonTarjetas(r.text).slice(0, 20);
+        return items.length ? { id: def.id, title: def.titulo, ref: def.ref, items: items } : null;
+      } catch (e) {
+        log('aon fila «' + def.titulo + '» falló', (e && e.message) || String(e));
+        return null;
+      }
+    }));
+    const filas = [];
+    for (const fila of rtas) if (fila) filas.push(fila);
+    if (filas.length) return filas;
+    /* v0.6.1: si ningún género trajo nada, la home del tema Dooplay
      * también trae tarjetas de series. */
-    if (!items.length && !pideRevision) {
+    let items = [];
+    if (!pideRevision) {
       try {
         const r2 = await aonTraer('/', 10000);
         if (r2.revision) pideRevision = true;
@@ -3478,8 +3558,16 @@ registrarFuente({
   },
 
   async hoja(ref) {
-    if (ref !== 'aon-anime') return null;
-    const r = await aonTraer('/genero/ver-anime/', 12000);
+    /* v0.6.5: cada riel de la portada abre su propio camino. */
+    const caminos = {
+      'aon-anime': '/genero/ver-anime/',
+      'aon-emision': '/genero/en-emision-1/',
+      'aon-latino': '/genero/audio-latino/',
+      'aon-peliculas': '/pelicula/'
+    };
+    const camino = caminos[ref];
+    if (!camino) return null;
+    const r = await aonTraer(camino, 12000);
     if (r.revision) {
       throw aonErrorRevision();
     }
@@ -3589,8 +3677,13 @@ function ivaTarjetas(html) {
       title: titulo.slice(0, 200),
       kind: 'series'
     };
-    const im = /(?:src|data-src)\s*=\s*["']([^"']+\.(?:jpg|jpeg|png|webp)[^"']*)["']/i.exec(ventana);
-    if (im) item.poster = im[1].indexOf('//') === 0 ? 'https:' + im[1] : im[1];
+    /* v0.6.5: el src de sus tarjetas es un anime.png de relleno y el
+     * póster de verdad vive en data-src: se mira primero en la ventana
+     * con los criterios de siempre y hacia atrás, y se cose con la
+     * base porque a veces llega relativo. */
+    let poster = posterEnVentana(ventana);
+    if (!poster) poster = posterAntesDe(String(html || ''), m.index);
+    if (poster) item.poster = absolutizar(poster, BASE_IVA);
     items.push(item);
   }
   return items;
@@ -3640,19 +3733,39 @@ registrarFuente({
   },
 
   async portada() {
-    try {
-      const r = await traer(BASE_IVA + '/', { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 10000 });
-      const items = ivaTarjetas(r.text).slice(0, 20);
-      if (items.length) return [{ id: 'iva-emision', title: 'En emisión · IvAnime', ref: 'iva-emision', items: items }];
-    } catch (e) {
-      log('iva fila', (e && e.message) || e);
-    }
-    return [];
+    /* v0.6.5: la sección se llena con tres rieles (en emisión,
+     * directorio y últimos agregados) traídos en paralelo. */
+    const defs = [
+      { id: 'iva-emision', titulo: 'En emisión · IvAnime', ref: 'iva-emision', camino: '/emision' },
+      { id: 'iva-directorio', titulo: 'Directorio · IvAnime', ref: 'iva-directorio', camino: '/animes' },
+      { id: 'iva-nuevos', titulo: 'Últimos agregados · IvAnime', ref: 'iva-nuevos', camino: '/' }
+    ];
+    const rtas = await Promise.all(defs.map(async (def) => {
+      try {
+        const r = await traer(BASE_IVA + def.camino, { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 9000 });
+        const items = ivaTarjetas(r.text).slice(0, 20);
+        return items.length ? { id: def.id, title: def.titulo, ref: def.ref, items: items } : null;
+      } catch (e) {
+        log('iva fila «' + def.titulo + '» falló', (e && e.message) || String(e));
+        return null;
+      }
+    }));
+    const filas = [];
+    for (const fila of rtas) if (fila) filas.push(fila);
+    return filas;
   },
 
   async hoja(ref) {
-    if (ref !== 'iva-emision') return null;
-    const r = await traer(BASE_IVA + '/', { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 12000 });
+    /* v0.6.5: cada riel abre su propio camino; la paginación de IvAnime
+     * no está verificada, así que el riel se corta limpio. */
+    const caminos = {
+      'iva-emision': '/emision',
+      'iva-directorio': '/animes',
+      'iva-nuevos': '/'
+    };
+    const camino = caminos[ref];
+    if (!camino) return null;
+    const r = await traer(BASE_IVA + camino, { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 12000 });
     if (!r.ok) {
       throw kino.error('unavailable', 'IvAnime no respondió (status ' + r.status + ')', {
         userMessage: 'IvAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
@@ -3924,11 +4037,11 @@ function sinSufijoFuente(titulo, etiqueta) {
    oculto; la honestidad manda: sin reproductor legible, mensaje claro. */
 const NUCLEO_TODAS = {
   av1: ['av1-row-eps', 'av1-latest', 'av1-populares', 'av1-score'],
-  otv: ['otv-emision', 'otv-eps'],
-  ayt: ['ayt-latest'],
-  eas: ['eas-eps', 'eas-sub'],
-  aon: ['aon-anime'],
-  iva: ['iva-emision']
+  otv: ['otv-emision', 'otv-eps', 'otv-animes'],
+  ayt: ['ayt-latest', 'ayt-peliculas'],
+  eas: ['eas-eps', 'eas-sub', 'eas-lat', 'eas-popular'],
+  aon: ['aon-anime', 'aon-emision', 'aon-latino'],
+  iva: ['iva-emision', 'iva-directorio']
 };
 
 async function cargarPantalla(fuente) {
@@ -3974,9 +4087,13 @@ async function cargarPantalla(fuente) {
     }
   }
   const hero = fuente === 'todas' || fuente === 'av1' ? await heroDeAv1() : null;
+  /* v0.6.5: con las secciones llenas el estado de la pantalla crece y
+   * Kino la guarda con un tope de 64 KB: cuando hay muchas filas, cada
+   * riel muestra 8 tarjetas en vez de 12 para que «Todas» no desborde. */
+  const porRiel = filas.length > 18 ? 8 : 12;
   const fuera = [];
   for (const fila of filas) {
-    const items = (fila.items || []).slice(0, 12).map(compactarItem);
+    const items = (fila.items || []).slice(0, porRiel).map(compactarItem);
     if (!items.length) continue;
     fuera.push({ id: fila.id, title: fila.title, ref: fila.ref || null, fuente: fila.fuente || '', items: items });
   }
