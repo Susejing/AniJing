@@ -13,7 +13,7 @@ jobs:
       - name: sondear
         run: |
           python3 - <<'PYEOF' > probe-result.txt 2>&1 || true
-          import urllib.request, re, json
+          import urllib.request, re
           UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
           def get(url, headers=None, timeout=25):
               h={'User-Agent':UA}
@@ -27,98 +27,53 @@ jobs:
           def sec(t): print('====',t,'====')
           XRW={'X-Requested-With':'XMLHttpRequest','Accept':'application/json, text/javascript, */*; q=0.01'}
           
-          sec('EAS bundle main JS: rutas ajax y servers')
-          st,js=get('https://estrenosanime.net/assets/build/2160da6ae38414a3343bc89196b9c9/dist/main-Cf60lTXs.js')
-          print('status',st,'len',len(js))
-          for m in sorted(set(re.findall(r'[\"\x27`](.{0,90}ajax.{0,90})[\"\x27`]', js)))[:60]: print('RUTA:',m)
-          for m in sorted(set(re.findall(r'[\"\x27`](.{0,90}(?:servers-content|episodeId|sources).{0,90})[\"\x27`]', js)))[:40]: print('SRV:',m)
+          sec('EAS servers html COMPLETO')
+          st,body=get('https://estrenosanime.net/ajax/v2/episode/servers?episodeId=72238', dict(XRW, Referer='https://estrenosanime.net/ver/tensei-kizoku-kantei-skill-de-nariagaru-3rd-season/episodio-7'))
+          print('status',st)
+          try:
+              j=__import__('json').loads(body)
+              html=j.get('html','')
+              print('LEN html', len(html))
+              print(html[:4500])
+          except Exception as e:
+              print('no json:', body[:1500])
           
-          sec('EAS episodio data-epid')
-          st,ep=get('https://estrenosanime.net/ver/tensei-kizoku-kantei-skill-de-nariagaru-3rd-season/episodio-7', {'Referer':'https://estrenosanime.net/'})
-          print('status',st,'len',len(ep))
-          m=re.search(r'data-id=\"(\d+)\" data-epid=\"(\d+)\"', ep)
-          epid=m.group(2) if m else '?'
-          print('data-id/epid:', m.groups() if m else 'NO')
+          sec('EAS sources con ids hallados')
+          st,body=get('https://estrenosanime.net/ajax/v2/episode/servers?episodeId=72238', dict(XRW, Referer='https://estrenosanime.net/'))
+          ids=re.findall(r'data-id=\"(\d+)\"', body)
+          sids=re.findall(r'data-server-id=\"(\d+)\"', body)
+          print('data-id:', ids[:10], 'data-server-id:', sids[:10])
+          for sid in (sids or ids)[:3]:
+              for su in ['https://estrenosanime.net/ajax/v2/episode/sources?id=','https://estrenosanime.net/ajax/episode/sources?id=']:
+                  st,b=get(su+sid, dict(XRW, Referer='https://estrenosanime.net/'))
+                  print('source', sid, su.split('net')[1], '->', st, b[:250])
+                  if st==200 and ('link' in b or 'url' in b): break
           
-          ok_servers=''
-          for ruta in ['/ajax/v2/episode/servers?episodeId=','/ajax/episode/servers?episodeId=','/ajax/episode/servers?ep=','/ajax/servers?episodeId=']:
-              u='https://estrenosanime.net'+ruta+epid
-              st,body=get(u, dict(XRW, Referer='https://estrenosanime.net/'))
-              print('EAS AJAX', ruta, '->', st, body[:600])
-              if st==200 and len(body)>100: ok_servers=body; break
-          if ok_servers:
-              ids=re.findall(r'data-(?:server-)?id=\"(\d+)\"', ok_servers)[:6]
-              nombres=re.findall(r'<div[^>]*server-name[^>]*>([^<]{1,30})<', ok_servers)[:6]
-              print('server ids:', ids, 'nombres:', nombres)
-              for sid in ids[:4]:
-                  for su in ['https://estrenosanime.net/ajax/v2/episode/sources?id=','https://estrenosanime.net/ajax/episode/sources?id=']:
-                      st,b=get(su+sid, dict(XRW, Referer='https://estrenosanime.net/'))
-                      print('EAS source', sid, su, '->', st, b[:200])
-                      if st==200 and 'link' in b: break
+          sec('AYT mytsumi limpio: open=1 y sin el, con Referer episodio')
+          epu='https://animeyt.cc/116579/anime/kashita-maryoku-wa-revo-barai-de-kyousei-choushuu-capitulo-1/'
+          limpia='https://mytsumi.com/container.php?id=x9MSVgFqorVi0vN9&only=SUB&lang=SUB'
+          st,mp=get(limpia+'&open=1', {'Referer':epu})
+          print('open=1 con Referer episodio ->', st, 'len', len(mp))
+          print(mp[:2500])
+          st,mp2=get(limpia, {'Referer':epu})
+          print('sin open=1 ->', st, 'len', len(mp2))
+          print(mp2[:1200])
           
-          sec('OTV episodio: data-dwn, encrypt y play-video')
-          st,otv=get('https://www.otakustv.net/ver/one-piece-1180', {'Referer':'https://www.otakustv.net/'})
-          print('status',st,'len',len(otv))
-          d=re.search(r'data-dwn=\"([^\"]+)\"', otv)
-          print('dwn:', d.group(1)[:500] if d else 'NO')
-          enc=re.search(r'data-encrypt=\"([^\"]+)\"', otv)
-          print('encrypt:', enc.group(1) if enc else 'NO')
-          if enc:
-              hx=enc.group(1)
-              dec=bytes.fromhex(hx).decode('utf-8','replace') if all(c in '0123456789abcdefABCDEF' for c in hx) else '?'
-              print('encrypt decodificado:', dec)
-          for q in ['285-1180','1','2851180','3238352d31313830']:
-              st,body=get('https://www.otakustv.net/play-video?id='+q, dict(XRW, Referer='https://www.otakustv.net/ver/one-piece-1180'))
-              print('OTV play-video', q, '->', st, body[:250])
-          
-          sec('AYT home, ficha y episodio')
-          st,ayt=get('https://animeyt.cc/', {'Referer':'https://animeyt.cc/'})
-          print('home status',st,'len',len(ayt))
-          tvs=re.findall(r'href=\"([^\"]*/tv/[^\"]+)\"', ayt)[:5]
-          print('tvs:', tvs)
-          if tvs:
-              u=tvs[0] if tvs[0].startswith('http') else 'https://animeyt.cc'+tvs[0]
-              st,ficha=get(u, {'Referer':'https://animeyt.cc/'})
-              print('ficha',st,'len',len(ficha))
-              eps=re.findall(r'href=\"([^\"]*capitulo-\d+[^\"]*)\"', ficha)[:3]
-              print('eps:', eps)
-              if eps:
-                  eu=eps[0] if eps[0].startswith('http') else 'https://animeyt.cc/'+eps[0].lstrip('/')
-                  st,epa=get(eu, {'Referer':'https://animeyt.cc/'})
-                  print('episodio',st,'len',len(epa))
-                  print('mytsumi en crudo:', 'mytsumi' in epa)
-                  print('iframes:', re.findall(r'<iframe[^>]+(?:data-src|src)=\"([^\"]{10,160})\"', epa)[:6])
-                  print('data-player-url:', re.findall(r'data-player-url=\"([^\"]{10,180})\"', epa)[:6])
-                  print('data-dwn:', (re.search(r'data-dwn=\"([^\"]+)\"', epa) or [None,'NO'])[1][:300] if re.search(r'data-dwn', epa) else 'NO')
-                  mt=re.findall(r'https?://[^\s\"\x27<>]*mytsumi[^\s\"\x27<>]*', epa)[:2]
-                  print('urls mytsumi:', mt)
-                  for u2 in mt:
-                      ab=u2+('&' if '?' in u2 else '?')+'open=1'
-                      st2,myp=get(ab, {'Referer':u2})
-                      print('mytsumi open=1', st2, 'len',len(myp))
-                      print('botones:', re.findall(r'data-player-url=\"([^\"]{10,180})\"', myp)[:8])
-                      print('descargas:', re.findall(r'mytsumi-download-button[^>]*href=\"([^\"]{10,180})\"', myp)[:8], re.findall(r'href=\"([^\"]{10,180})\"[^>]*mytsumi-download-button', myp)[:8])
-          
-          sec('AON catalogo sin galleta y posters')
+          sec('AON: ventana de dos tarjetas del catalogo')
           st,aon=get('https://ww3.animeonline.ninja/genero/ver-anime/', {'Referer':'https://ww3.animeonline.ninja/'})
-          print('status',st,'len',len(aon), 'justamoment:', 'just a moment' in aon.lower())
-          imgs=re.findall(r'(?:data-lazy-src|data-src|data-litespeed-src|src)=\"([^\"]+(?:\.jpe?g|\.png|\.webp)[^\"]*)\"', aon)[:6]
-          print('posters:', imgs)
-          if imgs:
-              pu=imgs[0] if imgs[0].startswith('http') else 'https://ww3.animeonline.ninja'+imgs[0]
-              st,body=get(pu)
-              print('poster directo ->', st, 'CF?', 'just a moment' in str(body)[:2000].lower())
-              import urllib.parse
-              wp='https://wsrv.nl/?url='+urllib.parse.quote(pu, safe='')
-              st2,b2=get(wp)
-              print('poster via wsrv.nl ->', st2, 'len', len(b2) if isinstance(b2,str) else '?', 'CF?', 'just a moment' in str(b2)[:500].lower())
+          print('status',st,'len',len(aon))
+          an=re.findall(r'<a\b[^>]*href=\"[^\"]*\/(?:online|temporada|anime)\/[^\"]*\"[^>]*>[\s\S]{0,900}?</a>', aon)
+          print('n anclas:', len(an))
+          for a in an[:2]:
+              print('--- TARJETA ---')
+              print(a[:1200])
             
           PYEOF
-          head -c 6000 probe-result.txt
+          head -c 12000 probe-result.txt
       - name: subir
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add probe-result.txt
-          git commit -m "probe: resultados de sondeo [skip ci]" || echo "nada que subir"
+          git commit -m "probe v3: resultados [skip ci]" || echo "nada que subir"
           git push
