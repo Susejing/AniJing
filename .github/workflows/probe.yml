@@ -15,48 +15,58 @@ jobs:
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
           R=probe-result.txt
           : > "$R"
-          echo "=== VAN EPISODIO DEEP ===" >> "$R"
-          curl -sL --compressed -A "$UA" "https://veranime.ninja/ver/tensei-kizoku-kantei-skill-de-nariagaru-episodio-1/" -o /tmp/ve.html
+          echo "=== VAN EP PLAYER CTX ===" >> "$R"
+          curl -sL --compressed -A "$UA" "https://veranime.ninja/ver/dragon-ball-super-beerus-episodio-1/" -o /tmp/ve.html
           echo "bytes: $(wc -c < /tmp/ve.html)" >> "$R"
-          grep -Eo "postid-[0-9]+|post-[0-9]+" /tmp/ve.html | sort -u | head -10 >> "$R"
-          grep -Eo "data-[a-z-]+=\"[^\"]{0,90}\"" /tmp/ve.html | sort -u | head -50 >> "$R"
-          grep -Ei -B3 -A50 "dooplay_player|player_box|video_box|id=\"players|publicidad|Seleccione un" /tmp/ve.html | head -150 >> "$R"
+          python3 - <<'PY' >> "$R"
+          h = open('/tmp/ve.html', encoding='utf-8', errors='replace').read()
+          for kw in ['dooplay_player', 'playeroptions', 'video_player', 'data-post', 'admin-ajax', 'dtAjax', 'iframe', 'player_option', 'option-players', '#player']:
+              i = h.find(kw)
+              print('--- KW', kw, 'idx', i)
+              if i >= 0:
+                  print(repr(h[max(0,i-250):i+700]))
+          PY
+          echo "=== VAN ADMIN AJAX ===" >> "$R"
           PID=$(grep -Eo "postid-[0-9]+" /tmp/ve.html | head -1 | grep -Eo "[0-9]+")
           echo "PID: $PID" >> "$R"
-          if [ -n "$PID" ]; then
-            echo "--- dooplayer v2 post ---" >> "$R"
-            curl -sL --compressed -A "$UA" "https://veranime.ninja/wp-json/dooplayer/v2/post/$PID" >> "$R"
+          for BODY in "action=dooplay_player&post=$PID&nume=1&type=tv" "action=doo_player&post=$PID&nume=1&type=tv" "action=dooplay_player&post=$PID&nume=1"; do
+            echo "--- POST $BODY" >> "$R"
+            curl -sL --compressed -A "$UA" -H "Referer: https://veranime.ninja/ver/dragon-ball-super-beerus-episodio-1/" -H "X-Requested-With: XMLHttpRequest" --data "$BODY" "https://veranime.ninja/wp-admin/admin-ajax.php" | head -c 1200 >> "$R"
             echo "" >> "$R"
-            echo "--- dooplayer v2 post type tv ---" >> "$R"
-            curl -sL --compressed -A "$UA" "https://veranime.ninja/wp-json/dooplayer/v2/post/$PID?type=tv" >> "$R"
+          done
+          echo "=== VAN API V2 ===" >> "$R"
+          for U in "https://veranime.ninja/wp-json/dooplayer/v2/$PID" "https://veranime.ninja/wp-json/dooplayer/v2/?post=$PID" "https://veranime.ninja/wp-json/dooplayer/v2/post/$PID?type=tv&source=1"; do
+            echo "--- GET $U" >> "$R"
+            curl -sL --compressed -A "$UA" "$U" | head -c 600 >> "$R"
             echo "" >> "$R"
-          fi
-          echo "=== VAN EPISODIO 2 (otro) ===" >> "$R"
-          curl -sL --compressed -A "$UA" "https://veranime.ninja/ver/dragon-ball-super-beerus-episodio-1/" -o /tmp/ve2.html
-          echo "bytes: $(wc -c < /tmp/ve2.html)" >> "$R"
-          grep -Eo "postid-[0-9]+" /tmp/ve2.html | sort -u | head -5 >> "$R"
-          grep -Ei -B2 -A40 "iframe|dooplay_player" /tmp/ve2.html | head -120 >> "$R"
-          echo "=== VAN FICHA ANIME ===" >> "$R"
-          curl -sL --compressed -A "$UA" "https://veranime.ninja/anime/tensei-kizoku-kantei-skill-de-nariagaru/" -o /tmp/vf.html
+          done
+          echo "=== VAN FICHA EPISODIOS CTX ===" >> "$R"
+          curl -sL --compressed -A "$UA" "https://veranime.ninja/anime/dragon-ball-super-beerus/" -o /tmp/vf.html
           echo "bytes: $(wc -c < /tmp/vf.html)" >> "$R"
-          grep -Eo "href=\"[^\"]*/ver/[^\"]*\"" /tmp/vf.html | sort -u | head -15 >> "$R"
-          grep -Eo "og:image[^>]*" /tmp/vf.html | head -3 >> "$R"
-          echo "=== JARA TARJETA COMPLETA ===" >> "$R"
-          curl -sL --compressed -A "$UA" "https://animejara.com/emision" -o /tmp/m.html
-          grep -E -B14 -A36 "anime/black-clover" /tmp/m.html | head -160 >> "$R"
-          echo "=== JARA IDIOMAS ===" >> "$R"
+          python3 - <<'PY' >> "$R"
+          import re
+          h = open('/tmp/vf.html', encoding='utf-8', errors='replace').read()
+          for kw in ['seasons', 'episodios', '/ver/', 'se-c', 'pag_episodes']:
+              i = h.find(kw)
+              print('--- KW', kw, 'idx', i)
+              if i >= 0:
+                  print(repr(h[max(0,i-150):i+800]))
+          PY
+          echo "=== JARA ENLACES CTX ===" >> "$R"
           curl -sL --compressed -A "$UA" "https://animejara.com/episode/dragon-ball-super-beerus-1x5/" -o /tmp/e.html
-          grep -Ei -B2 -A18 "japones|latino|castellano" /tmp/e.html | head -120 >> "$R"
-          grep -Ei -B2 -A40 "function cambiarIdioma" /tmp/e.html | head -120 >> "$R"
-          grep -Eo "iframe[^>]{0,250}" /tmp/e.html | head -8 >> "$R"
-          echo "=== JARA HOME ULTIMOS ===" >> "$R"
-          curl -sL --compressed -A "$UA" "https://animejara.com/" -o /tmp/h.html
-          echo "bytes: $(wc -c < /tmp/h.html)" >> "$R"
-          grep -Eo "href=\"[^\"]*episode/[^\"]*\"" /tmp/h.html | sort -u | head -12 >> "$R"
+          python3 - <<'PY' >> "$R"
+          import re
+          h = open('/tmp/e.html', encoding='utf-8', errors='replace').read()
+          for kw in ['enlaces', 'cambiarIdioma', 'data-season', 'episodios</span>']:
+              i = h.find(kw)
+              print('--- KW', kw, 'idx', i)
+              if i >= 0:
+                  print(repr(h[max(0,i-200):i+600]))
+          PY
       - name: commit
         run: |
           git config user.name "probe-bot"
           git config user.email "probe@users.noreply.github.com"
           git add probe-result.txt
-          git commit -m "probe v16: resultados [skip ci]" || echo "nada"
+          git commit -m "probe v17: resultados [skip ci]" || echo "nada"
           git push
