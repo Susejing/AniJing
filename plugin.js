@@ -242,7 +242,18 @@
 // darkanimes.com. La ventanita de la revisión de Cloudflare se
 // retira con AnimeOnline: ninguna fuente viva la pide hoy.
 
-const VERSION = '0.6.9';
+// v0.6.10 «El 404 mentiroso» — AnimeJara sirve sus páginas de episodio
+// con estado HTTP 404 y el contenido completo adentro: el catálogo y
+// las fichas cargaban, pero el resolve moría al abrir cualquier
+// capítulo porque nadie mira el cuerpo cuando el estado miente. Ahora
+// la página del episodio y los embeds de streamhj se leen con
+// cuerpoSiempre y se validan por contenido (un 404 de verdad no trae
+// «const enlaces» ni «streamhj»). VerAnime, que en el teléfono no
+// aparecía, gana respaldo: si su género de catálogo viene vacío o no
+// responde, se prueba la home del sitio, y cada paso queda en el log
+// con estado y tamaño para que la próxima captura diga la verdad.
+
+const VERSION = '0.6.10';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -388,9 +399,14 @@ async function traer(url, opciones) {
   }
   try {
     const r = await kino.fetch(url, opts);
-    if (!r || !r.ok) return { ok: false, status: r ? r.status : 0, url: url, text: '' };
-    const t = typeof r.text === 'function' ? await r.text() : String(r.text || '');
-    return { ok: true, status: r.status, url: r.url || url, text: t };
+    const bien = !!(r && r.ok);
+    /* v0.6.10 «El 404 mentiroso»: AnimeJara sirve sus páginas de
+     * episodio con estado 404 y todo el contenido adentro; con
+     * cuerpoSiempre se lee el cuerpo aunque el estado no sea 200 y
+     * cada quien valida lo que recibió por contenido. */
+    if (!bien && o.cuerpoSiempre !== true) return { ok: false, status: r ? r.status : 0, url: url, text: '' };
+    const t = r && typeof r.text === 'function' ? await r.text() : String((r && r.text) || '');
+    return { ok: bien, status: r ? r.status : 0, url: url, text: t };
   } catch (e) {
     return { ok: false, status: 0, url: url, text: '', error: e };
   }
@@ -3534,8 +3550,12 @@ registrarFuente({
 
   async resolver(epslug, n, idx) {
     const epUrl = BASE_JARA + '/episode/' + epslug + '/';
-    const r = await traer(epUrl, { headers: { Referer: BASE_JARA + '/' }, timeoutMs: 10000 });
-    if (!r.ok || !r.text) {
+    /* v0.6.10: AnimeJara sirve esta página con estado 404 y el contenido
+     * completo adentro (título, enlaces, iframe): se lee el cuerpo igual
+     * y se valida por contenido — un 404 de verdad no trae «enlaces» ni
+     * «streamhj», y esos sí se quedan en el error honesto. */
+    const r = await traer(epUrl, { headers: { Referer: BASE_JARA + '/' }, timeoutMs: 10000, cuerpoSiempre: true });
+    if (!r.text || !/const\s+enlaces|streamhj\.top/i.test(r.text)) {
       throw kino.error('not_found', 'AnimeJara no entregó el episodio', {
         userMessage: 'No se pudo abrir este episodio en AnimeJara.'
       });
@@ -3568,8 +3588,8 @@ registrarFuente({
       if (queda() < 12000) break;
       let txtEmb = '';
       try {
-        const re2 = await traer(embeds[e], { headers: { Referer: BASE_JARA + '/', 'User-Agent': UA }, timeoutMs: 9000 });
-        if (re2.ok && re2.text) txtEmb = re2.text;
+        const re2 = await traer(embeds[e], { headers: { Referer: BASE_JARA + '/', 'User-Agent': UA }, timeoutMs: 9000, cuerpoSiempre: true });
+        if (re2.text) txtEmb = re2.text;
       } catch (e2) {
         log('embed de AnimeJara falló', (e2 && e2.message) || String(e2));
       }
@@ -3752,16 +3772,36 @@ registrarFuente({
   },
 
   async portada() {
+    /* v0.6.10: la fila no se pierde en silencio — si el género no trae
+     * tarjetas, se prueba la home del sitio y todo queda en el log con
+     * el estado y el tamaño de lo que llegó (el teléfono manda y su
+     * bitácora dirá qué pasó: reto, vacío o red). */
+    let r = null;
     try {
-      const r = await traer(BASE_VAN + '/genero/ver-anime/', { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 10000 });
-      if (!r.ok) return [];
-      const items = vanTarjetas(r.text).slice(0, 20);
-      if (!items.length) return [];
-      return [{ id: 'van-anime', title: 'Anime · VerAnime', ref: 'van-anime', items: items }];
+      r = await traer(BASE_VAN + '/genero/ver-anime/', { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 10000, cuerpoSiempre: true });
     } catch (e) {
       log('van fila «Anime» falló', (e && e.message) || String(e));
-      return [];
     }
+    let items = r && r.ok ? vanTarjetas(r.text).slice(0, 20) : [];
+    if (!items.length) {
+      if (r && r.text) {
+        log('van «Anime»: status ' + r.status + ', ' + r.text.length + ' letras, 0 tarjetas' +
+          (/cloudflare|just a moment|cf-chl/i.test(r.text) ? ' (huele a reto de Cloudflare)' : ''));
+      } else {
+        log('van «Anime» no respondió (status ' + (r ? r.status : 'null') + ')');
+      }
+      try {
+        const h = await traer(BASE_VAN + '/', { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 10000, cuerpoSiempre: true });
+        if (h.ok) items = vanTarjetas(h.text).slice(0, 20);
+        if (!items.length && h.text) {
+          log('van home: status ' + h.status + ', ' + h.text.length + ' letras, 0 tarjetas');
+        }
+      } catch (e2) {
+        log('van home falló', (e2 && e2.message) || String(e2));
+      }
+    }
+    if (!items.length) return [];
+    return [{ id: 'van-anime', title: 'Anime · VerAnime', ref: 'van-anime', items: items }];
   },
 
   async hoja(ref, cursor) {

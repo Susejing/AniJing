@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.9 «El cambiazo»)
+## Qué hace (v0.6.10 «El 404 mentiroso»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -31,6 +31,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.10 «El 404 mentiroso»
+
+La 0.6.9 llegó al teléfono con el catálogo de AnimeJara cargando pero **cualquier capítulo moría al abrirse**: «No se pudo abrir este episodio en AnimeJara». La causa fue una rareza digna de novela: **AnimeJara sirve sus páginas de episodio con estado HTTP 404 y el contenido completo adentro** (título, array de enlaces, iframe del player) — a un navegador le da igual, pero el plugin revisaba el estado antes de leer el cuerpo y rendía sin haber perdido. Ahora esas páginas y los embeds de streamhj se leen aunque el estado mienta, y la validación es por contenido: un 404 de verdad no trae «const enlaces» ni «streamhj», así que los capítulos inexistentes siguen cayendo en el aviso honesto. VerAnime, que en el teléfono no asomaba, gana respaldo: si su página de catálogo viene vacía o no responde, se prueba la home del sitio, y cada paso queda en el log con estado y tamaño de lo recibido — la próxima captura dirá la verdad de lo que el teléfono ve.
 
 ## v0.6.9 «El cambiazo»
 
