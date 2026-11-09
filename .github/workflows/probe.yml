@@ -13,8 +13,18 @@ jobs:
       - name: sondear
         run: |
           python3 - <<'PYEOF' > probe-result.txt 2>&1 || true
-          import urllib.request, re, subprocess
+          import urllib.request, json
           UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+          def post(url, data, headers=None):
+              body=json.dumps(data).encode()
+              h={'User-Agent':UA,'Content-Type':'application/json','Origin':'https://multiserver.sbs','Referer':'https://multiserver.sbs/embed/4927c67b-0cc2-4d0a-bad7-4a15787e6d3c'}
+              if headers: h.update(headers)
+              req=urllib.request.Request(url, data=body, headers=h, method='POST')
+              try:
+                  with urllib.request.urlopen(req, timeout=25) as r:
+                      return r.status, r.read().decode('utf-8','replace')
+              except Exception as e:
+                  return 'ERR', str(e)[:300]
           def get(url, headers=None, timeout=25):
               h={'User-Agent':UA}
               if headers: h.update(headers)
@@ -26,38 +36,21 @@ jobs:
                   return 'ERR', str(e)[:300]
           def sec(t): print('====',t,'====')
           
-          sec('IFRAMEN_V2.JS COMPLETO')
-          st,js=get('https://multiserver.sbs/js/iframen_v2.js', {'Referer':'https://multiserver.sbs/'})
-          print('status',st,'len',len(js))
-          print(js)
+          sec('DECRYPT-STREAM: blob byse')
+          st,b=post('https://multiserver.sbs/embed/api/decrypt-stream', {'encrypted':'U2FsdGVkX1+uq1BtVg2rHuPKt41RboYCtyzIuUAnpSMu39hla0kL3PVEHper4e2Akg4vJeXxGaj+D0h+A33fGw=='})
+          print('status',st); print(b[:500])
           
-          sec('CANDIDATOS A CLAVE')
-          Q=chr(39); DQ=chr(34)
-          p1='pass(?:word|phrase)?' + chr(92) + 's*[:=]' + chr(92) + 's*[' + Q + DQ + ']([^' + Q + DQ + ']+)'
-          p2='decrypt' + chr(92) + '([^,]+,' + chr(92) + 's*[' + Q + DQ + ']([^' + Q + DQ + ']+)'
-          p3='[' + Q + DQ + ']([A-Za-z0-9_-]{6,40})[' + Q + DQ + ']'
-          for nm,p in [('pass',p1),('decrypt',p2)]:
-              print(nm,'->',re.findall(p,js)[:15])
-          lits=re.findall(p3,js)
-          print('literales frecuentes:', sorted(set([x for x in lits if len(x)>=6]))[:40])
+          sec('DECRYPT-STREAM: blob streamtape')
+          st,b=post('https://multiserver.sbs/embed/api/decrypt-stream', {'encrypted':'U2FsdGVkX1+1TRO2FVDNTZjrL5saqj8PlKCEPWMguiVxCFWTmZASelvSZiTwWg6rY2+1D0rY4Xs1C6HUMg4/7Q=='})
+          print('status',st); print(b[:500])
           
-          sec('DESCIFRE CON CANDIDATOS')
-          blobs=['U2FsdGVkX1+uq1BtVg2rHuPKt41RboYCtyzIuUAnpSMu39hla0kL3PVEHper4e2Akg4vJeXxGaj+D0h+A33fGw==','U2FsdGVkX1+1TRO2FVDNTZjrL5saqj8PlKCEPWMguiVxCFWTmZASelvSZiTwWg6rY2+1D0rY4Xs1C6HUMg4/7Q==']
-          cands=set(re.findall(p1,js)) | set(re.findall(p2,js)) | set([x for x in lits if 4<=len(x)<=40])
-          print('probando', len(cands), 'candidatos')
-          for c in sorted(cands):
-              ok=0
-              for b in blobs:
-                  try:
-                      p=subprocess.run(['openssl','enc','-d','-aes-256-cbc','-md','md5','-pass','pass:'+c,'-a'], input=b+chr(10), capture_output=True, text=True, timeout=10)
-                      if p.returncode==0 and p.stdout.strip():
-                          print('CLAVE',c,'->',p.stdout.strip()[:200]); ok=1; break
-                  except Exception: pass
+          sec('DECRYPT-STREAM: blob voe')
+          st,b=post('https://multiserver.sbs/embed/api/decrypt-stream', {'encrypted':'U2FsdGVkX1/m21fEglGhfj9yzkRdC7hammPgASQs1SMbJ+H2P1fuUBysrR4eBffg'})
+          print('status',st); print(b[:500])
           
-          sec('DHCPLAY MAIN.JS')
-          st,mj=get('https://dhcplay.com/main.js?v=1.1.9', {'Referer':'https://dhcplay.com/'})
-          print('status',st,'len',len(mj))
-          print(mj[:4000])
+          sec('MULTISERVER: primeros 1500 chars (tabs de idioma)')
+          st,ms=get('https://multiserver.sbs/embed/4927c67b-0cc2-4d0a-bad7-4a15787e6d3c', {'Referer':'https://estrenosanime.net/'})
+          print(ms[:1500])
             
           PYEOF
           head -c 15000 probe-result.txt
@@ -66,5 +59,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add probe-result.txt
-          git commit -m "probe v7: resultados [skip ci]" || echo "nada que subir"
+          git commit -m "probe v8: resultados [skip ci]" || echo "nada que subir"
           git push
