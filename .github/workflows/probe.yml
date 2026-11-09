@@ -1,0 +1,112 @@
+name: probe
+on: [push]
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: sondear
+        run: |
+          set +e
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+          R=probe-result.txt
+          : > "$R"
+          curl -sL --compressed -A "$UA" -H "Referer: https://veranime.ninja/" -w "HTTP %{http_code}\n" "https://veranime.ninja/ver/cyberpunk-edgerunners-episodio-1/" -o /tmp/ep.html >> "$R" 2>&1
+          curl -sL --compressed -A "$UA" -H "Referer: https://ivanime.buzz/" -w "HTTP %{http_code}\n" "https://ivanime.buzz/anime/to-aru-anbu-no-item-sub-espanol/" -o /tmp/iva.html >> "$R" 2>&1
+          curl -sL --compressed -A "$UA" -H "Referer: https://ivanime.buzz/" -w "HTTP %{http_code}\n" "https://ivanime.buzz/" -o /tmp/ivahome.html >> "$R" 2>&1
+          python3 - <<'PY' >> "$R"
+          import re, urllib.request
+          UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+          def get(url, ref):
+              req = urllib.request.Request(url, headers={'User-Agent': UA, 'Referer': ref, 'Accept': '*/*'})
+              try:
+                  with urllib.request.urlopen(req, timeout=25) as r:
+                      return r.status, r.read().decode('utf-8', 'replace')
+              except Exception as e:
+                  return 0, 'ERR ' + str(e)
+          print('=== VAN EPISODIO ===')
+          ep = open('/tmp/ep.html', encoding='utf-8', errors='replace').read()
+          print('bytes:', len(ep))
+          lis = list(re.finditer(r'<li\b[^>]*dooplay_player_option[^>]*>.*?</li>', ep, re.S))
+          print('lis opcion:', len(lis))
+          for m in lis[:3]:
+              print('--- LI:', repr(m.group(0)[:500]))
+          for m in list(re.finditer(r'<iframe\b[^>]*>', ep))[:3]:
+              print('--- IFRAME:', repr(m.group(0)[:300]))
+          opts = []
+          for m in lis[:3]:
+              t = m.group(0)
+              dp = re.search(r'data-post\s*=\s*["\']([^"\']+)', t)
+              dn = re.search(r'data-nume\s*=\s*["\']([^"\']+)', t)
+              dt = re.search(r'data-type\s*=\s*["\']([^"\']+)', t)
+              if dp and dn:
+                  opts.append((dp.group(1), (dt.group(1) if dt else 'tv'), dn.group(1)))
+          print('=== VAN API ===')
+          embed = ''
+          for (post, tipo, nume) in opts[:2]:
+              url = 'https://veranime.ninja/wp-json/dooplayer/v2/' + post + '/' + tipo + '/' + nume
+              st, body = get(url, 'https://veranime.ninja/')
+              print('API', url, '->', st, '|', repr(body[:400]))
+              em = re.search(r'["\']embed_url["\']\s*:\s*["\']([^"\']+)', body)
+              if em:
+                  embed = em.group(1).replace('\\/', '/')
+                  print('EMBED_URL:', embed)
+          print('=== VAN EMBED ===')
+          if embed:
+              st, body = get(embed, 'https://veranime.ninja/')
+              print('status:', st, '| bytes:', len(body))
+              print('--- CABEZA:', repr(body[:2200]))
+              for m in list(re.finditer(r"\(\s*['\"](https?://[^'\"]+)['\"]\s*\)", body))[:20]:
+                  print('ONCLICK:', m.group(1))
+              for m in list(re.finditer(r'<iframe\b[^>]*>', body))[:5]:
+                  print('--- IFRAME EMBED:', repr(m.group(0)[:300]))
+          print('=== IVA FICHA ===')
+          iva = open('/tmp/iva.html', encoding='utf-8', errors='replace').read()
+          print('bytes:', len(iva))
+          hrefs = []
+          for m in re.finditer(r'href\s*=\s*["\']([^"\']+)["\']', iva):
+              u = m.group(1)
+              if re.search(r'/ver/|episodio|ep=|capitulo|-ep\b|watch', u, re.I) and u not in hrefs:
+                  hrefs.append(u)
+          print('hrefs ep-ish:', len(hrefs))
+          for u in hrefs[:30]:
+              print('HREF:', u)
+          i = iva.find('pisodio')
+          print('--- CONTEXTO EPISODIO:', repr(iva[max(0,i-900):i+900]) if i>=0 else 'no hay')
+          for m in list(re.finditer(r'<select\b[^>]*>', iva))[:3]:
+              print('--- SELECT:', m.group(0)[:200])
+          print('=== IVA HOME ===')
+          home = open('/tmp/ivahome.html', encoding='utf-8', errors='replace').read()
+          print('bytes:', len(home))
+          hhrefs = []
+          for m in re.finditer(r'href\s*=\s*["\']([^"\']+)["\']', home):
+              u = m.group(1)
+              if re.search(r'/ver/|episodio|ep=|capitulo', u, re.I) and u not in hhrefs:
+                  hhrefs.append(u)
+          print('hrefs ep-ish home:', len(hhrefs))
+          for u in hhrefs[:30]:
+              print('HREF HOME:', u)
+          for m in list(re.finditer(r'<img\b[^>]*>', home))[:4]:
+              print('--- IMG HOME:', repr(m.group(0)[:400]))
+          print('=== IVA EPISODIO PRUEBA ===')
+          if hhrefs:
+              st, body = get(hhrefs[0], 'https://ivanime.buzz/')
+              print('ep url:', hhrefs[0], '-> status:', st, '| bytes:', len(body))
+              for m in list(re.finditer(r'<iframe\b[^>]*>', body))[:5]:
+                  print('--- IFRAME EP:', repr(m.group(0)[:300]))
+              i = body.find('player')
+              if i < 0: i = body.find('iframe')
+              if i >= 0:
+                  print('--- CONTEXTO PLAYER:', repr(body[max(0,i-600):i+900]))
+          PY
+      - name: commit
+        run: |
+          git config user.name "probe-bot"
+          git config user.email "probe@users.noreply.github.com"
+          git add probe-result.txt
+          git commit -m "probe v22: resultados [skip ci]" || echo "nada"
+          git push
