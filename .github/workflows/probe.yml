@@ -16,7 +16,7 @@ jobs:
           R=probe-result.txt
           : > "$R"
           curl -sL --compressed -A "$UA" -H "Referer: https://veranime.ninja/" -w "HTTP %{http_code}\n" "https://veranime.ninja/ver/cyberpunk-edgerunners-episodio-1/" -o /tmp/ep.html >> "$R" 2>&1
-          curl -sL --compressed -A "$UA" -H "Referer: https://ivanime.buzz/" -w "HTTP %{http_code}\n" "https://ivanime.buzz/build/assets/app-CFHQxs1u.js" -o /tmp/app.js >> "$R" 2>&1
+          curl -sL --compressed -A "$UA" -H "Referer: https://ivanime.buzz/" -w "HTTP %{http_code}\n" "https://ivanime.buzz/ver/kanojo-no-tomodachi-episodio-6" -o /tmp/ivep6.html >> "$R" 2>&1
           curl -sL --compressed -A "$UA" -H "Referer: https://ivanime.buzz/" -w "HTTP %{http_code}\n" "https://ivanime.buzz/" -o /tmp/ivahome.html >> "$R" 2>&1
           python3 - <<'PY' >> "$R"
           import re, urllib.request, urllib.parse
@@ -30,55 +30,63 @@ jobs:
                       return r.status, r.read().decode('utf-8', 'replace')
               except Exception as e:
                   return 0, 'ERR ' + str(e)
-          print('=== VAN EP: JS DEL LI ===')
+          print('=== VAN: scripts del tema ===')
           ep = open('/tmp/ep.html', encoding='utf-8', errors='replace').read()
-          i = ep.find('dooplay_player_option')
-          if i >= 0:
-              j = ep.find('playeroptionsul')
-              print('--- UL:', repr(ep[max(0,j-300):j+600]) if j>=0 else 'no ul')
-          for m in list(re.finditer(r'<script\b[^>]*>([\s\S]*?)</script>', ep))[:40]:
-              s = m.group(1)
-              if 'player' in s.lower() or 'ajax' in s.lower() or 'nonce' in s.lower():
-                  if len(s.strip()) > 20:
-                      print('--- SCRIPT:', repr(s[:1800]))
-          for m in list(re.finditer(r'ajaxurl|dooplayer|player_option|doo_', ep))[:30]:
-              i2 = m.start()
-              print('--- CTX:', repr(ep[max(0,i2-250):i2+250]))
-          print('=== VAN AJAX POST ===')
-          for acc in ['doo_player', 'get_player']:
-              d = urllib.parse.urlencode({'action': acc, 'post': '7870', 'nume': '1', 'type': 'tv'}).encode()
-              st, b = get('https://veranime.ninja/wp-admin/admin-ajax.php', 'https://veranime.ninja/ver/cyberpunk-edgerunners-episodio-1/', data=d, extra={'X-Requested-With': 'XMLHttpRequest'})
-              print('POST', acc, '->', st, '|', repr(b[:400]))
-          print('=== IVA APP.JS: rutas de episodios ===')
-          js = open('/tmp/app.js', encoding='utf-8', errors='replace').read()
-          print('bytes:', len(js))
-          pats = [r'episodio', r'/ver/', r'capitulo', r'ajax', r'fetch\(', r'\.get\(', r'axios']
-          vistos = set()
-          for p in pats:
-              for m in list(re.finditer(p, js, re.I))[:8]:
-                  i3 = m.start()
-                  key = i3 // 100
-                  if key in vistos: continue
-                  vistos.add(key)
-                  print('--- JS CTX', p, ':', repr(js[max(0,i3-200):i3+260]))
-          print('=== IVA: endpoints probables ===')
-          for u in ['https://ivanime.buzz/anime/kanojo-no-tomodachi-sub-espanol/episodios',
-                    'https://ivanime.buzz/anime/kanojo-no-tomodachi-sub-espanol/capitulos',
-                    'https://ivanime.buzz/api/anime/kanojo-no-tomodachi-sub-espanol',
-                    'https://ivanime.buzz/anime/kanojo-no-tomodachi-sub-espanol?page=2']:
-              st, b = get(u, 'https://ivanime.buzz/')
-              print(u, '->', st, '| len:', len(b), '|', repr(b[:250]))
-          print('=== IVA HOME: tarjeta de listado ===')
+          srcs = []
+          for m in re.finditer(r'(?:data-src|src)\s*=\s*["\']([^"\']+\.js[^"\']*)["\']', ep):
+              u = m.group(1)
+              if 'dooplay' in u or 'ajax' in u or 'main' in u or 'theme' in u:
+                  if u not in srcs: srcs.append(u)
+          for u in srcs[:8]:
+              print('JS TEMA:', u)
+          for u in srcs[:4]:
+              st, b = get(u, 'https://veranime.ninja/')
+              print('--- fetch', u, '->', st, 'len', len(b))
+              if st == 200 and len(b) > 1000:
+                  idxs = [m.start() for m in re.finditer(r'player_option|dooplay_player|admin-ajax|action\s*[:=]', b)][:10]
+                  seen = set()
+                  for i in idxs:
+                      k = i // 400
+                      if k in seen: continue
+                      seen.add(k)
+                      print('--- CTX:', repr(b[max(0,i-400):i+500]))
+          print('=== IVA EP6: lista de episodios ===')
+          ivep6 = open('/tmp/ivep6.html', encoding='utf-8', errors='replace').read()
+          print('bytes:', len(ivep6))
+          vers = []
+          for m in re.finditer(r'href\s*=\s*["\']([^"\']*\/ver\/[^"\']+)["\']', ivep6):
+              u = m.group(1)
+              if u not in vers: vers.append(u)
+          print('hrefs /ver/ en ep6:', len(vers))
+          for u in vers[:25]:
+              print('VER6:', u)
+          if vers:
+              i0 = min(m.start() for m in re.finditer(re.escape(vers[0]), ivep6))
+              print('--- CTX LISTA:', repr(ivep6[max(0,i0-800):i0+800]))
+          print('=== IVA HOME: tarjetas del listado ===')
           home = open('/tmp/ivahome.html', encoding='utf-8', errors='replace').read()
-          m4 = re.search(r'href\s*=\s*["\'][^"\']*/anime/[^"\']+["\']', home)
-          if m4:
-              i4 = m4.start()
-              print('--- CARD CTX:', repr(home[max(0,i4-600):i4+1200]))
+          animes = [m for m in re.finditer(r'href\s*=\s*["\'][^"\']*\/anime\/[^"\']+["\']', home)]
+          print('anclas /anime/ totales:', len(animes))
+          vistos = set()
+          n = 0
+          for m in animes:
+              key = m.group(0)[:120]
+              if key in vistos: continue
+              vistos.add(key)
+              i = m.start()
+              ctx = home[max(0,i-800):i+400]
+              if 'hero' in ctx and n > 2: continue
+              print('--- CARD', n, ':', repr(home[max(0,i-700):i+600]))
+              n += 1
+              if n >= 3: break
+          print('=== IVA SITEMAP ===')
+          st, b = get('https://ivanime.buzz/sitemap.xml', 'https://ivanime.buzz/')
+          print('sitemap ->', st, '| len:', len(b), '|', repr(b[:400]))
           PY
       - name: commit
         run: |
           git config user.name "probe-bot"
           git config user.email "probe@users.noreply.github.com"
           git add probe-result.txt
-          git commit -m "probe v24: resultados [skip ci]" || echo "nada"
+          git commit -m "probe v25: resultados [skip ci]" || echo "nada"
           git push
