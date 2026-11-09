@@ -1,0 +1,51 @@
+name: probe
+on: [push]
+permissions:
+  contents: write
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: sonda v35 el muro de imagenes de ivanime
+        run: |
+          {
+            UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            echo "== probe v35: el muro de imagenes de ivanime =="
+            curl -s -A "$UA" https://ivanime.buzz/ -o home.html --max-time 25
+            echo "home: $(wc -c < home.html) bytes"
+            FRESH=$(grep -oE "https://ivanime\.buzz/assets/[^\"]+\.(webp|jpg|png)" home.html | head -3)
+            echo "frescas de la home:"
+            echo "$FRESH"
+            i=1
+            for F in $FRESH; do
+              echo "-- imagen $i: $F"
+              echo "   desnudo:       $(curl -s -o /dev/null -w "%{http_code} %{content_type} %{size_download}" --max-time 20 "$F")"
+              echo "   UA chrome:     $(curl -s -o /dev/null -w "%{http_code} %{content_type} %{size_download}" -A "$UA" --max-time 20 "$F")"
+              echo "   UA+Referer:    $(curl -s -o /dev/null -w "%{http_code} %{content_type} %{size_download}" -A "$UA" -H "Referer: https://ivanime.buzz/" --max-time 20 "$F")"
+              echo "   presentacion:  $(curl -s -o /dev/null -w "%{http_code} %{content_type} %{size_download}" -A "$UA" -H "Referer: https://ivanime.buzz/" -H "Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8" -H "Accept-Language: es-ES,es;q=0.9" --max-time 20 "$F")"
+              i=$((i+1))
+            done
+            IMG="https://ivanime.buzz/assets/thumbs/imagen/demons-crest-1793996605.jpg.webp"
+            echo "-- fija conocida: $IMG"
+            echo "   desnudo:       $(curl -s -o /dev/null -w "%{http_code} %{content_type} %{size_download}" --max-time 20 "$IMG")"
+            echo "   UA+Referer:    $(curl -s -o /dev/null -w "%{http_code} %{content_type} %{size_download}" -A "$UA" -H "Referer: https://ivanime.buzz/" --max-time 20 "$IMG")"
+            echo "   presentacion:  $(curl -s -o /dev/null -w "%{http_code} %{content_type} %{size_download}" -A "$UA" -H "Referer: https://ivanime.buzz/" -H "Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8" -H "Accept-Language: es-ES,es;q=0.9" --max-time 20 "$IMG")"
+            FIRST=$(echo "$FRESH" | head -1)
+            TOPE=$(echo "$FIRST" | sed "s/ivanime\.buzz/ivanime.top/")
+            echo "-- espejo top: $TOPE"
+            echo "   UA+Referer:    $(curl -s -o /dev/null -w "%{http_code} %{content_type} %{size_download}" -A "$UA" -H "Referer: https://ivanime.top/" --max-time 20 "$TOPE")"
+            echo "   desnudo:       $(curl -s -o /dev/null -w "%{http_code} %{content_type} %{size_download}" --max-time 20 "$TOPE")"
+            echo "-- proxy wsrv.nl: $FIRST"
+            echo "   wsrv:          $(curl -sG -o /dev/null -w "%{http_code} %{content_type} %{size_download}" --data-urlencode "url=$FIRST" --max-time 25 "https://wsrv.nl/")"
+            echo "== fin probe v35 =="
+          } > probe-result.txt 2>&1
+          cat probe-result.txt
+      - name: commitear resultados
+        run: |
+          git config user.name "anijing-probe-bot"
+          git config user.email "probe@users.noreply.github.com"
+          git add probe-result.txt
+          git commit -m "probe v35: resultados [skip ci]" || echo "nada que commitear"
+          git push
+
