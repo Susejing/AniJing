@@ -104,8 +104,31 @@
 // navegador que la ganó viajan desde entonces con cada petición, y el
 // catálogo de la página cargada se lee del HTML que la ventanita
 // entrega (Kino lo da renderizado, hasta 2 millones de caracteres).
+// v0.6.3 «El juicio de los embeds» — la 0.6.2 en el teléfono dejó un
+// solo gran problema: LOS VIDEOS NO REPRODUCEN en ninguna de las
+// cuatro fuentes nuevas (los catálogos y los pósters ya funcionan).
+// La captura del navegador oculto es inestable porque los players no
+// arrancan solos: hay que TOCAR la opción. La cura no es esperar, es
+// leer los EMBEDS que el HTML crudo sí trae — cada fuente con su
+// camino propio, aprendido de los addons que ya los resuelven:
+// OtakusTV guarda sus opciones en el select #ssel y cada una abre por
+// /play-video?id=<value>, que responde un JSON con la URL del embed
+// de verdad (filemoon, byse, doodstream…). EstrenosAnime esconde su
+// multiserver en el iframe de div.player-frame; adentro cada opción
+// abre con go_to_player('URL'). AnimeOnline es Dooplay: cada opción
+// de ul#playeroptionsul (data-post, data-nume, data-type) pregunta
+// al endpoint wp-json/dooplayer, cuyo embed_url puede ser un server
+// directo o el multiserver saidochesto.top, que a su vez lista sus
+// hosters por idioma. AnimeYT esconde sus players tras el contenedor
+// mytsumi.com, que solo entrega botones data-player-url si se le pide
+// con open=1 — por eso el sondeo de antes salía siempre vacío. Nuevo
+// extractor WolfStream (su archivo anda en un script de sources), el
+// iframe perezoso (data-src) también se lee, y la captura del
+// navegador queda de pura red de seguridad con el Referer de cada
+// fuente. Nada de milagros: si una puerta cambia, el mensaje sigue
+// siendo honesto.
 
-const VERSION = '0.6.2';
+const VERSION = '0.6.3';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -133,6 +156,12 @@ function decHtml(s) {
     .replace(/&gt;/g, '>')
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&');
+}
+
+/* v0.6.3: las URLs que llegan dentro de JSON y atributos vienen escapadas
+ * (&amp; de HTML, \/ de JSON); un toque y quedan listas para fetch. */
+function desescapar(u) {
+  return String(u || '').replace(/&amp;/g, '&').replace(/\\\//g, '/');
 }
 
 function limpio(s) {
@@ -492,11 +521,12 @@ function elegirMedia(lista) {
   return fin[0];
 }
 
-async function capturar(url, etiqueta) {
+async function capturar(url, etiqueta, refBase) {
+  const ref = (refBase || BASE_AV1) + '/';
   const ms = Math.max(6000, Math.min(20000, queda() - 2000));
   let pagina;
   try {
-    pagina = await kino.browser.capture(url, { timeoutMs: ms, headers: { Referer: BASE_AV1 + '/' } });
+    pagina = await kino.browser.capture(url, { timeoutMs: ms, headers: { Referer: ref } });
   } catch (e) {
     const code = String((e && e.code) || '');
     if (code === 'not_allowed' || code === 'browser_unavailable') CAP_OFF = true;
@@ -510,7 +540,7 @@ async function capturar(url, etiqueta) {
   if ((!pick || !esManifiesto(pick.url, pick.mime)) && queda() > 15000 && kino.browser && kino.browser.captureAll) {
     try {
       const ms2 = Math.min(25000, Math.max(6000, queda() - 2000));
-      const pagina2 = await kino.browser.capture(url, { timeoutMs: ms2, captureAll: true, headers: { Referer: BASE_AV1 + '/' } });
+      const pagina2 = await kino.browser.capture(url, { timeoutMs: ms2, captureAll: true, headers: { Referer: ref } });
       const pool = ((pagina2 && pagina2.media) || []).slice(0);
       const reqs = (pagina2 && pagina2.requests) || [];
       for (let i = 0; i < reqs.length; i++) {
@@ -544,13 +574,15 @@ const TIPO_ETIQUETA = {
   zilla: 'Zilla', directo: 'Directo', voe: 'Voe', mp4upload: 'MP4Upload', mixdrop: 'MixDrop',
   uqload: 'Uqload', streamtape: 'StreamTape', yourupload: 'YourUpload', upnshare: 'UPNShare',
   dood: 'Doodstream', okru: 'Ok.ru', hexload: 'Hexload', savefiles: 'SaveFiles', filemoon: 'Filemoon',
-  streamwish: 'StreamWish', lulu: 'LuluStream', vidhide: 'Vidhide', multi: 'Multiserver', generic: 'Servidor'
+  streamwish: 'StreamWish', lulu: 'LuluStream', vidhide: 'Vidhide', wolfstream: 'WolfStream',
+  multi: 'Multiserver', generic: 'Servidor'
 };
 
 const TIPO_ORDEN = {
   zilla: 1, directo: 2, voe: 3, upnshare: 4, mixdrop: 5, mp4upload: 6, uqload: 7,
   yourupload: 8, streamtape: 9, okru: 10, savefiles: 11, dood: 12, hexload: 13,
-  lulu: 14, streamwish: 15, vidhide: 16, filemoon: 17, multi: 18, generic: 20
+  lulu: 14, streamwish: 15, vidhide: 16, filemoon: 17, wolfstream: 18,
+  multi: 19, generic: 20
 };
 
 function detectarTipo(nombre, url) {
@@ -573,6 +605,7 @@ function detectarTipo(nombre, url) {
   if (/streamwish|obeywish|\bwish\b|embedwish|hlswish|awish/i.test(nu)) return 'streamwish';
   if (/yourupload/i.test(nu)) return 'yourupload';
   if (/streamtape/i.test(nu)) return 'streamtape';
+  if (/wolfstream/i.test(nu)) return 'wolfstream';
   /* v0.6.0: los agregadores propios (saidochesto y compañía) se abren con el
      navegador oculto: la captura pesca el video aunque el player no se deje leer. */
   if (/saidochesto\.?top|multiserver/i.test(nu)) return 'multi';
@@ -987,6 +1020,21 @@ async function exGenerico(u) {
 
 /* --- Multiserver (saidochesto y parientes): opaco al rascado, se captura --- */
 
+/* v0.6.3: WolfStream expone su archivo en un script de sources, al estilo
+ * jwplayer ({file:"…"}): basta leerlo del HTML. */
+async function exWolfstream(u) {
+  const origen = origenDe(u) || 'https://wolfstream.com';
+  const pagina = await traer(u, { headers: { Referer: origen + '/', 'User-Agent': UA }, timeoutMs: 10000 });
+  if (!pagina.ok || !pagina.text) throw new Error('wolfstream no respondió');
+  const fm = /\{file:\s*["']([^"']+)["']/.exec(pagina.text) ||
+    /sources\s*:\s*\[[\s\S]{0,200}?file:\s*["']([^"']+)["']/i.exec(pagina.text);
+  if (!fm) throw new Error('wolfstream sin archivo');
+  let url = desescapar(fm[1]);
+  if (url.indexOf('//') === 0) url = 'https:' + url;
+  if (!/^https?:\/\//i.test(url)) throw new Error('wolfstream con archivo raro');
+  return { url: url, mime: mimeDe(url), headers: { Referer: origen + '/', 'User-Agent': UA }, expiresInSeconds: 3600 };
+}
+
 async function exMulti(u) {
   if (!puedeCapturar()) throw new Error('Multiserver sin navegador oculto');
   return await capturar(u, 'Multiserver');
@@ -997,7 +1045,7 @@ const EXTRACTORES = {
   streamtape: exStreamtape, yourupload: exYourUpload, upnshare: exUpnshare,
   dood: exDood, okru: exOkru, hexload: exHexload, savefiles: exSavefiles,
   filemoon: exFilemoon, streamwish: exGenerico, lulu: exGenerico, vidhide: exGenerico,
-  multi: exMulti, generic: exGenerico
+  wolfstream: exWolfstream, multi: exMulti, generic: exGenerico
 };
 
 async function abrirServidor(server) {
@@ -2018,9 +2066,11 @@ function latServidores(html) {
 function servidoresDePagina(html) {
   const texto = String(html || '');
   const candidatos = [];
-  const ifRe = /<iframe[^>]+src\s*=\s*["']([^"']+)["'][^>]*>/gi;
+  /* v0.6.3: el iframe perezoso (data-src) también cuenta; algunos players
+   * (OtakusTV de vieja escuela, mytsumi) cargan así. */
+  const ifRe = /<iframe\b[^>]*?\b(?:data-src|src)\s*=\s*["']([^"']+)["'][^>]*>/gi;
   let m;
-  while ((m = ifRe.exec(texto))) candidatos.push({ url: m[1], nombre: '' });
+  while ((m = ifRe.exec(texto))) candidatos.push({ url: desescapar(m[1]), nombre: '' });
   const dpRe = /\bdata-(?:player|link)\s*=\s*["']([^"']+)["']/gi;
   while ((m = dpRe.exec(texto))) {
     const dec = b64Texto(m[1]).trim();
@@ -2035,7 +2085,7 @@ function servidoresDePagina(html) {
   const propios = /(animeonline\.ninja|otakustv2?\.com|otakustv\.net|animeyt\.(?:cc|one|org)|estrenosanime\.net|ivanime\.(?:top|buzz))/i;
   for (let i = 0; i < candidatos.length; i++) {
     const c = candidatos[i];
-    let u = String(c.url || '').trim();
+    let u = desescapar(String(c.url || '').trim());
     if (u.indexOf('//') === 0) u = 'https:' + u;
     if (!/^https?:\/\//i.test(u)) continue;
     if (propios.test(u)) continue;
@@ -2055,14 +2105,15 @@ function servidoresDePagina(html) {
 
 /* El resolve de las fuentes nuevas: primero los servidores de verdad y, si
  * ninguno abre (o lo único que hay es un multiserver opaco), la captura del
- * episodio entero con el navegador oculto. */
-async function probarConCaptura(epUrl, servers, idx, refDe, etiqueta) {
+ * episodio entero con el navegador oculto — con el Referer de SU fuente,
+ * que algunos players miran quién los manda (v0.6.3). */
+async function probarConCaptura(epUrl, servers, idx, refDe, etiqueta, refBase) {
   try {
     return await probarServidores(servers, idx, refDe);
   } catch (e) {
     if (puedeCapturar() && queda() > 8000) {
       try {
-        const st = await capturar(epUrl, etiqueta);
+        const st = await capturar(epUrl, etiqueta, refBase);
         const out = { url: st.url, label: etiqueta + ' (captura)', expiresInSeconds: 1800 };
         if (st.mime) out.mime = st.mime;
         out.headers = st.headers || { 'User-Agent': UA };
@@ -2112,41 +2163,78 @@ function posterAntesDe(html, idx) {
   return '';
 }
 
-/* v0.6.1: contenedores propios tipo mytsumi.com/container.php (AnimeYT):
- * un iframe que no parece player pero que adentro enlaza los servidores
- * de verdad (ok.ru, byse→filemoon…). Se sondea: se carga y se cosecha. */
-async function sondearContenedores(html) {
+/* v0.6.3: el contenedor mytsumi.com de AnimeYT esconde los players tras un
+ * open=1: solo con ese toque entrega botones data-player-url con los
+ * enlaces de verdad (y hasta archivos directos .mp4/.m3u8). Sin él la
+ * página sale vacía — por eso el sondeo de la 0.6.1 nunca encontraba
+ * nada en el teléfono. */
+async function aytSondearMytsumi(html) {
   const texto = String(html || '');
   const candidatos = [];
-  const ifRe = /<iframe[^>]+src\s*=\s*["']([^"']+)["'][^>]*>/gi;
+  const vistosUrl = {};
+  /* la URL del contenedor puede andar suelta en el JS de la página o
+   * dentro de un iframe perezoso; se caza en ambos sitios. */
+  const myRe = /https?:\/\/(?:www\.)?mytsumi\.com\/[^"'\s<>]+/gi;
   let m;
-  while ((m = ifRe.exec(texto))) {
-    let u = m[1].trim();
+  while ((m = myRe.exec(texto)) && candidatos.length < 2) {
+    const u = m[0].replace(/&amp;/g, '&');
+    if (vistosUrl[u]) continue;
+    vistosUrl[u] = true;
+    candidatos.push(u);
+  }
+  const ifRe = /<iframe\b[^>]*?\b(?:data-src|src)\s*=\s*["']([^"']*mytsumi[^"']*)["'][^>]*>/gi;
+  while ((m = ifRe.exec(texto)) && candidatos.length < 2) {
+    let u = desescapar(m[1].trim());
     if (u.indexOf('//') === 0) u = 'https:' + u;
-    if (!/^https?:\/\//i.test(u)) continue;
-    if (/(animeonline\.ninja|otakustv2?\.com|otakustv\.net|animeyt\.(?:cc|one|org)|estrenosanime\.net|ivanime\.(?:top|buzz)|saidochesto)/i.test(u)) continue;
+    if (!/^https?:\/\//i.test(u) || vistosUrl[u]) continue;
+    vistosUrl[u] = true;
     candidatos.push(u);
   }
   const servers = [];
   const vistos = {};
-  let sondeos = 0;
+  const agregar = function (u, nombre, directo, ref) {
+    if (!u || u === 'about:blank') return;
+    if (u.indexOf('//') === 0) u = 'https:' + u;
+    if (!/^https?:\/\//i.test(u)) return;
+    if (/\.(?:jpe?g|png|webp|gif)(?:$|\?)/i.test(u)) return;
+    if (directo || /\.(?:mp4|m3u8)(?:$|\?)/i.test(u)) {
+      const clave = 'dir|' + u;
+      if (vistos[clave]) return;
+      vistos[clave] = true;
+      servers.push({
+        nombre: nombre || 'Directo', url: u, tipo: 'directo',
+        directo: { url: u, mime: mimeDe(u), headers: { Referer: ref, 'User-Agent': UA } }
+      });
+      return;
+    }
+    const tipo = detectarTipo(nombre, u);
+    if (!tipo || tipo === 'generic') return;
+    const clave = tipo + '|' + u;
+    if (vistos[clave]) return;
+    vistos[clave] = true;
+    servers.push({ nombre: nombre, url: u, tipo: tipo });
+  };
   for (const u of candidatos) {
-    if (sondeos >= 2 || queda() < 6000) break;
-    if (detectarTipo('', u) !== 'generic') continue; /* ya es un player directo */
-    sondeos++;
+    if (queda() < 6000) break;
+    const abierta = u + (u.indexOf('?') >= 0 ? '&' : '?') + 'open=1';
     try {
-      const r = await traer(u, { headers: { Referer: BASE_AYT + '/', 'User-Agent': UA }, timeoutMs: 8000 });
+      const r = await traer(abierta, { headers: { Referer: u, 'User-Agent': UA }, timeoutMs: 9000 });
       if (!r.ok || !r.text) continue;
-      const dentro = servidoresDePagina(r.text);
-      for (const s of dentro) {
-        const clave = s.tipo + '|' + s.url;
-        if (vistos[clave]) continue;
-        vistos[clave] = true;
-        servers.push(s);
+      const botonRe = /<button\b[^>]*\bdata-player-url\s*=\s*["']([^"']+)["'][^>]*>/gi;
+      while ((m = botonRe.exec(r.text))) {
+        const etiqueta = /\bdata-player-label\s*=\s*["']([^"']{0,40})["']/i.exec(m[0]);
+        const esVideo = /\bdata-player-kind\s*=\s*["']video["']/i.test(m[0]);
+        agregar(desescapar(m[1]), etiqueta ? etiqueta[1] : '', esVideo, abierta);
       }
-      if (dentro.length) log('sondeo de contenedor:', u, '->', dentro.length, 'servidores');
+      const dlRe = /<a\b[^>]*mytsumi-download-button[^>]*>/gi;
+      while ((m = dlRe.exec(r.text))) {
+        const href = /\bhref\s*=\s*["']([^"']+)["']/i.exec(m[0]);
+        const tt = /\btitle\s*=\s*["']([^"']{0,40})["']/i.exec(m[0]);
+        if (href) agregar(desescapar(href[1]), tt ? tt[1] : '', /\.(?:mp4|m3u8)(?:$|\?)/i.test(href[1]), abierta);
+      }
+      if (servers.length) log('sondeo mytsumi:', u, '->', servers.length, 'servidores');
     } catch (e) {
-      log('sondeo de contenedor falló:', u, (e && e.message) || e);
+      log('sondeo mytsumi falló:', u, (e && e.message) || e);
     }
   }
   servers.sort(function (a, b) {
@@ -2232,6 +2320,60 @@ function otvEpisodiosDe(html) {
     items.push(item);
   }
   return items;
+}
+
+/* v0.6.3: las opciones del capítulo (filemoon 1, byse, doodstream…) viven
+ * en el select #ssel; cada una abre por /play-video?id=<value>, que
+ * responde un JSON con la URL del embed de verdad. Es la puerta del
+ * player de OtakusTV que usan los bots de descarga desde hace años: no
+ * hay que tocar la opción en el navegador para que suelte el enlace. */
+async function otvServersDe(html) {
+  const texto = String(html || '');
+  const servers = [];
+  const vistos = {};
+  const selM = /<select\b[^>]*\bid\s*=\s*["']ssel["'][^>]*>([\s\S]*?)<\/select>/i.exec(texto);
+  if (!selM) return servers;
+  const opciones = [];
+  const opRe = /<option\b[^>]*\bvalue\s*=\s*["']([^"']+)["'][^>]*>([^<]{0,60})</gi;
+  let m;
+  while ((m = opRe.exec(selM[1])) && opciones.length < 12) {
+    const id = m[1].trim();
+    if (id) opciones.push({ id: id, nombre: m[2].replace(/\s+/g, ' ').trim() });
+  }
+  if (!opciones.length) return servers;
+  log('otv: ' + opciones.length + ' opciones en #ssel');
+  /* en lotes paralelos de cinco: son hasta doce consultas chiquitas y el
+   * presupuesto del resolve no perdona las colas largas */
+  for (let i = 0; i < opciones.length; i += 5) {
+    if (queda() < 6000) break;
+    const lote = opciones.slice(i, i + 5);
+    const rtas = await Promise.all(lote.map(function (o) {
+      return traer(BASE_OTV + '/play-video?id=' + encodeURIComponent(o.id), {
+        headers: {
+          Referer: BASE_OTV + '/',
+          'X-Requested-With': 'XMLHttpRequest',
+          Accept: 'application/json, text/javascript, */*; q=0.01'
+        },
+        timeoutMs: 6000
+      });
+    }));
+    for (let j = 0; j < rtas.length; j++) {
+      const r = rtas[j];
+      if (!r.ok || !r.text) continue;
+      const um = /["']url["']\s*:\s*["']([^"']+)["']/.exec(r.text);
+      if (!um) continue;
+      let u = desescapar(um[1]);
+      if (u.indexOf('//') === 0) u = 'https:' + u;
+      if (!/^https?:\/\//i.test(u)) continue;
+      const tipo = detectarTipo(lote[j].nombre, u);
+      if (!tipo || tipo === 'generic') continue;
+      const clave = tipo + '|' + u;
+      if (vistos[clave]) continue;
+      vistos[clave] = true;
+      servers.push({ nombre: lote[j].nombre, url: u, tipo: tipo });
+    }
+  }
+  return servers;
 }
 
 registrarFuente({
@@ -2359,14 +2501,13 @@ registrarFuente({
         userMessage: 'No se pudo abrir este episodio en OtakusTV.'
       });
     }
-    const servers = servidoresDePagina(r.text);
-    /* v0.6.1: la página del episodio trae sus opciones (filemoon, byse,
-     * uqload…) pero las carga con JavaScript: sin URLs legibles en el HTML.
-     * Sin guard: con o sin servidores a la vista, probarConCaptura cae a
-     * la captura del navegador oculto, que abre el player por defecto. */
+    /* v0.6.3: primero las opciones del select #ssel por /play-video —
+     * los embeds de verdad sin tocar nada; si la puerta cambia, quedan
+     * los iframes legibles y la captura del navegador oculto. */
+    const servers = (await otvServersDe(r.text)).concat(servidoresDePagina(r.text));
     return await probarConCaptura(BASE_OTV + '/ver/' + slug + '-' + num, servers, idx, function (i) {
       return 'otv:' + slug + ':' + num + ':' + i;
-    }, 'OtakusTV');
+    }, 'OtakusTV', BASE_OTV);
   }
 });
 
@@ -2528,15 +2669,15 @@ registrarFuente({
       });
     }
     const servers = servidoresDePagina(r.text);
-    /* v0.6.1: AnimeYT esconde sus players tras un contenedor propio
-     * (mytsumi.com/container.php) que no parece player: se sondea ese
-     * iframe y se cosechan los servidores de adentro. Sin guard: si ni
-     * así aparecen, probarConCaptura cae a la captura del navegador. */
-    const extra = await sondearContenedores(r.text);
+    /* v0.6.3: los players viven en el contenedor mytsumi, que solo entrega
+     * sus botones data-player-url si se le pide con open=1 (el sondeo de
+     * la 0.6.1 pedía la página sin ese toque y salía vacío). Si ni así
+     * aparecen, probarConCaptura cae a la captura del navegador. */
+    const extra = await aytSondearMytsumi(r.text);
     const todos = servers.concat(extra);
     return await probarConCaptura(epUrl, todos, idx, function (i) {
       return 'ayt:' + slug + ':' + num + ':' + i;
-    }, 'AnimeYT');
+    }, 'AnimeYT', BASE_AYT);
   }
 });
 
@@ -2610,6 +2751,61 @@ function easEpisodiosDe(html) {
     items.push(item);
   }
   return items;
+}
+
+/* v0.6.3: el multiserver de EstrenosAnime vive en el iframe de
+ * div.player-frame; adentro cada opción abre con go_to_player('URL') —
+ * el mismo reproductor que usa AnimeOnline (saidochesto). Se carga el
+ * iframe y se cosecha; los enlaces caen directo en los extractores
+ * (filemoon, voe, streamtape, mixdrop, doodstream…). */
+async function easServersDe(html) {
+  const texto = String(html || '');
+  let destino = '';
+  let m;
+  const frRe = /<iframe\b[^>]*?\b(?:data-src|src)\s*=\s*["']([^"']+)["'][^>]*>/gi;
+  while ((m = frRe.exec(texto))) {
+    let u = desescapar(m[1].trim());
+    if (u.indexOf('//') === 0) u = 'https:' + u;
+    if (!/^https?:\/\//i.test(u)) continue;
+    const antes = texto.slice(Math.max(0, m.index - 300), m.index);
+    if (/player-frame/.test(antes)) { destino = u; break; }
+  }
+  if (!destino) return [];
+  log('eas: multiserver en', destino);
+  const servers = [];
+  const vistos = {};
+  try {
+    const r = await traer(destino, { headers: { Referer: BASE_EAS + '/', 'User-Agent': UA }, timeoutMs: 9000 });
+    if (!r.ok || !r.text) return [];
+    const gpRe = /go_to_player(?:Vast|)?\(\s*['"]([^'"]+)['"]/gi;
+    while ((m = gpRe.exec(r.text))) {
+      let u = desescapar(m[1]);
+      if (u.indexOf('//') === 0) u = 'https:' + u;
+      if (!/^https?:\/\//i.test(u)) continue;
+      const tipo = detectarTipo('', u);
+      if (!tipo || tipo === 'generic') continue;
+      const clave = tipo + '|' + u;
+      if (vistos[clave]) continue;
+      vistos[clave] = true;
+      servers.push({ nombre: '', url: u, tipo: tipo });
+    }
+    /* por si monta las opciones con onclick al estilo saidochesto */
+    if (!servers.length) {
+      const odRe = /\(\s*['"](https?:\/\/[^'"]+)['"]\s*\)/gi;
+      while ((m = odRe.exec(r.text))) {
+        let u = desescapar(m[1]);
+        const tipo = detectarTipo('', u);
+        if (!tipo || tipo === 'generic') continue;
+        const clave = tipo + '|' + u;
+        if (vistos[clave]) continue;
+        vistos[clave] = true;
+        servers.push({ nombre: '', url: u, tipo: tipo });
+      }
+    }
+  } catch (e) {
+    log('multiserver de EstrenosAnime falló', (e && e.message) || String(e));
+  }
+  return servers;
 }
 
 registrarFuente({
@@ -2715,12 +2911,13 @@ registrarFuente({
         userMessage: 'No se pudo abrir este episodio en EstrenosAnime.'
       });
     }
-    /* Su reproductor es un multiserver propio que carga por JavaScript; lo
-     * que se deje leer se prueba, y si no, la captura del episodio entero. */
-    const servers = servidoresDePagina(r.text);
+    /* v0.6.3: su multiserver ya no es un misterio: el iframe de
+     * player-frame trae las opciones con go_to_player('URL'). Si la
+     * puerta cambia, queda la captura del episodio entero. */
+    const servers = (await easServersDe(r.text)).concat(servidoresDePagina(r.text));
     return await probarConCaptura(epUrl, servers, idx, function (i) {
       return 'eas:' + slug + ':' + num + ':' + i;
-    }, 'EstrenosAnime');
+    }, 'EstrenosAnime', BASE_EAS);
   }
 });
 
@@ -2875,8 +3072,13 @@ function aonTarjetas(html) {
       title: titulo.slice(0, 200),
       kind: 'series'
     };
-    const im = /(?:src|data-litespeed-src|data-src)\s*=\s*["']([^"']+\.(?:jpg|jpeg|png|webp)[^"']*)["']/i.exec(ventana);
-    if (im) item.poster = im[1].indexOf('//') === 0 ? 'https:' + im[1] : im[1];
+    /* v0.6.3: misma caza de pósters que las demás fuentes — atributos
+     * perezosos en orden y, si no, cualquier URL de imagen por la
+     * ventana (antes exigía src|data-litespeed-src|data-src con
+     * extensión y las tarjetas del rescate quedaban grises). */
+    let poster = posterEnVentana(ventana);
+    if (!poster) poster = posterAntesDe(String(html || ''), m.index);
+    if (poster) item.poster = poster.indexOf('//') === 0 ? 'https:' + poster : poster;
     items.push(item);
   }
   return items;
@@ -2894,6 +3096,78 @@ async function aonPaginaDeSerie(slug) {
   const a = await aonTraer('/anime/' + slug + '/', 10000);
   if (a.revision) throw aonErrorRevision();
   return a;
+}
+
+/* v0.6.3: Dooplay guarda cada opción de reproducción en un li de
+ * ul#playeroptionsul, con data-post, data-nume y data-type; el embed
+ * real sale del endpoint wp-json/dooplayer — un JSON con embed_url que
+ * puede ser un servidor directo (filemoon, uqload…) o el multiserver
+ * saidochesto.top, que a su vez lista sus hosters por idioma con
+ * onclick('URL'). Con la galleta de Cloudflare en cada petición. */
+async function aonServersDe(html) {
+  const texto = String(html || '');
+  const servers = [];
+  const vistos = {};
+  const opciones = [];
+  let m;
+  const liRe = /<li\b[^>]*>[\s\S]{0,400}?<\/li>/gi;
+  while ((m = liRe.exec(texto)) && opciones.length < 8) {
+    const tag = m[0];
+    const post = /\bdata-post\s*=\s*["']([^"']+)["']/i.exec(tag);
+    const nume = /\bdata-nume\s*=\s*["']([^"']+)["']/i.exec(tag);
+    const tipo = /\bdata-type\s*=\s*["']([^"']+)["']/i.exec(tag);
+    if (!post || !nume) continue;
+    const tt = /<span\b[^>]*class\s*=\s*["'][^"']*title[^"']*["'][^>]*>([^<]{0,50})</i.exec(tag);
+    opciones.push({
+      post: post[1], nume: nume[1], tipo: tipo ? tipo[1] : '',
+      nombre: tt ? tt[1].replace(/\s+/g, ' ').trim() : ''
+    });
+  }
+  if (!opciones.length) return servers;
+  log('aon: ' + opciones.length + ' opciones de player');
+  for (const o of opciones) {
+    if (queda() < 6000) break;
+    let embed = '';
+    try {
+      const r = await traer(BASE_AON + '/wp-json/dooplayer/v1/post/' + encodeURIComponent(o.post) +
+        '?type=' + encodeURIComponent(o.tipo) + '&source=' + encodeURIComponent(o.nume),
+        { headers: aonHeaders(), timeoutMs: 8000 });
+      if (!r.ok || !r.text) continue;
+      const em = /["']embed_url["']\s*:\s*["']([^"']+)["']/.exec(r.text);
+      if (em) embed = desescapar(em[1]);
+    } catch (e) { continue; }
+    if (!embed) continue;
+    if (embed.indexOf('//') === 0) embed = 'https:' + embed;
+    if (!/^https?:\/\//i.test(embed)) continue;
+    if (/saidochesto|multiserver|animeonline\.ninja/i.test(embed)) {
+      /* el multiserver: sus li abren por onclick('URL'), agrupados por
+       * idioma (OD_SUB, OD_LAT…) */
+      try {
+        const r2 = await traer(embed, { headers: { Referer: BASE_AON + '/', 'User-Agent': UA }, timeoutMs: 9000 });
+        if (!r2.ok || !r2.text) continue;
+        const odRe = /\(\s*['"](https?:\/\/[^'"]+)['"]\s*\)/gi;
+        while ((m = odRe.exec(r2.text))) {
+          let u = desescapar(m[1]);
+          const tipo = detectarTipo('', u);
+          if (!tipo || tipo === 'generic') continue;
+          const clave = tipo + '|' + u;
+          if (vistos[clave]) continue;
+          vistos[clave] = true;
+          servers.push({ nombre: '', url: u, tipo: tipo });
+        }
+      } catch (e) {
+        log('multiserver de AnimeOnline falló', (e && e.message) || String(e));
+      }
+    } else {
+      const tipo = detectarTipo(o.nombre, embed);
+      if (!tipo || tipo === 'generic') continue;
+      const clave = tipo + '|' + embed;
+      if (vistos[clave]) continue;
+      vistos[clave] = true;
+      servers.push({ nombre: o.nombre, url: embed, tipo: tipo });
+    }
+  }
+  return servers;
 }
 
 registrarFuente({
@@ -3024,12 +3298,13 @@ registrarFuente({
         userMessage: 'No se pudo abrir este episodio en AnimeOnline.'
       });
     }
-    /* Su único streaming es el multiserver (saidochesto.top): la captura
-     * del navegador oculto es la red de seguridad de siempre. */
-    const servers = servidoresDePagina(r.text);
+    /* v0.6.3: el player de Dooplay ya se deja leer — cada opción pregunta
+     * al endpoint wp-json/dooplayer y el multiserver saidochesto lista sus
+     * hosters. La captura del navegador queda de red de seguridad. */
+    const servers = (await aonServersDe(r.text)).concat(servidoresDePagina(r.text));
     return await probarConCaptura(epUrl, servers, idx, function (i) {
       return 'aon:' + epslug + ':' + (n || 1) + ':' + i;
-    }, 'AnimeOnline');
+    }, 'AnimeOnline', BASE_AON);
   }
 });
 
@@ -3189,7 +3464,7 @@ registrarFuente({
      * navegador oculto queda como red de seguridad. */
     return await probarConCaptura(epUrl, servers, idx, function (i) {
       return 'iva:' + slug + ':' + num + ':' + i;
-    }, 'IvAnime');
+    }, 'IvAnime', BASE_IVA);
   }
 });
 
