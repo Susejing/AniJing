@@ -16,77 +16,91 @@ jobs:
           R=probe-result.txt
           : > "$R"
           curl -sL --compressed -A "$UA" -H "Referer: https://veranime.ninja/" -w "HTTP %{http_code}\n" "https://veranime.ninja/ver/cyberpunk-edgerunners-episodio-1/" -o /tmp/ep.html >> "$R" 2>&1
-          curl -sL --compressed -A "$UA" -H "Referer: https://ivanime.buzz/" -w "HTTP %{http_code}\n" "https://ivanime.buzz/ver/kanojo-no-tomodachi-episodio-6" -o /tmp/ivep6.html >> "$R" 2>&1
-          curl -sL --compressed -A "$UA" -H "Referer: https://ivanime.buzz/" -w "HTTP %{http_code}\n" "https://ivanime.buzz/" -o /tmp/ivahome.html >> "$R" 2>&1
+          curl -sL --compressed -A "$UA" -H "Referer: https://ivanime.buzz/" -w "HTTP %{http_code}\n" "https://ivanime.buzz/animes" -o /tmp/animes.html >> "$R" 2>&1
+          curl -sL --compressed -A "$UA" -H "Referer: https://ivanime.buzz/" -w "HTTP %{http_code}\n" "https://ivanime.buzz/emision" -o /tmp/emision.html >> "$R" 2>&1
+          curl -sL --compressed -A "$UA" -H "Referer: https://ivanime.buzz/" -w "HTTP %{http_code}\n" "https://ivanime.buzz/anime/to-aru-anbu-no-item-sub-espanol" -o /tmp/ficha.html >> "$R" 2>&1
           python3 - <<'PY' >> "$R"
-          import re, urllib.request, urllib.parse
+          import re, urllib.request, urllib.parse, http.cookiejar
           UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
-          def get(url, ref, data=None, extra=None):
-              h = {'User-Agent': UA, 'Referer': ref, 'Accept': '*/*'}
-              if extra: h.update(extra)
-              req = urllib.request.Request(url, headers=h, data=data)
-              try:
-                  with urllib.request.urlopen(req, timeout=25) as r:
-                      return r.status, r.read().decode('utf-8', 'replace')
-              except Exception as e:
-                  return 0, 'ERR ' + str(e)
-          print('=== VAN: scripts del tema ===')
+          print('=== VAN: TODOS los script src ===')
           ep = open('/tmp/ep.html', encoding='utf-8', errors='replace').read()
-          srcs = []
+          vistos = []
           for m in re.finditer(r'(?:data-src|src)\s*=\s*["\']([^"\']+\.js[^"\']*)["\']', ep):
               u = m.group(1)
-              if 'dooplay' in u or 'ajax' in u or 'main' in u or 'theme' in u:
-                  if u not in srcs: srcs.append(u)
-          for u in srcs[:8]:
-              print('JS TEMA:', u)
-          for u in srcs[:4]:
-              st, b = get(u, 'https://veranime.ninja/')
-              print('--- fetch', u, '->', st, 'len', len(b))
-              if st == 200 and len(b) > 1000:
-                  idxs = [m.start() for m in re.finditer(r'player_option|dooplay_player|admin-ajax|action\s*[:=]', b)][:10]
+              if u not in vistos: vistos.append(u)
+          for u in vistos:
+              print('SCRIPT:', u)
+          for u in vistos:
+              if 'comment' in u or 'jquery' in u.lower(): continue
+              try:
+                  req = urllib.request.Request(u, headers={'User-Agent': UA, 'Referer': 'https://veranime.ninja/'})
+                  with urllib.request.urlopen(req, timeout=25) as r:
+                      b = r.read().decode('utf-8', 'replace')
+                  print('--- JS', u, 'len', len(b))
+                  idxs = [m.start() for m in re.finditer(r'player_option|dooplay_player|action\s*[:=]|admin-ajax|post\s*[:=]', b)][:12]
                   seen = set()
                   for i in idxs:
-                      k = i // 400
+                      k = i // 500
                       if k in seen: continue
                       seen.add(k)
-                      print('--- CTX:', repr(b[max(0,i-400):i+500]))
-          print('=== IVA EP6: lista de episodios ===')
-          ivep6 = open('/tmp/ivep6.html', encoding='utf-8', errors='replace').read()
-          print('bytes:', len(ivep6))
-          vers = []
-          for m in re.finditer(r'href\s*=\s*["\']([^"\']*\/ver\/[^"\']+)["\']', ivep6):
-              u = m.group(1)
-              if u not in vers: vers.append(u)
-          print('hrefs /ver/ en ep6:', len(vers))
-          for u in vers[:25]:
-              print('VER6:', u)
-          if vers:
-              i0 = min(m.start() for m in re.finditer(re.escape(vers[0]), ivep6))
-              print('--- CTX LISTA:', repr(ivep6[max(0,i0-800):i0+800]))
-          print('=== IVA HOME: tarjetas del listado ===')
-          home = open('/tmp/ivahome.html', encoding='utf-8', errors='replace').read()
-          animes = [m for m in re.finditer(r'href\s*=\s*["\'][^"\']*\/anime\/[^"\']+["\']', home)]
-          print('anclas /anime/ totales:', len(animes))
-          vistos = set()
-          n = 0
-          for m in animes:
-              key = m.group(0)[:120]
-              if key in vistos: continue
-              vistos.add(key)
-              i = m.start()
-              ctx = home[max(0,i-800):i+400]
-              if 'hero' in ctx and n > 2: continue
-              print('--- CARD', n, ':', repr(home[max(0,i-700):i+600]))
-              n += 1
-              if n >= 3: break
-          print('=== IVA SITEMAP ===')
-          st, b = get('https://ivanime.buzz/sitemap.xml', 'https://ivanime.buzz/')
-          print('sitemap ->', st, '| len:', len(b), '|', repr(b[:400]))
+                      print('--- CTX:', repr(b[max(0,i-450):i+550]))
+              except Exception as e:
+                  print('--- JS', u, 'ERR', str(e)[:80])
+          print('=== VAN: POST con galletas y Origin ===')
+          cj = http.cookiejar.CookieJar()
+          op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+          try:
+              op.open(urllib.request.Request('https://veranime.ninja/ver/cyberpunk-edgerunners-episodio-1/', headers={'User-Agent': UA}), timeout=25)
+              print('galletas:', [c.name for c in cj])
+          except Exception as e:
+              print('GET ep ERR', str(e)[:80])
+          for acc in ['dooplay_player', 'doo_player', 'get_player']:
+              d = urllib.parse.urlencode({'action': acc, 'post': '7870', 'nume': '1', 'type': 'tv'}).encode()
+              req = urllib.request.Request('https://veranime.ninja/wp-admin/admin-ajax.php', data=d, headers={
+                  'User-Agent': UA, 'Referer': 'https://veranime.ninja/ver/cyberpunk-edgerunners-episodio-1/',
+                  'Origin': 'https://veranime.ninja', 'X-Requested-With': 'XMLHttpRequest',
+                  'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                  'Accept': 'application/json, text/javascript, */*; q=0.01'})
+              try:
+                  with op.open(req, timeout=25) as r:
+                      print('POST', acc, '->', r.status, '|', repr(r.read().decode('utf-8','replace')[:400]))
+              except Exception as e:
+                  print('POST', acc, 'ERR', str(e)[:120])
+          print('=== IVA: 404 de episodio inexistente ===')
+          try:
+              req = urllib.request.Request('https://ivanime.buzz/ver/kanojo-no-tomodachi-episodio-99', headers={'User-Agent': UA, 'Referer': 'https://ivanime.buzz/'})
+              with urllib.request.urlopen(req, timeout=25) as r:
+                  print('ep99 ->', r.status, '| len:', '?')
+          except urllib.error.HTTPError as e:
+              print('ep99 ->', e.code, '| len:', len(e.read()))
+          except Exception as e:
+              print('ep99 ERR', str(e)[:80])
+          print('=== IVA: ficha cuerpo (Ver ahora) ===')
+          ficha = open('/tmp/ficha.html', encoding='utf-8', errors='replace').read()
+          i = ficha.find('Ver ahora')
+          if i >= 0:
+              print('--- CTX:', repr(ficha[max(0,i-1400):i+400]))
+          i = ficha.find('pisodio')
+          print('índice "pisodio":', i)
+          if i >= 0:
+              print('--- CTX EPS:', repr(ficha[max(0,i-400):i+400]))
+          print('wire: count:', len(re.findall(r'wire:', ficha)))
+          print('=== IVA: tarjetas de /anices y /emision ===')
+          for nombre, path in [('ANIMES', '/tmp/animes.html'), ('EMISION', '/tmp/emision.html')]:
+              h = open(path, encoding='utf-8', errors='replace').read()
+              print('---', nombre, 'bytes:', len(h))
+              m2 = re.search(r'href\s*=\s*["\'][^"\']*/anime/[^"\']+["\']', h)
+              if m2:
+                  i2 = m2.start()
+                  print('--- CARD:', repr(h[max(0,i2-1000):i2+500]))
+              m3 = re.search(r'href\s*=\s*["\'][^"\']*page[^"\']*["\']', h)
+              if m3:
+                  print('--- PAG:', m3.group(0)[:200])
           PY
       - name: commit
         run: |
           git config user.name "probe-bot"
           git config user.email "probe@users.noreply.github.com"
           git add probe-result.txt
-          git commit -m "probe v25: resultados [skip ci]" || echo "nada"
+          git commit -m "probe v26: resultados [skip ci]" || echo "nada"
           git push
