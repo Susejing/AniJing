@@ -279,8 +279,21 @@
 // de la home, grisísimos, estaban a más de 1500 letras del ancla:
 // la ventana de la mirada hacia atrás crece a 3500 y el relleno
 // anime.png no cuenta.
+//
+// v0.6.13 «El escaparate» — VerAnime cargaba y reproducía, pero su
+// Inicio era una fila sola. Sus géneros viven en /genero/<slug>/ y
+// la sonda los verificó uno a uno: accion (36 páginas), comedia (39),
+// fantasia (40), aventura (32), drama (26) y romance (19), todos con
+// paginación /genero/<slug>/page/N/ — la portada se llena con un riel
+// por género y su «Ver más» pagina de verdad. Y el gris de IvAnime:
+// las imágenes de los héroes de su home viajan TODAS JUNTAS al
+// principio del HTML, a miles de letras de su ancla, así que ninguna
+// ventana las alcanzaba; pero su URL lleva el slug de la serie
+// (portada/<base>-portada-<numero>.jpg): el póster se busca por
+// nombre, verificado contra el HTML real. Sus lecturas ganan tiempo
+// (13 s) y bitácora con estado y tamaño, que el teléfono manda.
 
-const VERSION = '0.6.12';
+const VERSION = '0.6.13';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -785,6 +798,7 @@ function detectarTipo(nombre, url) {
   const nu = n + ' ' + u;
   if (/mega\.nz|\bmega\b|netu|hqq|waaw/i.test(nu)) return null;
   if (/mixdrop|mxdrop|mxcontent/i.test(nu)) return 'mixdrop';
+
   if (/mp4upload/i.test(nu)) return 'mp4upload';
   if (/lulu/i.test(nu)) return 'lulu';
   if (/uqload/i.test(nu)) return 'uqload';
@@ -798,7 +812,6 @@ function detectarTipo(nombre, url) {
   if (/hexload/i.test(nu)) return 'hexload';
   if (/streamwish|obeywish|\bwish\b|embedwish|hlswish|awish/i.test(nu)) return 'streamwish';
   if (/yourupload|gupload/i.test(nu)) return 'yourupload';
-
   if (/streamtape/i.test(nu)) return 'streamtape';
   if (/wolfstream/i.test(nu)) return 'wolfstream';
   /* v0.6.0: los agregadores propios (saidochesto y compañía) se abren con el
@@ -1586,6 +1599,7 @@ registrarFuente({
     const vistos = new Set();
     const episodios = [];
     for (const e of media.episodes) {
+
       const n = e && typeof e.number === 'number' ? e.number : 0;
       if (n < 1 || n > 99999 || vistos.has(n)) continue;
       vistos.add(n);
@@ -1599,7 +1613,6 @@ registrarFuente({
       };
       if (mediaId != null) ep.still = captura(mediaId, n);
       if (e && e.synopsis) ep.overview = limpio(e.synopsis).slice(0, 250);
-
       episodios.push(ep);
     }
     episodios.sort((a, b) => a.season - b.season || a.number - b.number);
@@ -2387,6 +2400,7 @@ function posterEnVentana(ventana) {
  * de episodios las insignias SUB/EP N alejan la imagen del ancla y con
  * 600 se quedaba fuera. */
 function posterAntesDe(html, idx) {
+
   const antes = String(html || '').slice(Math.max(0, idx - 1500), idx);
   const tags = antes.match(/<img\b[^>]*>/gi) || [];
   for (let i = tags.length - 1; i >= 0; i--) {
@@ -2400,7 +2414,6 @@ function posterAntesDe(html, idx) {
  * con la base de su fuente en cada llamada (eas/ayt/jara/van/iva), con el
  * absolutizar único de las utilidades. v0.6.6: la 0.6.5 declaró esa
  * función DOS veces (la vieja de utilidades y una nueva junto a los
-
  * conversores) y Kino compila el plugin como módulo, que no permite
  * redefinir un identificador global: la 0.6.5 no cargó en el teléfono
  * («invalid redefinition of global identifier»). Esta versión deja una
@@ -3188,6 +3201,7 @@ async function easServersDeViejo(texto) {
   const frRe = /<iframe\b[^>]*?\b(?:data-src|src)\s*=\s*["']([^"']+)["'][^>]*>/gi;
   while ((m = frRe.exec(texto))) {
     let u = desescapar(m[1].trim());
+
     if (u.indexOf('//') === 0) u = 'https:' + u;
     if (!/^https?:\/\//i.test(u)) continue;
     const antes = texto.slice(Math.max(0, m.index - 300), m.index);
@@ -3201,7 +3215,6 @@ async function easServersDeViejo(texto) {
     const r = await traer(destino, { headers: { Referer: BASE_EAS + '/', 'User-Agent': UA }, timeoutMs: 9000 });
     if (!r.ok || !r.text) return [];
     const gpRe = /go_to_player(?:Vast|)?\(\s*['"]([^'"]+)['"]/gi;
-
     while ((m = gpRe.exec(r.text))) {
       let u = desescapar(m[1]);
       if (u.indexOf('//') === 0) u = 'https:' + u;
@@ -3940,43 +3953,70 @@ registrarFuente({
   },
 
   async portada() {
-    /* v0.6.10: la fila no se pierde en silencio — si el género no trae
-     * tarjetas, se prueba la home del sitio y todo queda en el log con
-     * el estado y el tamaño de lo que llegó (el teléfono manda y su
-     * bitácora dirá qué pasó: reto, vacío o red). */
-    let r = null;
-    try {
-      r = await traer(BASE_VAN + '/genero/ver-anime/', { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 10000, cuerpoSiempre: true });
-    } catch (e) {
-      log('van fila «Anime» falló', (e && e.message) || String(e));
-    }
-    let items = r && r.ok ? vanTarjetas(r.text).slice(0, 20) : [];
-    if (!items.length) {
-      if (r && r.text) {
-        log('van «Anime»: status ' + r.status + ', ' + r.text.length + ' letras, 0 tarjetas' +
-          (/cloudflare|just a moment|cf-chl/i.test(r.text) ? ' (huele a reto de Cloudflare)' : ''));
-      } else {
-        log('van «Anime» no respondió (status ' + (r ? r.status : 'null') + ')');
-      }
+    /* v0.6.13 «El escaparate»: el Inicio de VerAnime crece — el riel
+     * «Anime» de siempre más un riel por género, verificados por sonda
+     * uno a uno (accion 36 páginas, comedia 39, fantasia 40, aventura
+     * 32, drama 26, romance 19; shonen/escolar/peliculas NO existen y
+     * se quedan fuera). Cada riel trae 20 tarjetas y su «Ver más»
+     * pagina en /genero/<slug>/page/N/. */
+    const defs = [
+      { id: 'van-anime', titulo: 'Anime · VerAnime', ref: 'van-anime', genero: 'ver-anime' },
+      { id: 'van-genero-accion', titulo: 'Acción · VerAnime', ref: 'van-genero-accion', genero: 'accion' },
+      { id: 'van-genero-aventura', titulo: 'Aventura · VerAnime', ref: 'van-genero-aventura', genero: 'aventura' },
+      { id: 'van-genero-fantasia', titulo: 'Fantasía · VerAnime', ref: 'van-genero-fantasia', genero: 'fantasia' },
+      { id: 'van-genero-comedia', titulo: 'Comedia · VerAnime', ref: 'van-genero-comedia', genero: 'comedia' },
+      { id: 'van-genero-drama', titulo: 'Drama · VerAnime', ref: 'van-genero-drama', genero: 'drama' },
+      { id: 'van-genero-romance', titulo: 'Romance · VerAnime', ref: 'van-genero-romance', genero: 'romance' }
+    ];
+    const rtas = await Promise.all(defs.map(async (def) => {
       try {
-        const h = await traer(BASE_VAN + '/', { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 10000, cuerpoSiempre: true });
-        if (h.ok) items = vanTarjetas(h.text).slice(0, 20);
-        if (!items.length && h.text) {
-          log('van home: status ' + h.status + ', ' + h.text.length + ' letras, 0 tarjetas');
+        const r = await traer(BASE_VAN + '/genero/' + def.genero + '/', { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 11000, cuerpoSiempre: true });
+        let items = r && r.ok ? vanTarjetas(r.text).slice(0, 20) : [];
+        /* v0.6.10 conservada: SOLO el riel «Anime» conserva su respaldo
+         * en la home del sitio — es el género maestro; los demás viven
+         * o mueren por su género, con bitácora honesta. */
+        if (!items.length && def.ref === 'van-anime') {
+          try {
+            const h = await traer(BASE_VAN + '/', { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 10000, cuerpoSiempre: true });
+            if (h.ok) items = vanTarjetas(h.text).slice(0, 20);
+            if (!items.length && h.text) {
+              log('van home: status ' + h.status + ', ' + h.text.length + ' letras, 0 tarjetas');
+            }
+          } catch (e2) {
+            log('van home falló', (e2 && e2.message) || String(e2));
+          }
         }
-      } catch (e2) {
-        log('van home falló', (e2 && e2.message) || String(e2));
+        if (!items.length) {
+          if (r && r.text) {
+            log('van fila «' + def.genero + '»: status ' + r.status + ', ' + r.text.length + ' letras, 0 tarjetas' +
+              (/cloudflare|just a moment|cf-chl/i.test(r.text) ? ' (huele a reto de Cloudflare)' : ''));
+          } else {
+            log('van fila «' + def.genero + '» no respondió (status ' + (r ? r.status : 'null') + ')');
+          }
+        }
+        return items.length ? { id: def.id, title: def.titulo, ref: def.ref, items: items } : null;
+      } catch (e) {
+        log('van fila «' + def.titulo + '» falló', (e && e.message) || String(e));
+        return null;
       }
-    }
-    if (!items.length) return [];
-    return [{ id: 'van-anime', title: 'Anime · VerAnime', ref: 'van-anime', items: items }];
+    }));
+    const filas = [];
+    for (const fila of rtas) if (fila) filas.push(fila);
+
+    return filas;
   },
 
   async hoja(ref, cursor) {
-    if (ref !== 'van-anime') return null;
+    /* v0.6.13: cada riel de género abre su propio /genero/<slug>/ y
+     * pagina con /genero/<slug>/page/N/ (verificado por sonda: la
+     * página 2 responde 200 con 69 anclas, igual que la 1). */
+    let genero = null;
+    if (ref === 'van-anime') genero = 'ver-anime';
+    else if (ref.indexOf('van-genero-') === 0) genero = ref.slice('van-genero-'.length);
+    if (!genero) return null;
     const pagina = parseInt(cursor, 10);
     const num = Number.isFinite(pagina) && pagina > 1 ? pagina : 1;
-    const camino = num > 1 ? '/genero/ver-anime/page/' + num + '/' : '/genero/ver-anime/';
+    const camino = num > 1 ? '/genero/' + genero + '/page/' + num + '/' : '/genero/' + genero + '/';
     const r = await traer(BASE_VAN + camino, { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 12000 });
     if (!r.ok) {
       throw kino.error('unavailable', 'VerAnime no respondió (status ' + r.status + ')', {
@@ -4002,7 +4042,6 @@ registrarFuente({
     if (sinM) serie.overview = limpio(sinM[1]).slice(0, 400);
     return serie;
   },
-
 
   async episodios(slug) {
     const r = await vanFicha(slug);
@@ -4081,6 +4120,29 @@ const BASE_IVA = 'https://ivanime.buzz';
  * resolver() no vuelva a leer la ficha. */
 const IVA_EPS = {};
 
+/* v0.6.13: el póster del héroe de IvAnime se llama como su serie: las
+ * URLs de /portada/ llevan el nombre dentro
+ * (.../portada/to-aru-anbu-no-item-portada-123.jpg, y a veces sin el
+ * «-portada»: tokyo-…-hen-123.jpg — sondeo v31, los dos casos). Con
+ * las imágenes de todos los héroes amontonadas a miles de letras de
+ * sus anclas, ninguna ventana las alcanza; buscar por nombre sí. */
+function ivaPosterDe(html, slug) {
+  const s = String(slug || '');
+  if (!s) return '';
+  const bases = [s];
+  const corto = s.replace(/-(?:sub-)?(?:espanol|castellano|latino)$/i, '');
+  if (corto && corto !== s) bases.push(corto);
+  const texto = String(html || '');
+  for (let i = 0; i < bases.length; i++) {
+    try {
+      const re = new RegExp('https?:\\/\\/[^\\s\\x27"<>]*\\/portada\\/[^\\s\\x27"<>]*' + bases[i] + '-[^\\s\\x27"<>]*?\\.(?:jpe?g|png|webp)', 'i');
+      const m = re.exec(texto);
+      if (m) return m[0];
+    } catch (e) {}
+  }
+  return '';
+}
+
 function ivaTarjetas(html) {
   const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/anime\/([^"\/?#]+)[^>]*>([\s\S]{0,900}?)<\/a>/gi;
   const items = [];
@@ -4125,6 +4187,14 @@ function ivaTarjetas(html) {
       for (let k = urls.length - 1; k >= 0; k--) {
         if (!/\/img\/anime\.png|logo|icon|playbtn/i.test(urls[k])) { poster = urls[k]; break; }
       }
+    }
+    if (!poster) {
+      /* v0.6.13: en la home de IvAnime las imágenes de los héroes
+       * viven TODAS JUNTAS al principio del HTML, a miles de letras de
+       * sus anclas — pero cada URL lleva el nombre de la serie en
+       * /portada/: se busca por nombre en toda la página (sondeo v31,
+       * verificado con y sin el «-portada» en el nombre del archivo). */
+      poster = ivaPosterDe(String(html || ''), slug);
     }
     if (poster) item.poster = absolutizar(poster, BASE_IVA);
     items.push(item);
@@ -4185,8 +4255,19 @@ registrarFuente({
     ];
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
-        const r = await traer(BASE_IVA + def.camino, { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 9000 });
+        /* v0.6.13: las páginas de IvAnime son pesadas (la home pasa de
+         * 100 KB) y en el teléfono 9 s se quedaban cortos: la espera
+         * crece, el cuerpo se lee aunque el estado mienta y cada fila
+         * vacía deja bitácora con estado y tamaño — el log dirá qué
+         * pasó (reto, vacío o red). */
+        const r = await traer(BASE_IVA + def.camino, { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 13000, cuerpoSiempre: true });
         const items = ivaTarjetas(r.text).slice(0, 20);
+        if (!items.length && r.text) {
+          log('iva fila «' + def.camino + '»: status ' + r.status + ', ' + r.text.length + ' letras, 0 tarjetas' +
+            (/cloudflare|just a moment|cf-chl/i.test(r.text) ? ' (huele a reto de Cloudflare)' : ''));
+        } else if (!items.length) {
+          log('iva fila «' + def.camino + '» no respondió (status ' + (r ? r.status : 'null') + ')');
+        }
         return items.length ? { id: def.id, title: def.titulo, ref: def.ref, items: items } : null;
       } catch (e) {
         log('iva fila «' + def.titulo + '» falló', (e && e.message) || String(e));
@@ -4722,6 +4803,7 @@ async function screenEvent(e) {
     /* v0.6.11: ya no es el menú nativo (corta en 8) sino el selector del
      * lienzo: el botón de arriba lo abre y lo cierra. */
     const ns = Object.assign({}, state);
+
     ns.elegirFuentes = !ns.elegirFuentes;
     return { state: ns };
   }
