@@ -13,7 +13,7 @@ jobs:
       - name: sondear
         run: |
           python3 - <<'PYEOF' > probe-result.txt 2>&1 || true
-          import urllib.request, re
+          import urllib.request, re, json
           UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
           def get(url, headers=None, timeout=25):
               h={'User-Agent':UA}
@@ -27,53 +27,62 @@ jobs:
           def sec(t): print('====',t,'====')
           XRW={'X-Requested-With':'XMLHttpRequest','Accept':'application/json, text/javascript, */*; q=0.01'}
           
-          sec('EAS servers html COMPLETO')
-          st,body=get('https://estrenosanime.net/ajax/v2/episode/servers?episodeId=72238', dict(XRW, Referer='https://estrenosanime.net/ver/tensei-kizoku-kantei-skill-de-nariagaru-3rd-season/episodio-7'))
-          print('status',st)
-          try:
-              j=__import__('json').loads(body)
-              html=j.get('html','')
-              print('LEN html', len(html))
-              print(html[:4500])
-          except Exception as e:
-              print('no json:', body[:1500])
+          sec('EAS sources del embed 133211')
+          for su in ['https://estrenosanime.net/ajax/v2/episode/sources?id=','https://estrenosanime.net/ajax/episode/sources?id=','https://estrenosanime.net/ajax/v2/episode/source?id=']:
+              st,b=get(su+'133211', dict(XRW, Referer='https://estrenosanime.net/'))
+              print(su.split('net')[1], '->', st, b[:300])
+              if st==200 and b.strip().startswith('{'): break
+          st,b=get('https://estrenosanime.net/ajax/v2/episode/sources?id=133211', dict(XRW, Referer='https://estrenosanime.net/'))
+          if st==200:
+              try:
+                  j=json.loads(b)
+                  lk=j.get('link') or j.get('url') or ''
+                  print('LINK:', lk)
+                  if lk.startswith('http'):
+                      st2,pg=get(lk, {'Referer':'https://estrenosanime.net/'})
+                      print('multiserver fetch ->', st2, 'len', len(pg))
+                      print(pg[:2200])
+              except Exception as e: print('json err', e)
           
-          sec('EAS sources con ids hallados')
-          st,body=get('https://estrenosanime.net/ajax/v2/episode/servers?episodeId=72238', dict(XRW, Referer='https://estrenosanime.net/'))
-          ids=re.findall(r'data-id=\"(\d+)\"', body)
-          sids=re.findall(r'data-server-id=\"(\d+)\"', body)
-          print('data-id:', ids[:10], 'data-server-id:', sids[:10])
-          for sid in (sids or ids)[:3]:
-              for su in ['https://estrenosanime.net/ajax/v2/episode/sources?id=','https://estrenosanime.net/ajax/episode/sources?id=']:
-                  st,b=get(su+sid, dict(XRW, Referer='https://estrenosanime.net/'))
-                  print('source', sid, su.split('net')[1], '->', st, b[:250])
-                  if st==200 and ('link' in b or 'url' in b): break
+          sec('OTV data-dwn en otros episodios')
+          for u in ['https://www.otakustv.net/ver/one-piece-1179']:
+              st,b=get(u, {'Referer':'https://www.otakustv.net/'})
+              d=re.search(r'data-dwn=\"([^\"]+)\"', b)
+              print(u, st, 'dwn:', (d.group(1)[:350] if d else 'NO'))
+          st,b=get('https://www.otakustv.net/anime/detective-conan', {'Referer':'https://www.otakustv.net/'})
+          eps=re.findall(r'href=\"[^\"]*\/ver\/(detective-conan-\d+)\"', b)[:3]
+          print('eps conan:', eps)
+          if eps:
+              st,b=get('https://www.otakustv.net/ver/'+eps[0], {'Referer':'https://www.otakustv.net/'})
+              d=re.search(r'data-dwn=\"([^\"]+)\"', b)
+              print('conan ep', st, 'dwn:', (d.group(1)[:350] if d else 'NO'))
           
-          sec('AYT mytsumi limpio: open=1 y sin el, con Referer episodio')
-          epu='https://animeyt.cc/116579/anime/kashita-maryoku-wa-revo-barai-de-kyousei-choushuu-capitulo-1/'
+          sec('AYT mytsumi: todos los botones')
           limpia='https://mytsumi.com/container.php?id=x9MSVgFqorVi0vN9&only=SUB&lang=SUB'
-          st,mp=get(limpia+'&open=1', {'Referer':epu})
-          print('open=1 con Referer episodio ->', st, 'len', len(mp))
-          print(mp[:2500])
-          st,mp2=get(limpia, {'Referer':epu})
-          print('sin open=1 ->', st, 'len', len(mp2))
-          print(mp2[:1200])
+          st,mp=get(limpia+'&open=1', {'Referer':'https://animeyt.cc/116579/anime/kashita-maryoku-wa-revo-barai-de-kyousei-choushuu-capitulo-1/'})
+          print('len', len(mp))
+          for m in re.findall(r'<button[^>]*data-player-url=\"[^\"]*\"[^>]*>', mp):
+              u2=re.search(r'data-player-url=\"([^\"]*)\"', m).group(1)
+              k2=re.search(r'data-player-kind=\"([^\"]*)\"', m)
+              print('BOTON:', u2, 'kind:', k2.group(1) if k2 else '?')
+          for m in re.findall(r'<a[^>]*mytsumi-download-button[^>]*>', mp):
+              print('DESCARGA:', m[:250])
           
-          sec('AON: ventana de dos tarjetas del catalogo')
+          sec('AON tarjetas de verdad (con img)')
           st,aon=get('https://ww3.animeonline.ninja/genero/ver-anime/', {'Referer':'https://ww3.animeonline.ninja/'})
-          print('status',st,'len',len(aon))
           an=re.findall(r'<a\b[^>]*href=\"[^\"]*\/(?:online|temporada|anime)\/[^\"]*\"[^>]*>[\s\S]{0,900}?</a>', aon)
-          print('n anclas:', len(an))
-          for a in an[:2]:
-              print('--- TARJETA ---')
-              print(a[:1200])
+          conimg=[a for a in an if '<img' in a]
+          print('anclas:', len(an), 'con img:', len(conimg))
+          for a in conimg[:2]:
+              print('--- TARJETA REAL ---')
+              print(a[:1400])
             
           PYEOF
-          head -c 12000 probe-result.txt
+          head -c 13000 probe-result.txt
       - name: subir
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add probe-result.txt
-          git commit -m "probe v3: resultados [skip ci]" || echo "nada que subir"
+          git commit -m "probe v4: resultados [skip ci]" || echo "nada que subir"
           git push
