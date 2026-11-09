@@ -1,128 +1,52 @@
-==== IFRAMEN_V2.JS COMPLETO ====
-status 200 len 5333
-function go_to_player(encryptedUrl) {
-    // Mostrar loading
-    document.querySelector(".BotHumano")
-        .classList.add('BotHumanoA');
-    document.querySelector(".BotHumano")
-        .insertAdjacentHTML('afterbegin', '<div class="BoxHumano"><span><b>Procesando vídeo</b> <p>Por favor espere unos segundos</p></span></div>');
-    
-    // Desencriptar URL usando API backend
-    fetch('/embed/api/decrypt-stream', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ encrypted: encryptedUrl })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            // Error al desencriptar (no mostrar detalles en console);
-            document.querySelector(".BotHumano").classList.remove('BotHumanoA');
-            alert('Error al cargar el video: ' + data.error);
-            return;
-        }
-        
-        // Cargar video con URL desencriptada
-        loadVideoPlayer(data.url);
-    })
-    .catch(error => {
-        console.error('Error en la petición:', error);
-        document.querySelector(".BotHumano").classList.remove('BotHumanoA');
-        alert('Error al cargar el video. Por favor, inténtalo de nuevo.');
-    });
-}
+==== DECRYPT-STREAM: blob byse ====
+status 200
+{"url":"https://byseqekaho.com/e/azz9e44409p2"}
+==== DECRYPT-STREAM: blob streamtape ====
+status 200
+{"url":"https://streamtape.com/e/PXm09gdKZYC03ZR"}
+==== DECRYPT-STREAM: blob voe ====
+status 200
+{"url":"https://voe.sx/e/t2tu112pyvbj"}
+==== MULTISERVER: primeros 1500 chars (tabs de idioma) ====
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reproductor</title>
+    <link href="/css/iframe_v2.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed:300,400,700" rel="stylesheet">
+    <meta name="robots" content="noindex,nofollow">
+</head>
+<body class="directAc" style="">
+    <div id="DisplayContent">
+        <div id="PlayerDisplay">
+            <div class="wpw" style="background-image: linear-gradient(rgba(16, 16, 23, 0.71), #000000), url('/images/wallpapers/animephoto18.webp'); background-size: 100%; background-repeat: no-repeat;"></div>
+            
+            <div class="SelectLangDisp">
+                
+                    
+                    
+                        
+                            <li onclick="SelLang(this, 'EN');" class="SLD_A">
+                                <img src="/images/lang/EN.png">
+                            </li>
+                            
+                        
+                    
+                        
+                    
+                        
+                    
+                        
+                    
+                
+            </div>
 
-function loadVideoPlayer(url) {
-    var displayVideo = document.querySelector(".DisplayVideo");
-    displayVideo.classList.add('DisplayVideoA');
-    displayVideo.innerHTML = `
-    <span onclick="listPlayer();">
-        <img src="/images/atras.png">
-    </span>
-    <iframe onload='document.querySelector(".BotHumano").classList.remove("BotHumanoA")' id="IFR" src="` + url + `" frameborder="0" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"></iframe>`;
-}
-
-function listPlayer(){
-	var displayVideo = document.querySelector(".DisplayVideo");
-    displayVideo.classList.remove('DisplayVideoA');
-	displayVideo.innerHTML = '';
-}
-
-function SelLang(who, id) {
-    document.querySelector(".FirstLoad")
-        .classList.add('FirstLoadA');
-    if (document.querySelector(".SLD_A") != null) {
-        document.querySelector(".SLD_A")
-            .classList.remove('SLD_A');
-    }
-    who.classList.add('SLD_A');
-    setTimeout(function () {
-        document.querySelector(".FirstLoad")
-            .classList.remove('FirstLoadA');
-        if (document.querySelector(".REactiv") != null) {
-            document.querySelector(".REactiv")
-                .classList.remove('REactiv');
-        }
-        document.querySelector(".OD_" + id)
-            .classList.add('REactiv');
-    }, 300);
-}! function (e, t) {
-    "function" == typeof define && define.amd ? define(function () {
-        return t(e)
-    }) : "object" == typeof exports ? module.exports = t : e.echo = t(e)
-}(this, function (e) {
-    "use strict";
-    var t, i, n, o, r, c = {}
-        , l = function () {}
-        , s = function (e, t) {
-            if (function (e) {
-                    return null === e.offsetParent
-                }(e)) return !1;
-            var i = e.getBoundingClientRect();
-            return i.right >= t.l && i.bottom >= t.t && i.left <= t.r && i.top <= t.b
-        }
-        , a = function () {
-            !o && i || (clearTimeout(i), i = setTimeout(function () {
-                c.render(), i = null
-            }, n))
-        };
-    return c.init = function (i) {
-        var s = (i = i || {})
-            .offset || 0
-            , d = i.offsetVertical || s
-            , u = i.offsetHorizontal || s
-            , m = function (e, t) {
-                return parseInt(e || t, 10)
-            };
-        t = {
-            t: m(i.offsetTop, d)
-            , b: m(i.offsetBottom, d)
-            , l: m(i.offsetLeft, u)
-            , r: m(i.offsetRight, u)
-        }, n = m(i.throttle, 250), o = !1 !== i.debounce, r = !!i.unload, l = i.callback || l, c.render(), document.addEventListener ? (e.addEventListener("scroll", a, !1), e.addEventListener("load", a, !1)) : (e.attachEvent("onscroll", a), e.attachEvent("onload", a))
-    }, c.render = function (i) {
-        for (var n, o, a = (i || document)
-                .querySelectorAll("[data-echo], [data-echo-background]"), d = a.length, u = {
-                    l: 0 - t.l
-                    , t: 0 - t.t
-                    , b: (e.innerHeight || document.documentElement.clientHeight) + t.b
-                    , r: (e.innerWidth || document.documentElement.clientWidth) + t.r
-                }, m = 0; m < d; m++) o = a[m], s(o, u) ? (r && o.setAttribute("data-echo-placeholder", o.src), null !== o.getAttribute("data-echo-background") ? o.style.backgroundImage = "url(" + o.getAttribute("data-echo-background") + ")" : o.src !== (n = o.getAttribute("data-echo")) && (o.src = n), r || (o.removeAttribute("data-echo"), o.removeAttribute("data-echo-background")), l(o, "load")) : r && (n = o.getAttribute("data-echo-placeholder")) && (null !== o.getAttribute("data-echo-background") ? o.style.backgroundImage = "url(" + n + ")" : o.src = n, o.removeAttribute("data-echo-placeholder"), l(o, "unload"));
-        d || c.detach()
-    }, c.detach = function () {
-        document.removeEventListener ? e.removeEventListener("scroll", a) : e.detachEvent("onscroll", a), clearTimeout(i)
-    }, c
-});
-
-
-==== CANDIDATOS A CLAVE ====
-pass -> []
-decrypt -> []
-literales frecuentes: ['BotHumanoA', 'BoxHumano', 'Content-Type', 'DisplayVideoA', 'FirstLoadA', 'REactiv', 'afterbegin', 'data-echo', 'data-echo-background', 'data-echo-placeholder', 'function', 'object', 'onload', 'onscroll', 'scroll', 'unload']
-==== DESCIFRE CON CANDIDATOS ====
-probando 16 candidatos
-==== DHCPLAY MAIN.JS ====
-status 200 len 71214
-(function(_0x53868c,_0x2965a6){function _0x21e877(_0x5db535,_0x5952ea,_0x155b6b,_0x430d6c,_0x2f53b5){return _0x5447(_0x5db535- -0x2d3,_0x2f53b5);}function _0x2f6688(_0x2037ac,_0x38acfb,_0x1db3ed,_0xdb5a04,_0x34f3f0){return _0x5447(_0x1db3ed-0x336,_0x38acfb);}function _0x5bb25c(_0x153f20,_0x3daa3,_0x1100ff,_0x493da4,_0x2fd3bf){return _0x5447(_0x493da4- -0x65,_0x3daa3);}function _0xb244a8(_0x243a68,_0x2b0b10,_0x3f656d,_0x2d9a93,_0x267aa1){return _0x5447(_0x2b0b10-0x288,_0x243a68);}function _0x28cfbf(_0x23b8aa,_0x1d4117,_0x265728,_0x31163a,_0x3f36ce){return _0x5447(_0x1d4117- -0x15,_0x3f36ce);}const _0x20c6a1=_0x53868c();while(!![]){try{const _0x5a51a6=-parseInt(_0x28cfbf(0x1b3,0x14e,0x219,0x237,'VfWE'))/(0x128+-0x59e+0x477)*(-parseInt(_0x28cfbf(0xbb,0x101,0x1c4,-0x2,'4yDx'))/(0x3d*-0x5b+-0xe52+-0x3*-0xc01))+parseInt(_0x2f6688(0x4bd,'J13g',0x5aa,0x674,0x698))/(0x6a*0x8+0x693+-0x4*0x278)*(parseInt(_0x28cfbf(-0x17,0xd4,0x162,0x138,'dkg9'))/(-0x2237*0x1+-0x509*0x6+-0x1b*-0x263))+parseInt(_0x21e877(0xb,0x87,0x4e,0xad,'A5M@'))/(-0x21d4+0x6c*-0x17+0x1*0x2b8d)*(parseInt(_0xb244a8('sI[@',0x4f4,0x608,0x4f7,0x4ad))/(-0xd3*0xb+0x5b2+0x365))+parseInt(_0x5bb25c(0x42,'riYZ',0x1fb,0x13c,0xd2))/(0x64*-0x4f+-0x1100+0x2fe3)+parseInt(_0xb244a8('fbco',0x53b,0x531,0x5df,0x5fd))/(-0x73+-0xb73*-0x1+-0x1*0xaf8)+parseInt(_0x28cfbf(0x216,0x154,0x276,0x259,'Xv]r'))/(0xbdd+0x3*-0x3a9+-0xd9)*(parseInt(_0x21e877(-0x3a,0x57,-0xc8,0x51,'J13g'))/(-0xbaf*0x1+-0x2455+-0x2*-0x1807))+-parseInt(_0x21e877(-0xc4,-0x1c0,-0x173,-0x10a,'Xv]r'))/(-0x14cf+-0xfeb*0x1+0x24c5*0x1);if(_0x5a51a6===_0x2965a6)break;else _0x20c6a1['push'](_0x20c6a1['shift']());}catch(_0xec65dd){_0x20c6a1['push'](_0x20c6a1['shift']());}}}(_0x140d,0xe6aef+-0xb*0x27071+0x1b9e26));const _0x4218fa=(function(){function _0x420afb(_0x10e6dc,_0x5d0834,_0x49675d,_0x582e0f,_0x4633ec){return _0x5447(_0x582e0f- -0x209,_0x5d0834);}function _0x314ad8(_0x227990,_0x175898,_0xdf18af,_0x1186b7,_0x28a701){return _0x5447(_0xdf18af-0x96,_0x175898);}const _0x1316db={'dkWCt':function(_0x52e7c6,_0x3be73d){return _0x52e7c6(_0x3be73d);},'BMKhn':function(_0x4136cf,_0x81f6c8,_0x4ecb6b){return _0x4136cf(_0x81f6c8,_0x4ecb6b);},'umlvT':function(_0x14932c,_0x4ea376){return _0x14932c*_0x4ea376;},'mOZUC':_0x314ad8(0xe7,'4yDx',0x1b0,0x17e,0x12f)+_0x420afb(0x11,'rg(h',-0x104,-0x9b,-0x12d)+_0x314ad8(0xd6,'yEq*',0x18e,0x12e,0xba)+_0x420afb(-0x1e0,'mB&R',-0x44,-0xc9,-0x110)+_0x314ad8(0x186,'dg*y',0x243,0x1b6,0x2c1)+'n:','Riqog':_0x420afb(-0x183,'*]kF',-0x177,-0xb9,-0x16e)+_0x420afb(-0x70,'dkg9',-0x57,-0x2c,-0xf6)+_0x1b4780('j8^h',0x3d2,0x4e7,0x45d,0x4c9)+')','RWAxT':_0x8be102('31Sf',-0xad,-0x1ee,-0xeb,-0x108)+_0x420afb(0x90,'TU(z',-0x77,-0x64,-0x78)+_0x8be102('sug8',-0xd6,-0xa8,-0x26,0x93)+_0x1b4780('Pe]T',0x53b,0x58c,0x658,0x75a)+_0x1b4780('iYdw',0x4cf,0x5cf,0x4c8,0x4d2)+_0x8be102('$AMA',-0x2b,0x52,-0x82,0x16)+_0x314ad8(0x1a6,'eNFD',0x1c6,0x222,0xfe),'MPOYE':_0x8be102('XJIK',-0x63,-0x8a,-0x54,0x6c),'PqNxs':function(_0x474011,_0x506ed0){return _0x474011+_0x506ed0;},'DbOHk':_0x420afb(-0x33,'dg*y',-0x148,-0x48,-0xc),'RiOVw':_0x1b4780('mB&R',0x5bf,0x552,0x508,0x4c1),'KEcxf':function(_0x4dbedf){return _0x4dbedf();},'jAGUK':function(_0x589e98,_0x4c7058){return _0x589e98!==_0x4c7058;},'afSNz':_0x314ad8(0x28f,'%c0[',0x354,0x2f6,0x2ff),'EgmpF':_0x1b4780('Pe]T',0x5c8,0x4c8,0x5b0,0x5bd),'LIvmW':_0x8be102('zf&8',0x18f,-0x2a,0xc0,0x83),'OTtFi':function(_0x173f8d,_0x52b454){return _0x173f8d===_0x52b454;},'yFDNQ':_0xf09812(0x103,-0x13,'Xv]r',0xf0,0xad),'mkluB':_0x1b4780('irWz',0x471,0x529,0x44a,0x51b)};let _0x181457=!![];function _0x8be102(_0x353b22,_0x24cc05,_0x1762d6,_0x2f891a,_0x3be87f){return _0x5447(_0x2f891a- -0x232,_0x353b22);}function _0x1b4780(_0x2088b4,_0x5179cd,_0x3d5966,_0x5816ac,_0x45c0ce){return _0x5447(_0x5816ac-0x368,_0x2088b4);}function _0xf09812(_0x15299b,_0x311b26,_0xd1341b,_0x22fa0b,_0x1ab051){return _0x5447(_0x311b26- -0x116,_0xd1341b);}return function(_0x2cc235,_0x30ee1d){const _0x598e8b={'qssna':function(_0x1263cc,_0x183c70){fun
+            <div class="OptionsLangDisp">
+                <div class="ODDIV">
+                    
+                        
+                        
+                            
+                                <div class="OD OD_EN REactiv">
+                        
