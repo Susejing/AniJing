@@ -253,7 +253,18 @@
 // responde, se prueba la home del sitio, y cada paso queda en el log
 // con estado y tamaño para que la próxima captura diga la verdad.
 
-const VERSION = '0.6.10';
+// v0.6.11 «La lista completa» — el menú de fuentes de Kino corta en 8
+// entradas y no se desplaza: con diez fuentes, VerAnime e IvAnime
+// quedaban debajo del corte, invisibles (el teléfono lo confirmó con
+// captura). El selector se dibuja ahora en el propio lienzo: una fila
+// por fuente, tan larga como haga falta, y el botón de arriba lo abre
+// y lo cierra. El catálogo de AnimeJara gana paginación (?page=N,
+// aprendida de sonda) y su hoja deja de tragarse los «multi» de la
+// página del episodio: eran landings de streamhj que la captura
+// perseguía 20 segundos cada uno para no pescar nada — tres veces lo
+// demostró el teléfono; fuera, que los embeds ya traen los hosters.
+
+const VERSION = '0.6.11';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -3416,6 +3427,26 @@ function jaraTarjetas(html) {
         break;
       }
     }
+    /* v0.6.11: las tarjetas del catálogo (anime-grid) traen la ficha
+     * completa en el atributo data-anime — un JSON con «titulo» y
+     * «poster» vestido de &quot; y barras escapadas — y su imagen puede
+     * quedar fuera de la ventana del ancla: si el img hj no apareció,
+     * se lee el data-anime del propio ancla. Sin esto, del catálogo
+     * solo se parseaba el top-10 lateral (Death Note y compañía). */
+    if (!poster) {
+      const da = /data-anime="([^"]*)"/i.exec(m[0]) || /data-anime='([^']*)'/i.exec(m[0]);
+      if (da) {
+        const json = da[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+        const pm = /"poster"\s*:\s*"([^"]+)"/i.exec(json);
+        if (pm) poster = pm[1].replace(/\\\//g, '/');
+        const tm = /"titulo"\s*:\s*"([^"]+)"/i.exec(json);
+        if (tm) {
+          titulo = decHtml(tm[1].replace(/\\u([0-9a-fA-F]{4})/g, function (x, h) {
+            return String.fromCharCode(parseInt(h, 16));
+          }));
+        }
+      }
+    }
     if (!poster) continue;
     vistos.add(slug);
     if (!titulo || titulo.length < 2) titulo = slugATitulo(slug);
@@ -3470,20 +3501,32 @@ registrarFuente({
     return filas;
   },
 
-  async hoja(ref) {
+  async hoja(ref, cursor) {
     const caminos = {
       'jara-emision': '/emision',
       'jara-catalogo': '/catalogo'
     };
     const camino = caminos[ref];
     if (!camino) return null;
-    const r = await traer(BASE_JARA + camino, { headers: { Referer: BASE_JARA + '/' }, timeoutMs: 12000 });
+    /* v0.6.11: el catálogo pagina con ?page=N — aprendido de sonda: la
+     * página 2 responde 200 con títulos distintos; ?pagina=N se ignora
+     * y /catalogo/page/2/ miente con su 404-con-contenido. Mientras una
+     * página traiga un buen puñado de tarjetas, hay siguiente. */
+    const pag = parseInt(cursor, 10);
+    const num = Number.isFinite(pag) && pag > 1 ? pag : 1;
+    const url = num > 1 && ref === 'jara-catalogo'
+      ? BASE_JARA + camino + '?page=' + num
+      : BASE_JARA + camino;
+    const r = await traer(url, { headers: { Referer: BASE_JARA + '/' }, timeoutMs: 12000 });
     if (!r.ok) {
       throw kino.error('unavailable', 'AnimeJara no respondió (status ' + r.status + ')', {
         userMessage: 'AnimeJara no respondió. Revisa tu conexión o inténtalo en un rato.'
       });
     }
-    return { items: jaraTarjetas(r.text).slice(0, 60), next: null };
+    const items = jaraTarjetas(r.text).slice(0, 60);
+    let next = null;
+    if (ref === 'jara-catalogo' && items.length >= 12) next = String(num + 1);
+    return { items: items, next: next };
   },
 
   async detalle(slug) {
@@ -3608,7 +3651,11 @@ registrarFuente({
       }
       log('jara embed ' + (e + 1) + ' de ' + embeds.length + ': ' + servers.length + ' servidores');
     }
-    const todos = servers.concat(servidoresDePagina(r.text));
+    /* v0.6.11: los «multi» que la página trae de propina (los iframes de
+     * streamhj) son landings, no reproductores: cada captura se come 20 s
+     * y nunca pesca nada (el teléfono lo demostró tres veces seguidas).
+     * Los embeds ya entregaron los hosters de verdad; los multis fuera. */
+    const todos = servers.concat(servidoresDePagina(r.text).filter(function (s) { return s.tipo !== 'multi'; }));
     return await probarConCaptura(epUrl, todos, idx, function (i) {
       return 'jara:' + epslug + ':' + (n || 1) + ':' + i;
     }, 'AnimeJara', BASE_JARA);
@@ -4375,9 +4422,22 @@ async function screen(arg) {
   const filas = Array.isArray(state.filas) ? state.filas : null;
   const hero = state.hero && state.hero.ref ? state.hero : null;
   const cuerpo = [];
-  /* v0.6.9: el botón de «Pasar la revisión» se retira con AnimeOnline:
-   * era su ventanita de Cloudflare y ninguna fuente viva la pide hoy. */
-  if (state.errorPantalla === true) {
+  /* v0.6.11 «La lista completa»: el menú nativo de Kino corta en 8
+   * entradas y no se desplaza — con diez fuentes, VerAnime e IvAnime
+   * quedaban debajo del corte, invisibles. El selector se dibuja aquí,
+   * en el propio lienzo, donde la lista es tan larga como haga falta. */
+  if (state.elegirFuentes === true) {
+    const actual = fuenteValida(state.fuente) || 'todas';
+    for (const x of FUENTES_PANTALLA) {
+      cuerpo.push({
+        type: 'Text',
+        text: (x.id === actual ? '✓ ' : '') + x.nombre,
+        style: 'h3',
+        onTap: { event: 'elegirFuente', arg: x.id }
+      });
+    }
+    cuerpo.push({ type: 'Button', labelText: 'Cancelar', onPressed: 'cerrarFuentes', alignSelf: 'center' });
+  } else if (state.errorPantalla === true) {
     cuerpo.push({ type: 'errorState', title: 'No se pudo cargar', text: 'Ninguna fuente respondió. Revisa tu conexión y vuelve a probar.' });
     cuerpo.push({ type: 'Button', labelText: 'Reintentar', onPressed: 'recargar', alignSelf: 'center' });
   } else if (filas && !filas.length) {
@@ -4476,12 +4536,34 @@ async function screenEvent(e) {
     return { toast: 'AnimeOnline ya no está en AniJing. Elige otra fuente.' };
   }
   if (nombre === 'fuentes') {
-    const fuente = fuenteDePantalla(state);
-    const items = FUENTES_PANTALLA.map((x) => ({
-      label: x.id === fuente ? '✓ ' + x.nombre : x.nombre,
-      onTap: { event: 'fuente', arg: x.id }
-    }));
-    return { menu: { title: 'Elegir fuente', items: items } };
+    /* v0.6.11: ya no es el menú nativo (corta en 8) sino el selector del
+     * lienzo: el botón de arriba lo abre y lo cierra. */
+    const ns = Object.assign({}, state);
+    ns.elegirFuentes = !ns.elegirFuentes;
+    return { state: ns };
+  }
+  if (nombre === 'cerrarFuentes') {
+    const ns = Object.assign({}, state);
+    ns.elegirFuentes = false;
+    return { state: ns };
+  }
+  if (nombre === 'elegirFuente') {
+    const nueva = fuenteValida(ev.arg) || 'todas';
+    try {
+      kino.storage.set(CLAVE_FUENTE_PANTALLA, nueva);
+    } catch (eS) {
+      log('no se pudo guardar la fuente', (eS && eS.message) || String(eS));
+    }
+    try {
+      const datos = await cargarPantalla(nueva);
+      const rta = { state: { fuente: nueva, filas: datos.filas, hero: datos.hero, errorPantalla: false, elegirFuentes: false } };
+      const nom = FUENTES_PANTALLA.filter((x) => x.id === nueva)[0];
+      if (nom) rta.toast = nom.nombre;
+      return rta;
+    } catch (err) {
+      log('cargar «' + nueva + '» falló', (err && err.message) || String(err));
+      return { state: { fuente: nueva, errorPantalla: true, elegirFuentes: false } };
+    }
   }
   if (nombre === 'fuente') {
     const nueva = fuenteValida(ev.arg) || 'todas';
@@ -4492,13 +4574,13 @@ async function screenEvent(e) {
     }
     try {
       const datos = await cargarPantalla(nueva);
-      const rta = { state: { fuente: nueva, filas: datos.filas, hero: datos.hero, errorPantalla: false } };
+      const rta = { state: { fuente: nueva, filas: datos.filas, hero: datos.hero, errorPantalla: false, elegirFuentes: false } };
       const nom = FUENTES_PANTALLA.filter((x) => x.id === nueva)[0];
       if (nom) rta.toast = nom.nombre;
       return rta;
     } catch (err) {
       log('cargar «' + nueva + '» falló', (err && err.message) || String(err));
-      return { state: { fuente: nueva, errorPantalla: true } };
+      return { state: { fuente: nueva, errorPantalla: true, elegirFuentes: false } };
     }
   }
   return null;
