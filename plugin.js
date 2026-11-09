@@ -127,8 +127,35 @@
 // navegador queda de pura red de seguridad con el Referer de cada
 // fuente. Nada de milagros: si una puerta cambia, el mensaje sigue
 // siendo honesto.
+//
+// v0.6.4 «El juicio de los embeds, segunda vista» — la 0.6.3 llegó al
+// teléfono y el veredicto fue claro: los catálogos y los pósters ya
+// funcionan, pero los videos seguían sin abrir — las puertas copiadas
+// de los addons de referencia ya no son las puertas de hoy. Esta vez
+// el diagnóstico se hizo con sondas de cabeceras de navegador de
+// verdad contra el HTML crudo de cada fuente, y cada fuente contó su
+// propia historia. OtakusTV ya no trae el select #ssel: las opciones
+// del capítulo viajan en data-dwn, una lista de pares [etiqueta,
+// enlace] (byse, doodstream, voe, mixdrop, mp4upload) que se cosecha
+// tal cual, convirtiendo el enlace pelado de mp4upload a su forma
+// embed-. EstrenosAnime se reconstruyó tipo Aniwatch: el episodio ya
+// no trae el multiserver en un iframe — sus servidores se piden por
+// AJAX (episode/servers → episode/sources) y el multiserver nuevo
+// (multiserver.sbs) entrega cada opción CIFRADA (U2FsdGVkX1…), pero
+// la clave no la esconde: su propia página trae un endpoint
+// (embed/api/decrypt-stream) que devuelve el enlace en claro a quien
+// se lo pregunte por POST; el plugin le pregunta y listo, sin AES en
+// el cliente. AnimeYT tenía el contenedor mytsumi bien identificado
+// desde la 0.6.3, pero la URL se cazaba con el ampersand numérico
+// sin decodificar (&#038;) y el contenedor la rechazaba: ahora la
+// URL viaja limpia. AnimeOnline reproducía pero enseñaba tarjetas
+// grises: los enlaces del menú de la plantilla cumplen el mismo
+// patrón que las tarjetas de verdad y llegan antes en el HTML, así
+// que ganaban el dedupe — ahora un ancla sin imagen cerca no es
+// tarjeta, es menú. Y el anuncio de wingsmob ya no puede colarse
+// por la captura de respaldo.
 
-const VERSION = '0.6.3';
+const VERSION = '0.6.4';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -257,6 +284,13 @@ async function traer(url, opciones) {
   if (o.metodo === 'POST') {
     opts.method = 'POST';
     opts.body = { form: o.form || {} };
+  }
+  /* v0.6.4: body JSON (el endpoint de descifre del multiserver de
+   * EstrenosAnime lo pide así: {encrypted: …} con Content-Type json). */
+  if (o.json !== undefined) {
+    opts.method = 'POST';
+    opts.body = { json: o.json };
+    cabeceras['Content-Type'] = 'application/json';
   }
   try {
     const r = await kino.fetch(url, opts);
@@ -503,7 +537,7 @@ function puedeCapturar() {
  * antes de abrir la boca: las redes de anuncios se descartan y los
  * manifiestos (m3u8/mpd) ganan, que los capítulos de verdad casi siempre
  * son HLS; los mp4/webm vienen detrás. */
-const ANUNCIO_RE = /doubleclick|googlesyndication|adserver|\/ads?[\/._-]|propeller|adsterra|popads|popunder|exoclick|juicyads|hilltop|clickadu|trafficjunky|adnetwork|monetiz|teaser|vignette|pre-?roll|-banner[._\/]/i;
+const ANUNCIO_RE = /doubleclick|googlesyndication|adserver|\/ads?[\/._-]|propeller|adsterra|popads|popunder|exoclick|juicyads|hilltop|clickadu|trafficjunky|adnetwork|monetiz|teaser|vignette|pre-?roll|-banner[._\/]|wingsmob/i;
 
 function esManifiesto(url, mime) {
   return /\.m3u8(?:[?#]|$)/i.test(String(url || '')) || /\.mpd(?:[?#]|$)/i.test(String(url || '')) || /mpegurl|dash/i.test(String(mime || ''));
@@ -2177,14 +2211,17 @@ async function aytSondearMytsumi(html) {
   const myRe = /https?:\/\/(?:www\.)?mytsumi\.com\/[^"'\s<>]+/gi;
   let m;
   while ((m = myRe.exec(texto)) && candidatos.length < 2) {
-    const u = m[0].replace(/&amp;/g, '&');
+    /* v0.6.4: la URL viene con el ampersand numérico (&#038;) y el
+     * contenedor rechaza la que no esté limpia — de ahí el vacío del
+     * sondeo en la 0.6.3 del teléfono. */
+    const u = decHtml(m[0]);
     if (vistosUrl[u]) continue;
     vistosUrl[u] = true;
     candidatos.push(u);
   }
   const ifRe = /<iframe\b[^>]*?\b(?:data-src|src)\s*=\s*["']([^"']*mytsumi[^"']*)["'][^>]*>/gi;
   while ((m = ifRe.exec(texto)) && candidatos.length < 2) {
-    let u = desescapar(m[1].trim());
+    let u = desescapar(decHtml(m[1]).trim());
     if (u.indexOf('//') === 0) u = 'https:' + u;
     if (!/^https?:\/\//i.test(u) || vistosUrl[u]) continue;
     vistosUrl[u] = true;
@@ -2198,6 +2235,10 @@ async function aytSondearMytsumi(html) {
     if (!/^https?:\/\//i.test(u)) return;
     if (/\.(?:jpe?g|png|webp|gif)(?:$|\?)/i.test(u)) return;
     if (directo || /\.(?:mp4|m3u8)(?:$|\?)/i.test(u)) {
+      /* v0.6.4: los botones de descarga de mytsumi traen depósitos de
+       * archivos (mediafire, terabox, gofile…) cuyos enlaces terminan en
+       * .mp4 pero son PÁGINAS, no vídeos: no son directos reproducibles. */
+      if (/mediafire|terabox|gofile|fireload|1fichier|vikingfile|mega\.nz/i.test(u)) return;
       const clave = 'dir|' + u;
       if (vistos[clave]) return;
       vistos[clave] = true;
@@ -2322,15 +2363,54 @@ function otvEpisodiosDe(html) {
   return items;
 }
 
-/* v0.6.3: las opciones del capítulo (filemoon 1, byse, doodstream…) viven
- * en el select #ssel; cada una abre por /play-video?id=<value>, que
- * responde un JSON con la URL del embed de verdad. Es la puerta del
- * player de OtakusTV que usan los bots de descarga desde hace años: no
- * hay que tocar la opción en el navegador para que suelte el enlace. */
+/* v0.6.4: el select #ssel desapareció del capítulo: ahora las opciones
+ * viajan en data-dwn, una lista de pares [etiqueta, enlace] con los
+ * servidores del episodio (byse, doodstream, voe, mixdrop, mp4upload…).
+ * Se cosecha tal cual; mp4upload viene con el enlace pelado (solo el
+ * id) y se convierte a su forma embed-, los desconocidos con /f|file/
+ * pasan a su forma /e/ y caen al genérico. El #ssel de la escuela
+ * vieja queda de respaldo por si vuelve. */
 async function otvServersDe(html) {
   const texto = String(html || '');
   const servers = [];
   const vistos = {};
+  const agregar = function (nombre, u, permitirGeneric) {
+    if (!u) return;
+    u = desescapar(decHtml(String(u)));
+    if (u.indexOf('//') === 0) u = 'https:' + u;
+    if (!/^https?:\/\//i.test(u)) return;
+    if (/\.(?:jpe?g|png|webp|gif)(?:$|\?)/i.test(u)) return;
+    /* mp4upload pelado (solo el id): su reproductor vive en embed-<id>.html */
+    const mp = /^https?:\/\/(?:www\.)?mp4upload\.com\/([a-z0-9]+)\/?$/i.exec(u);
+    if (mp) u = 'https://www.mp4upload.com/embed-' + mp[1] + '.html';
+    const tipo = detectarTipo(nombre, u);
+    if (!tipo) return;
+    if (tipo === 'generic') {
+      if (!permitirGeneric) return;
+      u = u.replace(/\/(?:f|file)\//i, '/e/');
+    }
+    const clave = tipo + '|' + u;
+    if (vistos[clave]) return;
+    vistos[clave] = true;
+    servers.push({ nombre: String(nombre || '').replace(/\s+/g, ' ').trim() || 'Servidor', url: u, tipo: tipo });
+  };
+  /* la lista de enlaces del capítulo, de fábrica en el propio HTML */
+  const dwnM = /\bdata-dwn\s*=\s*["']([^"']+)["']/i.exec(texto);
+  if (dwnM) {
+    const lista = decHtml(dwnM[1]);
+    const parRe = /\[\s*"([^"]*)"\s*,\s*"(https?:[^"]+)"\s*\]/g;
+    let m;
+    let n = 0;
+    while ((m = parRe.exec(lista)) && n < 10) {
+      agregar(m[1], m[2], true);
+      n++;
+    }
+    if (servers.length) {
+      log('otv: ' + servers.length + ' enlaces en data-dwn');
+      return servers;
+    }
+  }
+  /* respaldo: el select #ssel de la escuela vieja, por si vuelve */
   const selM = /<select\b[^>]*\bid\s*=\s*["']ssel["'][^>]*>([\s\S]*?)<\/select>/i.exec(texto);
   if (!selM) return servers;
   const opciones = [];
@@ -2362,15 +2442,7 @@ async function otvServersDe(html) {
       if (!r.ok || !r.text) continue;
       const um = /["']url["']\s*:\s*["']([^"']+)["']/.exec(r.text);
       if (!um) continue;
-      let u = desescapar(um[1]);
-      if (u.indexOf('//') === 0) u = 'https:' + u;
-      if (!/^https?:\/\//i.test(u)) continue;
-      const tipo = detectarTipo(lote[j].nombre, u);
-      if (!tipo || tipo === 'generic') continue;
-      const clave = tipo + '|' + u;
-      if (vistos[clave]) continue;
-      vistos[clave] = true;
-      servers.push({ nombre: lote[j].nombre, url: u, tipo: tipo });
+      agregar(lote[j].nombre, um[1], false);
     }
   }
   return servers;
@@ -2501,9 +2573,10 @@ registrarFuente({
         userMessage: 'No se pudo abrir este episodio en OtakusTV.'
       });
     }
-    /* v0.6.3: primero las opciones del select #ssel por /play-video —
-     * los embeds de verdad sin tocar nada; si la puerta cambia, quedan
-     * los iframes legibles y la captura del navegador oculto. */
+    /* v0.6.4: primero los enlaces de data-dwn (la puerta nueva del
+     * capítulo) — los embeds de verdad sin tocar nada; si la puerta
+     * cambia, quedan los iframes legibles y la captura del navegador
+     * oculto. */
     const servers = (await otvServersDe(r.text)).concat(servidoresDePagina(r.text));
     return await probarConCaptura(BASE_OTV + '/ver/' + slug + '-' + num, servers, idx, function (i) {
       return 'otv:' + slug + ':' + num + ':' + i;
@@ -2753,13 +2826,100 @@ function easEpisodiosDe(html) {
   return items;
 }
 
-/* v0.6.3: el multiserver de EstrenosAnime vive en el iframe de
- * div.player-frame; adentro cada opción abre con go_to_player('URL') —
- * el mismo reproductor que usa AnimeOnline (saidochesto). Se carga el
- * iframe y se cosecha; los enlaces caen directo en los extractores
- * (filemoon, voe, streamtape, mixdrop, doodstream…). */
-async function easServersDe(html) {
-  const texto = String(html || '');
+const EAS_AJAX = {
+  Referer: BASE_EAS + '/',
+  'X-Requested-With': 'XMLHttpRequest',
+  Accept: 'application/json, text/javascript, */*; q=0.01'
+};
+
+/* v0.6.4: el multiserver nuevo (multiserver.sbs) entrega cada opción
+ * CIFRADA (U2FsdGVkX1…, un blob de CryptoJS), pero la clave no se
+ * esconde: su propia página pregunta por POST a embed/api/decrypt-stream
+ * y el servidor responde el enlace en claro. Aquí se cosechan las
+ * opciones (li con go_to_player) y, si vienen cifradas, se le pregunta
+ * al mismo endpoint que usa la página. El go_to_player('URL') en claro
+ * de la escuela vieja también se acepta, por si conviven. */
+async function easMulti(link) {
+  const origen = origenDe(link) || 'https://multiserver.sbs';
+  const r = await traer(link, { headers: { Referer: BASE_EAS + '/', 'User-Agent': UA }, timeoutMs: 9000 });
+  if (!r.ok || !r.text) return [];
+  const servers = [];
+  const vistos = {};
+  const agregar = function (nombre, u, idioma) {
+    if (!u) return;
+    if (u.indexOf('//') === 0) u = 'https:' + u;
+    if (!/^https?:\/\//i.test(u)) return;
+    if (/\.(?:jpe?g|png|webp|gif)(?:$|\?)/i.test(u)) return;
+    const tipo = detectarTipo(nombre, u);
+    if (!tipo) return;
+    const clave = tipo + '|' + u;
+    if (vistos[clave]) return;
+    vistos[clave] = true;
+    servers.push({ nombre: String(nombre || '').replace(/\s+/g, ' ').trim(), url: u, tipo: tipo, idioma: String(idioma || '') });
+  };
+  const items = [];
+  let m;
+  const liRe = /<li\b[^>]*onclick\s*=\s*["']\s*go_to_player(?:Vast|)?\(\s*['"]([^'"]+)['"]/gi;
+  while ((m = liRe.exec(r.text)) && items.length < 14) {
+    const resto = r.text.slice(m.index, m.index + 400);
+    const etiqueta = /<span>([^<]{0,60})<\/span>/i.exec(resto);
+    const idioma = /<p>([^<]{0,60})<\/p>/i.exec(resto);
+    items.push({ dato: m[1], nombre: etiqueta ? etiqueta[1] : '', idioma: idioma ? idioma[1] : '' });
+  }
+  if (!items.length) {
+    const gpRe = /go_to_player(?:Vast|)?\(\s*['"](https?:\/\/[^'"]+)['"]/gi;
+    while ((m = gpRe.exec(r.text)) && items.length < 14) {
+      items.push({ dato: m[1], nombre: '', idioma: '' });
+    }
+  }
+  const cifrados = [];
+  for (const it of items) {
+    const dato = desescapar(it.dato);
+    if (/^https?:\/\//i.test(dato)) {
+      agregar(it.nombre, dato, it.idioma);
+    } else {
+      cifrados.push({ dato: dato, nombre: it.nombre, idioma: it.idioma });
+    }
+  }
+  /* los blobs cifrados se preguntan en lotes paralelos de cinco */
+  for (let i = 0; i < cifrados.length; i += 5) {
+    if (queda() < 5000) break;
+    const lote = cifrados.slice(i, i + 5);
+    const rtas = await Promise.all(lote.map(function (it) {
+      return traer(origen + '/embed/api/decrypt-stream', {
+        json: { encrypted: it.dato },
+        headers: { Referer: link, Origin: origen, Accept: 'application/json' },
+        timeoutMs: 6000
+      });
+    }));
+    for (let j = 0; j < rtas.length; j++) {
+      const rr = rtas[j];
+      if (!rr.ok || !rr.text) continue;
+      let enlace = '';
+      try {
+        const dj = JSON.parse(rr.text);
+        if (dj && typeof dj.url === 'string') enlace = dj.url;
+      } catch (e) {}
+      if (!enlace) {
+        const um = /["']url["']\s*:\s*["']([^"']+)["']/.exec(rr.text);
+        if (um) enlace = um[1];
+      }
+      if (!enlace) continue;
+      agregar(lote[j].nombre, desescapar(enlace), lote[j].idioma);
+    }
+  }
+  /* el doblado y el castellano van primero, que es lo que se busca */
+  servers.sort(function (a, b) {
+    const la = /latino|castellano/i.test(a.idioma) ? 0 : 1;
+    const lb = /latino|castellano/i.test(b.idioma) ? 0 : 1;
+    return la - lb || (TIPO_ORDEN[a.tipo] || 20) - (TIPO_ORDEN[b.tipo] || 20);
+  });
+  return servers;
+}
+
+/* v0.6.3 (de respaldo): el multiserver de EstrenosAnime vivía en el
+ * iframe de div.player-frame con go_to_player('URL') en claro. */
+async function easServersDeViejo(texto) {
   let destino = '';
   let m;
   const frRe = /<iframe\b[^>]*?\b(?:data-src|src)\s*=\s*["']([^"']+)["'][^>]*>/gi;
@@ -2805,6 +2965,90 @@ async function easServersDe(html) {
   } catch (e) {
     log('multiserver de EstrenosAnime falló', (e && e.message) || String(e));
   }
+  return servers;
+}
+
+/* v0.6.4: EstrenosAnime se reconstruyó tipo Aniwatch y el iframe del
+ * multiserver desapareció: el capítulo trae un div con data-epid, sus
+ * servidores se piden por AJAX (/ajax/v2/episode/servers), cada opción
+ * abre por /ajax/v2/episode/sources y el enlace que devuelve puede ser
+ * un servidor directo o el multiserver nuevo, cuyas opciones se
+ * descifran preguntándole a su propio endpoint. El iframe viejo queda
+ * de respaldo por si vuelve. */
+async function easServersDe(html) {
+  const texto = String(html || '');
+  const wm = /\bdata-epid\s*=\s*["'](\d+)["']/i.exec(texto);
+  if (!wm) return easServersDeViejo(texto);
+  const servers = [];
+  const vistos = {};
+  const agregar = function (u, tipo, nombre) {
+    const clave = tipo + '|' + u;
+    if (vistos[clave]) return;
+    vistos[clave] = true;
+    servers.push({ nombre: String(nombre || ''), url: u, tipo: tipo });
+  };
+  const r = await traer(BASE_EAS + '/ajax/v2/episode/servers?episodeId=' + wm[1], { headers: EAS_AJAX, timeoutMs: 9000 });
+  if (!r.ok || !r.text) return easServersDeViejo(texto);
+  /* la respuesta es JSON con el html adentro (y las comillas escapadas):
+   * se parsea de verdad, no se caza a regex sobre el crudo */
+  let plano = r.text;
+  try {
+    const j = JSON.parse(r.text);
+    if (j && typeof j.html === 'string' && j.html) plano = j.html;
+  } catch (e) {}
+  const ids = [];
+  let m;
+  const itRe = /\bdata-type\s*=\s*["']embed["'][^>]*\bdata-id\s*=\s*["'](\d+)["']/g;
+  const itRe2 = /\bdata-id\s*=\s*["'](\d+)["'][^>]*\bdata-type\s*=\s*["']embed["']/g;
+  while ((m = itRe.exec(plano)) && ids.length < 4) ids.push(m[1]);
+  if (!ids.length) {
+    while ((m = itRe2.exec(plano)) && ids.length < 4) ids.push(m[1]);
+  }
+  if (!ids.length) return [];
+  log('eas: ' + ids.length + ' opciones por AJAX');
+  const rtas = await Promise.all(ids.map(function (id) {
+    return traer(BASE_EAS + '/ajax/v2/episode/sources?id=' + id, { headers: EAS_AJAX, timeoutMs: 9000 });
+  }));
+  const multis = [];
+  for (let i = 0; i < rtas.length; i++) {
+    const rr = rtas[i];
+    if (!rr.ok || !rr.text) continue;
+    let enlace = '';
+    try {
+      const sj = JSON.parse(rr.text);
+      if (sj && typeof sj.link === 'string') enlace = sj.link;
+    } catch (e) {}
+    if (!enlace) {
+      const lm = /["']link["']\s*:\s*["']([^"']+)["']/.exec(rr.text);
+      if (lm) enlace = lm[1];
+    }
+    if (!enlace) continue;
+    let u = desescapar(enlace);
+    if (u.indexOf('//') === 0) u = 'https:' + u;
+    if (!/^https?:\/\//i.test(u)) continue;
+    if (/multiserver|saidochesto/i.test(u)) {
+      if (!vistos['multi|' + u]) {
+        vistos['multi|' + u] = true;
+        multis.push(u);
+      }
+    } else {
+      const tipo = detectarTipo('', u);
+      if (!tipo) continue;
+      agregar(u, tipo, '');
+    }
+  }
+  for (const u of multis) {
+    if (queda() < 8000) break;
+    try {
+      const extra = await easMulti(u);
+      for (const s of extra) agregar(s.url, s.tipo, s.nombre);
+    } catch (e) {
+      log('multiserver de EstrenosAnime falló', (e && e.message) || String(e));
+    }
+  }
+  servers.sort(function (a, b) {
+    return (TIPO_ORDEN[a.tipo] || 20) - (TIPO_ORDEN[b.tipo] || 20);
+  });
   return servers;
 }
 
@@ -2911,9 +3155,9 @@ registrarFuente({
         userMessage: 'No se pudo abrir este episodio en EstrenosAnime.'
       });
     }
-    /* v0.6.3: su multiserver ya no es un misterio: el iframe de
-     * player-frame trae las opciones con go_to_player('URL'). Si la
-     * puerta cambia, queda la captura del episodio entero. */
+    /* v0.6.4: los servidores se piden por AJAX y el multiserver nuevo
+     * suelta sus opciones por su propio endpoint de descifre — sin
+     * tocar nada. Si la puerta cambia, queda la captura del episodio. */
     const servers = (await easServersDe(r.text)).concat(servidoresDePagina(r.text));
     return await probarConCaptura(epUrl, servers, idx, function (i) {
       return 'eas:' + slug + ':' + num + ':' + i;
@@ -3054,8 +3298,16 @@ function aonTarjetas(html) {
     let slug = m[1];
     slug = slug.replace(/-temporada-\d+$/i, '');
     if (!slug || vistos.has(slug)) continue;
-    vistos.add(slug);
     const ventana = m[2];
+    /* v0.6.4: los enlaces de navegación de la plantilla cumplen el mismo
+     * patrón que las tarjetas y llegan ANTES en el HTML: ganaban el
+     * dedupe con su título bonito y sin póster, y las tarjetas de
+     * verdad quedaban escondidas detrás — de ahí el catálogo gris del
+     * teléfono. Un ancla sin imagen cerca no es tarjeta, es menú. */
+    let poster = posterEnVentana(ventana);
+    if (!poster) poster = posterAntesDe(String(html || ''), m.index);
+    if (!poster) continue;
+    vistos.add(slug);
     let titulo = '';
     const al = /alt\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
     const tt = /(?:oldtitle|title)\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
@@ -3072,12 +3324,11 @@ function aonTarjetas(html) {
       title: titulo.slice(0, 200),
       kind: 'series'
     };
-    /* v0.6.3: misma caza de pósters que las demás fuentes — atributos
-     * perezosos en orden y, si no, cualquier URL de imagen por la
-     * ventana (antes exigía src|data-litespeed-src|data-src con
-     * extensión y las tarjetas del rescate quedaban grises). */
-    let poster = posterEnVentana(ventana);
-    if (!poster) poster = posterAntesDe(String(html || ''), m.index);
+    /* v0.6.1: póster con atributos de carga perezosa en orden de prioridad
+     * (antes solo src|data-src y las tarjetas quedaban grises). v0.6.2:
+     * si la imagen no vive dentro del ancla, se mira hacia atrás, que
+     * algunos listados la dejan antes del <a>. v0.6.4: el póster ya se
+     * halló arriba (y sin póster el ancla no llega aquí: es menú). */
     if (poster) item.poster = poster.indexOf('//') === 0 ? 'https:' + poster : poster;
     items.push(item);
   }
