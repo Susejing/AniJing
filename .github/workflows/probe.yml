@@ -1,1 +1,71 @@
-# probe v19 placeholder
+name: probe
+on: [push]
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: sondear
+        run: |
+          set +e
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+          R=probe-result.txt
+          : > "$R"
+          echo "=== JARA EP 1x1 COMPLETO ===" >> "$R"
+          curl -sL --compressed -A "$UA" -H "Referer: https://animejara.com/" -w "HTTP %{http_code} bytes:%{size_download}\n" "https://animejara.com/episode/tensei-goblin-dakedo-shitsumon-aru-1x1/" -o /tmp/je.html >> "$R" 2>&1
+          python3 - <<'PY' >> "$R"
+          import re
+          h = open('/tmp/je.html', encoding='utf-8', errors='replace').read()
+          i = h.find('const enlaces')
+          print('--- const enlaces idx', i)
+          if i >= 0:
+              print(repr(h[max(0,i-200):i+1200]))
+          print('--- lang-name botones:', re.findall(r"lang-name[\"'][^>]*>([^<]{2,20})<", h)[:5])
+          print('--- iframes:', re.findall(r'<iframe[^>]*src=["\']([^"\']+)', h)[:3])
+          m = re.search(r'const\s+enlaces\s*=\s*\[(.*?)\]', h, re.S)
+          if m:
+              urls = [u.replace('\\/', '/') for u in re.findall(r'"([^"]+)"', m.group(1))]
+              print('--- enlaces:', urls)
+              if urls:
+                  open('/tmp/embed.txt','w').write(urls[0])
+          PY
+          if [ -s /tmp/embed.txt ]; then
+            E=$(cat /tmp/embed.txt)
+            echo "=== JARA EMBED $E ===" >> "$R"
+            curl -sL --compressed -A "$UA" -H "Referer: https://animejara.com/" -w "HTTP %{http_code} bytes:%{size_download}\n" "$E" -o /tmp/emb.html >> "$R" 2>&1
+            python3 - <<'PY' >> "$R"
+          import re, urllib.parse
+          h = open('/tmp/emb.html', encoding='utf-8', errors='replace').read()
+          print('embed bytes:', len(h))
+          pvs = re.findall(r"playVideo\((?:&quot;|[\"'])(https?:\/\/[^\"'<&]+)", h)
+          print('--- playVideo total:', len(pvs))
+          hosts = sorted(set(urllib.parse.urlparse(u).netloc for u in pvs))
+          print('--- hosts:', hosts)
+          for u in pvs[:8]:
+              print('  ', u)
+          PY
+          fi
+          echo "=== VAN GENERO TARJETAS ===" >> "$R"
+          curl -sL --compressed -A "$UA" -H "Referer: https://veranime.ninja/" -w "HTTP %{http_code} bytes:%{size_download}\n" "https://veranime.ninja/genero/ver-anime/" -o /tmp/vg.html >> "$R" 2>&1
+          python3 - <<'PY' >> "$R"
+          import re
+          h = open('/tmp/vg.html', encoding='utf-8', errors='replace').read()
+          cards = re.findall(r'<article[^>]*>.*?</article>', h, re.S)
+          print('cards:', len(cards))
+          for c in cards[:3]:
+              print('--- CARD:', repr(c[:1400]))
+              print('')
+          print('--- h3:', re.findall(r'<h3[^>]*>(.*?)</h3>', h, re.S)[:5])
+          print('--- hrefs:', re.findall(r'href="([^"]*\/(?:anime|pelicula|online)\/[^"]+)"', h)[:8])
+          PY
+      - name: commit
+        run: |
+          git config user.name "probe-bot"
+          git config user.email "probe@users.noreply.github.com"
+          git add probe-result.txt
+          git commit -m "probe v19: resultados [skip ci]" || echo "nada"
+          git push
