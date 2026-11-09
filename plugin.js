@@ -404,7 +404,23 @@
 // que ya abre sus resultados y la bitácora que confiesa póster
 // por póster.
 
-const VERSION = '0.6.18';
+// v0.6.19 «El patrón del pintor» — el diagnóstico de la 0.6.18 quedó
+// corto y se corrige aquí mismo: los «headers» del Image del lienzo
+// NO pertenecen a una Kino futura — la 0.9.83 lleva días en la calle
+// (y la 0.9.84 salió hoy): el pintor de Kino ya sabe presentarse, y
+// el teléfono de la persona lo prueba cada vez que MangaTrack pinta
+// Mangas.in con su Referer. Entonces ¿por qué el Inicio de la 0.6.17
+// quedó en letras? La caja: el Image del riel no llevaba ancho
+// propio, y un hueco sin ancho dentro del scroll horizontal no ocupa
+// lugar — con el muro negándole la portada, la caja quedaba en cero
+// y ni el gris ni el fallback tenían dónde dibujarse. La cura es el
+// patrón que el teléfono ya pinta: el posterCard de MangaTrack — el
+// ancho viaja EN la imagen (120), la tarjeta es un Card flush de
+// Kino con el tap, el título al pie con su aire, y el fallback de
+// siempre para el día gris. Los headers se quedan tal cual: son la
+// presentación que la 0.9.83 ya honra.
+
+const VERSION = '0.6.19';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4860,14 +4876,12 @@ async function screen(arg) {
        * el título al pie, su tap a la ficha, y el riel entero en un
        * scroll horizontal con su «Ver más». Si algo no cuadra, se
        * cae al titleRail de siempre.
-       * v0.6.18 «El póster que espera»: los headers aún no viven en
-       * ningún teléfono (la 0.9.83 no ha salido), así que la imagen
-       * falla hoy sí o hoy sí — y sin fallback la caja quedaba
-       * vacía, con el riel en puras letras. Cada Image lleva su
-       * «fallback» del contrato (desde Kino 0.9.74): el Icon y el
-       * nombre de la fuente sobre la superficie de Kino mientras
-       * la portada no puede llegar. Cuando el teléfono se ponga
-       * la 0.9.83, las portadas pintarán solas encima. */
+       * v0.6.18 «El póster que espera»: cada Image ganó su
+       * «fallback» (desde Kino 0.9.74) para el día en que la imagen
+       * no pueda llegar. v0.6.19 «El patrón del pintor»: el ancho
+       * viaja EN la imagen (120) y la tarjeta es un Card flush —
+       * el patrón del posterCard de MangaTrack, probado en el
+       * teléfono con la 0.9.83, donde los headers ya viven. */
       const primero = fila.items && fila.items[0] ? fila.items[0] : null;
       const esIva = !!(primero && primero.poster && typeof primero.poster === 'object' && primero.poster.source === 'plugin' && String(primero.poster.handle || '').indexOf('https://ivanime.buzz/') === 0);
       if (!esIva) {
@@ -4882,27 +4896,26 @@ async function screen(arg) {
         const u = it && it.poster && typeof it.poster === 'object' && it.poster.source === 'plugin' ? String(it.poster.handle || '') : '';
         if (u.indexOf('https://ivanime.buzz/') !== 0) continue;
         const tarjeta = {
-          type: 'Column',
-          gap: 4,
-          width: { compact: 104, medium: 124, expanded: 148 },
+          /* v0.6.19 «El patrón del pintor»: el ancho viaja EN la
+           * imagen (el posterCard de MangaTrack, probado en el
+           * teléfono con la 0.9.83): sin él, un Image dentro del
+           * scroll horizontal no ocupa lugar y la caja queda en
+           * cero. El Card flush de Kino lleva el tap y el título
+           * vive al pie con su aire. */
+          type: 'Card', flush: true,
+          onTap: { go: { title: { ref: String(it.ref || ''), kind: it.kind === 'movie' ? 'movie' : 'series' } } },
           children: [
             {
-              type: 'Image', url: u, aspect: '2:3', fit: 'cover',
-              headers: { Referer: 'https://ivanime.buzz/', 'User-Agent': UA },
+              type: 'Image', url: u, width: 120, aspect: '2:3',
               alt: String(it.title || ''), altEn: String(it.title || ''),
-              /* v0.6.18: hoy (Kino anterior a 0.9.83) los headers se
-               * ignoran, el muro contesta 403 y sin este «fallback» la
-               * caja quedaba vacía — el riel era solo letras. Este nodo
-               * es el del contrato (desde 0.9.74): se dibuja dentro de
-               * la caja cuando la imagen falla o no hay url. */
+              headers: { Referer: 'https://ivanime.buzz/', 'User-Agent': UA },
               fallback: {
-                type: 'Stack', color: 'surface',
-                children: [{ type: 'Column', padding: 12, children: [{ type: 'Icon', name: 'movie' }, { type: 'Text', text: 'IvAnime', style: 'caption' }] }]
+                type: 'Column', padding: 16, crossAxisAlignment: 'center',
+                children: [{ type: 'Icon', name: 'movie', color: 'muted' }]
               }
             },
-            { type: 'Text', text: String(it.title || ''), style: 'caption', maxLines: 2 }
-          ],
-          onTap: { go: { title: { ref: String(it.ref || ''), kind: it.kind === 'movie' ? 'movie' : 'series' } } }
+            { type: 'Text', text: String(it.title || ''), style: 'caption', maxLines: 2, padding: 8 }
+          ]
         };
         tarjetas.push(tarjeta);
       }

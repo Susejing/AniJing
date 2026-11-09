@@ -1,10 +1,10 @@
 # AniJing
 
-AniJing — Plugin de anime puro para kino catálogo, búsqueda, episodios y reproducción, todo en español.
+AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](https://kinotvapp.github.io/): catálogo, búsqueda, episodios y reproducción, todo en español.
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.18 «El póster que espera»)
+## Qué hace (v0.6.19 «El patrón del pintor»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -31,6 +31,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.19 «El patrón del pintor»
+
+Corrección honesta de la 0.6.18: los «headers» del lienzo no esperan ninguna Kino futura — **la 0.9.83 lleva días en la calle** (y la 0.9.84 salió hoy): el pintor de Kino ya sabe presentarse, como el teléfono lo prueba cada vez que MangaTrack pinta Mangas.in con su Referer. Entonces ¿por qué el Inicio de la 0.6.17 quedó en solo letras? La caja: el `Image` del riel no llevaba ancho propio, y un hueco sin ancho dentro del scroll horizontal no ocupa lugar — con el muro negándole la portada, la caja quedaba en cero y ni el gris ni el fallback tenían dónde dibujarse. La cura es el patrón que el teléfono ya pinta cada día — el *posterCard* de MangaTrack: el ancho viaja **en la imagen** (120), la tarjeta es un `Card` de Kino con el tap, el título al pie con su aire, y el `fallback` de siempre para el día gris. Los `headers` se quedan tal cual: son la presentación que la 0.9.83 ya honra. Lo demás queda como estaba: el respaldo del pulgar para las portadas grandes, la búsqueda de IvAnime que abre sus resultados, y la bitácora que confiesa póster por póster.
 
 ## v0.6.18 «El póster que espera»
 
