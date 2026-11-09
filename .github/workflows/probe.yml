@@ -1,0 +1,105 @@
+name: probe
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/probe.yml']
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: sondear
+        run: |
+          set +e
+          H='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+          A='https://ww3.animeonline.ninja'
+          Y='https://animeyt.cc'
+          {
+          echo "== probe v11: resultados =="
+          echo "--- AYT ficha de PELICULA (look-back) ---"
+          curl -sL -m 25 -A "$H" "$Y/pelicula/look-back/" -o ayt-movie.html
+          echo "bytes: $(wc -c < ayt-movie.html)"
+          echo "-- hrefs interesantes:"
+          grep -oE 'href="[^"]*"' ayt-movie.html | sort -u | grep -E 'capitulo|pelicula|/ver/|online' | head -12
+          echo "-- iframes:"
+          grep -oE '<iframe[^>]*>' ayt-movie.html | head -4
+          echo "--- AYT serie -> episodio -> mytsumi -> status de players ---"
+          curl -sL -m 25 -A "$H" "$Y/tv/" -o ayt-tv.html
+          echo "tv bytes: $(wc -c < ayt-tv.html)"
+          S=$(grep -oE 'href="[^"]*/tv/[^"?#]+/"' ayt-tv.html | head -1 | sed 's/href="//; s/"$//')
+          echo "serie: $S"
+          curl -sL -m 25 -A "$H" "$Y$S" -o ayt-f.html
+          echo "ficha bytes: $(wc -c < ayt-f.html)"
+          EP=$(grep -oE 'href="[^"]*/[0-9]+/anime/[^"]*capitulo-1[^"]*"' ayt-f.html | head -1 | sed 's/href="//; s/"$//')
+          echo "ep: $EP"
+          curl -sL -m 25 -A "$H" "$Y$EP" -o ayt-e.html
+          echo "ep bytes: $(wc -c < ayt-e.html)"
+          MY=$(grep -oE "https?://[^\"' ]*mytsumi[^\"' ]*" ayt-e.html | head -1 | sed 's/&#038;/\&/g; s/&amp;/\&/g')
+          echo "mytsumi: $MY"
+          curl -sL -m 25 -A "$H" -e "$MY" "$MY&open=1" -o ayt-my.html
+          echo "mytsumi bytes: $(wc -c < ayt-my.html)"
+          echo "-- botones:"
+          grep -oE '<button[^>]*data-player[^>]*>' ayt-my.html | head -6
+          echo "-- status de cada player (Range GET):"
+          for U in $(grep -oE 'data-player-url="[^"]*"' ayt-my.html | sed 's/data-player-url="//; s/"$//' | sed 's/&#038;/\&/g; s/&amp;/\&/g' | head -5); do
+            echo "URL: $U"
+            curl -s -o /dev/null -m 15 -r 0-1024 -A "$H" -w '  status: %{http_code} bytes: %{size_download}\n' "$U"
+            echo "---"
+          done
+          echo "--- AON /genero/ver-anime/ ---"
+          curl -sL -m 25 -A "$H" "$A/genero/ver-anime/" -o aon1.html
+          echo "bytes: $(wc -c < aon1.html) reto: $(grep -c 'Just a moment' aon1.html)"
+          echo "-- data-src:"; grep -oE 'data-src="[^"]*"' aon1.html | head -6
+          echo "-- src:"; grep -oE 'src="[^"]*"' aon1.html | head -6
+          echo "-- anclas:"; grep -oE 'href="[^"]*/(online|pelicula|anime|temporada)/[^"]*"' aon1.html | head -5
+          echo "-- tarjeta 1 cruda:"; grep -oE '<a [^>]*href="[^"]*/online/[^"]*"[^>]*>.{0,260}' aon1.html | head -1
+          echo "--- AON /genero/en-emision-1/ ---"
+          curl -sL -m 25 -A "$H" "$A/genero/en-emision-1/" -o aon2.html
+          echo "bytes: $(wc -c < aon2.html) reto: $(grep -c 'Just a moment' aon2.html)"
+          echo "-- data-src:"; grep -oE 'data-src="[^"]*"' aon2.html | head -6
+          echo "-- anclas:"; grep -oE 'href="[^"]*/(online|pelicula|anime|temporada)/[^"]*"' aon2.html | head -5
+          echo "-- tarjeta 1 cruda:"; grep -oE '<a [^>]*href="[^"]*/(online|pelicula|anime|temporada)/[^"]*"[^>]*>.{0,260}' aon2.html | head -1
+          echo "--- AON /genero/audio-latino/ ---"
+          curl -sL -m 25 -A "$H" "$A/genero/audio-latino/" -o aon3.html
+          echo "bytes: $(wc -c < aon3.html) reto: $(grep -c 'Just a moment' aon3.html)"
+          echo "-- data-src:"; grep -oE 'data-src="[^"]*"' aon3.html | head -6
+          echo "-- anclas:"; grep -oE 'href="[^"]*/(online|pelicula|anime|temporada)/[^"]*"' aon3.html | head -5
+          echo "-- tarjeta 1 cruda:"; grep -oE '<a [^>]*href="[^"]*/(online|pelicula|anime|temporada)/[^"]*"[^>]*>.{0,260}' aon3.html | head -1
+          echo "--- AON /pelicula/ ---"
+          curl -sL -m 25 -A "$H" "$A/pelicula/" -o aon4.html
+          echo "bytes: $(wc -c < aon4.html) reto: $(grep -c 'Just a moment' aon4.html)"
+          echo "-- data-src:"; grep -oE 'data-src="[^"]*"' aon4.html | head -6
+          echo "-- anclas:"; grep -oE 'href="[^"]*/(online|pelicula|anime|temporada)/[^"]*"' aon4.html | head -5
+          echo "-- tarjeta 1 cruda:"; grep -oE '<a [^>]*href="[^"]*/(online|pelicula|anime|temporada)/[^"]*"[^>]*>.{0,260}' aon4.html | head -1
+          echo "--- AON ficha de la primera PELICULA de /pelicula/ ---"
+          MS=$(grep -oE 'href="[^"]*/pelicula/[^"]+"' aon4.html | head -1 | sed 's/href="//; s/"$//')
+          echo "url pelicula: $MS"
+          case "$MS" in
+            http*) MU="$MS" ;;
+            *) MU="$A$MS" ;;
+          esac
+          curl -sL -m 25 -A "$H" "$MU" -o aonm.html
+          echo "bytes: $(wc -c < aonm.html) reto: $(grep -c 'Just a moment' aonm.html)"
+          echo "-- anclas episodio:"; grep -oE 'href="[^"]*episodio[^"]*"' aonm.html | head -6
+          echo "-- playeroptionsul:"; grep -oE '<li[^>]*data-post[^>]*>' aonm.html | head -8
+          echo "-- iframes:"; grep -oE '<iframe[^>]*>' aonm.html | head -4
+          echo "--- AON serie -> episodio (control) ---"
+          SS=$(grep -oE 'href="[^"]*/online/[^"]+"' aon1.html | head -1 | sed 's/href="//; s/"$//')
+          echo "url serie: $SS"
+          curl -sL -m 25 -A "$H" "$A$SS" -o aons.html
+          echo "bytes: $(wc -c < aons.html)"
+          ES=$(grep -oE 'href="[^"]*/episodio/[^"]+"' aons.html | head -1 | sed 's/href="//; s/"$//')
+          echo "url episodio: $ES"
+          curl -sL -m 25 -A "$H" "$A$ES" -o aone.html
+          echo "bytes: $(wc -c < aone.html) reto: $(grep -c 'Just a moment' aone.html)"
+          echo "-- playeroptionsul:"; grep -oE '<li[^>]*data-post[^>]*>' aone.html | head -8
+          } > probe-result.txt 2>&1
+      - name: publicar resultados
+        run: |
+          git config user.name "probe-bot"
+          git config user.email "probe@users.noreply.github.com"
+          git add probe-result.txt
+          git commit -m "probe v11: resultados [skip ci]" || echo "nada que commitear"
+          git push
