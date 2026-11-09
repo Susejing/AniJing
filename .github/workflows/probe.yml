@@ -17,16 +17,47 @@ jobs:
           A='https://ww3.animeonline.ninja'
           Y='https://animeyt.cc'
           {
-          echo "== probe v12: resultados =="
-          echo "--- AYT pelicula look-back: TODOS los hrefs ---"
-          curl -sL -m 25 -A "$H" "$Y/pelicula/look-back/" -o ayt-movie.html
-          echo "bytes: $(wc -c < ayt-movie.html)"
-          grep -oE 'href="[^"]{3,140}"' ayt-movie.html | sort -u | grep -vE 'wp-content|wp-includes|xmlrpc|feed|#|wp-login|comments' | head -40
-          echo "-- marcas de player:"
-          grep -oE '.{40}(dooplayer|playeroption|data-post|data-nume|getStreaming|publicados).{140}' ayt-movie.html | head -10
-          echo "--- AYT serie -> episodio -> mytsumi -> status ---"
+          echo "== probe v13: resultados =="
+          echo "--- AON tarjetas REALES (ancla con img dentro) ---"
+          curl -sL -m 25 -A "$H" "$A/genero/ver-anime/" -o aon1.html
+          echo "ver-anime bytes: $(wc -c < aon1.html)"
+          echo "-- tarjetas con img:"
+          grep -oE '<a [^>]*href="[^"]*/online/[a-z0-9-]+/"[^>]*>[[:space:]]*<img[^>]{0,320}>' aon1.html | head -3
+          echo "-- region poster:"
+          grep -oE 'class="poster">.{0,420}' aon1.html | head -3
+          curl -sL -m 25 -A "$H" "$A/genero/audio-latino/" -o aon3.html
+          echo "audio-latino bytes: $(wc -c < aon3.html)"
+          echo "-- tarjetas con img:"
+          grep -oE '<a [^>]*href="[^"]*/online/[a-z0-9-]+/"[^>]*>[[:space:]]*<img[^>]{0,320}>' aon3.html | head -3
+          echo "-- region poster:"
+          grep -oE 'class="poster">.{0,420}' aon3.html | head -3
+          echo "-- anclas de tarjetas (todas):"
+          grep -oE '<a [^>]*href="[^"]*(online|temporada|anime)/[a-z0-9-]+/"' aon3.html | wc -l
+          echo "-- alt/title de imgs:"
+          grep -oE '<img[^>]{0,400}>' aon3.html | grep -E 'alt|title' | head -5
+          echo "--- AYT pelicula -> pagina de episodio ---"
+          curl -sL -m 25 -A "$H" "$Y/76792/anime/look-back/" -o ayt-me.html
+          echo "bytes: $(wc -c < ayt-me.html)"
+          echo "-- iframes:"
+          grep -oE '<iframe[^>]{0,300}>' ayt-me.html | head -4
+          echo "-- mytsumi:"
+          grep -oE "https?://mytsumi[^\"' ]*" ayt-me.html | head -2
+          MY=$(grep -oE "https?://mytsumi[^\"' ]*" ayt-me.html | head -1 | sed 's/&#038;/\&/g; s/&amp;/\&/g')
+          echo "mytsumi url: $MY"
+          if [ -n "$MY" ]; then
+            curl -sL -m 25 -A "$H" -e "$MY" "$MY&open=1" -o ayt-my2.html
+            echo "mytsumi bytes: $(wc -c < ayt-my2.html)"
+            echo "-- botones:"
+            grep -oE '<button[^>]*data-player[^>]{0,200}>' ayt-my2.html | head -6
+            echo "-- status de players (Range GET):"
+            for U in $(grep -oE 'data-player-url="[^"]*"' ayt-my2.html | sed 's/data-player-url="//; s/"$//' | sed 's/&#038;/\&/g; s/&amp;/\&/g' | head -5); do
+              echo "URL: $U"
+              curl -s -o /dev/null -m 15 -r 0-1024 -A "$H" -w '  status: %{http_code} bytes: %{size_download}\n' "$U"
+            done
+          fi
+          echo "--- AYT serie -> mytsumi (control, sin feed) ---"
           curl -sL -m 25 -A "$H" "$Y/tv/" -o ayt-tv.html
-          S=$(grep -oE 'href="[^"]*/tv/[a-z0-9-]+/"' ayt-tv.html | grep -v '/tv/page/' | head -1 | sed 's/href="//; s/"$//')
+          S=$(grep -oE 'href="[^"]*/tv/[a-z0-9-]+/"' ayt-tv.html | grep -vE '/tv/(page|feed)/' | head -1 | sed 's/href="//; s/"$//')
           echo "serie: $S"
           curl -sL -m 25 -A "$H" "$Y$S" -o ayt-f.html
           echo "ficha bytes: $(wc -c < ayt-f.html)"
@@ -34,77 +65,24 @@ jobs:
           echo "ep: $EP"
           curl -sL -m 25 -A "$H" "$Y$EP" -o ayt-e.html
           echo "ep bytes: $(wc -c < ayt-e.html)"
-          MY=$(grep -oE "https?://[^\"' ]*mytsumi[^\"' ]*" ayt-e.html | head -1 | sed 's/&#038;/\&/g; s/&amp;/\&/g')
-          echo "mytsumi: $MY"
-          if [ -n "$MY" ]; then
-            curl -sL -m 25 -A "$H" -e "$MY" "$MY&open=1" -o ayt-my.html
+          MY2=$(grep -oE "https?://mytsumi[^\"' ]*" ayt-e.html | head -1 | sed 's/&#038;/\&/g; s/&amp;/\&/g')
+          echo "mytsumi: $MY2"
+          if [ -n "$MY2" ]; then
+            curl -sL -m 25 -A "$H" -e "$MY2" "$MY2&open=1" -o ayt-my3.html
+            echo "mytsumi bytes: $(wc -c < ayt-my3.html)"
+            echo "-- botones:"
+            grep -oE '<button[^>]*data-player[^>]{0,200}>' ayt-my3.html | head -6
+            echo "-- status de players (Range GET):"
+            for U in $(grep -oE 'data-player-url="[^"]*"' ayt-my3.html | sed 's/data-player-url="//; s/"$//' | sed 's/&#038;/\&/g; s/&amp;/\&/g' | head -5); do
+              echo "URL: $U"
+              curl -s -o /dev/null -m 15 -r 0-1024 -A "$H" -w '  status: %{http_code} bytes: %{size_download}\n' "$U"
+            done
           fi
-          echo "mytsumi bytes: $(wc -c < ayt-my.html)"
-          echo "-- botones:"
-          grep -oE '<button[^>]*data-player[^>]*>' ayt-my.html | head -6
-          echo "-- status de cada player (Range GET):"
-          for U in $(grep -oE 'data-player-url="[^"]*"' ayt-my.html | sed 's/data-player-url="//; s/"$//' | sed 's/&#038;/\&/g; s/&amp;/\&/g' | head -5); do
-            echo "URL: $U"
-            curl -s -o /dev/null -m 15 -r 0-1024 -A "$H" -w '  status: %{http_code} bytes: %{size_download} final: %{url_effective}\n' "$U"
-            echo "---"
-          done
-          echo "--- AON tarjeta cruda de /genero/ver-anime/ ---"
-          curl -sL -m 25 -A "$H" "$A/genero/ver-anime/" -o aon1.html
-          echo "bytes: $(wc -c < aon1.html) reto: $(grep -c 'Just a moment' aon1.html)"
-          echo "-- tarjeta cruda 1 (700 chars):"
-          grep -oE '<a [^>]*href="[^"]*/online/[a-z0-9-]+/"[^>]*>.{0,700}' aon1.html | head -1
-          echo "-- tarjeta cruda 2:"
-          grep -oE '<a [^>]*href="[^"]*/online/[a-z0-9-]+/"[^>]*>.{0,700}' aon1.html | head -2 | tail -1
-          echo "--- AON prueba de carga de IMAGENES ---"
-          I1=$(grep -oE 'data-src="https://ww4[^"]*"' aon1.html | head -1 | sed 's/data-src="//; s/"$//')
-          echo "img ww4: $I1"
-          if [ -n "$I1" ]; then
-            curl -s -o /dev/null -m 15 -A "$H" -w '  directo: %{http_code} %{size_download}B final: %{url_effective} tipo: %{content_type}\n' "$I1"
-            curl -s -o /dev/null -m 15 -A "$H" -e "$A/" -w '  con referer: %{http_code} %{size_download}B final: %{url_effective}\n' "$I1"
-            curl -sL -o /dev/null -m 15 -w '  sin UA: %{http_code} %{size_download}B final: %{url_effective}\n' "$I1"
-          fi
-          curl -sL -m 25 -A "$H" "$A/" -o aonh.html
-          echo "home bytes: $(wc -c < aonh.html)"
-          echo "-- hosts de imagenes en home:"
-          grep -oE '(data-src|src)="https?://[^/]+/' aonh.html | sort | uniq -c | sort -rn | head -10
-          I2=$(grep -oE '(data-src|src)="https://image\.tmdb[^"]*"' aonh.html | head -1 | sed 's/^[a-z-]*="//; s/"$//')
-          echo "img tmdb: $I2"
-          if [ -n "$I2" ]; then curl -s -o /dev/null -m 15 -A "$H" -w '  tmdb: %{http_code} %{size_download}B\n' "$I2"; fi
-          echo "--- AON www1 vs ww3 ---"
-          curl -s -o /dev/null -m 15 -A "$H" -w '  www1 serie: %{http_code} final: %{url_effective}\n' -L 'https://www1.animeonline.ninja/online/dragon-ball-super/'
-          echo "--- AON ficha de PELICULA real ---"
-          curl -sL -m 25 -A "$H" "$A/pelicula/" -o aon4.html
-          MU=$(grep -oE 'href="https?://[^"]*/pelicula/[a-z0-9-]+/"' aon4.html | grep -v '/pelicula/page/' | head -1 | sed 's/href="//; s/"$//')
-          echo "url pelicula: $MU"
-          if [ -n "$MU" ]; then curl -sL -m 25 -A "$H" "$MU" -o aonm.html; fi
-          echo "bytes: $(wc -c < aonm.html) reto: $(grep -c 'Just a moment' aonm.html)"
-          echo "-- anclas episodio:"
-          grep -oE 'href="[^"]*episodio[^"]*"' aonm.html | head -6
-          echo "-- lis de player:"
-          grep -oE '<li[^>]*data-post[^>]*>' aonm.html | head -8
-          echo "-- playeroptionsul:"
-          grep -oE 'playeroptionsul.{0,500}' aonm.html | head -1
-          echo "-- iframes:"
-          grep -oE '<iframe[^>]*>' aonm.html | head -4
-          echo "--- AON serie ww3 -> episodio (control) ---"
-          curl -sL -m 25 -A "$H" "$A/online/dragon-ball-super/" -o aons.html
-          echo "serie bytes: $(wc -c < aons.html)"
-          ES=$(grep -oE 'href="[^"]*/episodio/[a-z0-9-]+/"' aons.html | head -1 | sed 's/href="//; s/"$//')
-          echo "url episodio: $ES"
-          case "$ES" in http*) EU="$ES" ;; *) EU="$A$ES" ;; esac
-          curl -sL -m 25 -A "$H" "$EU" -o aone.html
-          echo "ep bytes: $(wc -c < aone.html) reto: $(grep -c 'Just a moment' aone.html)"
-          echo "-- lis de player:"
-          grep -oE '<li[^>]*data-post[^>]*>' aone.html | head -8
-          echo "-- playeroptionsul:"
-          grep -oE 'playeroptionsul.{0,500}' aone.html | head -1
-          echo "-- iframes:"
-          grep -oE '<iframe[^>]*>' aone.html | head -4
           } > probe-result.txt 2>&1
       - name: publicar resultados
         run: |
           git config user.name "probe-bot"
           git config user.email "probe@users.noreply.github.com"
           git add probe-result.txt
-          git commit -m "probe v12: resultados [skip ci]" || echo "nada que commitear"
+          git commit -m "probe v13: resultados [skip ci]" || echo "nada que commitear"
           git push
