@@ -1,83 +1,42 @@
-== probe v12: resultados ==
---- AYT pelicula look-back: TODOS los hrefs ---
-bytes: 104575
-href="/temporada/otono-2026/"
-href="https://animeyt.cc/"
-href="https://animeyt.cc/76792/anime/look-back/"
-href="https://animeyt.cc/genres/cultura-otaku/"
-href="https://animeyt.cc/genres/drama/"
-href="https://animeyt.cc/genres/shounen/"
-href="https://animeyt.cc/horario/"
-href="https://animeyt.cc/pelicula/"
-href="https://animeyt.cc/pelicula/look-back/"
-href="https://animeyt.cc/politica-de-cookies/"
-href="https://animeyt.cc/politica-de-privacidad/"
-href="https://animeyt.cc/ranking/"
-href="https://animeyt.cc/retirada-de-material/"
-href="https://animeyt.cc/studio/studio-durian/"
-href="https://animeyt.cc/temporada/otono-2024/"
-href="https://animeyt.cc/temporada/otono-2026/"
-href="https://animeyt.cc/terminos-y-condiciones/"
-href="https://animeyt.cc/tv/"
-href="https://animeyt.cc/tv/black-clover-temporada-2/"
-href="https://animeyt.cc/tv/black-clover/"
-href="https://animeyt.cc/tv/mushoku-tensei-iii-isekai-ittara-honki-dasu/"
-href="https://animeyt.cc/tv/mushoku-tensei/"
-href="https://animeyt.cc/tv/one-piece-arco-de-elbaph/"
-href="https://animeyt.cc/tv/tokyo-revengers-santen-sensou-hen/"
--- marcas de player:
-community-actions" data-aniyt-community data-post-id="76773"><button class="aniyt-community-action aniyt-community-action--reaction" type="button" data-reaction="like" aria-label="Me gusta"
---- AYT serie -> episodio -> mytsumi -> status ---
-serie: https://animeyt.cc/tv/feed/
-/home/runner/work/_temp/85b73fcc-4872-4b5b-99c7-60c1d8d899f9.sh: line 18: ayt-f.html: No such file or directory
+== probe v13: resultados ==
+--- AON tarjetas REALES (ancla con img dentro) ---
+ver-anime bytes: 287661
+-- tarjetas con img:
+-- region poster:
+class="poster"><img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2025/04/1jltcsz17CkfyhpcsSlmVC6pQGh.jpg" alt="Shin Samurai-den YAIBA"><div class="rating"><span class="icon-star2"></span> </div><div class="mepo"> </div><a href="https://ww4.animeonline.ninja/online/shin-sa
+class="poster"><img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20185%20278%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2021/02/bnWxRJHWbYcAGq9HWWuKCwm7I5X-185x278.jpg" alt="Shoujo Kakumei Utena"><div class="rating"><span class="icon-star2"></span> 8.8</div><div class="mepo"> </div><a href="https://ww4.animeonline.ninja/onlin
+class="poster"><img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2025/12/qTBlcSSTauMyuuS08M6vkqJuZPx.jpg" alt="Project Sekai Movie: Kowareta Sekai to Utaenai Miku"><div class="rating"><span class="icon-star2"></span> 6.5</div><div class="mepo"> <span class="quality">Blu-r
+grep: write error: Broken pipe
+audio-latino bytes: 241070
+-- tarjetas con img:
+-- region poster:
+class="poster"><img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2025/04/1jltcsz17CkfyhpcsSlmVC6pQGh.jpg" alt="Shin Samurai-den YAIBA"><div class="rating"><span class="icon-star2"></span> </div><div class="mepo"> </div><a href="https://ww4.animeonline.ninja/online/shin-sa
+class="poster"><img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20185%20278%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2021/02/bnWxRJHWbYcAGq9HWWuKCwm7I5X-185x278.jpg" alt="Shoujo Kakumei Utena"><div class="rating"><span class="icon-star2"></span> 8.8</div><div class="mepo"> </div><a href="https://ww4.animeonline.ninja/onlin
+class="poster"><img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/10/EQNjH4oeCm9pD58fi2s4WZyjgA.jpg" alt="Psyren"><div class="rating"><span class="icon-star2"></span> </div><div class="mepo"> </div><a href="https://ww4.animeonline.ninja/online/psyren/"><div class="see
+grep: write error: Broken pipe
+-- anclas de tarjetas (todas):
+69
+-- alt/title de imgs:
+<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2025/04/1jltcsz17CkfyhpcsSlmVC6pQGh.jpg" alt="Shin Samurai-den YAIBA">
+<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20185%20278%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2021/02/bnWxRJHWbYcAGq9HWWuKCwm7I5X-185x278.jpg" alt="Shoujo Kakumei Utena">
+<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/10/EQNjH4oeCm9pD58fi2s4WZyjgA.jpg" alt="Psyren">
+<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/08/6ILkBzgLiwDfhpyWBWKvh8iA35X.jpg" alt="All You Need Is Kill">
+<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2022/09/rNkilVmALgaIb4SenfbaecRStDD-500x750.jpg" alt="Cyberpunk: Edgerunners">
+grep: write error: Broken pipe
+--- AYT pelicula -> pagina de episodio ---
+bytes: 105188
+-- iframes:
+<iframe data-lazyloaded="1" src="about:blank" data-src="https://filemoon.to/e/fjrq3ud58dd7/LookBack_2024_720p_AnimeYT_es" frameborder="0" scrolling="no" width="640" height="360" allowfullscreen>
+<iframe src="https://filemoon.to/e/fjrq3ud58dd7/LookBack_2024_720p_AnimeYT_es" frameborder="0" scrolling="no" width="640" height="360" allowfullscreen>
+<iframe data-lazyloaded="1" src="about:blank" data-src="https://filemoon.to/e/fjrq3ud58dd7/LookBack_2024_720p_AnimeYT_es" frameborder="0" scrolling="no" width="640" height="360" allowfullscreen>
+<iframe src="https://filemoon.to/e/fjrq3ud58dd7/LookBack_2024_720p_AnimeYT_es" frameborder="0" scrolling="no" width="640" height="360" allowfullscreen>
+-- mytsumi:
+mytsumi url: 
+--- AYT serie -> mytsumi (control, sin feed) ---
+serie: https://animeyt.cc/tv/tensei-kizoku-kantei-skill-de-nariagaru/
+/home/runner/work/_temp/911666e9-7325-40c5-827e-4f4c5fff1637.sh: line 49: ayt-f.html: No such file or directory
 ficha bytes: 
 grep: ayt-f.html: No such file or directory
 ep: 
-ep bytes: 240438
-mytsumi: https://animeyt.cc/wp-content/themes/aniyt/assets/img/abismo-mytsumi-light-3.7.29.webp
-mytsumi bytes: 58433
--- botones:
--- status de cada player (Range GET):
---- AON tarjeta cruda de /genero/ver-anime/ ---
-bytes: 287661 reto: 0
--- tarjeta cruda 1 (700 chars):
-<a target="_blank" href="https://www1.animeonline.ninja/online/dragon-ball-super/">Dragon Ball ✴️</a><ul class="sub-menu"><li id="menu-item-249720" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-249720"><a href="https://ww3.animeonline.ninja/online/dragon-ball-super-beerus/">Dragon Ball Super: Beerus</a></li><li id="menu-item-132265" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-132265"><a target="_blank" href="https://www1.animeonline.ninja/online/dragon-ball/">Dragon Ball BD 🐉</a></li><li id="menu-item-132266" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-132266"><a target="_blank" href="https://www1.animeonline.ninja/online/dragon-ball-kai/">Dragon Ball Kai BD 🐲</a></li><li id="menu-item-253
-grep: write error: Broken pipe
--- tarjeta cruda 2:
-<a target="_blank" href="https://www1.animeonline.ninja/online/dragon-ball-super/">Dragon Ball Super ⭐</a></li><li id="menu-item-84621" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-84621"><a target="_blank" href="https://www1.animeonline.ninja/online/dragon-ball-gt/">Dragon Ball GT ✴️</a></li><li id="menu-item-13711" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-13711"><a target="_blank" href="https://www1.animeonline.ninja/online/dragon-ball-heroes/">Dragon Ball Heroes 💫</a></li></ul></li><li id="menu-item-128529" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-128529"><a target="_blank" href="https://ww4.animeonline.ninja/programacion/">Programación 📰</a></li><li id="menu-item-12559" class="
-grep: write error: Broken pipe
---- AON prueba de carga de IMAGENES ---
-img ww4: https://ww4.animeonline.ninja/wp-content/uploads/2025/04/1jltcsz17CkfyhpcsSlmVC6pQGh.jpg
-  directo: 200 139357B final: https://ww4.animeonline.ninja/wp-content/uploads/2025/04/1jltcsz17CkfyhpcsSlmVC6pQGh.jpg tipo: image/jpeg
-  con referer: 200 139357B final: https://ww4.animeonline.ninja/wp-content/uploads/2025/04/1jltcsz17CkfyhpcsSlmVC6pQGh.jpg
-  sin UA: 200 139357B final: https://ww4.animeonline.ninja/wp-content/uploads/2025/04/1jltcsz17CkfyhpcsSlmVC6pQGh.jpg
-home bytes: 43597
--- hosts de imagenes en home:
-      1 src="https://www.googletagmanager.com/
-img tmdb: 
---- AON www1 vs ww3 ---
-  www1 serie: 200 final: https://ww4.animeonline.ninja/online/dragon-ball-super-3-082125/
---- AON ficha de PELICULA real ---
-url pelicula: https://ww4.animeonline.ninja/pelicula/amai-choubatsu-watashi-wa-kanshu-senyou-pet-1/
-bytes: 138092 reto: 0
--- anclas episodio:
-href="https://ww4.animeonline.ninja/pelicula/one-piece-episodio-del-east-blue/"
-href="https://ww4.animeonline.ninja/episodio/jojos-bizarre-adventure-steel-ball-run-cap-8/"
-href="https://ww4.animeonline.ninja/episodio/sword-art-offline-ii-cap-1/"
-href="https://ww4.animeonline.ninja/episodio/shiguang-dailiren-link-click-3-cap-11/"
-href="https://ww4.animeonline.ninja/episodio/crows-zero-2/"
-href="https://ww4.animeonline.ninja/episodio/crows-zero/"
--- lis de player:
-<li id='player-option-1' class='dooplay_player_option' data-type='movie' data-post='34933' data-nume='1'>
--- playeroptionsul:
-playeroptionsul' class='ajax_mode'><li id='player-option-1' class='dooplay_player_option' data-type='movie' data-post='34933' data-nume='1'><i class='icon-play3'></i><span class='title'>MULTISERVER</span><span class='server'>saidochesto.top</span><span class='loader'></span></li></ul></div></div>  <div class="sheader"> <div class="poster"> <img class="lazy" itemprop="image" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20185%20278%22%3E%3C%2Fsvg%3E" da
--- iframes:
---- AON serie ww3 -> episodio (control) ---
-serie bytes: 220495
-url episodio: https://ww4.animeonline.ninja/episodio/jojos-bizarre-adventure-steel-ball-run-cap-8/
-ep bytes: 116276 reto: 0
--- lis de player:
-<li id='player-option-1' class='dooplay_player_option' data-type='tv' data-post='250464' data-nume='1'>
--- playeroptionsul:
-playeroptionsul' class='ajax_mode'><li id='player-option-1' class='dooplay_player_option' data-type='tv' data-post='250464' data-nume='1'><i class='icon-play3'></i><span class='title'>MULTISERVER</span><span class='server'>saidochesto.top</span><span class='loader'></span></li></ul></div></div> <div class='pag_episodes'><div class='item'><a href="https://ww4.animeonline.ninja/episodio/jojos-bizarre-adventure-steel-ball-run-cap-7/" title="JoJo&#8217;s Bizarre Adventure: Steel Ball Run Cap 7"><i class='icon-chev
--- iframes:
+ep bytes: 240531
+mytsumi: 
