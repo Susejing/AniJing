@@ -13,7 +13,7 @@ jobs:
       - name: sondear
         run: |
           python3 - <<'PYEOF' > probe-result.txt 2>&1 || true
-          import urllib.request, re, json
+          import urllib.request, re
           UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
           def get(url, headers=None, timeout=25):
               h={'User-Agent':UA}
@@ -27,62 +27,37 @@ jobs:
           def sec(t): print('====',t,'====')
           XRW={'X-Requested-With':'XMLHttpRequest','Accept':'application/json, text/javascript, */*; q=0.01'}
           
-          sec('EAS sources del embed 133211')
-          for su in ['https://estrenosanime.net/ajax/v2/episode/sources?id=','https://estrenosanime.net/ajax/episode/sources?id=','https://estrenosanime.net/ajax/v2/episode/source?id=']:
-              st,b=get(su+'133211', dict(XRW, Referer='https://estrenosanime.net/'))
-              print(su.split('net')[1], '->', st, b[:300])
-              if st==200 and b.strip().startswith('{'): break
-          st,b=get('https://estrenosanime.net/ajax/v2/episode/sources?id=133211', dict(XRW, Referer='https://estrenosanime.net/'))
-          if st==200:
+          sec('MULTISERVER completo')
+          st,ms=get('https://multiserver.sbs/embed/4927c67b-0cc2-4d0a-bad7-4a15787e6d3c', {'Referer':'https://estrenosanime.net/'})
+          print('status',st,'len',len(ms))
+          print(ms[1500:])
+          print('SCRIPTS SRC:', re.findall(r'<script[^>]*src=\"([^\"]+)\"', ms))
+          
+          sec('EAS latino: servers de otro episodio')
+          st,ep=get('https://estrenosanime.net/ver/tempal-item-no-chikara-overgeared-latino/episodio-7', {'Referer':'https://estrenosanime.net/'})
+          m=re.search(r'data-id=\"(\d+)\" data-epid=\"(\d+)\"', ep)
+          print('epid:', m.groups() if m else 'NO')
+          if m:
+              st,b=get('https://estrenosanime.net/ajax/v2/episode/servers?episodeId='+m.group(2), dict(XRW, Referer='https://estrenosanime.net/'))
+              import json
               try:
                   j=json.loads(b)
-                  lk=j.get('link') or j.get('url') or ''
-                  print('LINK:', lk)
-                  if lk.startswith('http'):
-                      st2,pg=get(lk, {'Referer':'https://estrenosanime.net/'})
-                      print('multiserver fetch ->', st2, 'len', len(pg))
-                      print(pg[:2200])
-              except Exception as e: print('json err', e)
+                  print(j.get('html','')[:1800])
+              except Exception as e: print('no json', b[:400])
           
-          sec('OTV data-dwn en otros episodios')
-          for u in ['https://www.otakustv.net/ver/one-piece-1179']:
+          sec('DHCPLAY y MOVEARNPRE: que son')
+          for u in ['https://dhcplay.com/f/fegoj8mfaeto','https://movearnpre.com/file/38wj2meyq003']:
               st,b=get(u, {'Referer':'https://www.otakustv.net/'})
-              d=re.search(r'data-dwn=\"([^\"]+)\"', b)
-              print(u, st, 'dwn:', (d.group(1)[:350] if d else 'NO'))
-          st,b=get('https://www.otakustv.net/anime/detective-conan', {'Referer':'https://www.otakustv.net/'})
-          eps=re.findall(r'href=\"[^\"]*\/ver\/(detective-conan-\d+)\"', b)[:3]
-          print('eps conan:', eps)
-          if eps:
-              st,b=get('https://www.otakustv.net/ver/'+eps[0], {'Referer':'https://www.otakustv.net/'})
-              d=re.search(r'data-dwn=\"([^\"]+)\"', b)
-              print('conan ep', st, 'dwn:', (d.group(1)[:350] if d else 'NO'))
-          
-          sec('AYT mytsumi: todos los botones')
-          limpia='https://mytsumi.com/container.php?id=x9MSVgFqorVi0vN9&only=SUB&lang=SUB'
-          st,mp=get(limpia+'&open=1', {'Referer':'https://animeyt.cc/116579/anime/kashita-maryoku-wa-revo-barai-de-kyousei-choushuu-capitulo-1/'})
-          print('len', len(mp))
-          for m in re.findall(r'<button[^>]*data-player-url=\"[^\"]*\"[^>]*>', mp):
-              u2=re.search(r'data-player-url=\"([^\"]*)\"', m).group(1)
-              k2=re.search(r'data-player-kind=\"([^\"]*)\"', m)
-              print('BOTON:', u2, 'kind:', k2.group(1) if k2 else '?')
-          for m in re.findall(r'<a[^>]*mytsumi-download-button[^>]*>', mp):
-              print('DESCARGA:', m[:250])
-          
-          sec('AON tarjetas de verdad (con img)')
-          st,aon=get('https://ww3.animeonline.ninja/genero/ver-anime/', {'Referer':'https://ww3.animeonline.ninja/'})
-          an=re.findall(r'<a\b[^>]*href=\"[^\"]*\/(?:online|temporada|anime)\/[^\"]*\"[^>]*>[\s\S]{0,900}?</a>', aon)
-          conimg=[a for a in an if '<img' in a]
-          print('anclas:', len(an), 'con img:', len(conimg))
-          for a in conimg[:2]:
-              print('--- TARJETA REAL ---')
-              print(a[:1400])
+              t2=re.search(r'<title>([^<]{0,80})', b)
+              print(u, '->', st, 'len', len(b), 'title:', t2.group(1) if t2 else '?')
+              print(b[:700].replace(chr(10),' '))
             
           PYEOF
-          head -c 13000 probe-result.txt
+          head -c 15000 probe-result.txt
       - name: subir
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add probe-result.txt
-          git commit -m "probe v4: resultados [skip ci]" || echo "nada que subir"
+          git commit -m "probe v5: resultados [skip ci]" || echo "nada que subir"
           git push
