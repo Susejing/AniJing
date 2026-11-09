@@ -1,0 +1,20 @@
+=== JARA /catalogo PAGINACION ===
+HTTP 200 bytes:61556
+tarjetas /anime/ unicas: 36 | primeras 5: ['demons-crest', 'ousama-ranking', 'ao-no-hako-blue-box', 'shikanoko-nokonoko-koshitantan', 'toaru-anbu-no-item']
+hrefs con page/pagina/siguiente:
+textos con Pagina/Siguiente:
+--- GET https://animejara.com/catalogo?page=2
+HTTP 200 bytes:59774
+  tarjetas: 34 | primeras 3: ['kanojo-no-tomodachi', 'mezametara-saikyou-soubi-to-uchuusenmochi-datta-no-de-ikkodate-mezashite-youhei-toshite-jiyuu-ni-ikitai', 'dark-summoner-to-dekiteiru']
+--- GET https://animejara.com/catalogo/page/2/
+HTTP 404 bytes:60042
+  tarjetas: 34 | primeras 3: ['kanojo-no-tomodachi', 'mezametara-saikyou-soubi-to-uchuusenmochi-datta-no-de-ikkodate-mezashite-youhei-toshite-jiyuu-ni-ikitai', 'dark-summoner-to-dekiteiru']
+--- GET https://animejara.com/catalogo?pagina=2
+HTTP 200 bytes:61591
+  tarjetas: 35 | primeras 3: ['demons-crest', 'ousama-ranking', 'ao-no-hako-blue-box']
+--- GET https://animejara.com/catalogo/2
+HTTP 404 bytes:45523
+  tarjetas: 18 | primeras 3: ['dragon-ball-super-beerus', 'black-clover', 'dark-summoner-to-dekiteiru']
+=== JARA /emision PAGINACION ===
+HTTP 200 bytes:49215
+tarjetas /emision: 62
