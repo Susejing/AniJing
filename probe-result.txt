@@ -1,233 +1,33 @@
-===== EAS eps imgs =====
-<img src="https://estrenosanime.net/uploads/LogoEstrenosanime.png" width="100%" height="auto" alt="Estrenos Anime">
-<img src="https://estrenosanime.net/images/pick-home.svg" data-placement="right" title="" data-original-title="Home">
-<img src="https://estrenosanime.net/images/pick-movies.svg" data-placement="right" title="" data-original-title="Movies">
-<img src="https://estrenosanime.net/images/pick-show.svg" data-placement="right" title="" data-original-title="TV Series">
-<img src="https://estrenosanime.net/images/pick-popular.svg" data-placement="right" title="" data-original-title="Mas Popular">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/614aeabeb25c5119fe5685fe30c300c1.jpg" src="/images/no_poster.jpg" alt="Tensei Kizoku, Kantei Skill de Nariagaru 3rd Season">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/8d05c00a37d3a7e1defea5d77c051bae.jpg" src="/images/no_poster.jpg" alt="Yowaki Max Reijou nanoni, Ratsuwan Konyakusha-sama no Kake ni Notte Shimatta">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/32fd44af31cbac0a611d8bdef141ec9d.jpg" src="/images/no_poster.jpg" alt="Kanata kara">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/57e487dbe4d3d03164e902f646c0c2d9.jpg" src="/images/no_poster.jpg" alt="Tempal: Item no Chikara: Overgeared (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/eb77eaf98ffad539b3a27c8aea596367.jpg" src="/images/no_poster.jpg" alt="Tempal: Item no Chikara">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/7be5383e640da095da1b43999301270b.jpg" src="/images/no_poster.jpg" alt="Tank Chair">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/a9481d5baa97a525b7b2522cce4bcd78.jpg" src="/images/no_poster.jpg" alt="Dragon Ball Super: Beerus">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/1d714c27aa411f6cb1a475b43731513b.jpg" src="/images/no_poster.jpg" alt="Shinja Zero no Megami-sama to Hajimeru Isekai Kouryaku">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/47ec3d2d536df983a0c479f1546edfce.jpg" src="/images/no_poster.jpg" alt="Ojisan wa Kawaii Mono ga Osuki.">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/41709026d8d89e4177aaf6891d205dbc.jpg" src="/images/no_poster.jpg" alt="Hotel Inhumans 2nd Season">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/cf11cbea75628da7e9e0382cd0eea923.jpg" src="/images/no_poster.jpg" alt="Mezametara Saikyou Soubi to Uchuusenmochi Datta node, Ikkodate Mezashite Youhei toshite Jiyuu ni Ikitai">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/202160561fcb2ea57d7a0ae28e2519fe.jpg" src="/images/no_poster.jpg" alt="Tank Chair (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/84f78be3443da6172bc5bb0ee788b7d7.jpg" src="/images/no_poster.jpg" alt="Yozakura-san Chi no Daisakusen 2nd Season Part 2">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/705059e9bd2fe3414807bf371316350a.jpg" src="/images/no_poster.jpg" alt="Ao Ashi Season 2">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/8da48bea2bea0b295afe5fcf551e42f1.jpg" src="/images/no_poster.jpg" alt="Diamond no Ace: Act II Second Season Part 2">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/3e5fe8f48b3c38a97f2323891de1af85.jpg" src="/images/no_poster.jpg" alt="Ao no Hako Season 2">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/344c7bc59313f77432e0812c2059fb61.jpg" src="/images/no_poster.jpg" alt="Mezametara Saikyou Soubi to Uchuusenmochi Datta node, Ikkodate Mezashite Youhei toshite Jiyuu ni Ikitai (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/b1dd887548cd75ac2a0a1cfbbabcb17b.jpg" src="/images/no_poster.jpg" alt="Ao no Hako: La caja azul Temporada 2 (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/017c1b402ab8eb8ff1a68ee3be3dee5d.jpg" src="/images/no_poster.jpg" alt="Ao ashi Temporada 2 (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/03ec3d9d783c2fe6dcae2e3d7f8bc1f0.jpg" src="/images/no_poster.jpg" alt="Rilakkuma">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/0a97b9a354cc9f9ddbeffe1ec1ab5745.jpg" src="/images/no_poster.jpg" alt="Black Clover Temporada 2 (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/bf0a27ef70a58bfd8c3aba5f99828990.jpg" src="/images/no_poster.jpg" alt="Marronnier Oukoku no Shichinin no Kishi: The Seven Knights of the Marronnier Kingdom (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/575561d65ed96dcb7c3d06c5efc6ed5e.jpg" src="/images/no_poster.jpg" alt="Ranma ½ (2024) Temporada 3 (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/46a47fb434d3ba5e26b7f756a89fee21.jpg" src="/images/no_poster.jpg" alt="Kashita Maryoku wa &#34;Revo Barai&#34; de Kyousei Choushuu">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/2aa56fd29e0f3d34faa8593baf7addd3.jpg" src="/images/no_poster.jpg" alt="Ranma ½ (2024) 3rd Season">
-grep: write error: Broken pipe
-===== EAS eps anclas contexto =====
-<a class="film-poster-ahref" href="/ver/tensei-kizoku-kantei-skill-de-nariagaru-3rd-season/episodio-7" title="Tensei Kizoku, Kantei Skill de Nariagaru 3rd Season"><i class="fas fa-play"></i></a></div><div class="film-detail"><h3 class="film-name"><a class="dynamic-name" href="/ver/tensei-kizoku-kantei-skill-de-nariagaru-3rd-season/episodio-7" title="Tensei Kizoku, Kantei Skill de Nariagaru 3rd Season" data-jname="Tensei Kizoku, Kantei Skill de Nariagaru 3rd Season">Tensei Kizoku, Kantei Skill de Nariagaru 3rd Season</a></h3><div class="description">Temporada 3 Tensei Kizoku, Kantei Skill de Nariagaru. Sub en Español, Reencarnado en otro mundo con la capac
-<a class="film-poster-ahref" href="/ver/yowaki-max-reijou-nanoni-ratsuwan-konyakusha-sama-no-kake-ni-notte-shimatta/episodio-6" title="Yowaki Max Reijou nanoni, Ratsuwan Konyakusha-sama no Kake ni Notte Shimatta"><i class="fas fa-play"></i></a></div><div class="film-detail"><h3 class="film-name"><a class="dynamic-name" href="/ver/yowaki-max-reijou-nanoni-ratsuwan-konyakusha-sama-no-kake-ni-notte-shimatta/episodio-6" title="Yowaki Max Reijou nanoni, Ratsuwan Konyakusha-sama no Kake ni Notte Shimatta" data-jname="Yowaki Max Reijou nanoni, Ratsuwan Konyakusha-sama no Kake ni Notte Shimatta">Yowaki Max Reijou nanoni, Ratsuwan Konyakusha-sama no Kake ni Notte Shimatta</a></h3><div class="description">Pia Rock
-<a class="film-poster-ahref" href="/ver/kanata-kara/episodio-6" title="Kanata kara"><i class="fas fa-play"></i></a></div><div class="film-detail"><h3 class="film-name"><a class="dynamic-name" href="/ver/kanata-kara/episodio-6" title="Kanata kara" data-jname="Kanata kara">Kanata kara</a></h3><div class="description">Noriko Tachiki es una estudiante de preparatoria completamente ordinaria cuya vida da un vuelco radical cuando, de camino a casa, se ve envuelta en la...</div><div class="fd-infor"><span class="fdi-item">TV</span> <span class="dot"></span> <span class="fdi-item">En E
-<a class="film-poster-ahref" href="/ver/tempal-item-no-chikara-overgeared-latino/episodio-7" title="Tempal: Item no Chikara: Overgeared (Latino)"><i class="fas fa-play"></i></a></div><div class="film-detail"><h3 class="film-name"><a class="dynamic-name" href="/ver/tempal-item-no-chikara-overgeared-latino/episodio-7" title="Tempal: Item no Chikara: Overgeared (Latino)" data-jname="Tempal: Item no Chikara: Overgeared (Latino)">Tempal: Item no Chikara: Overgeared (Latino)</a></h3><div class="description">La trama principal se centra en la vida de Shin Youngwoo, un joven sumido en deudas económicas y con una terrible racha de mala suerte en s
-<a class="film-poster-ahref" href="/ver/tempal-item-no-chikara/episodio-7" title="Tempal: Item no Chikara"><i class="fas fa-play"></i></a></div><div class="film-detail"><h3 class="film-name"><a class="dynamic-name" href="/ver/tempal-item-no-chikara/episodio-7" title="Tempal: Item no Chikara" data-jname="Tempal: Item no Chikara">Tempal: Item no Chikara</a></h3><div class="fd-infor"><span class="fdi-item">TV</span> <span class="dot"></span> <span class="fdi-item">En Emision</span> <span class="dot"></span> <span class="fdi-item">2026</span></div></div><div class="clearfix"></div></div><div class="flw-i
-<a class="film-poster-ahref" href="/ver/tank-chair/episodio-6" title="Tank Chair"><i class="fas fa-play"></i></a></div><div class="film-detail"><h3 class="film-name"><a class="dynamic-name" href="/ver/tank-chair/episodio-6" title="Tank Chair" data-jname="Tank Chair">Tank Chair</a></h3><div class="fd-infor"><span class="fdi-item">TV</span> <span class="dot"></span> <span class="fdi-item">En Emision</span> <span class="dot"></span> <span class="fdi-item">2026</span></div></div><div class="clearfix"></div></div><div class="flw-item"><div class="film-poster"><div class="tick ltr"
-grep: write error: Broken pipe
-===== EAS sub anclas contexto =====
-<a href="/anime/bleach-latino" class="dynamic-name" title="Bleach (Latino)" data-jname="Bleach (Latino)">Bleach (Latino)</a></h3><div class="fd-infor"><div class="tick"><span class="fdi-item"><i class="fas fa-tv me-1"></i>TV</span> <span class="dot"></span> <span class="fdi-item">EP 366</span></div></div></div><div class="clearfix"></div></li><li class="item-top"><div class="film-number"><span>02</span></div><div class="film-poster"><img src="https://estrenosanime.net/uploads/anime/57e487dbe4d3d03164e902f646c0c2d9.jpg" alt="Tempal: Item no Chikara: Overgeared (Latino)" title="Tempal: Item no Chikar
-<a href="/anime/tempal-item-no-chikara-overgeared-latino" class="dynamic-name" title="Tempal: Item no Chikara: Overgeared (Latino)" data-jname="Tempal: Item no Chikara: Overgeared (Latino)">Tempal: Item no Chikara: Overgeared (Latino)</a></h3><div class="fd-infor"><div class="tick"><span class="fdi-item"><i class="fas fa-tv me-1"></i>TV</span> <span class="dot"></span> <span class="fdi-item">EP 7</span></div></div></div><div class="clearfix"></div></li><li class="item-top"><div class="film-number"><span>03</span></div><div class="film-poster"><img src="https://estrenosanime.net/uploads/anime/f67b8a1b0530beae4eb6e2bab075947f.jpg" alt="Black Clover 2nd Season" title="Black Clover 2nd
-<a href="/anime/black-clover-2nd-season" class="dynamic-name" title="Black Clover 2nd Season" data-jname="Black Clover 2nd Season">Black Clover 2nd Season</a></h3><div class="fd-infor"><div class="tick"><span class="fdi-item"><i class="fas fa-tv me-1"></i>TV</span> <span class="dot"></span> <span class="fdi-item">EP 6</span></div></div></div><div class="clearfix"></div></li><li class=""><div class="film-number"><span>04</span></div><div class="film-poster"><img src="https://estrenosanime.net/uploads/anime/13bf41c1ccc046a7a8aa656642c3719d.jpg" alt="Fullmetal Alchemist Brotherhood (Latino)" title="Fullmetal Alchemist Brotherh
-<a href="/anime/fullmetal-alchemist-brotherhood-latino" class="dynamic-name" title="Fullmetal Alchemist Brotherhood (Latino)" data-jname="Fullmetal Alchemist Brotherhood (Latino)">Fullmetal Alchemist Brotherhood (Latino)</a></h3><div class="fd-infor"><div class="tick"><span class="fdi-item"><i class="fas fa-tv me-1"></i>TV</span> <span class="dot"></span> <span class="fdi-item">EP 64</span></div></div></div><div class="clearfix"></div></li><li class=""><div class="film-number"><span>05</span></div><div class="film-poster"><img src="https://estrenosanime.net/uploads/anime/705059e9bd2fe3414807bf371316350a.jpg" alt="Ao Ashi Season 2" title="Ao Ashi Season 2" class="film-post
-<a href="/anime/ao-ashi-season-2" class="dynamic-name" title="Ao Ashi Season 2" data-jname="Ao Ashi Season 2">Ao Ashi Season 2</a></h3><div class="fd-infor"><div class="tick"><span class="fdi-item"><i class="fas fa-tv me-1"></i>TV</span> <span class="dot"></span> <span class="fdi-item">EP 6</span></div></div></div><div class="clearfix"></div></li><li class=""><div class="film-number"><span>06</span></div><div class="film-poster"><img src="https://estrenosanime.net/uploads/anime/b1dd887548cd75ac2a0a1cfbbabcb17b.jpg" alt="Ao no Hako: La caja azul Temporada 2 (Latino)" title="Ao no Hako: La caja azul Tempo
-<a href="/anime/ao-no-hako-la-caja-azul-temporada-2-latino" class="dynamic-name" title="Ao no Hako: La caja azul Temporada 2 (Latino)" data-jname="Ao no Hako: La caja azul Temporada 2 (Latino)">Ao no Hako: La caja azul Temporada 2 (Latino)</a></h3><div class="fd-infor"><div class="tick"><span class="fdi-item"><i class="fas fa-tv me-1"></i>TV</span> <span class="dot"></span> <span class="fdi-item">EP 5</span></div></div></div><div class="clearfix"></div></li><li class=""><div class="film-number"><span>07</span></div><div class="film-poster"><img src="https://estrenosanime.net/uploads/anime/7f95f2b25b0cd1b7e1665e1c152cfd57.jpg" alt="Bleach: Sennen Kessen-hen - Ketsubetsu-tan Parte 2 (Lat
-grep: write error: Broken pipe
-===== EAS popular imgs =====
-<img src="https://estrenosanime.net/uploads/LogoEstrenosanime.png" width="100%" height="auto" alt="Estrenos Anime">
-<img src="https://estrenosanime.net/images/pick-home.svg" data-placement="right" title="" data-original-title="Home">
-<img src="https://estrenosanime.net/images/pick-movies.svg" data-placement="right" title="" data-original-title="Movies">
-<img src="https://estrenosanime.net/images/pick-show.svg" data-placement="right" title="" data-original-title="TV Series">
-<img src="https://estrenosanime.net/images/pick-popular.svg" data-placement="right" title="" data-original-title="Mas Popular">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/4d6f6dbcdfc6b127fd8d266ce1e80703.jpg" src="/images/no_poster.jpg" alt="One Piece">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/7314d2b028ba53d50511f986d45918a1.jpg" src="/images/no_poster.jpg" alt="One Piece (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/e068c5f531f99692bf4c89ddf959b0da.jpg" src="/images/no_poster.jpg" alt="Black Clover (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/66af53647304b6bad04bdead38c1afce.jpg" src="/images/no_poster.jpg" alt="Jujutsu Kaisen Temporada 2 (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/93f986843adeb434732a23fb8865ac2d.jpg" src="/images/no_poster.jpg" alt="Jujutsu Kaisen (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/72e98453eac6dfeb9d0166da7b6e3f8a.jpg" src="/images/no_poster.jpg" alt="Kimetsu no Yaiba Temporada 1 (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/ce597fc5f4efb2dacacc2d9075d99129.jpg" src="/images/no_poster.jpg" alt="Kaijuu 8 gou (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/15068c5d8ed87e846ed3a051d54c12e1.jpg" src="/images/no_poster.jpg" alt="Kimetsu no Yaiba: Hashira Geiko hen Temporada 5 (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/b7cd38ba881edc9e624dc4c7d36b1a05.jpg" src="/images/no_poster.jpg" alt="Dragon Ball Super (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/f0a21b121d14d2ae7755171fc3b98b4f.jpg" src="/images/no_poster.jpg" alt="Blue Lock (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/1342456498c6518abd3d05a993ff13fb.jpg" src="/images/no_poster.jpg" alt="Shingeki no Kyojin: Ataque a los Titanes Temporada 1 (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/d348d05a928c62a815cfa34e145257e8.jpg" src="/images/no_poster.jpg" alt="Haikyuu!! Temporada 1 (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/4ce42e487c1825e5549d80f117017683.jpg" src="/images/no_poster.jpg" alt="Ore dake Level Up na Ken (Solo Leveling) (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/8963a1a0380c363751e4a98e621c1006.jpg" src="/images/no_poster.jpg" alt="Mashle Temporada 2 (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/756f569c098a770d317856891024ff65.jpg" src="/images/no_poster.jpg" alt="Mashle (Latino)">
-grep: write error: Broken pipe
-===== EAS pelicula imgs =====
-<img src="https://estrenosanime.net/uploads/LogoEstrenosanime.png" width="100%" height="auto" alt="Estrenos Anime">
-<img src="https://estrenosanime.net/images/pick-home.svg" data-placement="right" title="" data-original-title="Home">
-<img src="https://estrenosanime.net/images/pick-movies.svg" data-placement="right" title="" data-original-title="Movies">
-<img src="https://estrenosanime.net/images/pick-show.svg" data-placement="right" title="" data-original-title="TV Series">
-<img src="https://estrenosanime.net/images/pick-popular.svg" data-placement="right" title="" data-original-title="Mas Popular">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/86fa31a2e8181c5a9e70e6477524a0b4.jpg" src="/images/no_poster.jpg" alt="Yeon-ui Pyeonji">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/f3a15b56af94b3fd346984433b4f7926.jpg" src="/images/no_poster.jpg" alt="Gintama the Movie 2026: Yoshiwara in Flames (Latino)">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/9cf0e9506da851604d45590b754f93c2.jpg" src="/images/no_poster.jpg" alt="Gintama Movie 3: Yoshiwara Daienjou">
-grep: write error: Broken pipe
-===== EAS actualizado imgs =====
-<img src="https://estrenosanime.net/uploads/LogoEstrenosanime.png" width="100%" height="auto" alt="Estrenos Anime">
-<img src="https://estrenosanime.net/images/pick-home.svg" data-placement="right" title="" data-original-title="Home">
-<img src="https://estrenosanime.net/images/pick-movies.svg" data-placement="right" title="" data-original-title="Movies">
-<img src="https://estrenosanime.net/images/pick-show.svg" data-placement="right" title="" data-original-title="TV Series">
-<img src="https://estrenosanime.net/images/pick-popular.svg" data-placement="right" title="" data-original-title="Mas Popular">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/f67b8a1b0530beae4eb6e2bab075947f.jpg" src="/images/no_poster.jpg" alt="Black Clover 2nd Season">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/66fe4a0dc53f6ad2d9ee0b386fdbdc63.jpg" src="/images/no_poster.jpg" alt="Demons&#39; Crest">
-<img class="film-poster-img lazyload" data-src="/uploads/anime/e6f4729c198bd89d4f65767f184cd5a7.jpg" src="/images/no_poster.jpg" alt="Devils Crest: Demons Crest  (Latino)">
-grep: write error: Broken pipe
-===== AON genero imgs =====
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2025/04/1jltcsz17CkfyhpcsSlmVC6pQGh.jpg" alt="Shin Samurai-den YAIBA">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20185%20278%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2021/02/bnWxRJHWbYcAGq9HWWuKCwm7I5X-185x278.jpg" alt="Shoujo Kakumei Utena">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2025/12/qTBlcSSTauMyuuS08M6vkqJuZPx.jpg" alt="Project Sekai Movie: Kowareta Sekai to Utaenai Miku">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2023/01/VrYTAlyK3TDa379pk20WpAHKmh-500x750.jpg" alt="Ao no Exorcist Movie">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2022/09/rNkilVmALgaIb4SenfbaecRStDD-500x750.jpg" alt="Cyberpunk: Edgerunners">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2024/04/ld8DpQKpM4T1wRAiBjgReV0mQcK.jpg" alt="Yozakura-san Chi no Daisakusen">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20706%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2023/01/aiJd0oGkBhf98uEH3F3yC7O48vr.jpg" alt="Hyouken no Majutsushi ga Sekai wo Suberu">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20707%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2023/10/grwiUnGAZlqYJMug1JGqWpsgnj.jpg" alt="Kikansha no Mahou wa Tokubetsu desu">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20185%20278%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2021/06/5NXO5acrIa2hkDxIqFyKcVW6vca-185x278.jpg" alt="Tantei wa Mou, Shindeiru">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2024/01/m3D7giT0fyJJ5ssjOEhYgUXN7Sg.jpg" alt="Sasaki and Pichan">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20185%20278%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2020/06/541xqQ0GFNfLXIVsXNAdDdgCLv5-185x278.jpg" alt="Hellsing Ultimate">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2025/07/6ZHkFKJekNYADTByu3QI7vJaUbC.jpg" alt="Hotel Inhumans">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20704%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2021/12/ffy4Cx0wzlFxUFKdzEPr2rlZV5s.jpg" alt="Ao Ashi">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20707%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2024/08/8YTcKA1J7PPGsqrWgaJiz3koQFu.jpg" alt="Ranma 1/2 (2024)">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20185%20278%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2020/02/ixM7N62bjtu5PGr1Tq3wuBbELxX-185x278.jpg" alt="Black Clover">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20425%20600%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2023/01/tk.jpg" alt="Tokyo Revengers">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2025/07/v4OlQo5vj9aXW8oqd7q6w4ine67.jpg" alt="Tougen Anki">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2023/10/b2qoaY4WW9Xs21mQgVwnQmOLA61.jpg" alt="Kusuriya no Hitorigoto">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20707%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/04/raUWGUcUQ5W8xi63a22gLhFXn9H.jpg" alt="Koori no Jouheki">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20708%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2022/07/w2XqopPSdVy20ZcmxhyxXlap0t9.jpg" alt="Tensei Shitara Ken Deshita">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2021/10/2rZJ0DU092uxpqtlbKYwP7JM0Yw-500x750.jpg" alt="The Prince of Tennis II">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20185%20278%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2021/02/qM2s9JtCzDqDcWffs2FbSjMPLKu-185x278.jpg" alt="Shoujo Kakumei Utena: Adolescence Mokushiroku">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20185%20278%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2020/01/5oYdnnS9jVy9CQd47rBdv7W7bd5-185x278.jpg" alt="DanMachi Arrow of the Orion">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20707%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2024/04/pMLitK7uCKoF25dNn5Xai0RuFra.jpg" alt="Tensei Kizoku, Kantei Skill de Nariagaru">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20706%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2025/09/uLkimDmIWb4VdgFUuiMlS8wGi5S.jpg" alt="Yasei no Last Boss ga Arawareta!">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20707%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2021/10/zVeyEpClF1Oxjg2UBJl62HRgC2m.jpg" alt="Kamiarizuki no Kodomo">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20707%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2025/04/jeh8PhZecsxpPikl6oUrVEkG8s6.jpg" alt="WITCH WATCH">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/01/rt29J2vs0AIc3S9mxnKv88qnTiJ.jpg" alt="Yuusha Kei ni Shosu: Choubatsu Yuusha 9004-tai Keimu Kiroku">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20185%20278%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2020/05/bXhogkZCR0aOQ077rfMULYbDmtH-185x278.jpg" alt="Steins;Gate Movie: Fuka Ryouiki no Déjà vu">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2024/10/brd9Bp1MlH8oK2nzR6VV9imY46k.jpg" alt="Dragon Ball Daima">
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201%201%22%3E%3C%2Fsvg%3E" data-src="https://image.tmdb.org/t/p/w300/jsXKG9uppnPrhqFNhImllyCfLhl.jpg" alt="Boku no Hero Academia" />
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201%201%22%3E%3C%2Fsvg%3E" data-src="https://image.tmdb.org/t/p/w300/nTvM4mhqNlHIvUkI1gVnW6XP7GG.jpg" alt="Kimetsu no Yaiba" />
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201%201%22%3E%3C%2Fsvg%3E" data-src="https://image.tmdb.org/t/p/w300/bzlZwirOq5SDC0bCWAXGBx4XDg9.jpg" alt="Overflow" />
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201%201%22%3E%3C%2Fsvg%3E" data-src="https://image.tmdb.org/t/p/w300/j9fRIimor0AMFJR9kjZubXcABzZ.jpg" alt="Mushoku Tensei: Isekai Ittara Honki Dasu" />
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201%201%22%3E%3C%2Fsvg%3E" data-src="https://image.tmdb.org/t/p/w300/gmECX1DvFgdUPjtio2zaL8BPYPu.jpg" alt="Jujutsu Kaisen" />
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201%201%22%3E%3C%2Fsvg%3E" data-src="https://image.tmdb.org/t/p/w300/vsfbUWytYJzg1aE439TnSWaommD.jpg" alt="JoJo&#8217;s Bizarre Adventure: Steel Ball Run Cap 8" />
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201%201%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2021/05/jWjBMVEhUUlejPDEPpAmfnMUocG.jpg" alt="Sword Art Offline II Cap 1" />
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201%201%22%3E%3C%2Fsvg%3E" data-src="https://image.tmdb.org/t/p/w300/1kiZ6bDrLlIXOsTcARjrUmLhcjk.jpg" alt="Shiguang Dailiren (Link Click) 3 Cap 11" />
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201%201%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/11/gO7rOvpYIRFPoMZgMq6EZkznmBc.jpg" alt="Crows Zero 2" />
-<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201%201%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/11/43FpZytJjlReDAPrByR77i81mnr.jpg" alt="Crows Zero" />
-===== AON genero anclas contexto =====
-<a href="https://ww4.animeonline.ninja/inicio"><h1 class='text'>Ver Anime</h1></a></div><div class="head-main-nav"><div class="menu-head-container"><ul id="main_header" class="main-header"><li id="menu-item-11872" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-11872"><a target="_blank" href="https://www1.animeonline.ninja/online/">Géneros 🔤</a><ul class="sub-menu"><li id="menu-item-25366" class=
-<a target="_blank" href="https://ww4.animeonline.ninja/genero/sin-censura/">Sin Censura 🔞</a></li><li id="menu-item-11858" class="menu-item menu-item-type-taxonomy menu-item-object-genres menu-item-11858"><a target="_blank" href="https://ww4.animeonline.ninja/genero/en-emision-1/">En emisión ⏩</a></li><li id="menu-item-37200" class="menu-item menu-item-type-taxonomy menu-item-object-genres menu-item-37200"><a target="_blank" href="https://ww4.animeonline.ninja/genero/blu-
-<a target="_blank" href="https://ww4.animeonline.ninja/genero/proximamente/">Próximamente</a></li><li id="menu-item-25363" class="menu-item menu-item-type-taxonomy menu-item-object-genres menu-item-25363"><a target="_blank" href="https://ww4.animeonline.ninja/genero/live-action/">Live Action 🇯🇵</a></li><li id="menu-item-31538" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-31538"><a target="_blank" href="https://ww4.animeonline.ninja/tendencias/"
-<a target="_blank" href="https://ww4.animeonline.ninja/ratings/">Mejores valorados ⭐</a></li><li id="menu-item-186222" class="menu-item menu-item-type-taxonomy menu-item-object-genres menu-item-186222"><a target="_blank" href="https://ww4.animeonline.ninja/genero/award-winning-anime/">Ganadores de premios 🏆</a></li></ul></li><li id="menu-item-54917" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-54917"><a target=
-<a target="_blank" href="https://www1.animeonline.ninja/genero/audio-latino/">Audio Latino 🇲🇽</a></li><li id="menu-item-52449" class="menu-item menu-item-type-taxonomy menu-item-object-genres menu-item-52449"><a target="_blank" href="https://ww4.animeonline.ninja/genero/anime-castellano/">Audio Castellano 🇪🇸</a></li></ul></li><li id="menu-item-11348" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-11348"><a target="_blank" hre
-<a target="_blank" href="https://www1.animeonline.ninja/pelicula/">Anime ㊗️</a></li><li id="menu-item-25365" class="menu-item menu-item-type-taxonomy menu-item-object-genres menu-item-25365"><a target="_blank" href="https://ww4.animeonline.ninja/genero/live-action/">Live Action 🇯🇵</a></li></ul></li><li id="menu-item-11164" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-11164"><a target="_blank" href="https://www1.a
-<a href="https://ww3.animeonline.ninja/online/dragon-ball-super-beerus/">Dragon Ball Super: Beerus</a></li><li id="menu-item-132265" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-132265"><a target="_blank" href="https://www1.animeonline.ninja/online/dragon-ball/">Dragon Ball BD 🐉</a></li><li id="menu-item-132266" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-132266"><a target="_blank" href="https://www1.animeonline.
-<a target="_blank" href="https://www1.animeonline.ninja/online/dragon-ball-super/">Dragon Ball Super ⭐</a></li><li id="menu-item-84621" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-84621"><a target="_blank" href="https://www1.animeonline.ninja/online/dragon-ball-gt/">Dragon Ball GT ✴️</a></li><li id="menu-item-13711" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-13711"><a target="_blank" href="https://www1.animeonline.ninja/
-<a target="_blank" href="https://ww4.animeonline.ninja/programacion/">Programación 📰</a></li><li id="menu-item-12559" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-12559"><a target="_blank" href="https://ww4.animeonline.ninja/peticiones/">➕ Más</a><ul class="sub-menu"><li id="menu-item-63605" class="menu-item menu-item-type-post_type menu-item-object-post menu-item-63605"><a target="_blank" href="https://ww4.animeon
-<a target="_blank" href="https://ww4.animeonline.ninja/como-funciona-anime-online/">Funcionamiento y dudas de la web ❓</a></li><li id="menu-item-214387" class="menu-item menu-item-type-post_type menu-item-object-post menu-item-214387"><a target="_blank" href="https://ww4.animeonline.ninja/como-saltar-el-bloqueo-de-proveedor-de-internet-en-perukistan/">Saltar bloqueo de internet</a></li><li id="menu-item-54918" class="menu-item menu-item-type-post_type menu-item-object-page menu-i
-<a href="https://ww4.animeonline.ninja/peticiones/">Peticiones 📩</a></li><li id="menu-item-58328" class="menu-item menu-item-type-post_type menu-item-object-post menu-item-58328"><a target="_blank" href="https://ww4.animeonline.ninja/servidores-de-video/">Servidores de video 🎬</a></li><li id="menu-item-114347" class="menu-item menu-item-type-post_type menu-item-object-post menu-item-114347"><a target="_blank" href="https://ww4.animeonline.ninja/sob
-<a target="_blank" href="https://www1.animeonline.ninja/anuncios-noticias/">Noticias de la web 🗞️</a></li></ul></li></ul></div></div><div class="headitems register_active"><div id="advc-menu" class="search"><form method="get" id="searchform" action="https://ww4.animeonline.ninja"><input type="text" placeholder="Buscar..." name="s" id="s" value="" autocomplete="off"><button class="search-button" type="submit"><span class="icon-search2"></span></button></form></div><div cla
-grep: write error: Broken pipe
-===== AON home =====
-43964 aon.html
-<h1 class="site-title">
-<h2 class="info-banner-title">Anime Online Gratis con Audio Latino, Castellano y Peliculas Anime HD Sub Españo
-<h2 class="hero-title">
-<h2 id="announcements-heading" class="section-title">ANUNCIOS
-<h3 id="faq-heading" class="faq-title">Preguntas Frecuentes
-href="https://ww4.animeonline.ninja/genero/anime-castellano/"
-href="https://ww4.animeonline.ninja/genero/audio-latino/"
-href="https://ww4.animeonline.ninja/genero/blu-ray-dvd-2/"
-href="https://ww4.animeonline.ninja/genero/en-emision-1/"
-href="https://ww4.animeonline.ninja/genero/live-action/"
-href="https://ww4.animeonline.ninja/genero/netflix/"
-href="https://ww4.animeonline.ninja/genero/proximamente/"
-href="https://ww4.animeonline.ninja/genero/sin-censura/"
-===== IVA home =====
-110405 iva.html
-<h1 class="font-extrabold leading-[0.98] tracking-tight" style="font-size: clamp(28px, 5vw, 56px); text-wrap: balance">To Aru Anbu no ITEM
-<h1 class="font-extrabold leading-[0.98] tracking-tight" style="font-size: clamp(28px, 5vw, 56px); text-wrap: balance">Tantei wa Mō, Shindeiru. Temporada 2
-<h1 class="font-extrabold leading-[0.98] tracking-tight" style="font-size: clamp(28px, 5vw, 56px); text-wrap: balance">Kanojo no Tomodachi
-<h1 class="font-extrabold leading-[0.98] tracking-tight" style="font-size: clamp(28px, 5vw, 56px); text-wrap: balance">Black Clover
-<h1 class="font-extrabold leading-[0.98] tracking-tight" style="font-size: clamp(28px, 5vw, 56px); text-wrap: balance">Yasei no Last Boss ga Arawareta! Temporada 2
-<h1 class="font-extrabold leading-[0.98] tracking-tight" style="font-size: clamp(28px, 5vw, 56px); text-wrap: balance">Seitokai ni mo Ana wa Aru!
-<h1 class="font-extrabold leading-[0.98] tracking-tight" style="font-size: clamp(28px, 5vw, 56px); text-wrap: balance">Tokyo Revengers: Santen Sensou-hen
-<h2 class="text-[22px] font-bold tracking-tight">Últimos capítulos
-<h3 class="card-title text-sm font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis transition">Kanojo no Tomodachi
-<h3 class="card-title text-sm font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis transition">Dark Summoner to Dekiteiru
-<h3 class="card-title text-sm font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis transition">Kanata Kara
-<h3 class="card-title text-sm font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis transition">Ao no Hako
-<h3 class="card-title text-sm font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis transition">Yozakura-san Chi no Daisakusen S2
-<h3 class="card-title text-sm font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis transition">HOTEL INHUMANS Temporada 2
-<h3 class="card-title text-sm font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis transition">Shinja Zero no Megami-sama to Hajimeru Isekai Kouryaku
-<h3 class="card-title text-sm font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis transition">Dragon Ball Super: Beerus
-<h3 class="card-title text-sm font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis transition">TANK CHAIR -Sensha Isu-
-<h3 class="card-title text-sm font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis transition">Tempal: Item no Chikara
-<h3 class="card-title text-sm font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis transition">Yowaki MAX Reijō nanoni, Ratsuwan Konyakusha-sama no Kake ni Notte Shimatta
-<h3 class="card-title text-sm font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis transition">Tensei Kizoku, Kantei Skill de Nariagaru S3
-grep: write error: Broken pipe
-href="https://ivanime.buzz/anime/black-clover-sub-espanol"
-href="https://ivanime.buzz/anime/dark-machine-the-animation-sub-espanol"
-href="https://ivanime.buzz/anime/demons-crest-sub-espanol"
-href="https://ivanime.buzz/anime/doragon-boru-supa-birusu-sub-espanol"
-href="https://ivanime.buzz/anime/dreamland-sub-espanol"
-href="https://ivanime.buzz/anime/kanojo-no-tomodachi-sub-espanol"
-href="https://ivanime.buzz/anime/kyoufu-collector-sub-espanol"
-href="https://ivanime.buzz/anime/mahou-shoujo-ikusei-keikaku-restart-sub-espanol"
-href="https://ivanime.buzz/anime/marronnier-okoku-no-shichinin-no-kishi-sub-espanol"
-href="https://ivanime.buzz/anime/saibapanku-edjirannazu-cyberpunk-edgerunners-2-sub-espanol"
-href="https://ivanime.buzz/anime/seitokai-ni-mo-ana-wa-aru-sub-espanol"
-href="https://ivanime.buzz/anime/shikin-on-myao-bou-sub-espanol"
-href="https://ivanime.buzz/anime/tantei-wa-mo-shindeiru-temporada-2-sub-espanol"
-href="https://ivanime.buzz/anime/to-aru-anbu-no-item-sub-espanol"
-href="https://ivanime.buzz/anime/tokyo-revengers-santen-sensou-hen-sub-espanol"
-href="https://ivanime.buzz/anime/watashi-no-shiawase-na-kekkon-s2-sub-espanol"
-href="https://ivanime.buzz/anime/yasei-no-last-boss-ga-arawareta-temporada-2-sub-espanol"
-href="https://ivanime.buzz/anime/your-letter-sub-espanol"
-href="https://ivanime.buzz/animes"
-href="https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg"
-href="https://ivanime.buzz/build/assets/app-B5vnAjYV.css"
-href="https://ivanime.buzz/build/assets/app-CFHQxs1u.js"
-href="https://ivanime.buzz/calendario"
-href="https://ivanime.buzz/emision"
-href="https://ivanime.buzz/login"
-href="https://ivanime.buzz/register"
-href="https://ivanime.buzz/ver/ao-ashi-temporada-2-episodio-6"
-href="https://ivanime.buzz/ver/ao-no-hako-episodio-30"
-href="https://ivanime.buzz/ver/black-clover-episodio-1"
-href="https://ivanime.buzz/ver/dark-summoner-to-dekiteiru-episodio-6"
+===== IVA emision =====
+60515 ivaem.html
+<a href="https://ivanime.buzz/anime/demons-crest-sub-espanol" class="card-wrap block group">
+<a href="https://ivanime.buzz/anime/dreamland-sub-espanol" class="card-wrap block group">
+<a href="https://ivanime.buzz/anime/shikin-on-myao-bou-sub-espanol" class="card-wrap block group">
+<a href="https://ivanime.buzz/anime/dark-machine-the-animation-sub-espanol" class="card-wrap block group">
 <img src="https://ivanime.buzz/images/ivanime-logo.png?v=4.72" alt="Logo Ivanime" class="h-auto" style="width: 130px">
-<img class="card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/assets/thumbs/portada/kanojo-no-tomodachi-portada-1791253718.jpg.webp?v=6" alt="Kanojo no Tomodachi capitulo 6"  fetchpriority="high" >
-<img class="card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/assets/thumbs/portada/dark-summoner-to-dekiteiru-portada-1791247725.jpg.webp?v=6" alt="Dark Summoner to Dekiteiru capitulo 6" >
-<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/capblank.png" data-src="https://ivanime.buzz/assets/thumbs/portada/kanata-kara-portada-1791216799.jpg.webp?v=6" alt="Kanata Kara capitulo 6">
-<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/capblank.png" data-src="https://ivanime.buzz/assets/thumbs/portada/ao-no-hako-portada-1791134353.jpg.webp?v=6" alt="Ao no Hako capitulo 30">
-<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/capblank.png" data-src="https://ivanime.buzz/assets/thumbs/portada/yozakura-san-chi-no-daisakusen-temporada-2-1777598490.jpg.webp?v=6" alt="Yozakura-san Chi no Daisakusen S2 capitulo 17">
-<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/capblank.png" data-src="https://ivanime.buzz/assets/thumbs/portada/hotel-inhumans-temporada-2-portada-1791148224.jpg.webp?v=6" alt="HOTEL INHUMANS Temporada 2 capitulo 6">
-<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/capblank.png" data-src="https://ivanime.buzz/assets/thumbs/portada/shinja-zero-no-megami-sama-to-hajimeru-isekai-kouryaku-portada-1791734390.jpg.webp?v=6" alt="Shinja Zero no Megami-sama to Hajimeru Isekai Kouryaku capitulo 5">
-<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/capblank.png" data-src="https://ivanime.buzz/assets/thumbs/portada/doragon-boru-supa-birusu-portada-1791735914.jpg.webp?v=6" alt="Dragon Ball Super: Beerus capitulo 5">
-<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/capblank.png" data-src="https://ivanime.buzz/assets/thumbs/portada/tank-chair-sensha-isu-portada-1791145596.jpg.webp?v=6" alt="TANK CHAIR -Sensha Isu- capitulo 6">
-<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/capblank.png" data-src="https://ivanime.buzz/assets/thumbs/portada/tempal-item-no-chikara-portada-1790525376.jpg.webp?v=6" alt="Tempal: Item no Chikara capitulo 7">
-<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/capblank.png" data-src="https://ivanime.buzz/assets/thumbs/portada/yowaki-max-reijo-nanoni-ratsuwan-konyakusha-sama-no-kake-ni-notte-shimatta-portada-1791131661.jpg.webp?v=6" alt="Yowaki MAX Reijō nanoni, Ratsuwan Konyakusha-sama no Kake ni Notte Shimatta capitulo 6">
-<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/capblank.png" data-src="https://ivanime.buzz/assets/thumbs/portada/tensei-kizoku-kantei-skill-de-nariagaru-s3-1790527732.jpg.webp?v=6" alt="Tensei Kizoku, Kantei Skill de Nariagaru S3 capitulo 7">
-<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/capblank.png" data-src="https://ivanime.buzz/assets/thumbs/portada/diamond-no-ace-act-ii-second-season-portada-1777589960.jpg.webp?v=6" alt="Diamond no Ace: Act II Second Season capitulo 18">
-<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/capblank.png" data-src="https://ivanime.buzz/assets/thumbs/portada/ojisan-wa-kawaii-mono-ga-osuki-portada-1791131643.jpg.webp?v=6" alt="Ojisan wa Kawaii Mono ga Osuki. capitulo 6">
-===== OTV animes filtros =====
-60067 otv.html
+<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/anime.png" data-src="https://ivanime.buzz/assets/thumbs/imagen/demons-crest-1793996605.jpg.webp?v=6" alt="Demon&#039;s Crest">
+<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/anime.png" data-src="https://ivanime.buzz/assets/thumbs/imagen/dreamland-1792258097.jpg.webp?v=6" alt="Dreamland">
+<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/anime.png" data-src="https://ivanime.buzz/assets/thumbs/imagen/shikin-on-myao-bou-1792002159.jpg.webp?v=6" alt="Shikin On Myao Bou">
+<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/anime.png" data-src="https://ivanime.buzz/assets/thumbs/imagen/dark-machine-the-animation-1791917944.jpg.webp?v=6" alt="DARK MACHINE -The Animation-">
+<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/anime.png" data-src="https://ivanime.buzz/assets/thumbs/imagen/mahou-shoujo-ikusei-keikaku-restart-1791822568.jpg.webp?v=6" alt="Mahou Shoujo Ikusei Keikaku: Restart">
+===== IVA animes =====
+114968 ivaan.html
+<a href="https://ivanime.buzz/anime/demons-crest-sub-espanol" class="card-wrap block group">
+<a href="https://ivanime.buzz/anime/watashi-no-shiawase-na-kekkon-s2-sub-espanol" class="card-wrap block group">
+<a href="https://ivanime.buzz/anime/saibapanku-edjirannazu-cyberpunk-edgerunners-2-sub-espanol" class="card-wrap block group">
+<a href="https://ivanime.buzz/anime/your-letter-sub-espanol" class="card-wrap block group">
+<img src="https://ivanime.buzz/images/ivanime-logo.png?v=4.72" alt="Logo Ivanime" class="h-auto" style="width: 130px">
+<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/anime.png" data-src="https://ivanime.buzz/assets/thumbs/imagen/demons-crest-1793996605.jpg.webp?v=6" alt="Demon&#039;s Crest">
+<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/anime.png" data-src="https://ivanime.buzz/assets/thumbs/imagen/watashi-no-shiawase-na-kekkon-s2-1792950979.jpg.webp?v=6" alt="Watashi no Shiawase na Kekkon S2">
+<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/anime.png" data-src="https://ivanime.buzz/assets/thumbs/imagen/saibapanku-edjirannazu-cyberpunk-edgerunners-2-1792523394.jpg.webp?v=6" alt="Cyberpunk: Edgerunners S2">
+<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/anime.png" data-src="https://ivanime.buzz/assets/thumbs/imagen/your-letter-1792436546.jpg.webp?v=6" alt="Your Letter">
+<img class="lazy card-img absolute inset-0 w-full h-full object-cover" src="https://ivanime.buzz/img/anime.png" data-src="https://ivanime.buzz/assets/thumbs/imagen/dreamland-1792258097.jpg.webp?v=6" alt="Dreamland">
+===== OTV genero latino =====
+48306 otvlat.html
+<img src="https://i.imgur.com/gcSlWN5.png" width="30" height="30" alt="otakustv">
+href="./animes?estado=en+emision"
+href="./animes?estado=finalizado"
+href="./animes?estado=proximamente"
 href="./animes?genero=accion"
 href="./animes?genero=aenime"
 href="./animes?genero=anime-latino"
@@ -235,44 +35,36 @@ href="./animes?genero=artes-marciales"
 href="./animes?genero=aventura"
 href="./animes?genero=aventuras"
 href="./animes?genero=blu-ray"
-href="./animes?genero=carreras"
-href="./animes?genero=castellano"
-href="./animes?genero=ciencia-ficcion"
-href="./animes?genero=comedia"
-href="./animes?genero=comida"
-href="./animes?genero=cyberpunk"
-href="./animes?genero=demencia"
-href="./animes?genero=dementia"
-href="./animes?genero=demonios"
-href="./animes?genero=deportes"
-href="./animes?genero=drama"
-href="./animes?genero=ecchi"
-href="./animes?genero=escolares"
-===== MYTSUMI YJU =====
-8793 mt.html
-<button type="button" class="mytsumi-tab is-active" data-player-url="https://bysesukior.com/e/rnwn7i2veoxi" data-player-kind="iframe" data-player-label="Byse" title="Byse · 1080p">
-<button type="button" class="mytsumi-tab" data-player-url="https://archive.org/download/rcjdp999rx-dvcgqpfn/feh6asaeynqj.mp4" data-player-kind="video" data-player-label="Omega" title="Omega · 720p">
-<button type="button" class="mytsumi-tab" data-player-url="https://mega.nz/embed/TCx0SKyK#3BdOifEHEMo0pcW4oqxz3CjiTW___JcZhaP6SZP3dIM" data-player-kind="iframe" data-player-label="MEGA" title="MEGA · 1080p">
-<button type="button" class="mytsumi-tab" data-player-url="https://ok.ru/videoembed/15968117721680" data-player-kind="iframe" data-player-label="OK" title="OK · 1080p">
-<button type="button" class="mytsumi-tab" data-player-url="https://ytplay.rpmvid.com/#b1pxtq" data-player-kind="iframe" data-player-label="Epsilon" title="Epsilon · 1080p">
-<button type="button" class="mytsumi-tab" data-player-url="https://player.abyssplayer.com/63oiBb0_r" data-player-kind="iframe" data-player-label="Abyss" title="Abyss · 1080p">
-<button type="button" class="mytsumi-tab mytsumi-download-tab" id="mytsumi-download-tab" title="Descargas" aria-label="Descargas">
-<button type="button" class="mytsumi-quality-btn" data-quality="1080p">
-<a class="mytsumi-download-button" href="https://1024terabox.com/s/18hSykbC6PFkTB_rmzGgK-Q" target="_blank" rel="noopener noreferrer" title="Terabox · 1080p" aria-label="Terabox · 1080p">
-<a class="mytsumi-download-button" href="https://mega.nz/file/TCx0SKyK#3BdOifEHEMo0pcW4oqxz3CjiTW___JcZhaP6SZP3dIM" target="_blank" rel="noopener noreferrer" title="MEGA · 1080p" aria-label="MEGA · 1080p">
-<a class="mytsumi-download-button" href="https://bysesukior.com/d/rnwn7i2veoxi" target="_blank" rel="noopener noreferrer" title="Byse · 1080p" aria-label="Byse · 1080p">
-<a class="mytsumi-download-button" href="https://www.mediafire.com/file/bvbvemh2i2m4uvq/01.TKKSdN_P2401.mp4/file" target="_blank" rel="noopener noreferrer" title="Fire · 1080p" aria-label="Fire · 1080p">
-<a class="mytsumi-download-button" href="https://www.fireload.com/8d69eaed240dfdd9/01.TKKSdN_P2401.mp4" target="_blank" rel="noopener noreferrer" title="Fireload · 1080p" aria-label="Fireload · 1080p">
-<a class="mytsumi-download-button" href="https://gofile.io/d/IxVYKsu6" target="_blank" rel="noopener noreferrer" title="Gofile · 1080p" aria-label="Gofile · 1080p">
-===== OMEGA test =====
-url: https://archive.org/download/rcjdp999rx-dvcgqpfn/feh6asaeynqj.mp4
-sin-ref: 403 ct=text/html; charset=utf-8
-ref-my: 403
-ref-ayt: 403
-range: 403
-===== N1MWQ test =====
-url: 
-curl: option : blank argument where content is expected
-curl: try 'curl --help' or 'curl --manual' for more information
-0 n1.html
-
+===== OTV genero latino pag2 =====
+48306 otvlat2.html
+<img src="https://i.imgur.com/gcSlWN5.png" width="30" height="30" alt="otakustv">
+===== AON pelicula =====
+207961 aonp.html
+60
+<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20185%20278%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2020/06/amai-choubatsu-watashi-wa-kanshu-senyou-pet-185x278.jpg" alt="Amai Choubatsu: Watashi wa Kanshu Senyou Pet">
+<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20185%20278%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2020/01/z6sXcBO7r6sxOdrsHj2VbEOWvsF-185x278.jpg" alt="Baby Princess 3D Paradise Love">
+<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20185%20278%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2019/07/evangelion-4-0-185x278.jpg" alt="Evangelion: 3.0+1.0">
+<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20185%20278%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2020/10/218374-185x278.jpg" alt="Joshiochi!: 2-kai kara Onnanoko ga&#8230; Futtekita!?">
+<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20424%20600%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2021/12/120072l.jpg" alt="Dragon Ball Super: SUPER HERO">
+===== AON en-emision =====
+163734 aone.html
+41
+<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/10/k8TF2vhulNFQj2A1dqH001kuoHn.jpg" alt="Magic Knight Rayearth (2026)">
+<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/10/EQNjH4oeCm9pD58fi2s4WZyjgA.jpg" alt="Psyren">
+<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20714%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/10/lZ88hdOO2J7EX40fctU1leGgZFu.jpg" alt="Dreamland">
+<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/10/hNNba8tLjCgRGcTSKcB1E0kpBhG.jpg" alt="DARK MACHINE THE ANIMATION">
+===== AON audio-latino =====
+241437 aonl.html
+41
+<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2025/04/1jltcsz17CkfyhpcsSlmVC6pQGh.jpg" alt="Shin Samurai-den YAIBA">
+<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20185%20278%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2021/02/bnWxRJHWbYcAGq9HWWuKCwm7I5X-185x278.jpg" alt="Shoujo Kakumei Utena">
+<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/10/EQNjH4oeCm9pD58fi2s4WZyjgA.jpg" alt="Psyren">
+<img class="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20500%20750%22%3E%3C%2Fsvg%3E" data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/08/6ILkBzgLiwDfhpyWBWKvh8iA35X.jpg" alt="All You Need Is Kill">
+===== EAS pelicula anclas =====
+<a class="film-poster-ahref" href="/anime/yeon-ui-pyeonji" title="Yeon-ui Pyeonji">
+<a class="dynamic-name" href="/anime/yeon-ui-pyeonji" title="Yeon-ui Pyeonji" data-jname="Yeon-ui Pyeonji">
+<a class="film-poster-ahref" href="/anime/gintama-the-movie-2026-yoshiwara-in-flames-latino" title="Gintama the Movie 2026: Yoshiwara in Flames (Latino)">
+<a class="dynamic-name" href="/anime/gintama-the-movie-2026-yoshiwara-in-flames-latino" title="Gintama the Movie 2026: Yoshiwara in Flames (Latino)" data-jname="Gintama the Movie 2026: Yoshiwara in Flames (Latino)">
+<a class="film-poster-ahref" href="/anime/gintama-movie-3-yoshiwara-daienjou" title="Gintama Movie 3: Yoshiwara Daienjou">
+<a class="dynamic-name" href="/anime/gintama-movie-3-yoshiwara-daienjou" title="Gintama Movie 3: Yoshiwara Daienjou" data-jname="Gintama Movie 3: Yoshiwara Daienjou">
+grep: write error: Broken pipe
