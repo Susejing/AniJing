@@ -15,53 +15,38 @@ jobs:
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
           R=probe-result.txt
           : > "$R"
-          echo "=== JARA /catalogo PAGINACION ===" >> "$R"
-          curl -sL --compressed -A "$UA" -H "Referer: https://animejara.com/" -w "HTTP %{http_code} bytes:%{size_download}\n" "https://animejara.com/catalogo" -o /tmp/c1.html >> "$R" 2>&1
+          curl -sL --compressed -A "$UA" -H "Referer: https://animejara.com/" -w "HTTP %{http_code}\n" "https://animejara.com/catalogo" -o /tmp/c1.html >> "$R" 2>&1
           python3 - <<'PY' >> "$R"
           import re
           h = open('/tmp/c1.html', encoding='utf-8', errors='replace').read()
-          animes = re.findall(r'href="https://animejara\.com/anime/([^"/?#]+)', h)
-          unicos = []
-          for a in animes:
-              if a not in unicos: unicos.append(a)
-          print('tarjetas /anime/ unicas:', len(unicos), '| primeras 5:', unicos[:5])
-          print('hrefs con page/pagina/siguiente:')
-          for m in re.findall(r'href="([^"]*(?:page|pag|next|siguiente|Siguiente)[^"]*)"', h)[:12]:
-              print('  ', m)
-          print('textos con Pagina/Siguiente:')
-          for m in re.findall(r'>([^<]{0,30}(?:[Pp][áa]gina|[Ss]iguiente)[^<]{0,30})<', h)[:8]:
-              print('  ', repr(m))
+          print('bytes:', len(h), '| imgs hj:', len(re.findall(r'hj\.animejara\.com', h)))
+          anclas = list(re.finditer(r'<a\b[^>]*href="https://animejara\.com/anime/[^"]*"[^>]*>', h))
+          print('anclas /anime/:', len(anclas))
+          for a in anclas[:3]:
+              i = a.start()
+              print('--- ANCLA en', i, ':', repr(h[max(0,i-350):i+700]))
+          i = h.find('death-note')
+          print('--- death-note idx', i)
+          if i >= 0:
+              print(repr(h[max(0,i-500):i+500]))
+          print('--- data-src o lazy:', re.findall(r'data-(?:src|lazy)[^=]*="([^"]+)"', h)[:5])
           PY
-          for U in "https://animejara.com/catalogo?page=2" "https://animejara.com/catalogo/page/2/" "https://animejara.com/catalogo?pagina=2" "https://animejara.com/catalogo/2"; do
-            echo "--- GET $U" >> "$R"
-            curl -sL --compressed -A "$UA" -H "Referer: https://animejara.com/" -w "HTTP %{http_code} bytes:%{size_download}\n" "$U" -o /tmp/cp.html >> "$R" 2>&1
-            python3 - <<'PY' >> "$R"
-          import re
-          h = open('/tmp/cp.html', encoding='utf-8', errors='replace').read()
-          animes = re.findall(r'href="https://animejara\.com/anime/([^"/?#]+)', h)
-          unicos = []
-          for a in animes:
-              if a not in unicos: unicos.append(a)
-          print('  tarjetas:', len(unicos), '| primeras 3:', unicos[:3])
-          PY
-          done
-          echo "=== JARA /emision PAGINACION ===" >> "$R"
-          curl -sL --compressed -A "$UA" -H "Referer: https://animejara.com/" -w "HTTP %{http_code} bytes:%{size_download}\n" "https://animejara.com/emision" -o /tmp/e1.html >> "$R" 2>&1
+          echo "=== PAGINA 2 ===" >> "$R"
+          curl -sL --compressed -A "$UA" -H "Referer: https://animejara.com/" -w "HTTP %{http_code}\n" "https://animejara.com/catalogo?page=2" -o /tmp/c2.html >> "$R" 2>&1
           python3 - <<'PY' >> "$R"
           import re
-          h = open('/tmp/e1.html', encoding='utf-8', errors='replace').read()
-          animes = re.findall(r'href="https://animejara\.com/anime/([^"/?#]+)', h)
-          unicos = []
-          for a in animes:
-              if a not in unicos: unicos.append(a)
-          print('tarjetas /emision:', len(unicos))
-          for m in re.findall(r'href="([^"]*(?:page|pag|next|siguiente)[^"]*)"', h)[:8]:
-              print('  href:', m)
+          h = open('/tmp/c2.html', encoding='utf-8', errors='replace').read()
+          print('bytes:', len(h), '| imgs hj:', len(re.findall(r'hj\.animejara\.com', h)))
+          anclas = list(re.finditer(r'<a\b[^>]*href="https://animejara\.com/anime/[^"]*"[^>]*>', h))
+          print('anclas /anime/:', len(anclas))
+          for a in anclas[:2]:
+              i = a.start()
+              print('--- ANCLA en', i, ':', repr(h[max(0,i-350):i+700]))
           PY
       - name: commit
         run: |
           git config user.name "probe-bot"
           git config user.email "probe@users.noreply.github.com"
           git add probe-result.txt
-          git commit -m "probe v20: resultados [skip ci]" || echo "nada"
+          git commit -m "probe v21: resultados [skip ci]" || echo "nada"
           git push
