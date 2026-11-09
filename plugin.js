@@ -347,7 +347,42 @@
 // igual, y las fichas y capítulos siguen intactos pase lo que
 // pase.
 
-const VERSION = '0.6.16';
+//
+// v0.6.17 «La ventanilla del lienzo» — el teléfono confesó en la
+// 0.6.16: Kino SÍ pide los pósters, el muro SÍ cede ante su red
+// (ni un 403), y las pantallas nativas de Kino (secciones, fichas,
+// búsqueda) pintan. Quedaban dos grises con dueño. UNO: el INICIO
+// — el lienzo no habla con el imageSource; sus rieles titleRail
+// reciben las referencias de póster y este Kino las pinta grises
+// (el log lo probó: los mismos handles ya servidos y cacheados en
+// las secciones seguían grises en el Inicio). La cura es la
+// ventanilla que MangaTrack usa desde siempre: los rieles de
+// IvAnime se dibujan a mano — cada tarjeta es un nodo Image que
+// lleva SU PROPIA presentación (Referer + User-Agent, los
+// «headers» del Image del lienzo, Kino 0.9.83+) dentro de un
+// scroll horizontal, con su «Ver más» y su tap a la ficha; las
+// demás fuentes siguen con su titleRail nativo, que nunca falló.
+// DOS: las PORTADAS grandes (333-374 KB) que rebasan el tope de
+// 256 KB de Kino — con su mensajito rojo por cada negativa — y
+// las que ya ni existen (404). El propio sitio regaló el
+// respaldo: cada portada vive también en su versión pulgar, con
+// el MISMO número en el nombre y cuatro veces más chica (sonda
+// v37: verificada en los tres pósters que el teléfono rechazó —
+// y los pulgares de las portadas 404 también viven). Cuando una
+// portada no cabe o ni existe, se prueba su pulgar derivado y se
+// sirve ese; solo si el pulgar tampoco existe, el placeholder
+// honesto. Y honesto de nuevo: si el Kino es anterior a 0.9.83,
+// los headers del lienzo se ignoran y las tarjetas pintan sus
+// imágenes sin presentación (grises otra vez, sin romper nada);
+// un riel recién abierto tarda unos segundos en llenarse. Y de
+// paso, una astilla vieja de la 0.6.1 que nadie había visto
+// porque los rieles no pasan por ahí: los resultados de BÚSQUEDA
+// de IvAnime llevaban su ref con doble dos puntos (un slice de
+// menos al re-etiquetar las tarjetas que casan con el patrón de
+// AnimeYT) y al abrirlos partirRef los botaba; ya cosen como
+// cualquier otra ref de la casa.
+
+const VERSION = '0.6.17';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -798,7 +833,6 @@ async function capturar(url, etiqueta, refBase) {
    * ejemplo), segunda pasada más larga con captureAll: el video del
    * capítulo suele llegar cuando el anuncio termina, y la lista de
    * peticiones de la página expone lo demás que cargó. */
-
   if ((!pick || !esManifiesto(pick.url, pick.mime)) && queda() > 15000 && kino.browser && kino.browser.captureAll) {
     try {
       const ms2 = Math.min(25000, Math.max(6000, queda() - 2000));
@@ -1599,7 +1633,6 @@ registrarFuente({
       throw kino.error('unavailable', 'AnimeAV1 no armó ninguna fila', {
         userMessage: 'AnimeAV1 no respondió. Revisa tu conexión o inténtalo en un rato.'
       });
-
     }
     return filas;
   },
@@ -2399,7 +2432,6 @@ function servidoresDePagina(html) {
   });
   return servers;
 }
-
 
 /* El resolve de las fuentes nuevas: primero los servidores de verdad y, si
  * ninguno abre (o lo único que hay es un multiserver opaco), la captura del
@@ -3201,7 +3233,6 @@ async function easMulti(link) {
     while ((m = gpRe.exec(r.text)) && items.length < 14) {
       items.push({ dato: m[1], nombre: '', idioma: '' });
     }
-
   }
   const cifrados = [];
   for (const it of items) {
@@ -4002,7 +4033,6 @@ registrarFuente({
       return items;
     } catch (e) {
       log('van buscar', (e && e.message) || String(e));
-
       return [];
     }
   },
@@ -4294,7 +4324,11 @@ registrarFuente({
         const items = [];
         const vistos = new Set();
         for (const it of brutos) {
-          const ref = 'iva:' + String(it.ref || '').slice(3);
+          /* v0.6.17: el slice era de 3 y las refs de aquí llevan el
+           * prefijo de 4 letras («iva:», «ayt:») — los resultados de
+           * búsqueda salían con doble dos puntos y partirRef los
+           * botaba al abrirlos. Astilla vieja de la 0.6.1, curada. */
+          const ref = 'iva:' + String(it.ref || '').slice(4);
           if (!ref || vistos.has(ref)) continue;
           vistos.add(ref);
           it.ref = ref;
@@ -4794,16 +4828,72 @@ async function screen(arg) {
       cuerpo.push(heroNodo);
     }
     const rielDe = function (fila) {
-      const riel = { type: 'titleRail', title: fila.title, items: fila.items };
-      if (fila.ref) riel.ref = fila.ref;
-      return riel;
+      /* v0.6.17 «La ventanilla del lienzo»: el titleRail nativo está
+       * bien para las fuentes sin muro, pero el lienzo de este Kino no
+       * habla con el imageSource — las referencias {source:'plugin'}
+       * que las pantallas nativas sirven sin problema en el Inicio se
+       * pintan grises. Los rieles de IvAnime se dibujan a mano: cada
+       * tarjeta lleva un nodo Image con su propia presentación (los
+       * «headers» del lienzo, Kino 0.9.83+, el truco de MangaTrack),
+       * el título al pie, su tap a la ficha, y el riel entero en un
+       * scroll horizontal con su «Ver más». Si algo no cuadra, se
+       * cae al titleRail de siempre. */
+      const primero = fila.items && fila.items[0] ? fila.items[0] : null;
+      const esIva = !!(primero && primero.poster && typeof primero.poster === 'object' && primero.poster.source === 'plugin' && String(primero.poster.handle || '').indexOf('https://ivanime.buzz/') === 0);
+      if (!esIva) {
+        const riel = { type: 'titleRail', title: fila.title, items: fila.items };
+        if (fila.ref) riel.ref = fila.ref;
+        return riel;
+      }
+      const tarjetas = [];
+      const items = fila.items || [];
+      for (let i = 0; i < items.length && tarjetas.length < 12; i++) {
+        const it = items[i];
+        const u = it && it.poster && typeof it.poster === 'object' && it.poster.source === 'plugin' ? String(it.poster.handle || '') : '';
+        if (u.indexOf('https://ivanime.buzz/') !== 0) continue;
+        const tarjeta = {
+          type: 'Column',
+          gap: 4,
+          width: { compact: 104, medium: 124, expanded: 148 },
+          children: [
+            { type: 'Image', url: u, aspect: '2:3', fit: 'cover', headers: { Referer: 'https://ivanime.buzz/', 'User-Agent': UA } },
+            { type: 'Text', text: String(it.title || ''), style: 'caption', maxLines: 2 }
+          ],
+          onTap: { go: { title: { ref: String(it.ref || ''), kind: it.kind === 'movie' ? 'movie' : 'series' } } }
+        };
+        tarjetas.push(tarjeta);
+      }
+      if (!tarjetas.length) {
+        const riel = { type: 'titleRail', title: fila.title, items: fila.items };
+        if (fila.ref) riel.ref = fila.ref;
+        return riel;
+      }
+      const cabecera = [{ type: 'Text', text: String(fila.title || ''), style: 'h3', flex: 1 }];
+      if (fila.ref) {
+        cabecera.push({
+          type: 'TextButton',
+          labelText: 'Ver más',
+          onPressed: { go: { browse: { ref: String(fila.ref), title: String(fila.title || '') } } }
+        });
+      }
+      return {
+        type: 'Column',
+        gap: 8,
+        children: [
+          { type: 'Row', children: cabecera },
+          {
+            type: 'SingleChildScrollView',
+            direction: 'horizontal',
+            children: [{ type: 'Row', gap: 8, children: tarjetas }]
+          }
+        ]
+      };
     };
     if (state.fuente === 'todas') {
       /* v0.5.0 — «Todas» se lee por secciones: un encabezado por fuente
          (tocarlo pasa a esa fuente) y debajo sus rieles; cada bloque con
          su aire para que el scroll se lea por partes, no amontonado. */
       const bloques = [];
-
       const vistos = {};
       for (const fila of filas) {
         const fid = fila.fuente || 'av1';
@@ -4956,18 +5046,55 @@ async function image(arg) {
     log('iva póster «' + nombre + '»: ni siquiera llegó (' + ((eF && eF.message) || String(eF)) + ')');
     throw kino.error('unavailable', 'IvAnime no entregó la imagen');
   }
-  if (!r || r.status !== 200) {
-    log('iva póster «' + nombre + '»: status ' + (r && r.status) + ' (el muro no cedió)');
-    throw kino.error('unavailable', 'la imagen no llegó (status ' + (r && r.status) + ')');
+  /* v0.6.17 unificado: la portada puede fallar porque pese más del
+   * tope de Kino (256 KB) o porque ya ni exista (404) — y en ambos
+   * casos el sitio guarda la misma imagen en su versión pulgar,
+   * con el mismo número en el nombre y cuatro veces más chica. Se
+   * prueba ese antes de rendirse: un póster chico vale más que un
+   * gris y que un mensajito rojo. */
+  if (!r || r.status !== 200 || r.truncated === true) {
+    let servido = null;
+    let pulgar = handle.replace('/assets/img/serie/portada/', '/assets/thumbs/imagen/');
+    pulgar = pulgar.replace('-portada-', '-');
+    pulgar = pulgar.replace('.jpg', '.jpg.webp');
+    if (pulgar !== handle && pulgar.indexOf('/assets/thumbs/imagen/') >= 0) {
+      let r2 = null;
+      try {
+        r2 = await kino.fetch(pulgar, {
+          headers: { Referer: 'https://ivanime.buzz/', 'User-Agent': UA },
+          timeoutMs: 9000,
+          maxBytes: 262145
+        });
+      } catch (eF2) { r2 = null; }
+      if (r2 && r2.status === 200 && r2.truncated !== true) {
+        let bytes2 = '';
+        try { bytes2 = r2.base64(); } catch (eB2) { bytes2 = ''; }
+        const ct2 = ((r2.headers && (r2.headers['content-type'] || r2.headers['Content-Type'])) || '');
+        if (bytes2 && !/text\/html/i.test(ct2)) {
+          let mime2 = 'image/webp';
+          if (/png/i.test(ct2)) mime2 = 'image/png';
+          else if (/jpeg/i.test(ct2)) mime2 = 'image/jpeg';
+          const kb2 = Math.round((bytes2.length * 3 / 4) / 102.4) / 10;
+          log('iva póster «' + nombre + '»: la portada falló — servido su pulgar («' + (pulgar.split('/').pop() || pulgar) + '», ' + kb2 + ' KB)');
+          servido = { bytes: bytes2, mime: mime2 };
+        }
+      }
+      if (!servido) {
+        log('iva póster «' + nombre + '»: la portada falló y su pulgar derivado tampoco llegó (status ' + (r2 && r2.status) + ')');
+      }
+    }
+    if (servido) return servido;
+    if (!r) {
+      log('iva póster «' + nombre + '»: ni siquiera llegó — placeholder honesto');
+      throw kino.error('unavailable', 'IvAnime no entregó la imagen');
+    }
+    log('iva póster «' + nombre + '»: status ' + r.status + (r.truncated ? ' (pesa más del tope de Kino, 256 KB)' : ' (el muro no cedió)') + ' — placeholder honesto');
+    throw kino.error('unavailable', 'la imagen no llegó (status ' + r.status + (r.truncated ? ', demasiado grande' : '') + ')');
   }
   const ct = ((r.headers && (r.headers['content-type'] || r.headers['Content-Type'])) || '');
   if (/text\/html/i.test(ct)) {
     log('iva póster «' + nombre + '»: llegó HTML en vez de imagen (el muro)');
     throw kino.error('unavailable', 'IvAnime contestó con su muro, no con la imagen');
-  }
-  if (r.truncated === true) {
-    log('iva póster «' + nombre + '»: pesa más del tope de Kino (256 KB) — placeholder honesto');
-    throw kino.error('unavailable', 'la imagen pesa más de lo que Kino acepta');
   }
   let bytes = '';
   try { bytes = r.base64(); } catch (eB) { bytes = ''; }
@@ -4986,4 +5113,3 @@ async function image(arg) {
 }
 
 export { search, home, browse, episodes, details, resolve, screen, screenEvent, image };
-

@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.16 «La imagen confesante»)
+## Qué hace (v0.6.17 «La ventanilla del lienzo»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -31,6 +31,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.17 «La ventanilla del lienzo»
+
+La 0.6.16 confesó y el teléfono habló: Kino sí pide los pósters, el muro de IvAnime sí cede ante la red del teléfono (ni un solo 403 en el log) y los pósters de las **secciones y fichas** empezaron a llegar. Quedaban dos grises con dueño. Uno: el **Inicio** — el lienzo de este Kino no habla con el servidor de imágenes del plugin, así que sus rieles pintaban grises las mismas imágenes ya servidas en las secciones. La cura es la ventanilla que MangaTrack usa desde siempre: los rieles de IvAnime en el Inicio se **dibujan a mano**, cada tarjeta con un nodo Image que lleva su propia presentación (Referer + User-Agent, los «headers» del Image del lienzo, Kino 0.9.83+) dentro de un scroll horizontal, con su «Ver más» y su tap a la ficha — las demás fuentes siguen con su riel nativo, que nunca falló. Dos: las **portadas grandes** (333-374 KB) que se pasan del tope de 256 KB que Kino acepta por póster — y cada negativa honesta sacaba además el mensajito rojo de «Error en AniJing» — y las portadas que ya ni existen (404). El propio sitio regaló el respaldo: cada portada vive también en su versión **pulgar**, con el mismo número en el nombre y cuatro veces más chica (la sonda v37 lo verificó en los tres pósters que el teléfono rechazó — y los pulgares de las portadas 404 también viven). Cuando una portada no cabe o ni existe, el plugin prueba su pulgar derivado y sirve ese — un póster chico vale más que un gris; solo si ese pulgar tampoco existe llega el placeholder honesto. Honesto: si tu Kino es anterior a 0.9.83, los headers del lienzo se ignoran y el Inicio de IvAnime se queda en grises otra vez (sin romper nada — el resto del plugin no toca esa ventana); un riel recién abierto puede tardar unos segundos en llenarse; y las series sin pulgar derivado seguirán con placeholder. De paso se cura una astilla vieja de la 0.6.1 que nadie había visto porque los rieles no pasan por ahí: los resultados de **búsqueda** de IvAnime llevaban su ref mal cosida (con doble dos puntos) y al abrirlos desde la búsqueda fallaban — ya cosen como cualquier otra.
 
 ## v0.6.16 «La imagen confesante»
 
@@ -114,4 +118,3 @@ Esta versión pide los mismos dos permisos de siempre — abrir páginas web ocu
 ## Licencia
 
 GPL-3.0 © 2026 Susejing. Los algoritmos de decodificación (el baile de Voe, el packer p.a.c.k.e.r, el AES de UPNShare) son reimplementaciones propias de patrones públicos de la comunidad Kino; no se copió código de otros plugins.
-
