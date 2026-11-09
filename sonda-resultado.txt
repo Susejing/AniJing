@@ -1,0 +1,119 @@
+bytes emision: 60148
+slug: demons-crest-sub-espanol
+bytes ficha: 23229
+== primeros 4000 chars ==
+<!doctype html>
+<html lang="es"><head>
+<meta name="google-site-verification" content="VxwCTf3BIqK0eo_ddPqgKgGxdyQ8ixBqcd8mmxbomos" />
+
+<link rel="shortcut icon" href="/images/ivanime-icon.png" type="image/x-icon" />
+<link rel="apple-touch-icon" href="/images/ivanime-icon.png" />
+
+
+
+
+<meta charset="utf-8">
+
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demon&amp;#039;s Crest Sub Español Online en Ivanime</title>
+<meta property="og:site_name" content="Ivanime" />
+
+
+<meta property="og:title" content="Demon&amp;#039;s Crest Sub Español Online en Ivanime" />
+<meta name="description" content="Ver Demon&amp;#039;s Crest online sub español gratis en Ivanime. Yuma Ashihara estaba listo para disfrutar de una sesión de prueba de Actual Magic (AM), e Mira todos los episodios en HD.">
+<meta property="og:description" content="Ver Demon&amp;#039;s Crest online sub español gratis en Ivanime. Yuma Ashihara estaba listo para disfrutar de una sesión de prueba de Actual Magic (AM), e Mira todos los episodios en HD." />
+
+
+
+
+
+
+<meta name="robots" content="index, follow">
+
+<meta name="theme-color" content="#1e1c1b" />
+<meta name="csrf-token" content="zznDv71xGWuJ17T9dyV0X0Wuf2QSZ7oiPvhnaYdV">
+
+<link rel="preload" as="style" href="https://ivanime.buzz/build/assets/app-B5vnAjYV.css" /><link rel="modulepreload" as="script" href="https://ivanime.buzz/build/assets/app-CFHQxs1u.js" /><link rel="stylesheet" href="https://ivanime.buzz/build/assets/app-B5vnAjYV.css" /><script type="module" src="https://ivanime.buzz/build/assets/app-CFHQxs1u.js"></script>
+
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-57HS68HJW3"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag("js", new Date());
+gtag("config", "G-57HS68HJW3");
+</script>
+
+<script type="text/javascript" data-cfasync="false">
+/*<![CDATA[/* */
+(function(){var b=window,l="f33e7b9425e668da364405b5853cd658",y=[["siteId",805+881+239-36+5288295],["minBid",0],["popundersPerIP","0"],["delayBetween",0],["default",false],["defaultPerDay",0],["topmostLayer","auto"]],i=["d3d3LmludGVsbGlnZW5jZWFkeC5jb20veHVXL3JqdW1wLm1pbi5qcw==","ZDJrbHg4N2Jnem5nY2UuY2xvdWRmcm9udC5uZXQvQXNId29YL0xPL3FnbG9iYWxpemUubWluLmNzcw==","d3d3LnhlYW96ZWZlZmt4LmNvbS9KaENJaXgvaGp1bXAubWluLmpz","d3d3LnhwdmV5aHd1LmNvbS9ReC9CL2tnbG9iYWxpemUubWluLmNzcw=="],f=-1,k,p,s=function(){clearTimeout(p);f++;if(i[f]&&!(1801218355000<(new Date).getTime()&&1<f)){k=b.document.createElement("script");k.type="text/javascript";k.async=!0;var z=b.document.getElementsByTagName("script")[0];k.src="https://"+atob(i[f]);k.crossOrigin="anonymous";k.onerror=s;k.onload=function(){clearTimeout(p);b[l.slice(0,16)+l.slice(0,16)]||s()};p=setTimeout(s,5E3);z.parentNode.insertBefore(k,z)}};if(!b[l]){try{Object.freeze(b[l]=y)}catch(e){}s()}})();
+/*]]>/* */
+</script>
+
+<script src="https://verticallysaturate.com/a5/ec/58/a5ec58dfe6001c7ff3acbe18f275ef2e.js"></script>
+
+<script>(function(s){s.dataset.zone="10809838",s.src="https://llvpn.com/tag.min.js"})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement("script")))</script>
+
+</head>
+<body class="min-h-screen overflow-x-hidden flex flex-col">
+
+
+<header id="navbar" class="sticky top-0 left-0 right-0 z-50" style="background: #1e1c1b; border-bottom: 1px solid var(--line-soft);">
+  <div class="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 py-3 flex items-center gap-3 sm:gap-6 lg:gap-8">
+    
+    <button id="mobile-menu-btn" class="xl:hidden w-10 h-10 rounded-lg grid place-items-center text-white/70 hover:bg-white/10 transition shrink-0" aria-label="Menú">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+
+    
+    
+    <a href="https://ivanime.buzz" class="navbar-brand flex items-center shrink-0 absolute left-1/2 -tra
+== meta tags ==
+<meta name="google-site-verification" content="VxwCTf3BIqK0eo_ddPqgKgGxdyQ8ixBqcd8mmxbomos" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:site_name" content="Ivanime" />
+<meta property="og:title" content="Demon&amp;#039;s Crest Sub Español Online en Ivanime" />
+<meta name="description" content="Ver Demon&amp;#039;s Crest online sub español gratis en Ivanime. Yuma Ashihara estaba listo para disfrutar de una sesión de prueba de Actual Magic (AM), e Mira todos los episodios en HD.">
+<meta property="og:description" content="Ver Demon&amp;#039;s Crest online sub español gratis en Ivanime. Yuma Ashihara estaba listo para disfrutar de una sesión de prueba de Actual Magic (AM), e Mira todos los episodios en HD." />
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#1e1c1b" />
+<meta name="csrf-token" content="zznDv71xGWuJ17T9dyV0X0Wuf2QSZ7oiPvhnaYdV">
+== urls de imagen ==
+https://ivanime.buzz/images/ivanime-logo.png?v=4.72
+https://ivanime.buzz/img/anime.png
+https://ivanime.buzz/assets/thumbs/imagen/demons-crest-1793996605.jpg.webp?v=6
+== ventana h1 ==
+h1 en byte: 13926
+enter gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold tracking-widest uppercase" style="background:rgba(0,0,0,0.6); color:#ff9b05; border:1px solid rgba(255,155,5,0.35); backdrop-filter: blur(6px);">
+            <span class="w-1.5 h-1.5 rounded-full bg-brand animate-pulse"></span>            Estreno
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="flex-1 min-w-0 flex flex-col gap-4">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="font-mono text-[11px] tracking-[0.18em] uppercase text-brand">Anime</span>
+                    <span class="w-1 h-1 rounded-full bg-white/30"></span>
+          <span class="font-mono text-[11px] tracking-widest text-white/55">06 de Noviembre de 2026</span>
+                  </div>
+
+        <h1 class="font-extrabold leading-[0.95] tracking-tight" style="font-size: clamp(30px, 5vw, 56px); text-wrap: balance">Demon&#039;s Crest</h1>
+
+                <div class="font-mono text-[12px] text-white/45 -mt-1">Devils&#039; Crest</div>
+        
+        
+                <div class="flex gap-2 flex-wrap">
+                    <a href="https://ivanime.buzz/genero/accion" class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-white/[0.08] text-white/75 border border-white/[0.06] hover:bg-white/[0.14] hover:text-white transition">Acción</a>
+                    <a href="https://ivanime.buzz/genero/ciencia-ficcion" class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-white/[0.08] text-white/75 border border-white/[0.06] hover:bg-white/[0.14] hover:text-white transition">Ciencia Ficción</a>
+                  </div>
+        
+        
+                <p class="text-white/75 text-[15px] leading-[1.6] max-w-[640px]" style="text-wrap: pretty">Yuma Ashihara estaba listo para disfrutar de una sesión de prueba de Actual Magic (AM), el primer VRMMO-RPG fulldive del mundo, junto con sus compañeros de clase Sawa Ashihara, Kenji Kondo y Minagi Sano. El plan era simple: derrotar al jefe como un grupo de cuatro, cerrar sesión y terminar la prueba de forma segura, o al menos, así es como se suponía que debía ser.</p>
+        
+        
+        <div class="flex flex-wrap gap-2 sm:g
+== FIN ==
