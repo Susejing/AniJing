@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.14 «La ventana ancha»)
+## Qué hace (v0.6.15 «La imagen presentada»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -31,6 +31,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.15 «La imagen presentada»
+
+La 0.6.14 llenó los directorios de IvAnime y el teléfono confirmó que reproduce — solo quedaban los pósters grises. Y resultó que sí había cura: la 0.6.14 los había declarado «bloqueo del sitio» tras probarlos sin Referer y por proxy, pero la sonda v35 encontró la llave que la casa ya conocía de Mangas.in y ManhwaWeb: **sus imágenes responden 403 al desnudo y 200 CON PRESENTACIÓN** — el Referer del propio sitio más un UA de navegador (el UA solo también recibe 403; el espejo ivanime.top no comparte assets y el proxy wsrv.nl tampoco pasa, así que la única puerta es presentarse como el propio sitio). Kino pide los pósters del catálogo sin Referer y por eso salían grises. La cura es la capability «imageSource» de Kino (apiVersion 13): los items de IvAnime llevan su póster como una referencia servida por el plugin, y cuando Kino va a pintar la tarjeta le pide los bytes, el plugin baja la imagen con presentación y se la entrega en base64 — Kino la cachea por imagen (la misma portada no se baja dos veces). Al actualizar, Kino pedirá re-aprobar el plugin por la capacidad nueva de servir imágenes. Honesto: la primera vez que aparece una fila sus pósters tardan un segundo en llenarse (Kino los pide en serie); si el sitio vuelve a cerrar la llave, el placeholder gris vuelve sin romper nada; y un título guardado en biblioteca desde otro dispositivo muestra el placeholder (la referencia solo carga donde el plugin puede servirla).
 
 ## v0.6.14 «La ventana ancha»
 

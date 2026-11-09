@@ -308,8 +308,28 @@
 // capítulos y reproducción van de sobra. Y si /emision o /animes
 // algún día sale vacía con el olor a Cloudflare en el log, es el
 // reto del sitio, no del plugin: la bitácora lo cuenta.
+//
+// v0.6.15 «La imagen presentada» — el teléfono pidió el truco de
+// MangaTrack para los pósters grises de IvAnime, y la sonda v35
+// encontró la llave: sus imágenes responden 403 al desnudo pero 200
+// CON PRESENTACIÓN (el Referer del propio sitio más un UA de
+// navegador; el UA solo no basta) — el mismo muro de Mangas.in y
+// ManhwaWeb que la casa ya venció en su día. Kino pide los pósters
+// del catálogo sin Referer y por eso salían grises; la cura es la
+// capability «imageSource» (apiVersion 13): los items de IvAnime
+// llevan su póster como {source:'plugin', handle:<la URL>} y Kino
+// le pide los bytes al plugin, que baja la imagen con presentación
+// y se la sirve en base64; Kino la cachea por handle (la misma
+// imagen no se baja dos veces). El espejo .top no comparte assets
+// (404) y el proxy wsrv tampoco pasa (400): la única puerta es
+// presentarse como el propio sitio. HONESTO: la primera vez que
+// aparece una fila sus pósters tardan un segundo en llenarse (Kino
+// los pide en serie), y si el sitio vuelve a cerrar la llave el
+// placeholder gris vuelve sin romper nada; en biblioteca e
+// historial la referencia se guarda tal cual (un título guardado en
+// otro dispositivo muestra el placeholder y ya).
 
-const VERSION = '0.6.14';
+const VERSION = '0.6.15';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -778,6 +798,7 @@ async function capturar(url, etiqueta, refBase) {
   const origen = origenDe((pagina && pagina.finalUrl) || url);
   return {
     url: pick.url,
+
     mime: mimeDe(pick.url),
     headers: (pick.headers && Object.keys(pick.headers).length) ? pick.headers : { Referer: origen + '/', 'User-Agent': UA }
   };
@@ -798,7 +819,6 @@ const TIPO_ETIQUETA = {
   uqload: 'Uqload', streamtape: 'StreamTape', yourupload: 'YourUpload', upnshare: 'UPNShare',
   dood: 'Doodstream', okru: 'Ok.ru', hexload: 'Hexload', savefiles: 'SaveFiles', filemoon: 'Filemoon',
   streamwish: 'StreamWish', lulu: 'LuluStream', vidhide: 'Vidhide', wolfstream: 'WolfStream',
-
   multi: 'Multiserver', generic: 'Servidor'
 };
 
@@ -1579,6 +1599,7 @@ registrarFuente({
     const pag = raiz.pagination && typeof raiz.pagination === 'object' ? raiz.pagination : null;
     if (pag && pag.currentPage < pag.totalPages) next = String(pag.currentPage + 1);
     else if (!pag && items.length >= 20) next = String((Math.max(1, parseInt(String(cursor || '1'), 10) || 1)) + 1);
+
     return { items: items, next: next };
   },
 
@@ -1599,7 +1620,6 @@ registrarFuente({
     if (typeof media.score === 'number' && media.score > 0 && media.score <= 10) {
       out.rating = Math.round(media.score * 100) / 100;
     }
-
     if (typeof media.malId === 'number' && media.malId > 0) out.ids = { mal: media.malId };
     return out;
   },
@@ -2380,6 +2400,7 @@ async function probarConCaptura(epUrl, servers, idx, refDe, etiqueta, refBase) {
         return out;
       } catch (e2) {
         log('la captura del episodio falló', (e2 && e2.message) || e2);
+
       }
     }
     throw e;
@@ -2400,7 +2421,6 @@ function posterEnVentana(ventana) {
      * atributo así no es póster, es su ausencia. */
     if (m && !/^data:/i.test(m[1]) && !/no_poster|capblank|placeholder/i.test(m[1])) {
       return m[1].indexOf('//') === 0 ? 'https:' + m[1] : m[1];
-
     }
   }
   /* v0.6.2: último recurso — cualquier URL de imagen con extensión que
@@ -3181,6 +3201,7 @@ async function easMulti(link) {
       return traer(origen + '/embed/api/decrypt-stream', {
         json: { encrypted: it.dato },
         headers: { Referer: link, Origin: origen, Accept: 'application/json' },
+
         timeoutMs: 6000
       });
     }));
@@ -3201,7 +3222,6 @@ async function easMulti(link) {
     }
   }
   /* el doblado y el castellano van primero, que es lo que se busca */
-
   servers.sort(function (a, b) {
     const la = /latino|castellano/i.test(a.idioma) ? 0 : 1;
     const lb = /latino|castellano/i.test(b.idioma) ? 0 : 1;
@@ -3982,6 +4002,7 @@ registrarFuente({
       { id: 'van-genero-fantasia', titulo: 'Fantasía · VerAnime', ref: 'van-genero-fantasia', genero: 'fantasia' },
       { id: 'van-genero-comedia', titulo: 'Comedia · VerAnime', ref: 'van-genero-comedia', genero: 'comedia' },
       { id: 'van-genero-drama', titulo: 'Drama · VerAnime', ref: 'van-genero-drama', genero: 'drama' },
+
       { id: 'van-genero-romance', titulo: 'Romance · VerAnime', ref: 'van-genero-romance', genero: 'romance' }
     ];
     const rtas = await Promise.all(defs.map(async (def) => {
@@ -4002,7 +4023,6 @@ registrarFuente({
             log('van home falló', (e2 && e2.message) || String(e2));
           }
         }
-
         if (!items.length) {
           if (r && r.text) {
             log('van fila «' + def.genero + '»: status ' + r.status + ', ' + r.text.length + ' letras, 0 tarjetas' +
@@ -4159,6 +4179,17 @@ function ivaPosterDe(html, slug) {
   return '';
 }
 
+/* v0.6.15: el póster de IvAnime viaja como referencia propia
+ * ({source:'plugin', handle:<URL>}): Kino le pide los bytes al
+ * plugin, que baja la imagen con presentación (Referer + UA, la
+ * llave que la sonda v35 encontró: desnudo 403, con Referer 200).
+ * Las imágenes de otros hosts viajan peladas como siempre. */
+function ivaRefDe(url) {
+  const u = String(url || '');
+  if (u.indexOf('https://ivanime.buzz/') !== 0) return u || undefined;
+  return { source: 'plugin', handle: u };
+}
+
 function ivaTarjetas(html) {
   /* v0.6.14: las tarjetas de /emision y /animes son anclas «card-wrap»
    * que llevan TODO dentro (div, imagen, insignias y título) y su
@@ -4218,7 +4249,9 @@ function ivaTarjetas(html) {
        * verificado con y sin el «-portada» en el nombre del archivo). */
       poster = ivaPosterDe(String(html || ''), slug);
     }
-    if (poster) item.poster = absolutizar(poster, BASE_IVA);
+    /* v0.6.15: el póster va como referencia servida por el plugin —
+     * Kino pide los bytes con nuestra presentación y lo cachea. */
+    if (poster) item.poster = ivaRefDe(absolutizar(poster, BASE_IVA));
     items.push(item);
   }
   return items;
@@ -4328,7 +4361,8 @@ registrarFuente({
     const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
     if (h) serie.title = limpio(h[1]) || serie.title;
     const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(r.text);
-    if (og) serie.poster = og[1].indexOf('//') === 0 ? 'https:' + og[1] : og[1];
+    /* v0.6.15: la ficha también viaja como referencia servida. */
+    if (og) serie.poster = ivaRefDe(og[1].indexOf('//') === 0 ? 'https:' + og[1] : og[1]);
     const sinM = /<p[^>]*>([\s\S]{30,600}?)<\/p>/i.exec(r.text);
     if (sinM) serie.overview = limpio(sinM[1]).slice(0, 400);
     return serie;
@@ -4769,6 +4803,7 @@ async function screen(arg) {
           text: f ? f.etiqueta : b.fuente,
           style: 'h3',
           tooltip: 'Ver solo esta fuente',
+
           tooltipEn: 'Show this source only',
           onTap: { event: 'fuente', arg: b.fuente }
         }];
@@ -4803,7 +4838,6 @@ async function screen(arg) {
 }
 
 async function screenEvent(e) {
-
   const ev = e || {};
   const state = ev.state && typeof ev.state === 'object' ? ev.state : {};
   const nombre = String(ev.name || '');
@@ -4873,5 +4907,41 @@ async function screenEvent(e) {
   return null;
 }
 
-export { search, home, browse, episodes, details, resolve, screen, screenEvent };
+async function image(arg) {
+  /* v0.6.15 «La imagen presentada»: Kino pide por este export los
+   * bytes de los pósters de IvAnime (capability imageSource, la
+   * apiVersion 13). El handle es la URL de la imagen, estable por
+   * serie (su nombre lleva el slug y su número), sin secretos. La
+   * sonda v35 midió el muro: desnudo 403, con UA solo 403, con
+   * Referer del propio sitio 200 — así que aquí se va con
+   * presentación. Kino cachea cada handle una vez y no re-pide;
+   * un fallo aquí es honesto: Kino muestra el placeholder y pone
+   * el handle cinco minutos en cuarentena, y la ficha y los
+   * capítulos siguen intactos. */
+  const handle = arg && arg.handle ? String(arg.handle) : '';
+  if (handle.indexOf('https://ivanime.buzz/') !== 0) {
+    throw kino.error('not_found', 'imagen que no es de IvAnime');
+  }
+  const r = await kino.fetch(handle, {
+    headers: { Referer: 'https://ivanime.buzz/', 'User-Agent': UA },
+    timeoutMs: 9000
+  });
+  if (!r || r.status !== 200) {
+    throw kino.error('unavailable', 'la imagen no llegó (status ' + (r && r.status) + ')');
+  }
+  let bytes = '';
+  try { bytes = r.base64(); } catch (eB) { bytes = ''; }
+  if (!bytes) {
+    throw kino.error('unavailable', 'IvAnime no entregó los bytes del póster');
+  }
+  const ct = ((r.headers && (r.headers['content-type'] || r.headers['Content-Type'])) || '');
+  let mime = 'image/jpeg';
+  if (/webp/i.test(ct)) mime = 'image/webp';
+  else if (/png/i.test(ct)) mime = 'image/png';
+  else if (/\.webp(\?|$)/i.test(handle)) mime = 'image/webp';
+  else if (/\.png(\?|$)/i.test(handle)) mime = 'image/png';
+  return { bytes: bytes, mime: mime };
+}
+
+export { search, home, browse, episodes, details, resolve, screen, screenEvent, image };
 
