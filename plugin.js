@@ -382,7 +382,29 @@
 // AnimeYT) y al abrirlos partirRef los botaba; ya cosen como
 // cualquier otra ref de la casa.
 
-const VERSION = '0.6.17';
+// v0.6.18 «El póster que espera» — la 0.6.17 en el teléfono contó
+// una verdad incómoda: el Inicio dibujó sus rieles a mano con sus
+// títulos y su «Ver más», pero las imágenes ni grises quedaron —
+// solo letras. El contrato leído a fondo lo explica: los
+// «headers» del Image del lienzo pertenecen a la PRÓXIMA Kino
+// (la 0.9.83 provisional, «imágenes que necesitan un Referer») —
+// el teléfono de hoy los ignora y pide la portada desnuda; el
+// muro contesta 403 y la caja queda vacía (y el imageSource no
+// ayuda: la guía lo dice claro, sus referencias solo sirven a
+// las tarjetas NATIVAS de Kino, nunca al lienzo de la pantalla).
+// Mientras esa versión llega, la caja espera con dignidad: cada
+// Image lleva su «fallback» — el nodo que el contrato dibuja
+// dentro de la caja cuando la imagen falla (desde Kino 0.9.74)
+// — con su Icon y el nombre de la fuente sobre la superficie de
+// Kino, tal como lo pinta la galería oficial. Y los headers se
+// quedan donde están, porque el día que el teléfono se ponga la
+// 0.9.83 las portadas del Inicio pintarán solas, sin tocar el
+// plugin. Lo demás queda como la 0.6.17 lo dejó: el respaldo
+// del pulgar para las portadas grandes, la búsqueda de IvAnime
+// que ya abre sus resultados y la bitácora que confiesa póster
+// por póster.
+
+const VERSION = '0.6.18';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4837,7 +4859,15 @@ async function screen(arg) {
        * «headers» del lienzo, Kino 0.9.83+, el truco de MangaTrack),
        * el título al pie, su tap a la ficha, y el riel entero en un
        * scroll horizontal con su «Ver más». Si algo no cuadra, se
-       * cae al titleRail de siempre. */
+       * cae al titleRail de siempre.
+       * v0.6.18 «El póster que espera»: los headers aún no viven en
+       * ningún teléfono (la 0.9.83 no ha salido), así que la imagen
+       * falla hoy sí o hoy sí — y sin fallback la caja quedaba
+       * vacía, con el riel en puras letras. Cada Image lleva su
+       * «fallback» del contrato (desde Kino 0.9.74): el Icon y el
+       * nombre de la fuente sobre la superficie de Kino mientras
+       * la portada no puede llegar. Cuando el teléfono se ponga
+       * la 0.9.83, las portadas pintarán solas encima. */
       const primero = fila.items && fila.items[0] ? fila.items[0] : null;
       const esIva = !!(primero && primero.poster && typeof primero.poster === 'object' && primero.poster.source === 'plugin' && String(primero.poster.handle || '').indexOf('https://ivanime.buzz/') === 0);
       if (!esIva) {
@@ -4856,7 +4886,20 @@ async function screen(arg) {
           gap: 4,
           width: { compact: 104, medium: 124, expanded: 148 },
           children: [
-            { type: 'Image', url: u, aspect: '2:3', fit: 'cover', headers: { Referer: 'https://ivanime.buzz/', 'User-Agent': UA } },
+            {
+              type: 'Image', url: u, aspect: '2:3', fit: 'cover',
+              headers: { Referer: 'https://ivanime.buzz/', 'User-Agent': UA },
+              alt: String(it.title || ''), altEn: String(it.title || ''),
+              /* v0.6.18: hoy (Kino anterior a 0.9.83) los headers se
+               * ignoran, el muro contesta 403 y sin este «fallback» la
+               * caja quedaba vacía — el riel era solo letras. Este nodo
+               * es el del contrato (desde 0.9.74): se dibuja dentro de
+               * la caja cuando la imagen falla o no hay url. */
+              fallback: {
+                type: 'Stack', color: 'surface',
+                children: [{ type: 'Column', padding: 12, children: [{ type: 'Icon', name: 'movie' }, { type: 'Text', text: 'IvAnime', style: 'caption' }] }]
+              }
+            },
             { type: 'Text', text: String(it.title || ''), style: 'caption', maxLines: 2 }
           ],
           onTap: { go: { title: { ref: String(it.ref || ''), kind: it.kind === 'movie' ? 'movie' : 'series' } } }

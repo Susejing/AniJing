@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.17 «La ventanilla del lienzo»)
+## Qué hace (v0.6.18 «El póster que espera»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -31,6 +31,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.18 «El póster que espera»
+
+La 0.6.17 en el teléfono contó una verdad incómoda: el Inicio de IvAnime dibujó sus rieles a mano con sus títulos y su «Ver más»… pero las imágenes ni grises quedaron — solo letras. El contrato de Kino leído a fondo lo explica: los «headers» del Image del lienzo pertenecen a la **próxima** Kino (la 0.9.83, «imágenes que necesitan un Referer») — ningún teléfono los tiene todavía, así que hoy el lienzo pide la portada desnuda, el muro contesta 403 y la caja queda vacía (y el servidor de imágenes del plugin no puede ayudar: sus referencias solo sirven a las tarjetas nativas de Kino, nunca al lienzo de la pantalla). Mientras esa versión llega, esta hace que la caja **espere con dignidad**: cada Image del riel lleva su «fallback» — el nodo que el contrato de Kino dibuja dentro de la caja cuando la imagen falla (disponible desde Kino 0.9.74) — con un icono y el nombre de la fuente sobre la superficie de Kino, tal como lo pinta la galería oficial de componentes. Y los headers se quedan donde están: el día que tu teléfono se ponga la 0.9.83, las portadas del Inicio pintarán solas, sin tocar el plugin. Lo demás queda como la 0.6.17 lo dejó: el respaldo del pulgar para las portadas grandes, la búsqueda de IvAnime que abre sus resultados, y la bitácora que confiesa póster por póster.
 
 ## v0.6.17 «La ventanilla del lienzo»
 
