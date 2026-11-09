@@ -5,7 +5,7 @@ kanojo-no-tomodachi-sub-espanol -> base kanojo-no-tomodachi -> https://ivanime.b
 
 === VAN: ficha de ejemplo para listar generos ===
 genero ver-anime status 200 primer slug: kizu-darake-seijo-yori-houfuku-wo-komete
-ficha status 200 bytes 88840
+ficha status 200 bytes 88826
 generos de la ficha: ['fantasia', 'sci-fi', 'ver-anime', 'accion', 'antropomorfico', 'artes-marciales', 'aventura', 'bl', 'carreras', 'ciencia-ficcion', 'comedia', 'cosas-de-la-vida', 'crime', 'deportes', 'detectives', 'drama', 'ecchi', 'elenco-adulto', 'erotico', 'escolares', 'espacial', 'familia', 'gl', 'gore', 'gourmet', 'guerra-y-politica', 'harem', 'hentai', 'historico', 'idol', 'idols-hombre', 'idols-mujer', 'infantil', 'isekai', 'josei', 'juegos-estrategia', 'kids', 'mahou-shoujo', 'mecha', 'militar', 'misterio', 'mitologia', 'musica', 'parodia', 'psicologico', 'recuentos-de-la-vida', 'romance', 'samurai', 'seinen', 'shoujo', 'shoujo-ai', 'shounen', 'shounen-ai', 'slice-of-life', 'sobrenatural', 'superpoderes', 'suspenso', 'terror', 'thriller', 'vampiros', 'western']
 
 === VAN: generos candidatas ===
