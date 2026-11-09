@@ -13,7 +13,7 @@ jobs:
       - name: sondear
         run: |
           python3 - <<'PYEOF' > probe-result.txt 2>&1 || true
-          import urllib.request, re, subprocess, base64
+          import urllib.request, re, subprocess
           UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
           def get(url, headers=None, timeout=25):
               h={'User-Agent':UA}
@@ -32,27 +32,32 @@ jobs:
           print(js)
           
           sec('CANDIDATOS A CLAVE')
-          for pat in [r'\"([A-Za-z0-9]{6,40})\"\s*,?\s*\)', r'pass(?:word|phrase)?\s*[:=]\s*[\'\"]([^\'\"]+)', r'AES\.decrypt\([^,]+\s*,\s*[\'\"]([^\'\"]+)', r'decrypt\([^,]+,\s*\"([^\"]+)\"', r'var\s+(?:key|clave|secret|pass)[^=]*=\s*[\'\"]([^\'\"]+)\"']:
-              print(pat, '->', re.findall(pat, js)[:12])
+          Q=chr(39); DQ=chr(34)
+          p1='pass(?:word|phrase)?' + chr(92) + 's*[:=]' + chr(92) + 's*[' + Q + DQ + ']([^' + Q + DQ + ']+)'
+          p2='decrypt' + chr(92) + '([^,]+,' + chr(92) + 's*[' + Q + DQ + ']([^' + Q + DQ + ']+)'
+          p3='[' + Q + DQ + ']([A-Za-z0-9_-]{6,40})[' + Q + DQ + ']'
+          for nm,p in [('pass',p1),('decrypt',p2)]:
+              print(nm,'->',re.findall(p,js)[:15])
+          lits=re.findall(p3,js)
+          print('literales frecuentes:', sorted(set([x for x in lits if len(x)>=6]))[:40])
           
-          sec('INTENTOS DE DESCIFRE CON CANDIDATOS')
-          blobs=['U2FsdGVkX1+uq1BtVg2rHuPKt41RboYCtyzIuUAnpSMu39hla0kL3PVEHper4e2Akg4vJeXxGaj+D0h+A33fGw==','U2FsdGVkX1/m21fEglGhfj9yzkRdC7hammPgASQs1SMbJ+H2P1fuUBysrR4eBffg','U2FsdGVkX18pT8jkN7ppAomG63TSdebPk1Lv8+48Ka+xCuvc80jtLQNhvn2HbSeBcFS1RtCQJPrDCaX1EuzZsw==','U2FsdGVkX1+1TRO2FVDNTZjrL5saqj8PlKCEPWMguiVxCFWTmZASelvSZiTwWg6rY2+1D0rY4Xs1C6HUMg4/7Q==']
-          cands=set()
-          for pat in [r'\"([A-Za-z0-9]{6,40})\"\s*,?\s*\)', r'AES\.decrypt\([^,]+\s*,\s*[\'\"]([^\'\"]+)\'] :
-              for c in re.findall(pat, js): cands.add(c)
-          print('cands:', list(cands))
-          for c in list(cands)[:15]:
-              for b in blobs[:1]:
+          sec('DESCIFRE CON CANDIDATOS')
+          blobs=['U2FsdGVkX1+uq1BtVg2rHuPKt41RboYCtyzIuUAnpSMu39hla0kL3PVEHper4e2Akg4vJeXxGaj+D0h+A33fGw==','U2FsdGVkX1+1TRO2FVDNTZjrL5saqj8PlKCEPWMguiVxCFWTmZASelvSZiTwWg6rY2+1D0rY4Xs1C6HUMg4/7Q==']
+          cands=set(re.findall(p1,js)) | set(re.findall(p2,js)) | set([x for x in lits if 4<=len(x)<=40])
+          print('probando', len(cands), 'candidatos')
+          for c in sorted(cands):
+              ok=0
+              for b in blobs:
                   try:
-                      p=subprocess.run(['openssl','enc','-d','-aes-256-cbc','-md','md5','-pass','pass:'+c,'-a'], input=b+'\n', capture_output=True, text=True, timeout=10)
+                      p=subprocess.run(['openssl','enc','-d','-aes-256-cbc','-md','md5','-pass','pass:'+c,'-a'], input=b+chr(10), capture_output=True, text=True, timeout=10)
                       if p.returncode==0 and p.stdout.strip():
-                          print('CLAVE', c, '->', p.stdout.strip()[:200])
-                  except Exception as e: pass
+                          print('CLAVE',c,'->',p.stdout.strip()[:200]); ok=1; break
+                  except Exception: pass
           
           sec('DHCPLAY MAIN.JS')
           st,mj=get('https://dhcplay.com/main.js?v=1.1.9', {'Referer':'https://dhcplay.com/'})
           print('status',st,'len',len(mj))
-          print(mj[:3000])
+          print(mj[:4000])
             
           PYEOF
           head -c 15000 probe-result.txt
@@ -61,5 +66,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add probe-result.txt
-          git commit -m "probe v6: resultados [skip ci]" || echo "nada que subir"
+          git commit -m "probe v7: resultados [skip ci]" || echo "nada que subir"
           git push
