@@ -24,38 +24,29 @@ jobs:
                       return r.status, r.read().decode('utf-8', 'replace')
               except Exception as e:
                   return 0, 'ERR ' + str(e)
-          print('=== VAN doo_player_ajax (7870 tv 1) ===')
-          d = urllib.parse.urlencode({'action': 'doo_player_ajax', 'post': '7870', 'nume': '1', 'type': 'tv'}).encode()
-          st, b = get('https://veranime.ninja/wp-admin/admin-ajax.php', 'https://veranime.ninja/ver/cyberpunk-edgerunners-episodio-1/', data=d, extra={'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
-          print('status:', st, '| body:', repr(b[:600]))
-          embed = ''
-          try:
-              j = json.loads(b)
-              embed = (j.get('embed_url') or '').replace('\\/', '/')
-              print('type:', j.get('type'), '| embed_url:', embed)
-          except Exception as e:
-              print('json ERR', str(e)[:100])
-          if embed:
-              print('=== VAN EMBED (darkanimes) ===')
-              st2, b2 = get(embed, 'https://veranime.ninja/')
-              print('status:', st2, '| bytes:', len(b2))
-              print('--- CABEZA:', repr(b2[:2500]))
-              for m in list(re.finditer(r"\(\s*['\"](https?://[^'\"]+)['\"]\s*\)", b2))[:20]:
-                  print('ONCLICK:', m.group(1))
-              for m in list(re.finditer(r'data-player\s*=\s*["\']([A-Za-z0-9+/=]+)["\']', b2))[:10]:
-                  import base64
-                  try: dec = base64.b64decode(m.group(1)).decode('utf-8','replace')
-                  except Exception: dec = '???'
-                  print('DATA-PLAYER:', dec[:200])
-              for m in list(re.finditer(r'<iframe\b[^>]*>', b2))[:5]:
-                  print('--- IFRAME:', repr(m.group(0)[:300]))
-          print('=== VAN doo_player_ajax de una PELICULA por si acaso ===')
-          print('(omitido)')
+          print('=== VAN EMBED COMPLETO ===')
+          st, b = get('https://darkanimes.com/cyberpunk-edgerunners-1/', 'https://veranime.ninja/')
+          print('bytes:', len(b))
+          i = b.find('msp-lists')
+          print('--- MSP-LISTS:', repr(b[i-100:i+3500]) if i>=0 else 'no')
+          m = re.search(r'data-api\s*=\s*["\']([^"\']+)["\']', b)
+          api = m.group(1) if m else ''
+          print('API:', api)
+          print('=== MSP API ===')
+          if api:
+              for q in ['', '?lang=1', '?lang=2', '?lang=3']:
+                  st2, b2 = get(api + q, 'https://darkanimes.com/')
+                  print('API' + q, '->', st2, '|', repr(b2[:900]))
+          print('=== MSP API por POST por si acaso ===')
+          if api:
+              d = urllib.parse.urlencode({'lang': '1'}).encode()
+              st3, b3 = get(api, 'https://darkanimes.com/', data=d, extra={'Content-Type': 'application/x-www-form-urlencoded'})
+              print('POST ->', st3, '|', repr(b3[:500]))
           PY
       - name: commit
         run: |
           git config user.name "probe-bot"
           git config user.email "probe@users.noreply.github.com"
           git add probe-result.txt
-          git commit -m "probe v28: resultados [skip ci]" || echo "nada"
+          git commit -m "probe v29: resultados [skip ci]" || echo "nada"
           git push
