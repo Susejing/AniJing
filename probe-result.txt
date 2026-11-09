@@ -1,0 +1,24 @@
+== probe v37: el pulgar derivado de las portadas grandes ==
+home: 110180 bytes
+-- las 3 portadas que el telefono rechazo (tope 262144):
+   tokyo-revengers-santen-sensou-hen-1791143214
+     portada:  200 image/jpeg 271578
+     pulgar:   200 image/webp 41656
+     pulgar v6: 200 image/webp 41656
+   yasei-no-last-boss-ga-arawareta-temporada-2-1790439553
+     portada:  404 text/html; charset=utf-8 13792
+     pulgar:   200 image/webp 98600
+     pulgar v6: 200 image/webp 98600
+   seitokai-ni-mo-ana-wa-aru-1791141404
+     portada:  404 text/html; charset=utf-8 13792
+     pulgar:   200 image/webp 92710
+     pulgar v6: 200 image/webp 92710
+-- patron general: 8 portadas de la home -> su pulgar con los mismos digitos
+   1: 404 text/html; charset=utf-8 13792 <- https://ivanime.buzz/assets/img/serie/portada/black-clover-portada-1777582817.jpg
+   2: 404 text/html; charset=utf-8 13792 <- https://ivanime.buzz/assets/img/serie/portada/kanojo-no-tomodachi-portada-1791253718.jpg
+   3: 404 text/html; charset=utf-8 13792 <- https://ivanime.buzz/assets/img/serie/portada/seitokai-ni-mo-ana-wa-aru-portada-1791141404.jpg
+   4: 404 text/html; charset=utf-8 13792 <- https://ivanime.buzz/assets/img/serie/portada/tantei-wa-mo-shindeiru-temporada-2-portada-1791392078.jpg
+   5: 404 text/html; charset=utf-8 13792 <- https://ivanime.buzz/assets/img/serie/portada/to-aru-anbu-no-item-portada-1791560194.jpg
+   6: 200 image/webp 41656 <- https://ivanime.buzz/assets/img/serie/portada/tokyo-revengers-santen-sensou-hen-1791143214.jpg
+   7: 404 text/html; charset=utf-8 13792 <- https://ivanime.buzz/assets/img/serie/portada/yasei-no-last-boss-ga-arawareta-temporada-2-portada-1790439553.jpg
+== fin probe v37 ==
