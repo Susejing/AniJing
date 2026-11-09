@@ -1,6 +1,6 @@
 # AniJing
 
-AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](https://kinotvapp.github.io/): catálogo, búsqueda, episodios y reproducción, todo en español.
+AniJing — Plugin de anime puro para kino catálogo, búsqueda, episodios y reproducción, todo en español.
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
