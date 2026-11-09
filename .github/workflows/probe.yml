@@ -1,0 +1,84 @@
+name: probe
+on: [push]
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: sondear
+        run: |
+          set +e
+          python3 - <<'PY' > probe-result.txt
+          import re, urllib.request, urllib.parse
+          UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+          def get(url, ref):
+              h = {'User-Agent': UA, 'Referer': ref, 'Accept': 'text/html,*/*', 'Accept-Language': 'es-ES,es;q=0.9'}
+              req = urllib.request.Request(url, headers=h)
+              try:
+                  with urllib.request.urlopen(req, timeout=25) as r:
+                      return r.status, r.read().decode('utf-8', 'replace')
+              except Exception as e:
+                  return 0, 'ERR ' + str(e)
+          def anclas_iva(b, n=3):
+              out = []
+              for m in re.finditer(r'href\s*=\s*["\'][^"\']*/anime/([^"\'/?#]+)', b):
+                  i = m.start()
+                  out.append('--- ancla /anime/' + m.group(1) + ' en idx ' + str(i) + '\nANTES: ' + repr(b[max(0,i-600):i]) + '\nDESPUES: ' + repr(b[i:i+900]))
+                  if len(out) >= n: break
+              return out
+          print('=== IVA HOME ===')
+          st, b = get('https://ivanime.buzz/', 'https://ivanime.buzz/')
+          print('status', st, 'bytes', len(b))
+          for line in anclas_iva(b): print(line)
+          print('img tags totales:', len(re.findall(r'<img\b', b)))
+          for m in list(re.finditer(r'<img\b[^>]*>', b))[:8]:
+              print('IMG:', repr(m.group(0)[:300]))
+          print('srcset count:', b.count('srcset'), '| background-image count:', b.count('background-image'), '| data-src count:', b.count('data-src'), '| data-lazy count:', b.count('data-lazy'))
+          print('extensiones: webp', b.count('.webp'), 'jpg', b.count('.jpg'), 'png', b.count('.png'))
+          print()
+          print('=== IVA EMISION ===')
+          st, b = get('https://ivanime.buzz/emision', 'https://ivanime.buzz/')
+          print('status', st, 'bytes', len(b))
+          for line in anclas_iva(b): print(line)
+          print()
+          print('=== IVA DIRECTORIO /animes ===')
+          st, b = get('https://ivanime.buzz/animes', 'https://ivanime.buzz/')
+          print('status', st, 'bytes', len(b))
+          for line in anclas_iva(b): print(line)
+          print()
+          print('=== VAN HOME ===')
+          st, b = get('https://veranime.ninja/', 'https://veranime.ninja/')
+          print('status', st, 'bytes', len(b))
+          generos = []
+          for m in re.finditer(r'href\s*=\s*["\'][^"\']*/genero/([^"\'/?#]+)', b):
+              if m.group(1) not in generos: generos.append(m.group(1))
+          print('generos (primeros 30):', generos[:30])
+          titulos = re.findall(r'<h[1-4][^>]*>([^<]{2,60})</h[1-4]>', b)
+          print('h1-h4 (primeros 30):', titulos[:30])
+          otros = []
+          for m in re.finditer(r'href\s*=\s*["\']([^"\']+)\s*["\'][^>]*>', b):
+              u = m.group(1)
+              if u and u not in otros and not re.search(r'/anime/|/pelicula/|/ver/|#', u) and (u.startswith('https://veranime') or u.startswith('/')):
+                  otros.append(u)
+          print('otros hrefs (primeros 30):', otros[:30])
+          print('paginacion:', re.findall(r'P[áa]gina\s+\d+\s+de\s+\d+', b)[:5])
+          print()
+          for camino in ['/peliculas/', '/genero/pelicula/', '/genero/peliculas/', '/episodios/', '/genero/accion/', '/genero/estrenos/', '/genero/anime/', '/genero/latino/']:
+              st, b2 = get('https://veranime.ninja' + camino, 'https://veranime.ninja/')
+              n_an = len(re.findall(r'/anime/([^"\'/?#]+)', b2))
+              n_pel = len(re.findall(r'/pelicula/([^"\'/?#]+)', b2))
+              pg = re.findall(r'P[áa]gina\s+(\d+)\s+de\s+(\d+)', b2)
+              print('VAN', camino, '-> status', st, 'bytes', len(b2), 'anclas anime', n_an, 'pelicula', n_pel, 'paginacion', pg[:2])
+          PY
+      - name: commit
+        run: |
+          git config user.name "probe-bot"
+          git config user.email "probe@users.noreply.github.com"
+          git add probe-result.txt
+          git commit -m "probe v30: resultados [skip ci]" || echo "nada"
+          git push
+
