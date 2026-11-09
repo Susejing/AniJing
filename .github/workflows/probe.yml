@@ -15,56 +15,50 @@ jobs:
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
           R=probe-result.txt
           : > "$R"
-          echo "=== JARA FICHA ===" >> "$R"
-          curl -sL --compressed -A "$UA" -H "Accept-Language: es-ES,es;q=0.9" "https://animejara.com/anime/dragon-ball-super-beerus" -o /tmp/f.html
-          echo "bytes: $(wc -c < /tmp/f.html)" >> "$R"
-          grep -Eo "api-web[^\"' ]*" /tmp/f.html | sort -u | head -30 >> "$R"
-          grep -Eo "admin-ajax[^\"' ]*" /tmp/f.html | sort -u | head -10 >> "$R"
-          grep -Eo "data-[a-zA-Z-]+=\"[^\"]{0,50}\"" /tmp/f.html | sort -u | head -70 >> "$R"
-          grep -Eo "href=\"[^\"]*episode[^\"]*\"" /tmp/f.html | sort -u | head -30 >> "$R"
-          grep -Ei -A 40 "Temporadas" /tmp/f.html | head -120 >> "$R"
-          echo "=== JARA EPISODE ===" >> "$R"
+          echo "=== JARA EMBED ===" >> "$R"
+          curl -sL --compressed -A "$UA" "https://multiplayer1.streamhj.top/player/multiplayer/embed1.php?idanime=4913&idcapitulo=5" -o /tmp/emb.html
+          echo "bytes: $(wc -c < /tmp/emb.html)" >> "$R"
+          grep -Eo "<iframe[^>]{0,250}" /tmp/emb.html | head -8 >> "$R"
+          grep -Eo "https://[a-zA-Z0-9./?=_&%-]*(mp4|m3u8)" /tmp/emb.html | sort -u | head -15 >> "$R"
+          grep -Eo "(onclick|data-url|data-player|data-file)=\"[^\"]{0,160}\"" /tmp/emb.html | head -25 >> "$R"
+          grep -Ei -o "(filemoon|dood|streamwish|voe|mp4upload|mixdrop|uqload|ok\.ru|streamtape)[a-z0-9./?=_&%-]{0,120}" /tmp/emb.html | sort -u | head -25 >> "$R"
+          grep -Ei -A 20 "servidor|option" /tmp/emb.html | head -80 >> "$R"
+          echo "=== JARA EPISODE IDIOMAS ===" >> "$R"
           curl -sL --compressed -A "$UA" "https://animejara.com/episode/dragon-ball-super-beerus-1x5/" -o /tmp/e.html
-          echo "bytes: $(wc -c < /tmp/e.html)" >> "$R"
-          grep -Eo "<iframe[^>]{0,200}" /tmp/e.html | head -10 >> "$R"
-          grep -Eo "api-web[^\"' ]*" /tmp/e.html | sort -u | head -20 >> "$R"
-          grep -Eo "data-[a-zA-Z-]+=\"[^\"]{0,60}\"" /tmp/e.html | sort -u | head -70 >> "$R"
-          grep -Eo "https://[a-zA-Z0-9./?=_-]*(mp4|m3u8)" /tmp/e.html | sort -u | head -15 >> "$R"
-          grep -Ei -o "player[a-z-]*" /tmp/e.html | sort -u | head -25 >> "$R"
-          grep -Ei -A 25 "reproductor|player-container|video-container" /tmp/e.html | head -90 >> "$R"
-          echo "=== JARA EMISION ===" >> "$R"
+          grep -Eo "cambiarIdioma\([^)]*\)" /tmp/e.html | head -10 >> "$R"
+          grep -Eo "embed[0-9]\.php[^\"' ]{0,120}" /tmp/e.html | sort -u | head -10 >> "$R"
+          grep -Eo "streamhj[^\"' ]{0,150}" /tmp/e.html | sort -u | head -10 >> "$R"
+          grep -Ei -B2 -A25 "function cambiarIdioma" /tmp/e.html | head -90 >> "$R"
+          echo "=== JARA EMISION TARJETA ===" >> "$R"
+          grep -E -B6 -A10 "anime/black-clover" /tmp/m.html 2>/dev/null | head -70 >> "$R"
           curl -sL --compressed -A "$UA" "https://animejara.com/emision" -o /tmp/m.html
-          echo "bytes: $(wc -c < /tmp/m.html)" >> "$R"
-          grep -Eo "href=\"[^\"]*anime/[^\"]*\"" /tmp/m.html | sort -u | head -40 >> "$R"
-          grep -Eo "<img[^>]{0,180}" /tmp/m.html | head -15 >> "$R"
-          echo "=== JARA CATALOGO ===" >> "$R"
-          curl -sL --compressed -A "$UA" "https://animejara.com/catalogo" -o /tmp/c.html
-          echo "bytes: $(wc -c < /tmp/c.html)" >> "$R"
-          grep -Eo "href=\"[^\"]*anime/[^\"]*\"" /tmp/c.html | sort -u | head -40 >> "$R"
-          echo "=== VAN GENERO ===" >> "$R"
+          grep -E -B6 -A10 "anime/black-clover" /tmp/m.html | head -70 >> "$R"
+          echo "=== JARA FICHA TEMPORADAS ===" >> "$R"
+          curl -sL --compressed -A "$UA" "https://animejara.com/anime/ranma-12-2024" -o /tmp/f2.html
+          echo "bytes: $(wc -c < /tmp/f2.html)" >> "$R"
+          grep -Eo "data-season=\"[0-9]+\"" /tmp/f2.html | sort -u >> "$R"
+          grep -Eo "<span>[0-9]+ episodios</span>" /tmp/f2.html >> "$R"
+          grep -Eo "href=\"[^\"]*episode[^\"]*\"" /tmp/f2.html | sort -u | head -20 >> "$R"
+          echo "=== VAN EPISODIO ===" >> "$R"
+          curl -sL --compressed -A "$UA" "https://veranime.ninja/ver/tensei-kizoku-kantei-skill-de-nariagaru-episodio-1/" -o /tmp/ve.html
+          echo "bytes: $(wc -c < /tmp/ve.html)" >> "$R"
+          grep -Eo "<iframe[^>]{0,250}" /tmp/ve.html | head -8 >> "$R"
+          grep -Eo "data-post=\"[^\"]*\"" /tmp/ve.html | sort -u | head -10 >> "$R"
+          grep -Eo "dooplayer[^\"' ]{0,100}" /tmp/ve.html | sort -u | head -10 >> "$R"
+          grep -Eo "onclick=\"[^\"]{0,160}\"" /tmp/ve.html | sort -u | head -25 >> "$R"
+          grep -Eo "(id|class)=\"[a-z-]*(player|option|server)[a-z-]*\"" /tmp/ve.html | sort -u | head -25 >> "$R"
+          grep -Ei -B3 -A30 "reproductor|player-options|pserver|option-player" /tmp/ve.html | head -120 >> "$R"
+          echo "=== VAN TARJETA GENERO ===" >> "$R"
           curl -sL --compressed -A "$UA" "https://veranime.ninja/genero/ver-anime/" -o /tmp/v.html
-          echo "bytes: $(wc -c < /tmp/v.html)" >> "$R"
-          grep -Eo "data-post=\"[^\"]*\"" /tmp/v.html | head -5 >> "$R"
-          grep -Eo "href=\"[^\"]*episodio[^\"]*\"" /tmp/v.html | sort -u | head -10 >> "$R"
-          grep -Eo "data-src=\"[^\"]*\"" /tmp/v.html | head -5 >> "$R"
-          echo "=== VAN FICHA ===" >> "$R"
-          curl -sL --compressed -A "$UA" "https://veranime.ninja/online/shin-samurai-den-yaiba/" -o /tmp/vf.html
-          echo "bytes: $(wc -c < /tmp/vf.html)" >> "$R"
-          grep -Eo "playeroptionsul.{0,300}" /tmp/vf.html | head -3 >> "$R"
-          grep -Eo "data-post=\"[^\"]*\"" /tmp/vf.html | sort -u | head -10 >> "$R"
-          grep -Eo "href=\"[^\"]*episodio[^\"]*\"" /tmp/vf.html | sort -u | head -15 >> "$R"
-          echo "=== VAN DOOPLAYER ===" >> "$R"
-          for P in $(grep -Eo "data-post=\"[0-9]+\"" /tmp/vf.html | grep -Eo "[0-9]+" | sort -u | head -3); do
-            T=$(grep -E "data-post=\"$P\"" /tmp/vf.html | grep -Eo "data-type=\"[a-z]+\"" | head -1 | grep -Eo "[a-z]+$")
-            N=$(grep -E "data-post=\"$P\"" /tmp/vf.html | grep -Eo "data-nume=\"[0-9]+\"" | head -1 | grep -Eo "[0-9]+$")
-            echo "post $P type $T nume $N" >> "$R"
-            curl -sL --compressed -A "$UA" "https://veranime.ninja/wp-json/dooplayer/v1/post/$P?type=$T&source=$N" >> "$R"
-            echo "" >> "$R"
-          done
+          grep -E -B6 -A8 "image.tmdb.org/t/p/w185" /tmp/v.html | head -60 >> "$R"
+          echo "=== VAN SEARCH ===" >> "$R"
+          curl -sL --compressed -A "$UA" "https://veranime.ninja/?s=yaiba" -o /tmp/vs.html
+          echo "bytes: $(wc -c < /tmp/vs.html)" >> "$R"
+          grep -Eo "href=\"[^\"]*(online|anime|pelicula|temporada)/[^\"]*\"" /tmp/vs.html | sort -u | head -15 >> "$R"
       - name: commit
         run: |
           git config user.name "probe-bot"
           git config user.email "probe@users.noreply.github.com"
           git add probe-result.txt
-          git commit -m "probe v14: resultados [skip ci]" || echo "nada"
+          git commit -m "probe v15: resultados [skip ci]" || echo "nada"
           git push
