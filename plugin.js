@@ -263,8 +263,24 @@
 // página del episodio: eran landings de streamhj que la captura
 // perseguía 20 segundos cada uno para no pescar nada — tres veces lo
 // demostró el teléfono; fuera, que los embeds ya traen los hosters.
+//
+// v0.6.12 «La puerta del player» — el teléfono destapó dos fuentes
+// rotas y un anuncio con suerte. VerAnime cargaba pero su API v2
+// responde 200 con el cuerpo VACÍO: el embed de verdad sale del POST
+// admin-ajax del tema (action doo_player_ajax), y su darkanimes.com es
+// un multiserver-pro que cifra cada botón — base64 de la URL XORada
+// con la pk que su propia API entrega en claro. Y cuando lo único que
+// la captura pesca es publicidad (el wingsmob de siempre, 450×450),
+// elegirMedia ya no cae al anuncio por descarte: fallo honesto. En
+// IvAnime los capítulos viven en /ver/<epslug>-episodio-N con un
+// epslug que NO es el de la serie; la ficha solo enseña el «Ver
+// ahora» del primero, así que el total se averigua con búsqueda
+// binaria sobre su 404 de verdad (de verdad: probado). Sus pósters
+// de la home, grisísimos, estaban a más de 1500 letras del ancla:
+// la ventana de la mirada hacia atrás crece a 3500 y el relleno
+// anime.png no cuenta.
 
-const VERSION = '0.6.11';
+const VERSION = '0.6.12';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -383,6 +399,25 @@ function b64Latin1(s) {
     let out = '';
     for (let i = 0; i < bytes.length; i++) out += String.fromCharCode(bytes[i]);
     return out;
+  } catch (e) { return ''; }
+}
+
+/* v0.6.12: el multiserver-pro (darkanimes.com y familia) no trae las
+ * URLs de sus botones en claro: data-url es el base64 de la URL XORada
+ * byte a byte con la clave pk (ASCII), y esa pk la entrega su propia
+ * API en claro dentro de {"pk":"..."}. Decodificado y verificado con
+ * cuatro muestras de sonda (gupload.site, filelions.top, streamwish.top,
+ * uqload.cx). */
+function descifrarMsp(valor, pk) {
+  try {
+    const bytes = b64Bytes(String(valor || ''));
+    const clave = String(pk || '');
+    if (!bytes.length || !clave.length) return '';
+    let r = '';
+    for (let i = 0; i < bytes.length; i++) {
+      r += String.fromCharCode(bytes[i] ^ clave.charCodeAt(i % clave.length));
+    }
+    return /^https?:\/\//i.test(r) ? r : '';
   } catch (e) { return ''; }
 }
 
@@ -667,13 +702,17 @@ function esManifiesto(url, mime) {
 function elegirMedia(lista) {
   const grupo = (lista || []).filter((x) => x && x.url);
   const buenas = grupo.filter((x) => !ANUNCIO_RE.test(x.url));
-  const fin = buenas.length ? buenas : grupo;
-  if (!fin.length) return null;
-  const man = fin.filter((x) => esManifiesto(x.url, x.mime));
+  /* v0.6.12: si TODO lo pescado es anuncio, NADA. Antes el reparto
+   * caía al grupo completo por descarte y el teléfono terminó
+   * reproduciendo el anuncio de wingsmob (450×450, bitrate 107) como
+   * si fuera el capítulo de VerAnime. Un fallo honesto es mejor que
+   * una publicidad que no se puede ver. */
+  if (!buenas.length) return null;
+  const man = buenas.filter((x) => esManifiesto(x.url, x.mime));
   if (man.length) return man[0];
-  const vid = fin.filter((x) => /\.(?:mp4|webm|mkv|mov)(?:[?#]|$)/i.test(x.url) || /^video\//i.test(String(x.mime || '')));
+  const vid = buenas.filter((x) => /\.(?:mp4|webm|mkv|mov)(?:[?#]|$)/i.test(x.url) || /^video\//i.test(String(x.mime || '')));
   if (vid.length) return vid[0];
-  return fin[0];
+  return buenas[0];
 }
 
 async function capturar(url, etiqueta, refBase) {
@@ -758,7 +797,8 @@ function detectarTipo(nombre, url) {
   if (/savefiles?|streamhls/i.test(nu)) return 'savefiles';
   if (/hexload/i.test(nu)) return 'hexload';
   if (/streamwish|obeywish|\bwish\b|embedwish|hlswish|awish/i.test(nu)) return 'streamwish';
-  if (/yourupload/i.test(nu)) return 'yourupload';
+  if (/yourupload|gupload/i.test(nu)) return 'yourupload';
+
   if (/streamtape/i.test(nu)) return 'streamtape';
   if (/wolfstream/i.test(nu)) return 'wolfstream';
   /* v0.6.0: los agregadores propios (saidochesto y compañía) se abren con el
@@ -916,7 +956,11 @@ async function exStreamtape(u) {
 /* --- YourUpload: og:video o file: --- */
 
 async function exYourUpload(u) {
-  const pagina = await traer(u, { headers: { Referer: 'https://www.yourupload.com/' }, timeoutMs: 10000 });
+  /* v0.6.12: YourUpload anda también como gupload.site (el multiserver
+   * de VerAnime lo sirve): el Referer ya no es fijo sino el origen del
+   * embed, que es el que el espejo espera ver. */
+  const origen = origenDe(u) || 'https://www.yourupload.com';
+  const pagina = await traer(u, { headers: { Referer: origen + '/' }, timeoutMs: 10000 });
   if (!pagina.ok) throw new Error('YourUpload HTTP ' + pagina.status);
   const html = pagina.text;
   const m = /<meta[^>]+og:video["'][^>]*content=["']([^"']+)["']/i.exec(html) ||
@@ -925,7 +969,7 @@ async function exYourUpload(u) {
   if (!m) throw new Error('YourUpload sin video');
   const url = decHtml(String(m[1]).replace(/\\\//g, '/').replace(/\\u0026/gi, '&'));
   if (!/^https?:\/\//i.test(url)) throw new Error('YourUpload con URL rara');
-  return { url: url, mime: 'video/mp4', headers: { Referer: 'https://www.yourupload.com/', 'User-Agent': UA }, expiresInSeconds: 1800 };
+  return { url: url, mime: 'video/mp4', headers: { Referer: origen + '/', 'User-Agent': UA }, expiresInSeconds: 1800 };
 }
 
 /* --- UPNShare: API cifrada con AES-128-CBC --- */
@@ -1555,6 +1599,7 @@ registrarFuente({
       };
       if (mediaId != null) ep.still = captura(mediaId, n);
       if (e && e.synopsis) ep.overview = limpio(e.synopsis).slice(0, 250);
+
       episodios.push(ep);
     }
     episodios.sort((a, b) => a.season - b.season || a.number - b.number);
@@ -2355,6 +2400,7 @@ function posterAntesDe(html, idx) {
  * con la base de su fuente en cada llamada (eas/ayt/jara/van/iva), con el
  * absolutizar único de las utilidades. v0.6.6: la 0.6.5 declaró esa
  * función DOS veces (la vieja de utilidades y una nueva junto a los
+
  * conversores) y Kino compila el plugin como módulo, que no permite
  * redefinir un identificador global: la 0.6.5 no cargó en el teléfono
  * («invalid redefinition of global identifier»). Esta versión deja una
@@ -3155,6 +3201,7 @@ async function easServersDeViejo(texto) {
     const r = await traer(destino, { headers: { Referer: BASE_EAS + '/', 'User-Agent': UA }, timeoutMs: 9000 });
     if (!r.ok || !r.text) return [];
     const gpRe = /go_to_player(?:Vast|)?\(\s*['"]([^'"]+)['"]/gi;
+
     while ((m = gpRe.exec(r.text))) {
       let u = desescapar(m[1]);
       if (u.indexOf('//') === 0) u = 'https:' + u;
@@ -3731,7 +3778,14 @@ async function vanFicha(slug) {
 }
 
 /* El dooplayer de VerAnime: cada li (con comillas simples o dobles) trae
- * data-post, data-nume y data-type; el embed sale del endpoint v2. */
+ * data-post, data-nume y data-type. v0.6.12: la API v2 REST responde 200
+ * con el cuerpo VACÍO (la sonda lo probó con todas sus variantes) — el
+ * tema usa la puerta admin-ajax: POST a /wp-admin/admin-ajax.php con
+ * action doo_player_ajax y {post, nume, type}, que sí devuelve el
+ * {"embed_url":...}. El embed de darkanimes.com es un multiserver-pro:
+ * botones msp-server con data-url cifrado (base64 de la URL XORada con
+ * la pk de su API) repartidos en listas por idioma (data-lang 1 Latino,
+ * 2 Castellano, 3 Subtitulado). */
 async function vanServersDe(html) {
   const texto = String(html || '');
   const servers = [];
@@ -3757,33 +3811,100 @@ async function vanServersDe(html) {
   for (const o of opciones) {
     if (queda() < 6000) break;
     let embed = '';
+    /* v0.6.12: la puerta buena es el admin-ajax del tema; la v2 queda
+     * de respaldo por si el sitio vuelve a ella. */
     try {
-      const r = await traer(BASE_VAN + '/wp-json/dooplayer/v2/' + encodeURIComponent(o.post) +
-        '/' + encodeURIComponent(o.tipo) + '/' + encodeURIComponent(o.nume),
-        { headers: { Referer: BASE_VAN + '/', 'User-Agent': UA }, timeoutMs: 8000 });
-      if (!r.ok || !r.text) continue;
-      const em = /["']embed_url["']\s*:\s*["']([^"']+)["']/.exec(r.text);
-      if (em) embed = desescapar(em[1]).replace(/\\\//g, '/');
-    } catch (e) { continue; }
+      const r = await traer(BASE_VAN + '/wp-admin/admin-ajax.php', {
+        metodo: 'POST',
+        form: { action: 'doo_player_ajax', post: o.post, nume: o.nume, type: o.tipo },
+        headers: { Referer: BASE_VAN + '/', 'User-Agent': UA, 'X-Requested-With': 'XMLHttpRequest' },
+        timeoutMs: 8000
+      });
+      if (r.ok && r.text) {
+        const em = /["']embed_url["']\s*:\s*["']([^"']+)["']/.exec(r.text);
+        if (em) embed = desescapar(em[1]).replace(/\\\//g, '/');
+        else log('van doo_player_ajax: status ' + r.status + ', ' + r.text.length + ' letras sin embed_url');
+      } else {
+        log('van doo_player_ajax: status ' + (r ? r.status : 'null') + (r && r.text ? ', ' + r.text.length + ' letras' : ''));
+      }
+    } catch (e) {
+      log('van doo_player_ajax falló', (e && e.message) || String(e));
+    }
+    if (!embed) {
+      try {
+        const r = await traer(BASE_VAN + '/wp-json/dooplayer/v2/' + encodeURIComponent(o.post) +
+          '/' + encodeURIComponent(o.tipo) + '/' + encodeURIComponent(o.nume),
+          { headers: { Referer: BASE_VAN + '/', 'User-Agent': UA }, timeoutMs: 8000 });
+        if (!r.ok || !r.text) continue;
+        const em = /["']embed_url["']\s*:\s*["']([^"']+)["']/.exec(r.text);
+        if (em) embed = desescapar(em[1]).replace(/\\\//g, '/');
+      } catch (e) { continue; }
+    }
     if (!embed) continue;
     if (embed.indexOf('//') === 0) embed = 'https:' + embed;
     if (!/^https?:\/\//i.test(embed)) continue;
     if (/darkanimes\.com|saidochesto|multiserver|streamhj\.top/i.test(embed)) {
-      /* el multiserver: sus li abren por onclick('URL'), como el
-       * saidochesto de siempre */
+      /* multiserver-pro: los botones traen data-url cifrado y la clave
+       * vive en la API que anuncia el div #msp (data-api). Respaldos:
+       * el onclick('URL') de siempre y, si nada, fuera. */
       try {
         const r2 = await traer(embed, { headers: { Referer: BASE_VAN + '/', 'User-Agent': UA }, timeoutMs: 9000 });
-        if (!r2.ok || !r2.text) continue;
-        const odRe = /\(\s*['"](https?:\/\/[^'"]+)['"]\s*\)/gi;
-        while ((m = odRe.exec(r2.text))) {
-          const u = desescapar(m[1]);
-          const tipo = detectarTipo('', u);
-          if (!tipo || tipo === 'generic' || tipo === 'multi') continue;
-          const clave = tipo + '|' + u;
-          if (vistos[clave]) continue;
-          vistos[clave] = true;
-          servers.push({ nombre: '', url: u, tipo: tipo });
+        if (!r2.ok || !r2.text) { log('van multiserver: status ' + r2.status); continue; }
+        let pk = '';
+        const apiM = /data-api\s*=\s*["']([^"']+)["']/i.exec(r2.text);
+        if (apiM) {
+          try {
+            const r3 = await traer(apiM[1], { headers: { Referer: origenDe(embed) + '/', 'User-Agent': UA }, timeoutMs: 8000 });
+            if (r3.ok && r3.text) {
+              const pkM = /["']pk["']\s*:\s*["']([^"']+)["']/.exec(r3.text);
+              if (pkM) pk = pkM[1];
+              else log('van API del multiserver: sin pk (' + r3.text.length + ' letras)');
+            } else {
+              log('van API del multiserver: status ' + (r3 ? r3.status : 'null'));
+            }
+          } catch (e3) {
+            log('van API del multiserver falló', (e3 && e3.message) || String(e3));
+          }
         }
+        let sacados = 0;
+        if (pk) {
+          const ulRe = /<ul\b[^>]*msp-list[^>]*data-lang\s*=\s*["'](\d+)["'][^>]*>([\s\S]*?)<\/ul>/gi;
+          let ul;
+          while ((ul = ulRe.exec(r2.text)) && sacados < 12) {
+            const suf = ul[1] === '2' ? ' · CASTELLANO' : ul[1] === '3' ? ' · SUBTITULADO' : ' · LATINO';
+            const liRe2 = /<li\b[^>]*>[\s\S]*?<\/li>/gi;
+            let li;
+            while ((li = liRe2.exec(ul[2])) && sacados < 12) {
+              const du = /data-url\s*=\s*["']([^"']+)["']/i.exec(li[0]);
+              if (!du) continue;
+              const u = descifrarMsp(du[1], pk);
+              if (!u) continue;
+              const nomM = /msp-server-name[^>]*>([^<]{1,60})</i.exec(li[0]);
+              const tipo = detectarTipo(nomM ? nomM[1] : '', u);
+              if (!tipo || tipo === 'generic' || tipo === 'multi') continue;
+              const clave = tipo + '|' + u;
+              if (vistos[clave]) continue;
+              vistos[clave] = true;
+              servers.push({ nombre: (nomM ? limpio(nomM[1]) : ''), url: u, tipo: tipo, sufijo: suf });
+              sacados++;
+            }
+          }
+        }
+        if (!sacados) {
+          /* respaldo viejo: onclick('URL') a lo saidochesto */
+          const odRe = /\(\s*['"](https?:\/\/[^'"]+)['"]\s*\)/gi;
+          while ((m = odRe.exec(r2.text))) {
+            const u = desescapar(m[1]);
+            const tipo = detectarTipo('', u);
+            if (!tipo || tipo === 'generic' || tipo === 'multi') continue;
+            const clave = tipo + '|' + u;
+            if (vistos[clave]) continue;
+            vistos[clave] = true;
+            servers.push({ nombre: '', url: u, tipo: tipo });
+            sacados++;
+          }
+        }
+        log('van multiserver: ' + sacados + ' servidores');
       } catch (e) {
         log('multiserver de VerAnime falló', (e && e.message) || String(e));
       }
@@ -3882,6 +4003,7 @@ registrarFuente({
     return serie;
   },
 
+
   async episodios(slug) {
     const r = await vanFicha(slug);
     if (!r.ok || !r.text) {
@@ -3953,6 +4075,11 @@ registrarFuente({
 /* ---------- fuente: IvAnime (ivanime.buzz, espejo de ivanime.top) ---------- */
 
 const BASE_IVA = 'https://ivanime.buzz';
+/* v0.6.12: el epslug de los capítulos de IvAnime NO es el slug de la
+ * serie (la ficha de «…-sub-espanol» enlaza /ver/… SIN el sufijo): el
+ * prefijo real se aprende en episodios() y se guarda aquí para que
+ * resolver() no vuelva a leer la ficha. */
+const IVA_EPS = {};
 
 function ivaTarjetas(html) {
   const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/anime\/([^"\/?#]+)[^>]*>([\s\S]{0,900}?)<\/a>/gi;
@@ -3986,6 +4113,19 @@ function ivaTarjetas(html) {
      * base porque a veces llega relativo. */
     let poster = posterEnVentana(ventana);
     if (!poster) poster = posterAntesDe(String(html || ''), m.index);
+    if (!poster) {
+      /* v0.6.12: en la home las tarjetas son los héroes del slider: la
+       * imagen vive lejos del ancla (después del título, los géneros y
+       * la sinopsis; la sonda la midió a ~1200–2000 letras). Se mira
+       * 3500 letras atrás por la última imagen con extensión, y el
+       * anime.png de relleno, logos, iconos y botones de play no
+       * cuentan. */
+      const antes = String(html || '').slice(Math.max(0, m.index - 3500), m.index);
+      const urls = antes.match(/https?:\/\/[^\s"'<>]+\.(?:jpe?g|png|webp)(?:\?[^\s"'<>]*)?/gi) || [];
+      for (let k = urls.length - 1; k >= 0; k--) {
+        if (!/\/img\/anime\.png|logo|icon|playbtn/i.test(urls[k])) { poster = urls[k]; break; }
+      }
+    }
     if (poster) item.poster = absolutizar(poster, BASE_IVA);
     items.push(item);
   }
@@ -4098,28 +4238,71 @@ registrarFuente({
         userMessage: 'IvAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
       });
     }
-    /* La ficha lista sus capítulos como anclas /ver/<slug>-<n>/. */
-    const re = new RegExp('href\\s*=\\s*["\'][^"\']*\\/ver\\/' + slug + '-(\\d+)', 'gi');
-    const numeros = new Set();
-    let m;
-    while ((m = re.exec(r.text))) numeros.add(parseInt(m[1], 10));
-    if (!numeros.size) {
+    /* v0.6.12: los capítulos viven en /ver/<epslug>-episodio-N SIN
+     * barra final, y el epslug no es el slug de la serie (la ficha de
+     * «…-sub-espanol» enlaza /ver/… sin el sufijo). La ficha solo
+     * enseña el «Ver ahora» del primer capítulo: de ahí sale el
+     * prefijo, y el total se averigua preguntando (un capítulo que no
+     * existe da un 404 DE VERDAD, probado por sonda). */
+    const em = /href\s*=\s*["'][^"']*\/ver\/([^"'\/?#]+)-episodio-(\d+)/i.exec(r.text);
+    if (!em) {
       throw kino.error('not_found', 'IvAnime: 0 capítulos', {
         userMessage: 'No se pudieron leer los capítulos de esta serie en IvAnime.'
       });
     }
+    const prefijo = em[1];
+    IVA_EPS[slug] = prefijo;
+    async function ivaExisteCap(n) {
+      try {
+        const p = await traer(BASE_IVA + '/ver/' + prefijo + '-episodio-' + n,
+          { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 7000 });
+        return !!(p && p.ok && p.text && /data-player|Cap\u00edtulo/i.test(p.text));
+      } catch (e) { return false; }
+    }
+    /* sondeo exponencial hacia arriba y búsqueda binaria fina: una
+     * serie de 24 cuesta ~6 lecturas, una de 200 ~16. Techo 2000. */
+    let total = parseInt(em[2], 10) || 1;
+    let salto = 1;
+    while (total + salto <= 2000) {
+      if (await ivaExisteCap(total + salto)) { total += salto; salto *= 2; }
+      else break;
+    }
+    if (salto > 1) {
+      let a = total + 1;
+      let b = Math.min(total + salto - 1, 2000);
+      while (a <= b) {
+        const mid = Math.floor((a + b) / 2);
+        if (await ivaExisteCap(mid)) { a = mid + 1; total = mid; }
+        else { b = mid - 1; }
+      }
+    }
+    log('iva: ' + slug + ' -> ' + total + ' capítulos (prefijo ' + prefijo + ')');
     const lista = [];
-    for (const n of numeros) {
-      if (n < 1 || n > 9999) continue;
+    for (let n = 1; n <= total; n++) {
       lista.push({ season: 1, number: n, ref: 'iva:' + slug + ':' + n, title: 'Episodio ' + n });
     }
-    lista.sort((a, b) => a.number - b.number);
     return { series: { title: slugATitulo(slug) }, episodes: lista };
   },
 
   async resolver(slug, n, idx) {
     const num = n || 1;
-    const epUrl = BASE_IVA + '/ver/' + slug + '-' + num + '/';
+    /* v0.6.12: el epslug real (aprendido en episodios(); si el módulo
+     * se acaba de recargar, se relee de la ficha). La URL sin barra
+     * final: con la barra el sitio también sirve, pero la buena es la
+     * que enseña su propio HTML. */
+    let prefijo = IVA_EPS[slug];
+    if (!prefijo) {
+      const r0 = await traer(BASE_IVA + '/anime/' + slug + '/', { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 10000 });
+      const em = r0.ok && r0.text ? /href\s*=\s*["'][^"']*\/ver\/([^"'\/?#]+)-episodio-(\d+)/i.exec(r0.text) : null;
+      if (!em) {
+        throw kino.error('not_found', 'IvAnime no entregó el episodio', {
+          userMessage: 'No se pudo abrir este episodio en IvAnime.'
+        });
+      }
+      prefijo = em[1];
+      IVA_EPS[slug] = prefijo;
+    }
+    const epUrl = BASE_IVA + '/ver/' + prefijo + '-episodio-' + num;
     const r = await traer(epUrl, { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 10000 });
     if (!r.ok || !r.text) {
       throw kino.error('not_found', 'IvAnime no entregó el episodio', {
@@ -4587,3 +4770,4 @@ async function screenEvent(e) {
 }
 
 export { search, home, browse, episodes, details, resolve, screen, screenEvent };
+

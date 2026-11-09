@@ -1,7 +1,7 @@
 {
   "id": "anijing",
   "name": "AniJing",
-  "version": "0.6.11",
+  "version": "0.6.12",
   "apiVersion": 20,
   "entry": "plugin.js",
   "description": "Anime en español desde AnimeAV1, MonosChinos, LataAnime, OtakusTV, AnimeYT, EstrenosAnime, AnimeJara, VerAnime e IvAnime, con pantalla propia de Inicio (destacado del día, secciones por fuente, rieles con su Ver más y selector de fuentes), búsqueda, fichas, episodios y extractores de servidores con captura del navegador oculto para los multiservers. El anime con la firma de Susejing.",
@@ -26,6 +26,7 @@
     "andreagrabinduce.com",
     "animejara.com",
     "darkanimes.com",
+    "gupload.site",
     "filelions.top",
     "henaojara2.com",
     "hj.animejara.com",
@@ -144,6 +145,7 @@
     "streamlyplayero.online",
     "streamtape.com",
     "streamwish.com",
+    "streamwish.top",
     "streamwish.to",
     "strwish.com",
     "tapecontent.net",
@@ -317,3 +319,4 @@
     }
   ]
 }
+
