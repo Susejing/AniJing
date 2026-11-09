@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.7 «La segunda vista»)
+## Qué hace (v0.6.8 «La mudanza»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -30,6 +30,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.8 «La mudanza»
+
+La 0.6.7 llegó al teléfono con AnimeYT ya reproduciendo (varios sí, algunos no: los Ok.ru muertos de algunos capítulos dan 400 y la captura de Filemoon no siempre pesca), pero **AnimeOnline se quedó mudo: ni catálogo vivo ni episodios**. La causa no fue el plugin sino el sitio: **AnimeOnline se mudó de ww3 a ww4** — ww3.animeonline.ninja sirve ahora la página de aterrizaje de otro sitio y a cada camino del viejo contestaba sin catálogo, mientras que el sitio de verdad vive en ww4 (la ventanita de la revisión lo delataba: sus portadas cargaban allí en color, y el catálogo del teléfono era solo el rescate de la ventanita). La base del plugin se muda a ww4 — que el manifiesto ya conocía — y con ella casan la galleta de la revisión, las fichas, los episodios y el endpoint Dooplay. Los pósters siguen en manos del Cloudflare del sitio: la app los pide sin galleta y él la cierra; el rastro del log queda por si hace falta mirar más.
 
 ## v0.6.7 «La segunda vista»
 

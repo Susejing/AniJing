@@ -210,8 +210,24 @@
 // para mirar lo mismo que ve el teléfono. Y los http:// se suben
 // a https:// en absolutizar: una imagen en claro la app la pinta
 // gris.
+//
+// v0.6.8 «La mudanza» — la 0.6.7 reprodujo en AnimeYT pero
+// AnimeOnline se quedó mudo: ni catálogo vivo ni episodios. La
+// culpa no era del plugin sino del sitio: AnimeOnline SE MUDÓ
+// de ww3 a ww4 — ww3.animeonline.ninja sirve ahora la página de
+// aterrizaje de otro sitio y a cada camino del viejo responde
+// sin catálogo, mientras que el AnimeOnline de verdad vive en
+// ww4 (la ventanita lo probaba: sus portadas cargaban allí en
+// color, y el catálogo del teléfono era el rescate de la
+// ventanita — lo vivo nunca llegó). BASE_AON se muda a ww4 (el
+// manifiesto ya lo conocía desde la 0.6.5) y la galleta
+// cf_clearance ganada en la ventanita es de ww4: ahora casa
+// con la base y el catálogo, las fichas, los episodios y el
+// dooplay vuelven a contestar. Los pósters de ww4 siguen en
+// manos del Cloudflare del sitio (la app los pide sin galleta
+// y él la cierra); el rastro del log queda por si hace falta.
 
-const VERSION = '0.6.7';
+const VERSION = '0.6.8';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -3330,7 +3346,13 @@ registrarFuente({
 
 /* ---------- fuente: AnimeOnline (animeonline.ninja) ---------- */
 
-const BASE_AON = 'https://ww3.animeonline.ninja';
+/* v0.6.8 «La mudanza»: el sitio vivo es ww4 — ww3 quedó sirviendo
+ * la página de aterrizaje de otro sitio y a ningún camino del
+ * viejo respondía con catálogo (por eso el teléfono solo veía el
+ * rescate de la ventanita y ningún episodio abría). La galleta
+ * cf_clearance que gana la ventanita también es de ww4: con esta
+ * base, casa. El manifiesto conoce ww4 desde la 0.6.5. */
+const BASE_AON = 'https://ww4.animeonline.ninja';
 
 /* v0.6.2 — la puerta de AnimeOnline la guarda Cloudflare: a la petición
  * del plugin le responde su página de revisión («Just a a moment…») en
