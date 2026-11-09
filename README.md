@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.15 «La imagen presentada»)
+## Qué hace (v0.6.16 «La imagen confesante»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -31,6 +31,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.16 «La imagen confesante»
+
+La 0.6.15 llegó al teléfono: los rieles de IvAnime llenan, reproduce fino… pero los pósters siguieron grises y el log no dijo ni una línea de imágenes — nadie contaba la verdad. Esta versión convierte el servidor de pósters en un testigo: cada imagen que Kino pide deja su línea en la bitácora — servida con sus KB y su tipo, o el porqué honesto de su fallo: el status cuando el muro no cede, el aviso cuando llega el reto en HTML en vez de la imagen, o el tope rebasado cuando la portada pesa más de los 256 KB que Kino acepta por póster (la descarga se corta ahí mismo, sin bajar entera una imagen que Kino rechazaría igual). Así el próximo log del teléfono señala al culpable entre tres sospechosos: si no aparece ni una línea de póster, es que Kino nunca pidió la imagen; si salen «status 403», es el muro que no cede ante la red del teléfono; si salen «tope», son las portadas demasiado grandes. Las fichas, los capítulos y la reproducción siguen intactos pase lo que pase.
 
 ## v0.6.15 «La imagen presentada»
 

@@ -328,8 +328,26 @@
 // placeholder gris vuelve sin romper nada; en biblioteca e
 // historial la referencia se guarda tal cual (un título guardado en
 // otro dispositivo muestra el placeholder y ya).
+//
+// v0.6.16 «La imagen confesante» — la 0.6.15 llegó al teléfono, los
+// rieles de IvAnime llenaron y la reproducción siguió fina, pero
+// los pósters siguieron grises… y el log no dijo NI UNA línea de
+// imágenes: nadie contaba la verdad. Esta versión convierte el
+// export image en un testigo: cada póster que Kino pide se anota
+// en la bitácora — servido con sus KB y su mime, o el porqué
+// honesto de su fallo: si el muro no cedió (con su status), si
+// llegó HTML en vez de imagen, o si pesa más del tope de 256 KB
+// que Kino acepta por póster. Así el próximo log del teléfono
+// señala al culpable entre los tres sospechosos: un Kino que
+// nunca llama (cero líneas de póster en el log), un muro que no
+// cede ante la red del teléfono (líneas con status 403), o unas
+// portadas demasiado grandes (líneas de tope rebasado). El corte
+// además es limpio: maxBytes (apiVersion 14) detiene la descarga
+// en el tope en vez de bajar entera una imagen que Kino rechazaría
+// igual, y las fichas y capítulos siguen intactos pase lo que
+// pase.
 
-const VERSION = '0.6.15';
+const VERSION = '0.6.16';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -780,6 +798,7 @@ async function capturar(url, etiqueta, refBase) {
    * ejemplo), segunda pasada más larga con captureAll: el video del
    * capítulo suele llegar cuando el anuncio termina, y la lista de
    * peticiones de la página expone lo demás que cargó. */
+
   if ((!pick || !esManifiesto(pick.url, pick.mime)) && queda() > 15000 && kino.browser && kino.browser.captureAll) {
     try {
       const ms2 = Math.min(25000, Math.max(6000, queda() - 2000));
@@ -798,7 +817,6 @@ async function capturar(url, etiqueta, refBase) {
   const origen = origenDe((pagina && pagina.finalUrl) || url);
   return {
     url: pick.url,
-
     mime: mimeDe(pick.url),
     headers: (pick.headers && Object.keys(pick.headers).length) ? pick.headers : { Referer: origen + '/', 'User-Agent': UA }
   };
@@ -1581,6 +1599,7 @@ registrarFuente({
       throw kino.error('unavailable', 'AnimeAV1 no armó ninguna fila', {
         userMessage: 'AnimeAV1 no respondió. Revisa tu conexión o inténtalo en un rato.'
       });
+
     }
     return filas;
   },
@@ -1599,7 +1618,6 @@ registrarFuente({
     const pag = raiz.pagination && typeof raiz.pagination === 'object' ? raiz.pagination : null;
     if (pag && pag.currentPage < pag.totalPages) next = String(pag.currentPage + 1);
     else if (!pag && items.length >= 20) next = String((Math.max(1, parseInt(String(cursor || '1'), 10) || 1)) + 1);
-
     return { items: items, next: next };
   },
 
@@ -2382,6 +2400,7 @@ function servidoresDePagina(html) {
   return servers;
 }
 
+
 /* El resolve de las fuentes nuevas: primero los servidores de verdad y, si
  * ninguno abre (o lo único que hay es un multiserver opaco), la captura del
  * episodio entero con el navegador oculto — con el Referer de SU fuente,
@@ -2400,7 +2419,6 @@ async function probarConCaptura(epUrl, servers, idx, refDe, etiqueta, refBase) {
         return out;
       } catch (e2) {
         log('la captura del episodio falló', (e2 && e2.message) || e2);
-
       }
     }
     throw e;
@@ -3183,6 +3201,7 @@ async function easMulti(link) {
     while ((m = gpRe.exec(r.text)) && items.length < 14) {
       items.push({ dato: m[1], nombre: '', idioma: '' });
     }
+
   }
   const cifrados = [];
   for (const it of items) {
@@ -3201,7 +3220,6 @@ async function easMulti(link) {
       return traer(origen + '/embed/api/decrypt-stream', {
         json: { encrypted: it.dato },
         headers: { Referer: link, Origin: origen, Accept: 'application/json' },
-
         timeoutMs: 6000
       });
     }));
@@ -3984,6 +4002,7 @@ registrarFuente({
       return items;
     } catch (e) {
       log('van buscar', (e && e.message) || String(e));
+
       return [];
     }
   },
@@ -4002,7 +4021,6 @@ registrarFuente({
       { id: 'van-genero-fantasia', titulo: 'Fantasía · VerAnime', ref: 'van-genero-fantasia', genero: 'fantasia' },
       { id: 'van-genero-comedia', titulo: 'Comedia · VerAnime', ref: 'van-genero-comedia', genero: 'comedia' },
       { id: 'van-genero-drama', titulo: 'Drama · VerAnime', ref: 'van-genero-drama', genero: 'drama' },
-
       { id: 'van-genero-romance', titulo: 'Romance · VerAnime', ref: 'van-genero-romance', genero: 'romance' }
     ];
     const rtas = await Promise.all(defs.map(async (def) => {
@@ -4785,6 +4803,7 @@ async function screen(arg) {
          (tocarlo pasa a esa fuente) y debajo sus rieles; cada bloque con
          su aire para que el scroll se lea por partes, no amontonado. */
       const bloques = [];
+
       const vistos = {};
       for (const fila of filas) {
         const fid = fila.fuente || 'av1';
@@ -4803,7 +4822,6 @@ async function screen(arg) {
           text: f ? f.etiqueta : b.fuente,
           style: 'h3',
           tooltip: 'Ver solo esta fuente',
-
           tooltipEn: 'Show this source only',
           onTap: { event: 'fuente', arg: b.fuente }
         }];
@@ -4908,38 +4926,62 @@ async function screenEvent(e) {
 }
 
 async function image(arg) {
-  /* v0.6.15 «La imagen presentada»: Kino pide por este export los
+  /* v0.6.16 «La imagen confesante»: Kino pide por este export los
    * bytes de los pósters de IvAnime (capability imageSource, la
    * apiVersion 13). El handle es la URL de la imagen, estable por
    * serie (su nombre lleva el slug y su número), sin secretos. La
    * sonda v35 midió el muro: desnudo 403, con UA solo 403, con
    * Referer del propio sitio 200 — así que aquí se va con
-   * presentación. Kino cachea cada handle una vez y no re-pide;
-   * un fallo aquí es honesto: Kino muestra el placeholder y pone
-   * el handle cinco minutos en cuarentena, y la ficha y los
-   * capítulos siguen intactos. */
+   * presentación. Y desde la 0.6.16 cada llamada deja su línea en
+   * la bitácora: los pósters que salen y los que no, con el
+   * porqué — porque en el teléfono de la 0.6.15 salieron grises y
+   * el silencio del log no dejaba saber si Kino no llamaba, si el
+   * muro no cedía ante su red, o si pesaban de más. Kino cachea
+   * cada handle una vez y no re-pide; un fallo aquí es honesto:
+   * Kino muestra el placeholder y pone el handle cinco minutos en
+   * cuarentena, y la ficha y los capítulos siguen intactos. */
   const handle = arg && arg.handle ? String(arg.handle) : '';
   if (handle.indexOf('https://ivanime.buzz/') !== 0) {
     throw kino.error('not_found', 'imagen que no es de IvAnime');
   }
-  const r = await kino.fetch(handle, {
-    headers: { Referer: 'https://ivanime.buzz/', 'User-Agent': UA },
-    timeoutMs: 9000
-  });
+  const nombre = handle.split('/').pop() || handle;
+  let r = null;
+  try {
+    r = await kino.fetch(handle, {
+      headers: { Referer: 'https://ivanime.buzz/', 'User-Agent': UA },
+      timeoutMs: 9000,
+      maxBytes: 262145
+    });
+  } catch (eF) {
+    log('iva póster «' + nombre + '»: ni siquiera llegó (' + ((eF && eF.message) || String(eF)) + ')');
+    throw kino.error('unavailable', 'IvAnime no entregó la imagen');
+  }
   if (!r || r.status !== 200) {
+    log('iva póster «' + nombre + '»: status ' + (r && r.status) + ' (el muro no cedió)');
     throw kino.error('unavailable', 'la imagen no llegó (status ' + (r && r.status) + ')');
+  }
+  const ct = ((r.headers && (r.headers['content-type'] || r.headers['Content-Type'])) || '');
+  if (/text\/html/i.test(ct)) {
+    log('iva póster «' + nombre + '»: llegó HTML en vez de imagen (el muro)');
+    throw kino.error('unavailable', 'IvAnime contestó con su muro, no con la imagen');
+  }
+  if (r.truncated === true) {
+    log('iva póster «' + nombre + '»: pesa más del tope de Kino (256 KB) — placeholder honesto');
+    throw kino.error('unavailable', 'la imagen pesa más de lo que Kino acepta');
   }
   let bytes = '';
   try { bytes = r.base64(); } catch (eB) { bytes = ''; }
   if (!bytes) {
+    log('iva póster «' + nombre + '»: llegó 200 pero sin bytes');
     throw kino.error('unavailable', 'IvAnime no entregó los bytes del póster');
   }
-  const ct = ((r.headers && (r.headers['content-type'] || r.headers['Content-Type'])) || '');
   let mime = 'image/jpeg';
   if (/webp/i.test(ct)) mime = 'image/webp';
   else if (/png/i.test(ct)) mime = 'image/png';
   else if (/\.webp(\?|$)/i.test(handle)) mime = 'image/webp';
   else if (/\.png(\?|$)/i.test(handle)) mime = 'image/png';
+  const kb = Math.round((bytes.length * 3 / 4) / 102.4) / 10;
+  log('iva póster servido «' + nombre + '»: ' + kb + ' KB, ' + mime);
   return { bytes: bytes, mime: mime };
 }
 
