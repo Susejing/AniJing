@@ -1,0 +1,93 @@
+name: probe
+on: [push]
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: sondear
+        run: |
+          set +e
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+          R=probe-result.txt
+          : > "$R"
+          SLUG="tensei-goblin-dakedo-shitsumon-aru"
+          echo "=== JARA FICHA /anime/$SLUG ===" >> "$R"
+          curl -sL --compressed -A "$UA" -H "Referer: https://animejara.com/" -w "HTTP %{http_code} final:%{url_effective} bytes:%{size_download}\n" "https://animejara.com/anime/$SLUG" -o /tmp/jf.html >> "$R" 2>&1
+          python3 - <<'PY' >> "$R"
+          import re
+          h = open('/tmp/jf.html', encoding='utf-8', errors='replace').read()
+          print('ficha bytes:', len(h))
+          print('--- data-season tabs + episodios (lo que sintetizaria el plugin):')
+          for m in re.finditer(r'data-season=["\'](\d+)["\']', h):
+              seg = h[m.end():m.end()+4000]
+              sm = re.search(r'(\d+)\s*episodios', seg, re.I)
+              print('  season', m.group(1), '->', (sm.group(1) + ' eps') if sm else 'SIN CUENTA')
+          print('--- links /episode/ en la ficha:')
+          eps = re.findall(r'/episode/[^"\'\s<>]+', h)
+          print('  total:', len(eps), '| primeros 10:', eps[:10])
+          if eps:
+              open('/tmp/real_ep.txt','w').write('https://animejara.com' + (eps[0] if eps[0].startswith('/') else '/' + eps[0]))
+          for kw in ['streamhj', 'const enlaces', 'hj.animejara.com', 'temporada', 'Ver ahora']:
+              i = h.find(kw)
+              print('--- KW', kw, 'idx', i)
+              if i >= 0:
+                  print(repr(h[max(0,i-200):i+500]))
+          PY
+          echo "=== JARA EP SINTETIZADA /episode/$SLUG-1x1/ ===" >> "$R"
+          curl -sL --compressed -A "$UA" -H "Referer: https://animejara.com/" -w "HTTP %{http_code} final:%{url_effective} bytes:%{size_download}\n" "https://animejara.com/episode/$SLUG-1x1/" -o /tmp/je1.html >> "$R" 2>&1
+          echo "const enlaces: $(grep -c 'const enlaces' /tmp/je1.html)" >> "$R"
+          head -c 400 /tmp/je1.html >> "$R"
+          echo "" >> "$R"
+          if [ -s /tmp/real_ep.txt ]; then
+            RE=$(cat /tmp/real_ep.txt)
+            echo "=== JARA EP REAL $RE ===" >> "$R"
+            curl -sL --compressed -A "$UA" -H "Referer: https://animejara.com/" -w "HTTP %{http_code} final:%{url_effective} bytes:%{size_download}\n" "$RE" -o /tmp/je2.html >> "$R" 2>&1
+            python3 - <<'PY' >> "$R"
+          h = open('/tmp/je2.html', encoding='utf-8', errors='replace').read()
+          print('ep real bytes:', len(h))
+          i = h.find('const enlaces')
+          print('--- const enlaces idx', i)
+          if i >= 0:
+              print(repr(h[max(0,i-100):i+900]))
+          for kw in ['lang-name', 'playVideo', 'streamhj']:
+              j = h.find(kw)
+              print('--- KW', kw, 'idx', j)
+              if j >= 0:
+                  print(repr(h[max(0,j-150):j+400]))
+          PY
+          fi
+          echo "=== VAN GENERO /genero/ver-anime/ ===" >> "$R"
+          curl -sL --compressed -A "$UA" -H "Referer: https://veranime.ninja/" -w "HTTP %{http_code} final:%{url_effective} bytes:%{size_download}\n" "https://veranime.ninja/genero/ver-anime/" -o /tmp/vg.html >> "$R" 2>&1
+          python3 - <<'PY' >> "$R"
+          import re
+          h = open('/tmp/vg.html', encoding='utf-8', errors='replace').read()
+          print('genero bytes:', len(h))
+          print('articles:', h.count('article'), '| item cards:', h.count('class="item') , '| posters:', h.count('data-src'))
+          t = re.search(r'<title>(.*?)</title>', h, re.S)
+          print('title:', t.group(1)[:120] if t else 'NO TITLE')
+          i = h.find('article')
+          if i >= 0:
+              print(repr(h[max(0,i-100):i+600]))
+          PY
+          echo "=== VAN HOME / ===" >> "$R"
+          curl -sL --compressed -A "$UA" -H "Referer: https://veranime.ninja/" -w "HTTP %{http_code} final:%{url_effective} bytes:%{size_download}\n" "https://veranime.ninja/" -o /tmp/vh.html >> "$R" 2>&1
+          python3 - <<'PY' >> "$R"
+          import re
+          h = open('/tmp/vh.html', encoding='utf-8', errors='replace').read()
+          print('home bytes:', len(h))
+          t = re.search(r'<title>(.*?)</title>', h, re.S)
+          print('title:', t.group(1)[:120] if t else 'NO TITLE')
+          print('articles:', h.count('article'), '| generos mencionados:', re.findall(r'/genero/[^/"\']+', h)[:10])
+          PY
+      - name: commit
+        run: |
+          git config user.name "probe-bot"
+          git config user.email "probe@users.noreply.github.com"
+          git add probe-result.txt
+          git commit -m "probe v18: resultados [skip ci]" || echo "nada"
+          git push
