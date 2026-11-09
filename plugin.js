@@ -447,6 +447,18 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.23 «Sin dobleces» — la 0.6.22 nunca cargó en el teléfono:
+// «El plugin no carga: invalid redefinition of global identifier».
+// La causa: la cosecha nueva se declaró como ivaPosterDe… y la
+// 0.6.13 ya tenía un ivaPosterDe global (el buscador de pósters por
+// nombre de los rieles). El motor del banco deja ganar a la última
+// declaración y el banco pasó 43/43; el motor del teléfono (Hermes)
+// no tolera un global declarado dos veces y ni siquiera cargó el
+// archivo. Cura: la vieja se renombra a ivaPosterPorNombre (un
+// global, un nombre) y el banco gana un vigía que escanea el
+// maestro buscando declaraciones duplicadas — este disparo no
+// vuelve a pasar verde.
+
 // v0.6.22 «La ficha en pie» — la 0.6.21 vistió el details() y el
 // teléfono confesó con su log que no bastó: al abrir la ficha desde
 // el Inicio, episodes() corrió («iva: … -> N capítulos») pero ni
@@ -455,12 +467,12 @@
 // también vive en episodes().series (KinoSeriesInfo: poster acepta
 // la referencia servida, como overview) — y episodes() es el
 // llamado que el log PROBÓ que Kino hace en cada ficha. La misma
-// cosecha del 0.6.21 (ivaPosterDe) ahora sirve a los dos caminos,
+// cosecha del 0.6.21 ahora sirve a los dos caminos,
 // sacada de la misma página que episodios ya baja: sin fetch
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.22';
+const VERSION = '0.6.23';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4287,8 +4299,13 @@ const IVA_EPS = {};
  * (.../portada/to-aru-anbu-no-item-portada-123.jpg, y a veces sin el
  * «-portada»: tokyo-…-hen-123.jpg — sondeo v31, los dos casos). Con
  * las imágenes de todos los héroes amontonadas a miles de letras de
- * sus anclas, ninguna ventana las alcanza; buscar por nombre sí. */
-function ivaPosterDe(html, slug) {
+ * sus anclas, ninguna ventana las alcanza; buscar por nombre sí.
+ * v0.6.23 «Sin dobleces»: renombrada — la 0.6.22 declaró su cosecha
+ * con el MISMO nombre (ivaPosterDe) y el motor del teléfono (Hermes)
+ * no carga un global declarado dos veces («invalid redefinition of
+ * global identifier»); el motor del banco deja ganar a la última y
+ * el duplicado pasó 43/43. Un global, un nombre. */
+function ivaPosterPorNombre(html, slug) {
   const s = String(slug || '');
   if (!s) return '';
   const bases = [s];
@@ -4409,7 +4426,7 @@ function ivaTarjetas(html) {
        * sus anclas — pero cada URL lleva el nombre de la serie en
        * /portada/: se busca por nombre en toda la página (sondeo v31,
        * verificado con y sin el «-portada» en el nombre del archivo). */
-      poster = ivaPosterDe(String(html || ''), slug);
+      poster = ivaPosterPorNombre(String(html || ''), slug);
     }
     /* v0.6.15: el póster va como referencia servida por el plugin —
      * Kino pide los bytes con nuestra presentación y lo cachea. */

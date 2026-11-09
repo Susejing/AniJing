@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.22 «La ficha en pie»)
+## Qué hace (v0.6.23 «Sin dobleces»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -32,9 +32,13 @@ Todas las filas llevan su «Ver más».
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
 
+## v0.6.23 «Sin dobleces»
+
+La 0.6.22 nunca cargó en el teléfono: «El plugin no carga: invalid redefinition of global identifier». La causa: la cosecha nueva se declaró como `ivaPosterDe`… y la 0.6.13 ya tenía un `ivaPosterDe` global (el buscador de pósters por nombre de los rieles). El motor del banco deja ganar a la última declaración y el banco pasó 43/43; el motor del teléfono (Hermes) no tolera un global declarado dos veces y **ni siquiera cargó el archivo**. Cura: la vieja se renombra a `ivaPosterPorNombre` — un global, un nombre — y el banco gana un vigía que escanea el maestro buscando declaraciones duplicadas: este disparo no vuelve a pasar verde.
+
 ## v0.6.22 «La ficha en pie»
 
-La 0.6.21 vistió el `details()` con el pulgar del héroe… y el teléfono confesó con su log que no bastó: al abrir la ficha desde el Inicio, `episodes()` corrió («iva: … → N capítulos») pero ni una línea de `image()` — Kino nunca pidió el póster del detalle. El contrato tiene la puerta que faltaba: **el póster de una ficha también vive en `episodes().series`** (`KinoSeriesInfo` acepta `poster` como referencia servida, y `overview`) — y `episodes()` es el llamado que el log probó que Kino hace en cada ficha. La misma cosecha de la 0.6.21 (`ivaPosterDe`: og:image por si aparece, el pulgar del héroe, de último una portada grande) ahora sirve a los dos caminos, sacada de la misma página que `episodios` ya baja para contar capítulos: sin fetch extra. Y el detalle gana bitácora — un export sin línea en el log es indistinguible de un export muerto.
+La 0.6.21 vistió el `details()` con el pulgar del héroe… y el teléfono confesó con su log que no bastó: al abrir la ficha desde el Inicio, `episodes()` corrió («iva: … → N capítulos») pero ni una línea de `image()` — Kino nunca pidió el póster del detalle. El contrato tiene la puerta que faltaba: **el póster de una ficha también vive en `episodes().series`** (`KinoSeriesInfo` acepta `poster` como referencia servida, y `overview`) — y `episodes()` es el llamado que el log probó que Kino hace en cada ficha. La misma cosecha de la 0.6.21 ahora sirve a los dos caminos, sacada de la misma página que `episodios` ya baja para contar capítulos: sin fetch extra. Y el detalle gana bitácora — un export sin línea en el log es indistinguible de un export muerto.
 
 ## v0.6.21 «El póster de la ficha»
 
