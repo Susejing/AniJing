@@ -1,0 +1,132 @@
+== probe v11: resultados ==
+--- AYT ficha de PELICULA (look-back) ---
+bytes: 104575
+-- hrefs interesantes:
+href="/pelicula/look-back/#comments"
+href="/pelicula/look-back/#respond"
+href="/pelicula/look-back/?orden=valorados#comments"
+href="https://animeyt.cc/pelicula/"
+href="https://animeyt.cc/pelicula/look-back/"
+href="https://animeyt.cc/pelicula/look-back/feed/"
+href="https://animeyt.cc/wp-login.php?redirect_to=https%3A%2F%2Fanimeyt.cc%2Fpelicula%2Flook-back%2F"
+-- iframes:
+--- AYT serie -> episodio -> mytsumi -> status de players ---
+tv bytes: 135814
+serie: https://animeyt.cc/tv/page/2/
+/home/runner/work/_temp/3cfffa82-fc9f-41a8-b129-a793f13973c5.sh: line 20: ayt-f.html: No such file or directory
+ficha bytes: 
+grep: ayt-f.html: No such file or directory
+ep: 
+ep bytes: 16
+mytsumi: 
+/home/runner/work/_temp/3cfffa82-fc9f-41a8-b129-a793f13973c5.sh: line 28: ayt-my.html: No such file or directory
+mytsumi bytes: 
+-- botones:
+grep: ayt-my.html: No such file or directory
+-- status de cada player (Range GET):
+grep: ayt-my.html: No such file or directory
+--- AON /genero/ver-anime/ ---
+bytes: 287661 reto: 0
+-- data-src:
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2025/04/1jltcsz17CkfyhpcsSlmVC6pQGh.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2021/02/bnWxRJHWbYcAGq9HWWuKCwm7I5X-185x278.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2025/12/qTBlcSSTauMyuuS08M6vkqJuZPx.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2023/01/VrYTAlyK3TDa379pk20WpAHKmh-500x750.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2022/09/rNkilVmALgaIb4SenfbaecRStDD-500x750.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2024/04/ld8DpQKpM4T1wRAiBjgReV0mQcK.jpg"
+-- src:
+src="https://cvt-s2.agl003.com/o/s/114ceb8fd4b175d08f041c62576b2f82.js"
+src="https://www.googletagmanager.com/gtag/js?id=G-ES0BC9NXD9"
+src="https://ww4.animeonline.ninja/wp-includes/js/jquery/jquery.min.js"
+src="https://ww4.animeonline.ninja/wp-includes/js/jquery/jquery-migrate.min.js"
+src="https://ww4.animeonline.ninja/wp-content/themes/dooplay/assets/js/lib/mcsbscrollbar.js"
+src="https://ww4.animeonline.ninja/wp-content/themes/dooplay/assets/js/lib/owlcarousel.js"
+grep: write error: Broken pipe
+-- anclas:
+href="https://www1.animeonline.ninja/online/"
+href="https://www1.animeonline.ninja/pelicula/"
+href="https://www1.animeonline.ninja/pelicula/"
+href="https://www1.animeonline.ninja/online/dragon-ball-super/"
+href="https://ww3.animeonline.ninja/online/dragon-ball-super-beerus/"
+grep: write error: Broken pipe
+-- tarjeta 1 cruda:
+<a target="_blank" href="https://www1.animeonline.ninja/online/">Géneros 🔤</a><ul class="sub-menu"><li id="menu-item-25366" class="menu-item menu-item-type-taxonomy menu-item-object-genres menu-item-25366"><a target="_blank" href="https://ww4.animeonline.ninja/genero/sin-censura/">Sin Censura 🔞</a></li><li id="menu-item-118
+grep: write error: Broken pipe
+--- AON /genero/en-emision-1/ ---
+bytes: 163367 reto: 0
+-- data-src:
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/10/k8TF2vhulNFQj2A1dqH001kuoHn.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/10/EQNjH4oeCm9pD58fi2s4WZyjgA.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/10/lZ88hdOO2J7EX40fctU1leGgZFu.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/10/hNNba8tLjCgRGcTSKcB1E0kpBhG.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2024/04/ld8DpQKpM4T1wRAiBjgReV0mQcK.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/10/l5RosRt3Fe85WJZl65WFWzo4Q9X.jpg"
+-- anclas:
+href="https://www1.animeonline.ninja/online/"
+href="https://www1.animeonline.ninja/pelicula/"
+href="https://www1.animeonline.ninja/pelicula/"
+href="https://www1.animeonline.ninja/online/dragon-ball-super/"
+href="https://ww3.animeonline.ninja/online/dragon-ball-super-beerus/"
+grep: write error: Broken pipe
+-- tarjeta 1 cruda:
+<a target="_blank" href="https://www1.animeonline.ninja/online/">Géneros 🔤</a><ul class="sub-menu"><li id="menu-item-25366" class="menu-item menu-item-type-taxonomy menu-item-object-genres menu-item-25366"><a target="_blank" href="https://ww4.animeonline.ninja/genero/sin-censura/">Sin Censura 🔞</a></li><li id="menu-item-118
+grep: write error: Broken pipe
+--- AON /genero/audio-latino/ ---
+bytes: 241070 reto: 0
+-- data-src:
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2025/04/1jltcsz17CkfyhpcsSlmVC6pQGh.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2021/02/bnWxRJHWbYcAGq9HWWuKCwm7I5X-185x278.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/10/EQNjH4oeCm9pD58fi2s4WZyjgA.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2026/08/6ILkBzgLiwDfhpyWBWKvh8iA35X.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2022/09/rNkilVmALgaIb4SenfbaecRStDD-500x750.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2024/04/ld8DpQKpM4T1wRAiBjgReV0mQcK.jpg"
+-- anclas:
+href="https://www1.animeonline.ninja/online/"
+href="https://www1.animeonline.ninja/pelicula/"
+href="https://www1.animeonline.ninja/pelicula/"
+href="https://www1.animeonline.ninja/online/dragon-ball-super/"
+href="https://ww3.animeonline.ninja/online/dragon-ball-super-beerus/"
+grep: write error: Broken pipe
+-- tarjeta 1 cruda:
+<a target="_blank" href="https://www1.animeonline.ninja/online/">Géneros 🔤</a><ul class="sub-menu"><li id="menu-item-25366" class="menu-item menu-item-type-taxonomy menu-item-object-genres menu-item-25366"><a target="_blank" href="https://ww4.animeonline.ninja/genero/sin-censura/">Sin Censura 🔞</a></li><li id="menu-item-118
+grep: write error: Broken pipe
+--- AON /pelicula/ ---
+bytes: 207594 reto: 0
+-- data-src:
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2020/06/amai-choubatsu-watashi-wa-kanshu-senyou-pet-185x278.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2020/01/z6sXcBO7r6sxOdrsHj2VbEOWvsF-185x278.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2019/07/evangelion-4-0-185x278.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2020/10/218374-185x278.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2021/12/120072l.jpg"
+data-src="https://ww4.animeonline.ninja/wp-content/uploads/2021/05/2WvrGAnKtHrb20nHLd38RyhIj0Q-185x278.jpg"
+-- anclas:
+href="https://ww4.animeonline.ninja/pelicula/"
+href="https://ww4.animeonline.ninja/pelicula/page/2/"
+href="https://www1.animeonline.ninja/online/"
+href="https://www1.animeonline.ninja/pelicula/"
+href="https://www1.animeonline.ninja/pelicula/"
+grep: write error: Broken pipe
+-- tarjeta 1 cruda:
+<a target="_blank" href="https://www1.animeonline.ninja/online/">Géneros 🔤</a><ul class="sub-menu"><li id="menu-item-25366" class="menu-item menu-item-type-taxonomy menu-item-object-genres menu-item-25366"><a target="_blank" href="https://ww4.animeonline.ninja/genero/sin-censura/">Sin Censura 🔞</a></li><li id="menu-item-118
+grep: write error: Broken pipe
+--- AON ficha de la primera PELICULA de /pelicula/ ---
+grep: write error: Broken pipe
+url pelicula: https://ww4.animeonline.ninja/pelicula/page/2/
+bytes: 229730 reto: 0
+-- anclas episodio:
+href="https://ww4.animeonline.ninja/episodio/jojos-bizarre-adventure-steel-ball-run-cap-8/"
+href="https://ww4.animeonline.ninja/episodio/sword-art-offline-ii-cap-1/"
+href="https://ww4.animeonline.ninja/episodio/shiguang-dailiren-link-click-3-cap-11/"
+href="https://ww4.animeonline.ninja/episodio/crows-zero-2/"
+href="https://ww4.animeonline.ninja/episodio/crows-zero/"
+-- playeroptionsul:
+-- iframes:
+--- AON serie -> episodio (control) ---
+grep: write error: Broken pipe
+url serie: https://www1.animeonline.ninja/online/dragon-ball-super/
+/home/runner/work/_temp/3cfffa82-fc9f-41a8-b129-a793f13973c5.sh: line 78: aons.html: No such file or directory
+bytes: 
+grep: aons.html: No such file or directory
+url episodio: 
+bytes: 43597 reto: 0
+-- playeroptionsul:
