@@ -1,0 +1,49 @@
+=== JARA FICHA /anime/tensei-goblin-dakedo-shitsumon-aru ===
+HTTP 200 final:https://animejara.com/anime/tensei-goblin-dakedo-shitsumon-aru bytes:56166
+ficha bytes: 262603
+--- data-season tabs + episodios (lo que sintetizaria el plugin):
+  season 1 -> 5 eps
+--- links /episode/ en la ficha:
+  total: 1 | primeros 10: ['/episode/${ANIME_SLUG}-${numTemp}x${numEp}/`;']
+--- KW streamhj idx -1
+--- KW const enlaces idx -1
+--- KW hj.animejara.com idx 111827
+'x;">\n                    \n                    <div class="anime-poster-area">\n                        <div id="posterContainer" class="poster-container">\n                            <img src="https://hj.animejara.com/api-web/img/3gHPd50EwLAhtzyOlZv47JafE6jpg.webp" alt="Tensei Goblin dakedo Shitsumon Aru" class="main-poster-img" id="mainPosterImg">\n                            <div class="label-poster label-left" style="background: #2ecc71;">\n                                EMISION                            </div>\n                        </div>\n\n                        <div class="dropdown-status" id="dropdownStatus">\n                            <button class="btn-cambiar-estado" id="btnStatu'
+--- KW temporada idx 107034
+'font-size: 13px; font-weight: bold; transition: 0.3s;\n    display: inline-flex; align-items: center; gap: 8px;\n}\n.btn-toggle-view:hover { background: #2a2542; color: white; border-color: #71ddef; }\n\n.temporada-titulo.accordion-header {\n    background: #4a526e; padding: 12px 15px; border-radius: 6px;\n    cursor: pointer; font-weight: bold; display: flex;\n    justify-content: space-between; align-items: center;\n    color: white; margin-bottom: 0; border: 1px solid #3a3452;\n    transition: background 0.3s;\n}\n.temporada-titulo.accordion-header:hover { background: #5a6382; }\n\n/* --- ESTILOS PARA LA SECCIÓN DE CALIFICACIÓN DETALLADA --- */\n.rating-details-container {\n    background: #2a2542;\n    b'
+--- KW Ver ahora idx -1
+=== JARA EP SINTETIZADA /episode/tensei-goblin-dakedo-shitsumon-aru-1x1/ ===
+HTTP 404 final:https://animejara.com/episode/tensei-goblin-dakedo-shitsumon-aru-1x1/ bytes:50451
+const enlaces: 1
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tensei Goblin dakedo Shitsumon Aru 1&#215;1 | AnimeJara</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <meta name='robots' content='noindex, follow' />
+
+
+<me
+=== JARA EP REAL https://animejara.com/episode/${ANIME_SLUG}-${numTemp}x${numEp}/`; ===
+HTTP 404 final:https://animejara.com/episode/ANIME_SLUG-numTempxnumEp/ bytes:43227
+ep real bytes: 175398
+--- const enlaces idx -1
+--- KW lang-name idx 100991
+' transition: 0.2s; }\n    .boton-idioma.active { background: #6173a7; color: #ffffff; font-weight: bold; }\n    .boton-idioma img { width: 25px; }\n    .lang-name { font-size: 14px; }\n    .lang-tag { font-size: 12px; color: #ccc; }\n    \n    #reproductor-wrapper { width: 100%; position: relative; padding-top: 56.25%; background: #1e1a38; border-radius: 8px; overflow: hidden; }\n    #iframe-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }\n\n    .botones-navegacion { display: flex; justify-content: center; gap: 20px; margin-top'
+--- KW playVideo idx -1
+--- KW streamhj idx -1
+=== VAN GENERO /genero/ver-anime/ ===
+HTTP 200 final:https://veranime.ninja/genero/ver-anime/ bytes:18274
+genero bytes: 72044
+articles: 82 | item cards: 31 | posters: 49
+title: Ver Anime Online Gratis en HD
+'ver-anime/page/2/" /><meta property="og:locale" content="es_ES" /><meta property="og:type" content="article" /><meta property="og:title" content="Ver Anime Online Gratis en HD" /><meta property="og:description" content="AnimeOnlineNinja o VerAnime es un sitio de Streaming de anime gratuito donde puedes ver anime online en calidad HD gratis con subtítulos o doblaje en español latino y castellano." /><meta property="og:url" content="https://veranime.ninja/genero/ver-anime/" /><meta property="og:site_name" content="Anime Ninja" /><meta name="twitter:card" content="summary_large_image" /><meta name="twitter:title" content="Ver Anime Online Gratis en HD" /><meta name="twitter:description" content'
+=== VAN HOME / ===
+HTTP 200 final:https://veranime.ninja/ bytes:24003
+home bytes: 120757
+title: Anime Ninja | Ver Anime Online Gratis
+articles: 209 | generos mencionados: []
