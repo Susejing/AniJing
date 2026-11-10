@@ -1,34 +1,25 @@
-name: sonda
+name: sonde
 on: push
 permissions:
   contents: write
 jobs:
-  sonda:
+  sonde:
     if: contains(github.event.head_commit.message, '[sonda]')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: file listing
+      - name: sonda v51
         run: |
           mkdir -p sonda-out
-          : > sonda-out/fireload5.txt
-          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
-          curl -sL --max-time 25 -A "$UA" "https://www.fireload.com/themes/flow/js/flow-api.js" -o /tmp/flow.js || true
-          echo "== contexto del endpoint en flow-api.js:" >> sonda-out/fireload5.txt
-          grep -oE '.{0,150}_view_folder_v2_file_listing.{0,250}' /tmp/flow.js | head -4 >> sonda-out/fireload5.txt || echo "(nada)" >> sonda-out/fireload5.txt
-          echo "== intentos POST:" >> sonda-out/fireload5.txt
-          for d in "folderId=51319" "folderId=51319&page=1" "folderId=4fbe306e2d5a7dd4fe235763e8a495a2" "pageNodeId=51319" "nodeId=51319"; do
-            echo "-- $d:" >> sonda-out/fireload5.txt
-            curl -sL --max-time 20 -A "$UA" -X POST "https://www.fireload.com/ajax/_view_folder_v2_file_listing.ajax.php" -H "X-Requested-With: XMLHttpRequest" --data "$d" | head -c 400 >> sonda-out/fireload5.txt || true
-            echo "" >> sonda-out/fireload5.txt
-          done
-          echo "== tambien global.js:" >> sonda-out/fireload5.txt
-          curl -sL --max-time 25 -A "$UA" "https://www.fireload.com/themes/flow/js/global.js" -o /tmp/g.js || true
-          grep -oE '.{0,120}file_listing.{0,200}' /tmp/g.js | head -3 >> sonda-out/fireload5.txt || echo "(nada)" >> sonda-out/fireload5.txt
-      - name: commit
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
+          curl -sL -A "$UA" -H 'Referer: https://www.az-animex.com/' 'https://www.az-animex.com/?s=grisaia' -o sonda-out/s-grisaia.html
+          curl -sL -A "$UA" -H 'Referer: https://www.az-animex.com/' 'https://www.az-animex.com/?s=grisaia+no+kajitsu' -o sonda-out/s-kajitsu.html
+          curl -sL -A "$UA" -H 'Referer: https://www.az-animex.com/' 'https://www.az-animex.com/?s=naruto' -o sonda-out/s-naruto.html
+          curl -sL -A "$UA" -H 'Referer: https://www.az-animex.com/' 'https://www.az-animex.com/grisaia-no-kajitsu/' -o sonda-out/ficha-grisaia.html
+          curl -sL -A "$UA" 'https://www.az-animex.com/sitemap.xml' -o sonda-out/sitemap.xml
+          curl -sL -A "$UA" 'https://www.az-animex.com/wp-sitemap.xml' -o sonda-out/wp-sitemap.xml
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add sonda-out
-          git commit -m "sonda out" || true
+          git commit -m 'sonda out v51' || true
           git push
