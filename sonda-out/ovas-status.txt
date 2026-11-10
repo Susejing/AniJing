@@ -1,0 +1,4 @@
+* Could not resolve host: ovas.az-animex.com
+* Store negative name resolve for ovas.az-animex.com:443
+* shutting down connection #0
+HTTP 000 type  len 0
