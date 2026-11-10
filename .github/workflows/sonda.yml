@@ -12,30 +12,25 @@ jobs:
         run: |
           mkdir -p sonda-out
           UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+          curl -s -A "$UA" --max-time 30 -o sonda-out/filemoon-spa.js 'https://filemoon.to/assets/index-DocunfmE.js' || true
+          curl -s -L -A "$UA" --max-time 20 -o sonda-out/terabox-air.html 'https://1024terabox.com/s/17ros2IqjamnOnfUMsQYh_A' || true
           {
-          echo '=== DNS ==='
-          for h in peliculas.az-animex.com onas.az-animex.com series-am.az-animex.com especiales.az-animex.com dire.az-animex.com ovas.az-animex.com; do
-            echo "-- $h"
-            getent hosts "$h" || echo 'SIN DNS'
-          done
-          echo '=== PELICULAS mp4 (Range 0-1023) ==='
-          curl -s -A "$UA" -H 'Referer: https://www.az-animex.com/' -r 0-1023 --max-time 20 -o sonda-out/peliculas-body.bin -D - -w 'STATUS %{http_code} TYPE %{content_type} SIZE %{size_download}\n' 'https://peliculas.az-animex.com/B/Break%20Blade%201%20-%20Kakusei%20no%20Toki%20BD/%5BAz-Animex%5D%20Break%20Blade%201%20-%20Kakusei%20no%20Toki%20%5BBD%5D%5BDS%5D.mp4' 2>&1 | head -40
-          echo '=== ONAS mp4 (Range 0-1023) ==='
-          curl -s -A "$UA" -H 'Referer: https://www.az-animex.com/' -r 0-1023 --max-time 20 -o /dev/null -D - -w 'STATUS %{http_code} TYPE %{content_type} SIZE %{size_download}\n' 'https://onas.az-animex.com/es/B/Bubble/%5BAz-Animex%5D%20Bubble%20%5BHakoniwa%5D.mp4' 2>&1 | head -30
-          echo '=== SERIES-AM Ajin BD ==='
-          curl -s -L -A "$UA" --max-time 20 -D - -o sonda-out/seriesam-ajin.txt -w 'STATUS %{http_code} TYPE %{content_type} SIZE %{size_download}\n' 'https://series-am.az-animex.com/es/A/Ajin%20BD' 2>&1 | head -30
-          echo '=== SERIES-AM raiz ==='
-          curl -s -L -A "$UA" --max-time 20 -D - -o sonda-out/seriesam-raiz.txt -w 'STATUS %{http_code} TYPE %{content_type} SIZE %{size_download}\n' 'https://series-am.az-animex.com/' 2>&1 | head -20
-          } >> sonda-out/sonda-v58.txt 2>&1 || true
-          # cuerpo de peliculas en texto por si trae mp4
-          file sonda-out/peliculas-body.bin >> sonda-out/sonda-v58.txt 2>&1 || true
-          head -c 200 sonda-out/peliculas-body.bin | tr -c '[:print:][:space:]' '.' >> sonda-out/sonda-v58.txt 2>&1 || true
-          echo '' >> sonda-out/sonda-v58.txt || true
-          rm -f sonda-out/peliculas-body.bin || true
+          echo '=== API del bundle filemoon ==='
+          grep -o 'api/[a-zA-Z0-9_./-]*' sonda-out/filemoon-spa.js 2>/dev/null | sort -u | head -40
+          echo '=== tamanos ==='
+          wc -c sonda-out/filemoon-spa.js sonda-out/terabox-air.html 2>/dev/null
+          echo '=== terabox: locals / files ==='
+          grep -o 'window.locals[^;][^;]\{0,150\}' sonda-out/terabox-air.html 2>/dev/null | head -3
+          grep -o 'file_name[^,}][^,}]\{0,60\}' sonda-out/terabox-air.html 2>/dev/null | head -5
+          grep -o 'dlink[^,}][^,}]\{0,100\}' sonda-out/terabox-air.html 2>/dev/null | head -5
+          echo '=== terabox: title ==='
+          grep -o '<title>[^<]*' sonda-out/terabox-air.html 2>/dev/null | head -2
+          } > sonda-out/sonda-v59.txt 2>&1 || true
+          rm -f sonda-out/filemoon-spa.js || true
       - name: commit
         run: |
           git config user.name "sonda-bot"
           git config user.email "sonda@users.noreply.github.com"
           git add sonda-out .github/workflows/sonda.yml
-          git commit -m "sonda v58 out" || true
+          git commit -m "sonda v59 out" || true
           git push || true
