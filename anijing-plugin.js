@@ -447,6 +447,15 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.45 «El sondeo del almacén» — la 0.6.44 llegó al teléfono (0.6.44
+// en pantalla) y AUN ASÍ la vista de BeatZ siguió igual: algunas
+// portadas cargan, otras quedan grises y el catálogo se corta. Se
+// acabó el adivinar: botón nuevo «Sondear BeatZ» en los ajustes que
+// recorre el almacén paso a paso (raíz, las 4 páginas del padrón,
+// conteo por rango de letras y 3 pósters de muestra) y escribe TODO en
+// el log — el mismo camino con el que se curó Az-Animex: sondear,
+// leer el log del teléfono y arreglar con datos, no con teorías.
+//
 // v0.6.44 «Las letras en su casa» — la captura del teléfono (v0.6.43,
 // BeatZ como fuente única) destapó la metida de pata: las secciones de
 // letras se añadían con «if (solo !== true)», o sea, SOLO en «Todas» y
@@ -850,7 +859,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.44';
+const VERSION = '0.6.45';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -7373,6 +7382,54 @@ async function image(arg) {
  * y solo tras el toque de la persona; el plugin nunca ve lo que se
  * teclea adentro. */
 async function action(key) {
+  if (key === 'btzSonda') {
+    /* v0.6.45 «El sondeo del almacén»: diagnóstico de BeatZ desde el
+     * teléfono de verdad — raíz, padrón página por página, letras y
+     * pósters de muestra. Todo al log; el mensaje es solo el resumen. */
+    const partes = [];
+    try {
+      const raiz = await btzListar('BeatZ-Anime', 1);
+      const nombresRaiz = raiz.map((x) => (x && x.is_dir ? '[D] ' : '[f] ') + String((x && x.name) || '')).slice(0, 12);
+      log('sonda btz raiz: ' + raiz.length + ' entradas -> ' + nombresRaiz.join(' | '));
+      partes.push('raíz ' + raiz.length);
+    } catch (eR) {
+      log('sonda btz raiz FALLO: ' + ((eR && eR.message) || String(eR)));
+      partes.push('raíz FALLO');
+    }
+    try {
+      const pags = [];
+      let total = 0;
+      for (let p = 1; p <= 4; p++) {
+        const d = await btzListar(BTZ_RAIZ, p);
+        pags.push(d.length);
+        for (const x of d) { const n = x && x.is_dir ? String(x.name || '').trim() : ''; if (n) total++; }
+        if (d.length < 200) break;
+      }
+      log('sonda btz padrón: páginas ' + pags.join(',') + ' -> ' + total + ' series');
+      partes.push('series ' + total + ' (págs ' + pags.join(',') + ')');
+      const series = await btzSeries();
+      const conteo = BTZ_RANGOS.map((r) => r.id + '=' + series.filter((n) => btzEnRango(n, r.id)).length);
+      log('sonda btz letras: ' + conteo.join(' '));
+      partes.push('letras ' + conteo.join('/'));
+      let bien = 0;
+      const muestras = series.slice(0, 3);
+      for (const m of muestras) {
+        const it = btzItemDe(m);
+        try {
+          const rp = await traer(it.poster, { timeoutMs: 10000 });
+          log('sonda btz póster «' + m + '»: ' + rp.status + ' ' + (rp.ok ? 'OK' : 'FALLO') + ' ' + it.poster);
+          if (rp.ok) bien++;
+        } catch (eP) {
+          log('sonda btz póster «' + m + '»: EXCEPCIÓN ' + ((eP && eP.message) || String(eP)));
+        }
+      }
+      partes.push('pósters ' + bien + '/' + muestras.length);
+    } catch (eS) {
+      log('sonda btz padrón FALLO: ' + ((eS && eS.message) || String(eS)));
+      partes.push('padrón FALLO');
+    }
+    return { message: 'Sondeo de BeatZ: ' + partes.join(' · ') + '. Mándame el log del teléfono y con eso arreglo la fuente.' };
+  }
   if (key !== 'teraboxLogin' && key !== 'fireloadPrep' && key !== 'veranimeCf') return null;
   if (!kino.visualBrowser || !kino.visualBrowser.available) {
     return { message: 'Este aparato no puede abrir la ventanita (solo en el teléfono o la tablet).' };

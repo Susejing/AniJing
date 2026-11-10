@@ -38,6 +38,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.45 «El sondeo del almacén»
+
+La 0.6.44 llegó al teléfono (0.6.44 en pantalla) y aun así BeatZ siguió igual: algunas portadas cargan, otras quedan grises y el catálogo se corta. Se acabó el adivinar: ajustes estrena el botón **«Sondear BeatZ»**, que recorre el almacén paso a paso (raíz, las 4 páginas del padrón, conteo por rango de letras y 3 pósters de muestra) y escribe todo en el log — el mismo camino con el que se curó Az-Animex: sondear desde el teléfono de verdad, leer el log y arreglar con datos, no con teorías.
+
 ## v0.6.44 «Las letras en su casa»
 
 La captura del teléfono destapó la metida de pata de la 0.6.43: las secciones de letras de BeatZ se añadían con «solo si no es fuente única», o sea, solo se veían en «Todas» y en el inicio — justo la pantalla que casi nadie usa. En la vista de BeatZ como fuente única (la de la captura) seguía el «Catálogo BD» solo de siempre, y por eso parecía que no había cambiado nada. Ahora las letras **0-9 · A-F, G-L, M-R y S-Z aparecen siempre**, también con la fuente seleccionada. VerAnime no cambia porque no puede: su muro es de Cloudflare, no del plugin.
