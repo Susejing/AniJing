@@ -10,33 +10,37 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: v65
+      - name: v66
         run: |
           set -u
           mkdir -p sonda-out
           cd sonda-out
           UAW='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
           FO='https://www.fireload.com/folder/cac87056363111ce9ca201f09123a025/Ano_Natsu_de_Matteru_BD'
-          rm -f fl.jar fo.html
+          rm -f fl.jar fo.html aj.html
           curl -s -g -L -c fl.jar -A "$UAW" --max-time 20 "$FO" -o fo.html || true
           {
-          echo "== cuerpo de loadFiles() =="
-          awk '/function loadFiles/,/^    }/' fo.html | head -60 || true
-          echo
-          echo "== pageStart/nodeId/nodeIds en la pagina =="
-          grep -oE '(pageStart|perPage|nodeId|nodeIds|filterOrderBy|filterDirection)[^,;}]{0,30}' fo.html | sort | uniq -c | sort -rn | head -14 || true
-          } > v65-loadfiles.txt 2>&1
-          echo "== intento directo del ajax =="
-          curl -s -g -b fl.jar -A "$UAW" -e "$FO" --max-time 20 -d 'pageStart=0&perPage=100&nodeId=1' 'https://www.fireload.com/ajax/_view_folder_v2_file_listing.ajax.php' -o aj.json || true
-          echo "bytes aj.json: $(wc -c < aj.json 2>/dev/null || echo 0)" >> v65-loadfiles.txt
-          head -c 600 aj.json >> v65-loadfiles.txt || true
-          echo >> v65-loadfiles.txt
-          echo "== urls de archivos dentro del json =="
-          grep -oE 'https://www\\.fireload\\.com/[a-f0-9]{16}/[^\"]{0,80}' aj.json | head -8 >> v65-loadfiles.txt || true
-          rm -f fo.html aj.json
+          echo "== entradas ocultas nodeId / url_hash / folderId =="
+          grep -oE '<input[^>]*id="(nodeId|url_hash|folderId|nodeIds)"[^>]*>' fo.html | head -6 || true
+          grep -oE 'id="nodeId" value="[^"]*"' fo.html | head -2 || true
+          grep -oE 'id="url_hash" value="[^"]*"' fo.html | head -2 || true
+          } > v66-params.txt 2>&1
+          NH=$(grep -oE 'id="nodeId" value="[^"]*"' fo.html | head -1 | sed 's/.*value="//; s/"$//' || true)
+          UH=$(grep -oE 'id="url_hash" value="[^"]*"' fo.html | head -1 | sed 's/.*value="//; s/"$//' || true)
+          echo "nodeId=[$NH] url_hash=[$UH]" >> v66-params.txt
+          echo "== POST del listado con los parametros de la pagina =="
+          curl -s -g -b fl.jar -A "$UAW" -e "$FO" --max-time 20 --data-urlencode 'url_hash='$UH --data-urlencode 'nodeId='$NH --data-urlencode 'filterText=' --data-urlencode 'filterUploadedDateRange=' --data-urlencode 'filterOrderBy=default' --data-urlencode 'pageStart=0' --data-urlencode 'perPage=100' 'https://www.fireload.com/ajax/_view_folder_v2_file_listing.ajax.php' -o aj.html || true
+          echo "bytes aj.html: $(wc -c < aj.html 2>/dev/null || echo 0)" >> v66-params.txt
+          echo "== enlaces de archivos en el listado =="
+          grep -oE 'https://www\\.fireload\\.com/[a-f0-9]{16}/[^\"\x27<> ]{0,90}' aj.html | head -10 >> v66-params.txt || true
+          echo "== totales =="
+          grep -oE 'id="rsp(TotalResults|FolderTotalFiles|TotalPages)" value="[^"]*"' aj.html | head -4 >> v66-params.txt || true
+          echo "== estructura de un renglon =="
+          grep -oE '<li[^>]{0,120}' aj.html | head -3 >> v66-params.txt || true
+          rm -f fo.html aj.html
           cd ..
           git config user.name 'sonda'
           git config user.email 'sonda@users.noreply.github.com'
           git add sonda-out
-          git commit -m 'sonda v65: parametros del ajax de carpetas' || true
+          git commit -m 'sonda v66: listado real de la carpeta' || true
           git push || true
