@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.23 «Sin dobleces»)
+## Qué hace (v0.6.24 «El escaparate lleno»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -13,14 +13,14 @@ Su nombre une «anime» con la terminación «jing» de su autor.
 **Nueve fuentes**:
 
 - **AnimeAV1** — catálogo con carátulas, fichas con sinopsis, géneros, año, nota y el id de MyAnimeList; en «Todas» aporta su núcleo (últimos episodios, últimos agregados, populares, mejor puntuados).
-- **MonosChinos** — en emisión y animes completos, con sus películas y especiales.
-- **LataAnime** — novedades y anime en latino y en castellano.
+- **MonosChinos** — en emisión, animes completos y los géneros Acción y Comedia, con su «Ver más» paginado (`?p=N`); sus películas y especiales de siempre.
+- **LataAnime** — novedades, anime en latino y en castellano, más En emisión, Directorio y los géneros Acción y Comedia (los géneros pagan con `?p=N`).
 - **OtakusTV** — directorio de animes con pósters propios, en emisión y últimos episodios; las opciones de reproducción del capítulo viajan de fábrica en su lista `data-dwn` (byse, doodstream, voe, mixdrop, mp4upload), que se cosecha tal cual.
-- **AnimeYT** — catálogo con películas y buscador propio; sus players viven en el contenedor mytsumi.com, que entrega sus botones `data-player-url` cuando se le pide con `open=1` (ok.ru, Filemoon y hasta archivos directos). Los archivos directos van primero y se verifican con un Range de 2 bytes antes de entregarse; las películas abren su propia página de reproducción (un iframe de Filemoon a bordo).
-- **EstrenosAnime** — últimos episodios, sub y latino; sin buscador de texto propio, se admite con honestidad (la búsqueda global sigue con las demás fuentes). Sus servidores se piden por AJAX (episode/servers → episode/sources) y su multiserver entrega cada opción cifrada — pero la descifra su propio endpoint `api/decrypt-stream` con solo preguntarle por POST.
-- **AnimeJara** — la veterana (animejara.com, puerta henaojara2.com): en emisión y catálogo con pósters propios; las fichas traen sus temporadas en pestañas y los episodios se sintetizan como `/episode/<slug>-1x2/`. Su player es un multiserver propio (streamhj.top) que lista sus hosters (Filemoon, Uqload, Vidhide, Voe, LuluStream, StreamTape, MP4Upload) por idioma: japonés, latino y castellano.
-- **VerAnime** — un Dooplay de manual (veranime.ninja): pósters de tmdb, fichas con temporadas y episodios `/ver/<slug>-episodio-N/`; su player sale del POST `admin-ajax.php` (action `doo_player_ajax` — el endpoint v2 de la casa responde 200 con el cuerpo vacío) y su multiserver (darkanimes.com, familia multiserver-pro) lista sus hosters cifrados: cada botón trae su URL en base64 XOR con la clave `pk` que su propia API entrega en claro (ZoPlayer, StreamWish, Uqload, SaveFiles…, con su idioma: latino, castellano o subtitulado). Su Inicio trae siete rieles: «Anime» más seis géneros verificados por sonda (Acción, Aventura, Fantasía, Comedia, Drama y Romance, con «Página N de M» y su «Ver más» paginando en `/genero/<slug>/page/N/`). Las películas abren también: si la página de episodio no existe, el resolver cae a su ficha.
-- **IvAnime** — en emisión, directorio y últimos agregados; vive en el espejo .buzz (el .com es descargas), con Voe, MP4Upload, Dood, MixDrop, Lulu y más cubiertos. Sus capítulos viven en `/ver/<epslug>-episodio-N` con un epslug que no es el de la serie; la ficha solo enseña el «Ver ahora» del primero, así que el total se cuenta con búsqueda binaria sobre su 404 de verdad. Sus pósters de verdad viajan en `data-src` (el `src` es un anime.png de relleno) y los de los héroes de la home se hallan por su nombre: la portada lleva el slug de la serie (`…/portada/<slug>-…jpg`).
+- **AnimeYT** — catálogo con películas (la fila apunta a `/pelicula/` de verdad, paginado), Ranking, Temporada de otoño y Acción, con buscador propio; sus players viven en el contenedor mytsumi.com, que entrega sus botones `data-player-url` cuando se le pide con `open=1` (ok.ru, Filemoon y hasta archivos directos). Los archivos directos van primero y se verifican con un Range de 2 bytes antes de entregarse; las películas abren su propia página de reproducción (un iframe de Filemoon a bordo).
+- **EstrenosAnime** — últimos episodios, sub, latino, OVAs, Especiales y En emisión; sin buscador de texto propio, se admite con honestidad (la búsqueda global sigue con las demás fuentes). Sus servidores se piden por AJAX (episode/servers → episode/sources) y su multiserver entrega cada opción cifrada — pero la descifra su propio endpoint `api/decrypt-stream` con solo preguntarle por POST.
+- **AnimeJara** — la veterana (animejara.com, puerta henaojara2.com): en emisión, catálogo y los géneros Acción, Romance, Comedia y Drama (paginados en `/genero/<slug>/page/N/`), con pósters propios; las fichas traen sus temporadas en pestañas y los episodios se sintetizan como `/episode/<slug>-1x2/`. Su player es un multiserver propio (streamhj.top) que lista sus hosters (Filemoon, Uqload, Vidhide, Voe, LuluStream, StreamTape, MP4Upload) por idioma: japonés, latino y castellano.
+- **VerAnime** — un Dooplay de manual (veranime.ninja): pósters de tmdb, fichas con temporadas y episodios `/ver/<slug>-episodio-N/`; su player sale del POST `admin-ajax.php` (action `doo_player_ajax` — el endpoint v2 de la casa responde 200 con el cuerpo vacío) y su multiserver (darkanimes.com, familia multiserver-pro) lista sus hosters cifrados: cada botón trae su URL en base64 XOR con la clave `pk` que su propia API entrega en claro (ZoPlayer, StreamWish, Uqload, SaveFiles…, con su idioma: latino, castellano o subtitulado). Su Inicio trae quince rieles: «Anime», Películas, más trece géneros verificados por sonda (Acción, Aventura, Fantasía, Comedia, Drama, Romance, Shounen, Seinen, Isekai, Mecha, Misterio, Psicológico y Sobrenatural, con «Página N de M» y su «Ver más» paginando en `/genero/<slug>/page/N/` y `/pelicula/page/N/`). Las películas abren también: si la página de episodio no existe, el resolver cae a su ficha.
+- **IvAnime** — en emisión, directorio (paginado con `?p=N` — el catálogo completo, ya sin recorte), últimos agregados y los géneros Acción, Romance y Comedia; vive en el espejo .buzz (el .com es descargas), con Voe, MP4Upload, Dood, MixDrop, Lulu y más cubiertos. Sus capítulos viven en `/ver/<epslug>-episodio-N` con un epslug que no es el de la serie; la ficha solo enseña el «Ver ahora» del primero, así que el total se cuenta con búsqueda binaria sobre su 404 de verdad. Sus pósters de verdad viajan en `data-src` (el `src` es un anime.png de relleno) y los de los héroes de la home se hallan por su nombre: la portada lleva el slug de la serie (`…/portada/<slug>-…jpg`).
 
 Todas las filas llevan su «Ver más».
 
@@ -31,6 +31,21 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.24 «El escaparate lleno»
+
+«La fuente no muestra todo lo que tiene» — y era verdad. Las sondas v39/v39b/v39c recorrieron cada sitio buscando páginas vivas y cómo paginan, y esta versión cuelga lo encontrado:
+
+- **AnimeJara** suma Acción, Romance, Comedia y Drama (`/genero/<slug>/`, paginado en `/genero/<slug>/page/N/`). Ojo aprendido: las 404 de AnimeJara traen ~100 anclas de anime (la barra lateral popular) — por eso el fin de un riel se corta por estado HTTP, no por contenido.
+- **MonosChinos** suma Acción y Comedia (`/genero/<slug>` con `?p=N`, reusando `mcSiguientePagina`).
+- **LataAnime** suma En emisión (`/emision`), Directorio (`/animes`) y los géneros Acción y Comedia (`?p=N`). El directorio NO pagina (`?page=` y `?pag=` devuelven lo mismo) — hoja honesta de una sola página.
+- **IvAnime** suma Acción, Romance y Comedia… y el **Directorio ahora pagina con `?p=N`** (el «catálogo incompleto» de siempre: `!page=` no existe, `?p=` sí y trae títulos distintos).
+- **AnimeYT** corrige «Películas»: apunta a `/pelicula/` de verdad (el `?tipo=pelicula` era ignorado y mostraba series) con paginación `/pelicula/page/N/`, y suma Ranking, Temporada de otoño y Acción.
+- **VerAnime** suma Películas (`/pelicula/`, paginado con «Página X de Y») y siete géneros verificados: shounen, seinen, isekai, mecha, misterio, psicológico y sobrenatural.
+- **EstrenosAnime** suma OVAs, Especiales y En emisión (una página por hoja, honesto: `/tipo/OVA/page/2/` responde 404).
+- OtakusTV y AnimeAV1 quedan como estaban: las sondas no hallaron páginas nuevas reales que valgan.
+
+En «Todas» solo entra el núcleo de cada fuente (MonosChinos y LataAnime ganan núcleo propio con esta versión); los rieles nuevos viven en su sección, al tocar su nombre. Y sin dobles: cero globales nuevos, el vigía del banco lo confirma.
 
 ## v0.6.23 «Sin dobleces»
 

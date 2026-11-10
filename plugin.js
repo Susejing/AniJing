@@ -447,6 +447,33 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.24 «El escaparate lleno» — «la fuente no muestra todo lo que
+// tiene». Las sondas v39/v39b/v39c recorrieron cada sitio buscando
+// páginas vivas y cómo paginan, y esta versión cuelga lo encontrado:
+//   AnimeJara: +Acción/Romance/Comedia/Drama (/genero/<slug>/, paginado
+//     en /genero/<slug>/page/N/ estilo WordPress).
+//   MonosChinos: +Acción/Comedia (/genero/<slug> con ?p=N, reusando
+//     mcSiguientePagina).
+//   LataAnime: +En emisión (/emision), +Directorio (/animes), +Acción
+//     y +Comedia (/genero/<slug> con ?p=N; el directorio NO pagina —
+//     ?page= y ?pag= devuelven lo mismo, así que es una hoja honesta
+//     de una sola página).
+//   IvAnime: +Acción/Romance/Comedia (/genero/<slug> con ?p=N) y el
+//     DIRECTORIO ahora pagina con ?p=N (el «catálogo incompleto» de
+//     siempre: !page= no existe, ?p= sí y trae títulos distintos).
+//   AnimeYT: «Películas» apunta a /pelicula/ de verdad (el
+//     ?tipo=pelicula era ignorado y mostraba series), +Ranking,
+//     +Temporada de otoño, +Acción.
+//   VerAnime: +Películas (/pelicula/, paginado con «Página X de Y») y
+//     7 géneros verificados (shounen, seinen, isekai, mecha, misterio,
+//     psicologico, sobrenatural).
+//   EstrenosAnime: +OVAs, +Especiales, +En emisión (una página por
+//     hoja, honesto: /tipo/OVA/page/2/ responde 404).
+//   OtakusTV y AnimeAV1: sin páginas nuevas reales — no se tocan.
+// En «Todas» solo entra el núcleo de cada fuente; los rieles nuevos
+// viven en su sección propia. Y lección de la 0.6.23: un global, un
+// nombre — nada de helpers duplicados.
+
 // v0.6.23 «Sin dobleces» — la 0.6.22 nunca cargó en el teléfono:
 // «El plugin no carga: invalid redefinition of global identifier».
 // La causa: la cosecha nueva se declaró como ivaPosterDe… y la
@@ -472,7 +499,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.23';
+const VERSION = '0.6.24';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -2061,6 +2088,18 @@ registrarFuente({
         const pagina = await traerMc('/animes', 9000);
         const items = mcTarjetas(pagina.text).slice(0, 20);
         return items.length ? { id: 'mc-animes', title: 'Animes · MonosChinos', ref: 'mc-animes', items: items } : null;
+      })(),
+      /* v0.6.24: géneros verificados por sonda v39 (/genero/accion y
+       * /genero/comedia responden 200 con tarjetas y paginan con ?p=N). */
+      (async () => {
+        const pagina = await traerMc('/genero/accion', 9000);
+        const items = mcTarjetas(pagina.text).slice(0, 20);
+        return items.length ? { id: 'mc-genero-accion', title: 'Acción · MonosChinos', ref: 'mc-genero-accion', items: items } : null;
+      })(),
+      (async () => {
+        const pagina = await traerMc('/genero/comedia', 9000);
+        const items = mcTarjetas(pagina.text).slice(0, 20);
+        return items.length ? { id: 'mc-genero-comedia', title: 'Comedia · MonosChinos', ref: 'mc-genero-comedia', items: items } : null;
       })()
     ];
     const rtas = await Promise.all(tareas.map((t) => t.catch((e) => { log('mc fila', (e && e.message) || e); return null; })));
@@ -2070,9 +2109,13 @@ registrarFuente({
   },
 
   async hoja(ref, cursor) {
-    const base = ref === 'mc-emision' ? '/emision' : (ref === 'mc-animes' ? '/animes' : null);
+    const pag = parseInt(String(cursor || '1'), 10) || 1;
+    const num = pag > 1 ? pag : 1;
+    let base = null;
+    if (ref === 'mc-emision') base = '/emision';
+    else if (ref === 'mc-animes') base = '/animes';
+    else if (ref.indexOf('mc-genero-') === 0) base = '/genero/' + ref.slice('mc-genero-'.length);
     if (!base) return null;
-    const num = Math.max(1, parseInt(String(cursor || '1'), 10) || 1);
     const pagina = await traerMc(base + (num > 1 ? '?p=' + num : ''));
     const items = mcTarjetas(pagina.text);
     if (!items.length) return { items: [], next: null };
@@ -2332,6 +2375,29 @@ registrarFuente({
         const pagina = await traerLat('/buscar?q=castellano', 9000);
         const items = latTarjetas(pagina.text).slice(0, 20);
         return items.length ? { id: 'lat-castellano', title: 'En castellano · LataAnime', ref: 'lat-castellano', items: items } : null;
+      })(),
+      /* v0.6.24: filas nuevas verificadas por sonda v39 — /emision y
+       * /animes responden 200 (una sola página: ?page= y ?pag= son
+       * ignoradas) y los géneros pagan con ?p=N. */
+      (async () => {
+        const pagina = await traerLat('/emision', 9000);
+        const items = latTarjetas(pagina.text).slice(0, 20);
+        return items.length ? { id: 'lat-emision', title: 'En emisión · LataAnime', ref: 'lat-emision', items: items } : null;
+      })(),
+      (async () => {
+        const pagina = await traerLat('/animes', 9000);
+        const items = latTarjetas(pagina.text).slice(0, 20);
+        return items.length ? { id: 'lat-animes', title: 'Directorio · LataAnime', ref: 'lat-animes', items: items } : null;
+      })(),
+      (async () => {
+        const pagina = await traerLat('/genero/accion', 9000);
+        const items = latTarjetas(pagina.text).slice(0, 20);
+        return items.length ? { id: 'lat-genero-accion', title: 'Acción · LataAnime', ref: 'lat-genero-accion', items: items } : null;
+      })(),
+      (async () => {
+        const pagina = await traerLat('/genero/comedia', 9000);
+        const items = latTarjetas(pagina.text).slice(0, 20);
+        return items.length ? { id: 'lat-genero-comedia', title: 'Comedia · LataAnime', ref: 'lat-genero-comedia', items: items } : null;
       })()
     ];
     const rtas = await Promise.all(tareas.map((t) => t.catch((e) => { log('lat fila', (e && e.message) || e); return null; })));
@@ -2340,20 +2406,32 @@ registrarFuente({
     return filas;
   },
 
-  async hoja(ref) {
+  async hoja(ref, cursor) {
     let camino = null;
+    let paginado = false; /* v0.6.24: solo los géneros pagan (?p=N verificado) */
     if (ref === 'lat-novedades') camino = '/';
     else if (ref === 'lat-latino') camino = '/buscar?q=latino';
     else if (ref === 'lat-castellano') camino = '/buscar?q=castellano';
+    else if (ref === 'lat-emision') camino = '/emision';
+    else if (ref === 'lat-animes') camino = '/animes';
+    else if (ref.indexOf('lat-genero-') === 0) { camino = '/genero/' + ref.slice('lat-genero-'.length); paginado = true; }
     if (!camino) return null;
-    const pagina = await traerLat(camino, 12000);
+    const pag = parseInt(String(cursor || '1'), 10) || 1;
+    const num = paginado && pag > 1 ? pag : 1;
+    const pagina = await traerLat(camino + (paginado && num > 1 ? '?p=' + num : ''), 12000);
     if (!pagina.ok) {
+      /* v0.6.24: fin de riel callado — si un género ya no tiene página
+       * N, la hoja se cierra sin escándalo (la fila no murió: llegó al
+       * final de su catálogo). */
+      if (paginado && num > 1) return { items: [], next: null };
       throw kino.error('unavailable', 'LataAnime no respondió (status ' + pagina.status + ')', {
         userMessage: 'LataAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
       });
     }
     const items = latTarjetas(pagina.text).slice(0, 60);
-    return { items: items, next: null };
+    let next = null;
+    if (paginado && items.length >= 20) next = String(num + 1);
+    return { items: items, next: next };
   },
 
   async detalle(slug) {
@@ -3080,10 +3158,28 @@ registrarFuente({
         const items = aytTarjetas(r.text).slice(0, 20);
         return items.length ? { id: 'ayt-latest', title: 'Últimos agregados · AnimeYT', ref: 'ayt-latest', items: items } : null;
       })(),
+      /* v0.6.24: el ?tipo=pelicula era papel — el sitio lo ignora y
+       * mostraba series; /pelicula/ es la página real (sonda v39: 200
+       * con tarjetas de película). */
       (async () => {
-        const r = await traer(BASE_AYT + '/tv/?tipo=pelicula', { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 9000 });
+        const r = await traer(BASE_AYT + '/pelicula/', { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 9000 });
         const items = aytTarjetas(r.text).slice(0, 20);
         return items.length ? { id: 'ayt-peliculas', title: 'Películas · AnimeYT', ref: 'ayt-peliculas', items: items } : null;
+      })(),
+      (async () => {
+        const r = await traer(BASE_AYT + '/ranking/', { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 9000 });
+        const items = aytTarjetas(r.text).slice(0, 20);
+        return items.length ? { id: 'ayt-ranking', title: 'Ranking · AnimeYT', ref: 'ayt-ranking', items: items } : null;
+      })(),
+      (async () => {
+        const r = await traer(BASE_AYT + '/temporada/otono-2026/', { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 9000 });
+        const items = aytTarjetas(r.text).slice(0, 20);
+        return items.length ? { id: 'ayt-temporada', title: 'Temporada de otoño · AnimeYT', ref: 'ayt-temporada', items: items } : null;
+      })(),
+      (async () => {
+        const r = await traer(BASE_AYT + '/genero/accion/', { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 9000 });
+        const items = aytTarjetas(r.text).slice(0, 20);
+        return items.length ? { id: 'ayt-genero-accion', title: 'Acción · AnimeYT', ref: 'ayt-genero-accion', items: items } : null;
       })()
     ];
     const rtas = await Promise.all(tareas.map((t) => t.catch((e) => { log('ayt fila', (e && e.message) || e); return null; })));
@@ -3095,18 +3191,27 @@ registrarFuente({
   async hoja(ref, cursor) {
     const num = Math.max(1, parseInt(String(cursor || '1'), 10) || 1);
     let camino = null;
-    if (ref === 'ayt-latest') camino = '/tv/' + (num > 1 ? 'page/' + num + '/' : '');
-    else if (ref === 'ayt-peliculas') camino = '/tv/' + (num > 1 ? 'page/' + num + '/' : '') + '?tipo=pelicula';
+    let paginado = false;
+    if (ref === 'ayt-latest') { camino = '/tv/' + (num > 1 ? 'page/' + num + '/' : ''); paginado = true; }
+    /* v0.6.24: /pelicula/ pagina con /pelicula/page/N/ (sonda v39:
+     * página 2 responde 200 con títulos distintos). Ranking, temporada
+     * y género son de una sola página — page/2 devuelve lo mismo y no
+     * se inventa paginación. */
+    else if (ref === 'ayt-peliculas') { camino = '/pelicula/' + (num > 1 ? 'page/' + num + '/' : ''); paginado = true; }
+    else if (ref === 'ayt-ranking') camino = '/ranking/';
+    else if (ref === 'ayt-temporada') camino = '/temporada/otono-2026/';
+    else if (ref === 'ayt-genero-accion') camino = '/genero/accion/';
     if (!camino) return null;
     const r = await traer(BASE_AYT + camino, { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 10000 });
     if (!r.ok) {
+      if (paginado && num > 1) return { items: [], next: null };
       throw kino.error('unavailable', 'AnimeYT no respondió (status ' + r.status + ')', {
         userMessage: 'AnimeYT no respondió. Revisa tu conexión o inténtalo en un rato.'
       });
     }
     const items = aytTarjetas(r.text);
     if (!items.length) return { items: [], next: null };
-    return { items: items.slice(0, 30), next: String(num + 1) };
+    return { items: items.slice(0, 30), next: paginado ? String(num + 1) : null };
   },
 
   async detalle(slug) {
@@ -3524,7 +3629,14 @@ registrarFuente({
       { id: 'eas-popular', titulo: 'Popular · EstrenosAnime', ref: 'eas-popular', camino: '/popular' },
       /* v0.6.5: dos riel más para que la sección no se sienta vacía. */
       { id: 'eas-peliculas', titulo: 'Películas · EstrenosAnime', ref: 'eas-peliculas', camino: '/tipo/Pelicula' },
-      { id: 'eas-actualizados', titulo: 'Actualizados · EstrenosAnime', ref: 'eas-actualizados', camino: '/ultimo-actualizado' }
+      { id: 'eas-actualizados', titulo: 'Actualizados · EstrenosAnime', ref: 'eas-actualizados', camino: '/ultimo-actualizado' },
+      /* v0.6.24: páginas verificadas por sonda v39c — /tipo/OVA,
+       * /tipo/Especial y /estado/En+Emision responden 200 con fichas
+       * (hrefs relativos /anime/<slug>, que easFichas ya entiende).
+       * /tipo/OVA/page/2/ responde 404: una página por hoja, honesto. */
+      { id: 'eas-ova', titulo: 'OVAs · EstrenosAnime', ref: 'eas-ova', camino: '/tipo/OVA' },
+      { id: 'eas-especial', titulo: 'Especiales · EstrenosAnime', ref: 'eas-especial', camino: '/tipo/Especial' },
+      { id: 'eas-emision', titulo: 'En emisión · EstrenosAnime', ref: 'eas-emision', camino: '/estado/En+Emision' }
     ];
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
@@ -3550,6 +3662,9 @@ registrarFuente({
     else if (ref === 'eas-popular') camino = '/popular';
     else if (ref === 'eas-peliculas') camino = '/tipo/Pelicula';
     else if (ref === 'eas-actualizados') camino = '/ultimo-actualizado';
+    else if (ref === 'eas-ova') camino = '/tipo/OVA';
+    else if (ref === 'eas-especial') camino = '/tipo/Especial';
+    else if (ref === 'eas-emision') camino = '/estado/En+Emision';
     if (!camino) return null;
     const r = await traer(BASE_EAS + camino, { headers: { Referer: BASE_EAS + '/' }, timeoutMs: 12000 });
     if (!r.ok) {
@@ -3718,7 +3833,13 @@ registrarFuente({
   async portada() {
     const defs = [
       { id: 'jara-emision', titulo: 'En emisión · AnimeJara', ref: 'jara-emision', camino: '/emision' },
-      { id: 'jara-catalogo', titulo: 'Catálogo · AnimeJara', ref: 'jara-catalogo', camino: '/catalogo' }
+      { id: 'jara-catalogo', titulo: 'Catálogo · AnimeJara', ref: 'jara-catalogo', camino: '/catalogo' },
+      /* v0.6.24: géneros verificados por sonda v39 — todos responden
+       * 200 y pagan con /genero/<slug>/page/N/ (estilo WordPress). */
+      { id: 'jara-genero-accion', titulo: 'Acción · AnimeJara', ref: 'jara-genero-accion', camino: '/genero/accion' },
+      { id: 'jara-genero-romance', titulo: 'Romance · AnimeJara', ref: 'jara-genero-romance', camino: '/genero/romance' },
+      { id: 'jara-genero-comedia', titulo: 'Comedia · AnimeJara', ref: 'jara-genero-comedia', camino: '/genero/comedia' },
+      { id: 'jara-genero-drama', titulo: 'Drama · AnimeJara', ref: 'jara-genero-drama', camino: '/genero/drama' }
     ];
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
@@ -3739,28 +3860,42 @@ registrarFuente({
   async hoja(ref, cursor) {
     const caminos = {
       'jara-emision': '/emision',
-      'jara-catalogo': '/catalogo'
+      'jara-catalogo': '/catalogo',
+      'jara-genero-accion': '/genero/accion',
+      'jara-genero-romance': '/genero/romance',
+      'jara-genero-comedia': '/genero/comedia',
+      'jara-genero-drama': '/genero/drama'
     };
     const camino = caminos[ref];
     if (!camino) return null;
     /* v0.6.11: el catálogo pagina con ?page=N — aprendido de sonda: la
      * página 2 responde 200 con títulos distintos; ?pagina=N se ignora
      * y /catalogo/page/2/ miente con su 404-con-contenido. Mientras una
-     * página traiga un buen puñado de tarjetas, hay siguiente. */
+     * página traiga un buen puñado de tarjetas, hay siguiente.
+     * v0.6.24: los géneros pagan con /genero/<slug>/page/N/ (sonda v39:
+     * WordPress de verdad, página 2 con primer item distinto). Y ojo:
+     * las 404 de AnimeJara traen ~100 anclas de anime (la barra lateral
+     * popular) — por eso una página de error se corta por ESTADO, no
+     * por contenido. */
     const pag = parseInt(cursor, 10);
     const num = Number.isFinite(pag) && pag > 1 ? pag : 1;
-    const url = num > 1 && ref === 'jara-catalogo'
-      ? BASE_JARA + camino + '?page=' + num
-      : BASE_JARA + camino;
+    const esGenero = ref.indexOf('jara-genero-') === 0;
+    let url;
+    if (num > 1 && ref === 'jara-catalogo') url = BASE_JARA + camino + '?page=' + num;
+    else if (num > 1 && esGenero) url = BASE_JARA + camino + '/page/' + num + '/';
+    else url = BASE_JARA + camino;
     const r = await traer(url, { headers: { Referer: BASE_JARA + '/' }, timeoutMs: 12000 });
     if (!r.ok) {
+      /* fin de riel callado: el género llegó a su última página y el
+       * sitio contestó 404 — la hoja se cierra sin escándalo. */
+      if (num > 1 && esGenero) return { items: [], next: null };
       throw kino.error('unavailable', 'AnimeJara no respondió (status ' + r.status + ')', {
         userMessage: 'AnimeJara no respondió. Revisa tu conexión o inténtalo en un rato.'
       });
     }
     const items = jaraTarjetas(r.text).slice(0, 60);
     let next = null;
-    if (ref === 'jara-catalogo' && items.length >= 12) next = String(num + 1);
+    if ((ref === 'jara-catalogo' || esGenero) && items.length >= 12) next = String(num + 1);
     return { items: items, next: next };
   },
 
@@ -4141,11 +4276,28 @@ registrarFuente({
       { id: 'van-genero-fantasia', titulo: 'Fantasía · VerAnime', ref: 'van-genero-fantasia', genero: 'fantasia' },
       { id: 'van-genero-comedia', titulo: 'Comedia · VerAnime', ref: 'van-genero-comedia', genero: 'comedia' },
       { id: 'van-genero-drama', titulo: 'Drama · VerAnime', ref: 'van-genero-drama', genero: 'drama' },
-      { id: 'van-genero-romance', titulo: 'Romance · VerAnime', ref: 'van-genero-romance', genero: 'romance' }
+      { id: 'van-genero-romance', titulo: 'Romance · VerAnime', ref: 'van-genero-romance', genero: 'romance' },
+      /* v0.6.24 «El escaparate lleno»: la sonda v39b listó los 60
+       * géneros vivos del sitio — estos 7 respondieron 200 con
+       * tarjetas (shounen/escolar/peliculas ya se sabía que NO: los
+       * slugs del dump son los buenos). */
+      { id: 'van-genero-shounen', titulo: 'Shounen · VerAnime', ref: 'van-genero-shounen', genero: 'shounen' },
+      { id: 'van-genero-seinen', titulo: 'Seinen · VerAnime', ref: 'van-genero-seinen', genero: 'seinen' },
+      { id: 'van-genero-isekai', titulo: 'Isekai · VerAnime', ref: 'van-genero-isekai', genero: 'isekai' },
+      { id: 'van-genero-mecha', titulo: 'Mecha · VerAnime', ref: 'van-genero-mecha', genero: 'mecha' },
+      { id: 'van-genero-misterio', titulo: 'Misterio · VerAnime', ref: 'van-genero-misterio', genero: 'misterio' },
+      { id: 'van-genero-psicologico', titulo: 'Psicológico · VerAnime', ref: 'van-genero-psicologico', genero: 'psicologico' },
+      { id: 'van-genero-sobrenatural', titulo: 'Sobrenatural · VerAnime', ref: 'van-genero-sobrenatural', genero: 'sobrenatural' },
+      /* v0.6.24: /pelicula/ responde 200 con tarjetas de película
+       * (vanTarjetas ya las marca kind 'movie' y vanFicha rebota a
+       * /pelicula/<slug>/) y pagina con «Página X de Y» igual que los
+       * géneros. */
+      { id: 'van-peliculas', titulo: 'Películas · VerAnime', ref: 'van-peliculas', camino: '/pelicula/' }
     ];
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
-        const r = await traer(BASE_VAN + '/genero/' + def.genero + '/', { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 11000, cuerpoSiempre: true });
+        const destino = def.camino || ('/genero/' + def.genero + '/');
+        const r = await traer(BASE_VAN + destino, { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 11000, cuerpoSiempre: true });
         let items = r && r.ok ? vanTarjetas(r.text).slice(0, 20) : [];
         /* v0.6.10 conservada: SOLO el riel «Anime» conserva su respaldo
          * en la home del sitio — es el género maestro; los demás viven
@@ -4183,14 +4335,17 @@ registrarFuente({
   async hoja(ref, cursor) {
     /* v0.6.13: cada riel de género abre su propio /genero/<slug>/ y
      * pagina con /genero/<slug>/page/N/ (verificado por sonda: la
-     * página 2 responde 200 con 69 anclas, igual que la 1). */
-    let genero = null;
-    if (ref === 'van-anime') genero = 'ver-anime';
-    else if (ref.indexOf('van-genero-') === 0) genero = ref.slice('van-genero-'.length);
-    if (!genero) return null;
+     * página 2 responde 200 con 69 anclas, igual que la 1).
+     * v0.6.24: «Películas» hace lo propio con /pelicula/ (sonda v39:
+     * página 2 con «Página X de Y» y tarjetas distintas). */
+    let base = null;
+    if (ref === 'van-peliculas') base = '/pelicula';
+    else if (ref === 'van-anime') base = '/genero/ver-anime';
+    else if (ref.indexOf('van-genero-') === 0) base = '/genero/' + ref.slice('van-genero-'.length);
+    if (!base) return null;
     const pagina = parseInt(cursor, 10);
     const num = Number.isFinite(pagina) && pagina > 1 ? pagina : 1;
-    const camino = num > 1 ? '/genero/' + genero + '/page/' + num + '/' : '/genero/' + genero + '/';
+    const camino = num > 1 ? base + '/page/' + num + '/' : base + '/';
     const r = await traer(BASE_VAN + camino, { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 12000 });
     if (!r.ok) {
       throw kino.error('unavailable', 'VerAnime no respondió (status ' + r.status + ')', {
@@ -4489,7 +4644,12 @@ registrarFuente({
     const defs = [
       { id: 'iva-emision', titulo: 'En emisión · IvAnime', ref: 'iva-emision', camino: '/emision' },
       { id: 'iva-directorio', titulo: 'Directorio · IvAnime', ref: 'iva-directorio', camino: '/animes' },
-      { id: 'iva-nuevos', titulo: 'Últimos agregados · IvAnime', ref: 'iva-nuevos', camino: '/' }
+      { id: 'iva-nuevos', titulo: 'Últimos agregados · IvAnime', ref: 'iva-nuevos', camino: '/' },
+      /* v0.6.24: géneros verificados por sonda v39c — responden 200 y
+       * pagan con ?p=N (igual que el directorio). */
+      { id: 'iva-genero-accion', titulo: 'Acción · IvAnime', ref: 'iva-genero-accion', camino: '/genero/accion' },
+      { id: 'iva-genero-romance', titulo: 'Romance · IvAnime', ref: 'iva-genero-romance', camino: '/genero/romance' },
+      { id: 'iva-genero-comedia', titulo: 'Comedia · IvAnime', ref: 'iva-genero-comedia', camino: '/genero/comedia' }
     ];
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
@@ -4517,24 +4677,38 @@ registrarFuente({
     return filas;
   },
 
-  async hoja(ref) {
-    /* v0.6.5: cada riel abre su propio camino; la paginación de IvAnime
-     * no está verificada, así que el riel se corta limpio. */
+  async hoja(ref, cursor) {
+    /* v0.6.5: cada riel abre su propio camino.
+     * v0.6.24 «El escaparate lleno»: la sonda v39c probó la paginación
+     * de IvAnime y la encontró: /animes?p=2 responde 200 con títulos
+     * DISTINTOS (!page= no existe; ?p= sí). El directorio y los géneros
+     * pagan con ?p=N; /emision y la home no (página 2 idéntica) y
+     * quedan de una página, honesto. Fin de riel callado: si una
+     * página N ya no existe, la hoja se cierra sin escándalo. */
     const caminos = {
       'iva-emision': '/emision',
       'iva-directorio': '/animes',
-      'iva-nuevos': '/'
+      'iva-nuevos': '/',
+      'iva-genero-accion': '/genero/accion',
+      'iva-genero-romance': '/genero/romance',
+      'iva-genero-comedia': '/genero/comedia'
     };
     const camino = caminos[ref];
     if (!camino) return null;
-    const r = await traer(BASE_IVA + camino, { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 12000 });
+    const paginado = ref === 'iva-directorio' || ref.indexOf('iva-genero-') === 0;
+    const pag = parseInt(String(cursor || '1'), 10) || 1;
+    const num = paginado && pag > 1 ? pag : 1;
+    const r = await traer(BASE_IVA + camino + (paginado && num > 1 ? '?p=' + num : ''), { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 12000 });
     if (!r.ok) {
+      if (paginado && num > 1) return { items: [], next: null };
       throw kino.error('unavailable', 'IvAnime no respondió (status ' + r.status + ')', {
         userMessage: 'IvAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
       });
     }
     const items = ivaTarjetas(r.text).slice(0, 60);
-    return { items: items, next: null };
+    let next = null;
+    if (paginado && items.length >= 20) next = String(num + 1);
+    return { items: items, next: next };
   },
 
   async detalle(slug) {
@@ -4861,11 +5035,15 @@ function sinSufijoFuente(titulo, etiqueta) {
    oculto; la honestidad manda: sin reproductor legible, mensaje claro. */
 const NUCLEO_TODAS = {
   av1: ['av1-row-eps', 'av1-latest', 'av1-populares', 'av1-score'],
+  /* v0.6.24: MonosChinos y LataAnime ganan núcleo — con sus rieles
+   * nuevos ya no caben todos en «Todas»; quedan el par esencial. */
+  mc: ['mc-emision', 'mc-animes'],
+  lat: ['lat-novedades', 'lat-emision'],
   otv: ['otv-emision', 'otv-eps', 'otv-animes'],
   ayt: ['ayt-latest', 'ayt-peliculas'],
   eas: ['eas-eps', 'eas-sub', 'eas-lat', 'eas-popular'],
   jara: ['jara-emision', 'jara-catalogo'],
-  van: ['van-anime'],
+  van: ['van-anime', 'van-peliculas'],
   iva: ['iva-emision', 'iva-directorio']
 };
 
