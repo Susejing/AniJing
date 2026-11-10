@@ -1,0 +1,4 @@
+=== compresor de icono v2 (ImageMagick) ===
+herramienta: none
+/home/runner/work/_temp/3d8135c9-bd44-483c-b5f5-ac1f38a37505.sh: line 7: none: command not found
+/home/runner/work/_temp/3d8135c9-bd44-483c-b5f5-ac1f38a37505.sh: line 8: identify: command not found
