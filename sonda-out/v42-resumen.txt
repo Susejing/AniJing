@@ -1,0 +1,52 @@
+SONDA V42
+=== AZ ficha completa y estructura descargas ===
+azf.html: 218351 bytes
+--- contexto mirrored.to:
+<a class="gs-parent-hover gs_button_w_icon gs_icon_always col1-boton col1-mirror gsbp-5b12ce8" href="https://www.mirrored.to/multilinks/fe371ce9c1"
+--- contexto dire.az-anime (acortador?):
+<a class="gs-parent-hover gs_button_w_icon gs_icon_always col1-boton col1-serveraz col1-premium gsbp-807179d" href="https://dire.az-animex.com/Anime/Oshi%20no%20Ko%20BD" target="_blank" rel="noopener">
+--- headers de version/episodios (no CSS):
+<span class="gsbp-b197f47 col1-topspan">Episodios
+--- estructura botones col1- (fuera de CSS):
+=== AZ directorio: estructura entradas ===
+azd.html: 222896 bytes
+=== AZ home: estructura lcpag-card ===
+azh.html: 278667 bytes
+group" aria-label="Lista de comentarios">                                <article class="lcpag-item lcpag-card">
+                                                <article class="lcpag-item lcpag-card">
+=== AZ mirrored.to multilinks ===
+azm.html: 15588 bytes
+title: <title>File links - Mirrored.to - Upload Your files to multiple hosts
+--- contexto nombre de archivo:
+.mp4_links target=_blank
+.mp4_links
+.mp4_links target=_blank
+.mp4_links
+.mp4_links target=_blank
+.mp4_links
+=== DW ficha yomi: secciones idioma ===
+dwf.html: 377784 bytes
+nu-item-type-taxonomy menu-item-object-post_tag menu-item-10414"><a href="https://dw-anime.net/tag/audio-latino/">Audio Latino</a></li>
+tem-type-taxonomy menu-item-object-post_tag menu-item-34186"><a href="https://dw-anime.net/tag/audio-castellano/">Audio Castellano</a></li>
+                                            <h1 class="featured-title">Yomi no Tsugai Sub/Latino/Castellano</h1>
+<li>Audio: Japones/<strong>Latino</strong>/<strong>Castellano</strong></li>
+<h2 class="wp-block-heading has-text-align-center" style="font-size:22px"><strong>Descargar Yomi no Tsugai Sub/Latino/Castellano</strong></h2>
+  <summary>Versión Subtitulada</summary>
+  <summary>Versión Audio Latino</summary>
+  <summary>Versión Audio Castellano</summary>
+--- contexto Capitulo 1 (tabla):
+      <td class="chapter-td">Capitulo 1</td>
+=== DW cadena completa (8 links, titulos de nube) ===
+link1 | nube: https://www.mediafire.com/file/r7l7pfo173257wi | titulo: 01 - Asa y Yuru [Dw-anime.net] [720p-SD] | dl: https://download1589.mediafire.com/688
+link2 | nube:  | titulo: ? | dl: -
+link3 | nube: https://www.mediafire.com/file/ymbls952bb4s7ut | titulo: 01 - Asa y Yuru [Dw-anime.net] [720p] | dl: https://download1980.mediafire.com/hdqiqb8hk8rgvE7t0t-GmCs1BDW
+link4 | nube:  | titulo: ? | dl: -
+link5 | nube: https://www.mediafire.com/file/xdnd90m1q9hglhu | titulo: 01 - Asa y Yuru [Dw-anime.net] [1080p] | dl: https://download1075.mediafire.com/10qz6jpezjygzc6tDvFVfyelLIgjhFbCBiQvfckzBs0-Y1i6_DynP5T
+link6 | nube:  | titulo: ? | dl: -
+link7 | nube: https://www.mediafire.com/file/arrachbe4s2jy6q | titulo: 02 - Derecho e Izquierda [Dw-anime.net] [720p-SD] | dl: https://download1589.mediafire.com/yt154jj0b1kgGiziY_dv7VKzrIRMFkPXSae7Y9F_J
+link8 | nube:  | titulo: ? | dl: -
+=== DW home cards ===
+dwh.html: 129835 bytes
+<article class="post-item">
+<article class="post-item">
+<article class="post-item">
