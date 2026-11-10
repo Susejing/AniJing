@@ -1,7 +1,0 @@
-##### mc #####
-  https://monoschinos.st/animes -> 200 (280 clases)
-  https://monoschinos.st/animes/page/2/ -> 404 (20 clases)
-  https://monoschinos.st/animes?p=2 -> 200 (280 clases)
-  https://monoschinos.st/animes?page=2 -> 200 (280 clases)
-  --- ¿wp-json? ---
-  wp-json posts: 404 — total 
