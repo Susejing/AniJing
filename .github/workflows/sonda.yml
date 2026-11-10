@@ -10,7 +10,7 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: v66
+      - name: v67
         run: |
           set -u
           mkdir -p sonda-out
@@ -20,27 +20,29 @@ jobs:
           rm -f fl.jar fo.html aj.html
           curl -s -g -L -c fl.jar -A "$UAW" --max-time 20 "$FO" -o fo.html || true
           {
-          echo "== entradas ocultas nodeId / url_hash / folderId =="
-          grep -oE '<input[^>]*id="(nodeId|url_hash|folderId|nodeIds)"[^>]*>' fo.html | head -6 || true
-          grep -oE 'id="nodeId" value="[^"]*"' fo.html | head -2 || true
-          grep -oE 'id="url_hash" value="[^"]*"' fo.html | head -2 || true
-          } > v66-params.txt 2>&1
-          NH=$(grep -oE 'id="nodeId" value="[^"]*"' fo.html | head -1 | sed 's/.*value="//; s/"$//' || true)
-          UH=$(grep -oE 'id="url_hash" value="[^"]*"' fo.html | head -1 | sed 's/.*value="//; s/"$//' || true)
-          echo "nodeId=[$NH] url_hash=[$UH]" >> v66-params.txt
-          echo "== POST del listado con los parametros de la pagina =="
-          curl -s -g -b fl.jar -A "$UAW" -e "$FO" --max-time 20 --data-urlencode 'url_hash='$UH --data-urlencode 'nodeId='$NH --data-urlencode 'filterText=' --data-urlencode 'filterUploadedDateRange=' --data-urlencode 'filterOrderBy=default' --data-urlencode 'pageStart=0' --data-urlencode 'perPage=100' 'https://www.fireload.com/ajax/_view_folder_v2_file_listing.ajax.php' -o aj.html || true
-          echo "bytes aj.html: $(wc -c < aj.html 2>/dev/null || echo 0)" >> v66-params.txt
-          echo "== enlaces de archivos en el listado =="
-          grep -oE 'https://www\\.fireload\\.com/[a-f0-9]{16}/[^\"\x27<> ]{0,90}' aj.html | head -10 >> v66-params.txt || true
-          echo "== totales =="
-          grep -oE 'id="rsp(TotalResults|FolderTotalFiles|TotalPages)" value="[^"]*"' aj.html | head -4 >> v66-params.txt || true
-          echo "== estructura de un renglon =="
-          grep -oE '<li[^>]{0,120}' aj.html | head -3 >> v66-params.txt || true
+          echo "== input con url_hash =="
+          grep -oE "<input[^>]*url_hash[^>]*>" fo.html | head -4 || true
+          echo
+          echo "== input con nodeId =="
+          grep -oE "<input[^>]*nodeId[^>]*>" fo.html | head -4 || true
+          echo
+          echo "== todos los input hidden =="
+          grep -oE "<input[^>]*hidden[^>]*>" fo.html | head -10 || true
+          } > v67-params.txt 2>&1
+          UH=$(grep -oE '<input[^>]*url_hash[^>]*>' fo.html | grep -oE 'value="[^"]*"' | head -1 | sed 's/value="//; s/"$//' || true)
+          NH=$(grep -oE '<input[^>]*id="nodeId"[^>]*>' fo.html | grep -oE 'value="[^"]*"' | head -1 | sed 's/value="//; s/"$//' || true)
+          echo "url_hash=[$UH] nodeId=[$NH]" >> v67-params.txt
+          if [ -n "$UH" ]; then
+            curl -s -g -b fl.jar -A "$UAW" -e "$FO" --max-time 20 --data-urlencode "url_hash=$UH" --data-urlencode "nodeId=$NH" --data-urlencode "filterText=" --data-urlencode "filterUploadedDateRange=" --data-urlencode "filterOrderBy=default" --data-urlencode "pageStart=0" --data-urlencode "perPage=100" "https://www.fireload.com/ajax/_view_folder_v2_file_listing.ajax.php" -o aj.html || true
+            echo "bytes aj.html: $(wc -c < aj.html 2>/dev/null || echo 0)" >> v67-params.txt
+            echo "== enlaces de archivos =="
+            grep -oE "https://www\.fireload\.com/[a-f0-9]{16}/[^\"<> ]{0,90}" aj.html | head -10 >> v67-params.txt || true
+            grep -oE "id=\"rspTotalResults\" value=\"[^\"]*\"" aj.html >> v67-params.txt || true
+          fi
           rm -f fo.html aj.html
           cd ..
           git config user.name 'sonda'
           git config user.email 'sonda@users.noreply.github.com'
           git add sonda-out
-          git commit -m 'sonda v66: listado real de la carpeta' || true
+          git commit -m 'sonda v67: los ocultos de la carpeta' || true
           git push || true
