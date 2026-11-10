@@ -1,0 +1,20 @@
+===== tracker: browse.php =====
+status 200 bytes 3134
+<title>Login ‹ Unión Fansub</title>
+href="//foro.unionfansub.com/index.php"
+href="//foro.unionfansub.com/member.php?action=lostpw"
+href="//foro.unionfansub.com/member.php?action=register"
+href="//torrent.unionfansub.com/index.php"
+href="browse.php"
+href="faq.php"
+href="http://foro.unionfansub.com/member.php?action=register"
+href="https://foro.unionfansub.com/member.php?action=lostpw"
+href="staff.php"
+href="style.css?v=1792869709"
+href="topten.php"
+href="upload.php"
+     14 login
+--- ¿detalles de torrent? ---
+TD=
+===== archive: foro 3 (General) para ver el formato =====
+status 200 bytes 48868
