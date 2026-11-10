@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <script>
+    (function() {
+        try {
+            var theme = localStorage.getItem('theme');
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+            document.documentElement.classList.add('theme-no-transition');
+        } catch (e) {}
+    })();
+    </script>
+    <style id="pulsegrid-theme-critical">
+        html[data-theme="dark"] {
+            background-color: #1a1a1a;
+            color-scheme: dark;
+        }
+        html[data-theme="dark"] body {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+        html.theme-no-transition,
+        html.theme-no-transition *,
+        html.theme-no-transition *::before,
+        html.theme-no-transition *::after {
+            transition: none !important;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Las mejores versiones del anime">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="GénerosDw-anime">
+    <meta property="og:description" content="Las mejores versiones del anime">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://dw-anime.net">
+    
+    <!-- Google Fonts - Oswald -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <meta name='robots' content='index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' />
+
+	<!-- This site is optimized with the Yoast SEO plugin v28.8 - https://yoast.com/product/yoast-seo-wordpress/ -->
+	<title>Géneros</title>
+	<meta name="description" content="Todos los géneros de anime" />
+	<link rel="canonical" href="https://dw-anime.net/generos/" />
+	<meta property="og:locale" content="es_ES" />
+	<meta property="og:type" content="article" />
+	<meta property="og:title" content="Géneros" />
+	<meta property="og:description" content="Todos los géneros de anime" />
+	<meta property="og:url" content="https://dw-anime.net/generos/" />
+	<meta property="og:site_name" content="Dw-anime" />
+	<meta property="article:publisher" content="https://www.facebook.com/dwanime.net/" />
+	<meta property="article:modified_time" content="2026-03-05T01:58:24+00:00" />
+	<meta name="twitter:card" content="summary_large_image" />
+	<script type="application/ld+json" class="yoast-schema-graph">{"@context":"https:\/\/schema.org","@graph":[{"@type":"WebPage","@id":"https:\/\/dw-anime.net\/generos\/","url":"https:\/\/dw-anime.net\/generos\/","name":"Géneros","isPartOf":{"@id":"https:\/\/dw-anime.net\/#website"},"datePublished":"2026-03-05T01:58:23+00:00","dateModified":"2026-03-05T01:58:24+00:00","description":"Todos los géneros de anime","breadcrumb":{"@id":"https:\/\/dw-anime.net\/generos\/#breadcrumb"},"inLanguage":"es","potentialAction":[{"@type":"ReadAction","target":["https:\/\/dw-anime.net\/generos\/"]}]},{"@type":"BreadcrumbList","@id":"https:\/\/dw-anime.net\/generos\/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Portada","item":"https:\/\/dw-anime.net\/"},{"@type":"ListItem","position":2,"name":"Géneros"}]},{"@type":"WebSite","@id":"https:\/\/dw-anime.net\/#website","url":"https:\/\/dw-anime.net\/","name":"Dw-anime","description":"Las mejores versiones del anime","publisher":{"@id":"https:\/\/dw-anime.net\/#organization"},"potentialAction":[{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https:\/\/dw-anime.net\/?s={search_term_string}"},"query-input":{"@type":"PropertyValueSpecification","valueRequired":true,"valueName":"search_term_string"}}],"inLanguage":"es"},{"@type":"Organization","@id":"https:\/\/dw-anime.net\/#organization","name":"Dw-anime","url":"https:\/\/dw-anime.net\/","logo":{"@type":"ImageObject","inLanguage":"es","@id":"https:\/\/dw-anime.net\/#\/schema\/logo\/image\/","url":"https:\/\/dw-anime.net\/wp-content\/uploads\/2026\/03\/WhatsApp-Image-2026-03-03-at-22.24.36-2.png","contentUrl":"https:\/\/dw-anime.net\/wp-content\/uploads\/2026\/03\/WhatsApp-Image-2026-03-03-at-22.24.36-2.png","width":150,"height":47,"caption":"Dw-anime"},"image":{"@id":"https:\/\/dw-anime.net\/#\/schema\/logo\/image\/"},"sameAs":["https:\/\/www.facebook.com\/dwanime.net\/"]}]}</script>
+	<!-- / Yoast SEO plugin. -->
+
+
+<link rel="alternate" title="oEmbed (JSON)" type="application/json+oembed" href="https://dw-anime.net/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fdw-anime.net%2Fgeneros%2F" />
+<link rel="alternate" title="oEmbed (XML)" type="text/xml+oembed" href="https://dw-anime.net/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fdw-anime.net%2Fgeneros%2F&#038;format=xml" />
+<style id="wp-img-auto-sizes-contain-inline-css">
+img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
+/*# sourceURL=wp-img-auto-sizes-contain-inline-css */
+</style>
+ 
+<style id="wp-emoji-styles-inline-css">
+
+	img.wp-smiley, img.emoji {
+		display: inline !important;
+		border: none !important;
+		box-shadow: none !important;
+		height: 1em !important;
+		width: 1em !important;
+		margin: 0 0.07em !important;
+		vertical-align: -0.1em !important;
+		background: none !important;
+		padding: 0 !important;
+	}
+/*# sourceURL=wp-emoji-styles-inline-css */
+</style>
+<link rel='stylesheet' id='wp-block-library-css' href='https://dw-anime.net/wp-includes/css/dist/block-library/style.min.css?ver=7.1.4' media='all' />
+<style id="classic-theme-styles-inline-css">
+/*! This file is auto-generated */
+.wp-block-button__link{color:#fff;background-color:#32373c;border-radius:9999px;box-shadow:none;text-decoration:none;padding:calc(.667em + 2px) calc(1.333em + 2px);font-size:1.125em}.wp-block-file__button{background:#32373c;color:#fff;text-decoration:none}
+/*# sourceURL=/wp-includes/css/classic-themes.min.css */
+</style>
+<style id="global-styles-inline-css">
+:root{--wp--preset--aspect-ratio--square: 1;--wp--preset--aspect-ratio--4-3: 4/3;--wp--preset--aspect-ratio--3-4: 3/4;--wp--preset--aspect-ratio--3-2: 3/2;--wp--preset--aspect-ratio--2-3: 2/3;--wp--preset--aspect-ratio--16-9: 16/9;--wp--preset--aspect-ratio--9-16: 9/16;--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgb(6,147,227) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgb(252,185,0) 0%,rgb(255,105,0) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgb(255,105,0) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--font-size--small: 13px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 36px;--wp--preset--font-size--x-large: 42px;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.67rem;--wp--preset--spacing--40: 1rem;--wp--preset--spacing--50: 1.5rem;--wp--preset--spacing--60: 2.25rem;--wp--preset--spacing--70: 3.38rem;--wp--preset--spacing--80: 5.06rem;--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgb(255, 255, 255), 6px 6px rgb(0, 0, 0);--wp--preset--shadow--crisp: 6px 6px 0px rgb(0, 0, 0);}.wp-block-button{--wp--preset--dimension--25: 25%;--wp--preset--dimension--50: 50%;--wp--preset--dimension--75: 75%;--wp--preset--dimension--100: 100%;}:where(body) { margin: 0; }:where(.is-layout-flex){gap: 0.5em;}:where(.is-layout-grid){gap: 0.5em;}body .is-layout-flex{display: flex;}.is-layout-flex{flex-wrap: wrap;align-items: center;}.is-layout-flex > :is(*, div){margin: 0;}body .is-layout-grid{display: grid;}.is-layout-grid > :is(*, div){margin: 0;}body{padding-top: 0px;padding-right: 0px;padding-bottom: 0px;padding-left: 0px;}:root :where(.wp-element-button, .wp-block-button__link){background-color: #32373c;border-width: 0;color: #fff;font-family: inherit;font-size: inherit;font-style: inherit;font-weight: inherit;letter-spacing: inherit;line-height: inherit;padding-top: calc(0.667em + 2px);padding-right: calc(1.333em + 2px);padding-bottom: calc(0.667em + 2px);padding-left: calc(1.333em + 2px);text-decoration: none;text-transform: inherit;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+:root :where(.wp-block-icon svg){width: 24px;}
+:where(.wp-block-gallery.is-layout-flex){gap: var( --wp--style--gallery-gap-default, var( --gallery-block--gutter-size, var( --wp--style--block-gap, 0.5em ) ) );}:where(.wp-block-gallery.is-layout-grid){gap: var( --wp--style--gallery-gap-default, var( --gallery-block--gutter-size, var( --wp--style--block-gap, 0.5em ) ) );}
+:where(.wp-block-latest-posts.is-layout-flex){gap: 1.25em;}:where(.wp-block-latest-posts.is-layout-grid){gap: 1.25em;}
+:where(.wp-block-post-template.is-layout-flex){gap: 1.25em;}:where(.wp-block-post-template.is-layout-grid){gap: 1.25em;}
+:where(.wp-block-term-template.is-layout-flex){gap: 1.25em;}:where(.wp-block-term-template.is-layout-grid){gap: 1.25em;}
+:where(.wp-block-columns.is-layout-flex){gap: 2em;}:where(.wp-block-columns.is-layout-grid){gap: 2em;}
+:root :where(.wp-block-pullquote){font-size: 1.5em;line-height: 1.6;}
+/*# sourceURL=global-styles-inline-css */
+</style>
+<link rel='stylesheet' id='pulsegrid-style-css' href='https://dw-anime.net/wp-content/themes/pulsegrid-pro/style.css?ver=2.0' media='all' />
+<script id="jquery-core-js" src="https://dw-anime.net/wp-includes/js/jquery/jquery.min.js?ver=3.7.1"></script>
+<script id="jquery-migrate-js" src="https://dw-anime.net/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1"></script>
+<link rel="https://api.w.org/" href="https://dw-anime.net/wp-json/" /><link rel="alternate" title="JSON" type="application/json" href="https://dw-anime.net/wp-json/wp/v2/pages/34224" /><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://dw-anime.net/xmlrpc.php?rsd" />
+<meta name="generator" content="WordPress 7.1.4" />
+<link rel='shortlink' href='https://dw-anime.net/?p=34224' />
+<meta name="onesignal-plugin" content="wordpress-3.9.4">
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+          window.OneSignalDeferred = window.OneSignalDeferred || [];
+          OneSignalDeferred.push(async function(OneSignal) {
+            await OneSignal.init({
+              appId: "94aefeec-9944-49a6-801b-6e59b025cc32",
+              serviceWorkerOverrideForTypical: true,
+              path: "https://dw-anime.net/wp-content/plugins/onesignal-free-web-push-notifications/sdk_files/",
+              serviceWorkerParam: { scope: "\/wp-content\/plugins\/onesignal-free-web-push-notifications\/sdk_files\/push\/onesignal\/" },
+              serviceWorkerPath: "OneSignalSDKWorker.js",
+            });
+          });
+
+          // Unregister the legacy OneSignal service worker to prevent scope conflicts
+          if (navigator.serviceWorker) {
+            navigator.serviceWorker.getRegistrations().then((registrations) => {
+              // Iterate through all registered service workers
+              registrations.forEach((registration) => {
+                // Check the script URL to identify the specific service worker
+                if (registration.active && registration.active.scriptURL.includes('OneSignalSDKWorker.js.php')) {
+                  // Unregister the service worker
+                  registration.unregister().then((success) => {
+                    if (success) {
+                      console.log('OneSignalSW: Successfully unregistered:', registration.active.scriptURL);
+                    } else {
+                      console.log('OneSignalSW: Failed to unregister:', registration.active.scriptURL);
+                    }
+                  });
+                }
+              });
+            }).catch((error) => {
+              console.error('Error fetching service worker registrations:', error);
+            });
+        }
+        </script>
+<meta name="generator" content="Elementor 4.3.6; features: e_font_icon_svg, additional_custom_breakpoints; settings: css_print_method-external, google_font-enabled, font_display-auto">
+			<style>
+				.e-con.e-parent:nth-of-type(n+4):not(.e-lazyloaded):not(.e-no-lazyload),
+				.e-con.e-parent:nth-of-type(n+4):not(.e-lazyloaded):not(.e-no-lazyload) * {
+					background-image: none !important;
+				}
+				@media screen and (max-height: 1024px) {
+					.e-con.e-parent:nth-of-type(n+3):not(.e-lazyloaded):not(.e-no-lazyload),
+					.e-con.e-parent:nth-of-type(n+3):not(.e-lazyloaded):not(.e-no-lazyload) * {
+						background-image: none !important;
+					}
+				}
+				@media screen and (max-height: 640px) {
+					.e-con.e-parent:nth-of-type(n+2):not(.e-lazyloaded):not(.e-no-lazyload),
+					.e-con.e-parent:nth-of-type(n+2):not(.e-lazyloaded):not(.e-no-lazyload) * {
+						background-image: none !important;
+					}
+				}
+			</style>
+			<link rel="icon" href="https://dw-anime.net/wp-content/uploads/2025/04/cropped-LohE-32x32.png" sizes="32x32" />
+<link rel="icon" href="https://dw-anime.net/wp-content/uploads/2025/04/cropped-LohE-192x192.png" sizes="192x192" />
+<link rel="apple-touch-icon" href="https://dw-anime.net/wp-content/uploads/2025/04/cropped-LohE-180x180.png" />
+<meta name="msapplication-TileImage" content="https://dw-anime.net/wp-content/uploads/2025/04/cropped-LohE-270x270.png" />
+<style id="wp-custom-css">
+/* ===== ACORDEON Galeria ===== */
+/* CONTENEDOR */
+.acordeon-galeria {
+  margin: 20px 0;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.acordeon-titulo {
+  color: #000;
+}
+.acordeon-titulo,
+.acordeon-titulo:hover,
+.acordeon-titulo:focus,
+.acordeon-titulo:active {
+  color: #ffffff;
+}
+
+/* TITULO */
+.acordeon-titulo {
+  width: 100%;
+  padding: 14px;
+  background: #303030;
+  border: none;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* CONTENIDO */
+.acordeon-contenido {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+}
+
+/* GALERIA 3x2 */
+.galeria {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 12px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .galeria {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* IMAGENES */
+.galeria img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 4px;
+  cursor: pointer;
+  background: #eee;
+}
+
+
+
+/* ===== ACORDEON Enlaces ===== */
+.chapter-accordion {
+    margin: 12px 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    background: #fafafa;
+}
+
+.chapter-accordion summary {
+    cursor: pointer;
+    padding: 10px 12px;
+    font-weight: 600;
+    text-align: center;              /* 👈 CENTRADO */
+    background: #303030;
+    border-radius: 6px;
+    list-style: none;
+}
+details summary {
+    color: #ffffff;
+}
+.chapter-accordion summary::-webkit-details-marker {
+    display: none;
+}
+
+.chapter-accordion summary::before {
+    content: "▶";
+    margin-right: 8px;
+    font-size: 12px;
+}
+
+.chapter-accordion[open] summary::before {
+    content: "▼";
+}
+
+/* ===== TABLA ===== */
+.chapter-table.light {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0;
+}
+
+.chapter-table.light td {
+    padding: 8px 10px;
+    border-top: 1px solid #e0e0e0;
+    vertical-align: middle;
+}
+
+/* CAPITULO */
+.chapter-table.light .chapter-td {
+    width: 90px;
+    background: #f5f5f5;
+	  color: #000000;
+    text-align: center;
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+/* LINKS */
+.chapter-table.light .chapter-links {
+    font-size: 13px;
+}
+
+.chapter-table.light strong {
+    color: #000000;
+    font-weight: 600;
+}
+
+@media (max-width: 640px) {
+
+  /* cada bloque de resolución en línea nueva */
+  .chapter-table.light strong {
+      display: block;
+      margin-top: 6px;
+      margin-bottom: 4px;
+  }
+
+  /* enlaces más espaciados */
+  .chapter-table.light a.srv {
+      margin: 4px 6px 4px 0 !important;
+  }
+
+  /* separador visual sutil */
+  .chapter-table.light strong::after {
+      content: "";
+      display: block;
+      height: 1px;
+      background: #e0e0e0;
+      margin-top: 4px;
+  }
+}
+
+/* ===== SERVIDORES (FORZADO) ===== */
+.chapter-table.light a.srv {
+    display: inline-block !important;
+    margin: 2px 6px !important;
+    padding: 4px 8px !important;
+    border-radius: 3px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #fff !important;
+    background: #999 !important; /* fallback */
+    text-decoration: none !important;
+}
+
+/* Colores por servidor */
+.chapter-table.light a.srv-blue  { background-color: #2196f3 !important; }
+.chapter-table.light a.srv-green { background-color: #4caf50 !important; }
+.chapter-table.light a.srv-red   { background-color: #f44336 !important; }
+.chapter-table.light a.srv-black   { background-color: #000000 !important; }
+.chapter-table.light a.srv-orange{ background-color: #ff9800 !important; }
+
+
+.chapter-table.light a.srv:hover {
+    opacity: 0.85;
+}
+
+/* Avisos */
+.aviso {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 16px;
+  margin: 20px 0;
+  border-radius: 6px;
+  font-size: 15px;
+  text-align: center;
+  font-weight: 520;
+}
+
+/* Colores */
+.aviso.blue {
+  border: 2px solid #2196f3;
+  background: #e3f2fd;
+  color: #0d47a1;
+}
+
+.aviso.red {
+  border: 2px solid #e53935;
+  background: #fdecea;
+  color: #b71c1c;
+}
+
+.aviso.green {
+  border: 2px solid #4caf50;
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+.aviso.black {
+  border: 2px solid #000000;
+  background: #E0E0E0;
+  color: #262626;
+}
+
+  /* TEMPORAL: ocultar aviso de licencia PulseGrid hasta que responda soporte */
+  #pulsegrid-license-notice {
+      display: none !important;
+  }
+</style>
+</head>
+
+<body class="wp-singular page-template page-template-page-categories page-template-page-categories-php page page-id-34224 wp-custom-logo wp-theme-pulsegrid-pro elementor-default elementor-kit-7627">
+
+<header class="site-header">
+    <div class="container">
+        <div class="header-content">
+            <div class="header-left">
+                                    <div class="site-logo">
+                        <a href="https://dw-anime.net/" class="custom-logo-link" rel="home"><img width="150" height="47" src="https://dw-anime.net/wp-content/uploads/2026/03/WhatsApp-Image-2026-03-03-at-22.24.36-2.png" class="custom-logo" alt="Dw-anime" decoding="async" /></a>                    </div>
+                            </div>
+            <input type="checkbox" id="mobile-menu-checkbox" class="mobile-menu-checkbox">
+            <label for="mobile-menu-checkbox" class="mobile-menu-toggle" aria-label="Toggle menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </label>
+            <div class="header-right">
+                <nav class="main-navigation">
+                    <ul id="menu-inicio" class="nav-menu"><li id="menu-item-252" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-home menu-item-252"><a href="https://dw-anime.net">Inicio</a></li>
+<li id="menu-item-5212" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5212"><a href="https://dw-anime.net/en-emision/">En Emisión</a></li>
+<li id="menu-item-34227" class="menu-item menu-item-type-post_type menu-item-object-page current-menu-item page_item page-item-34224 current_page_item menu-item-34227"><a href="https://dw-anime.net/generos/" aria-current="page">Géneros</a></li>
+<li id="menu-item-34751" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-34751"><a href="https://dw-anime.net/como-ser-vip/">VIP</a></li>
+<li id="menu-item-34419" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-34419"><a href="https://dw-anime.net/como-descargar/">¿Como descargar?</a></li>
+<li id="menu-item-10415" class="menu-item menu-item-type-taxonomy menu-item-object-post_tag menu-item-10415"><a href="https://dw-anime.net/tag/sin-censura/">Sin Censura</a></li>
+<li id="menu-item-34184" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-34184"><a href="#">Doblajes</a>
+<ul class="sub-menu">
+	<li id="menu-item-10414" class="menu-item menu-item-type-taxonomy menu-item-object-post_tag menu-item-10414"><a href="https://dw-anime.net/tag/audio-latino/">Audio Latino</a></li>
+	<li id="menu-item-34186" class="menu-item menu-item-type-taxonomy menu-item-object-post_tag menu-item-34186"><a href="https://dw-anime.net/tag/audio-castellano/">Audio Castellano</a></li>
+</ul>
+</li>
+</ul>                </nav>
+            </div>
+            <div class="header-actions">
+                <button class="mobile-search-toggle" aria-label="Toggle search">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </button>
+                <button class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Mobile Search Bar -->
+<div class="mobile-search-bar" id="mobileSearchBar">
+    <div class="container">
+        <form role="search" method="get" class="mobile-search-form" action="https://dw-anime.net/">
+            <input type="search" class="mobile-search-input" placeholder="Buscar..." name="s" autocomplete="off" />
+            <button type="button" class="mobile-search-close" id="mobileSearchClose" aria-label="Cerrar búsqueda">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Header Ad -->
+
+<div class="container tags-page-container">
+    <div class="tags-page-header">
+        <h1 class="tags-page-title">Todas las Categorías</h1>
+        <p class="tags-page-description">Explora todo el contenido por categorías</p>
+    </div>
+
+    <div class="tags-cloud-wrapper">
+        <div class="tags-cloud-grid">                <a href="https://dw-anime.net/category/fantasia/" class="tag-item tag-xl" data-count="525">
+                    <span class="tag-name">Fantasía</span>
+                    <span class="tag-count">525</span>
+                </a>
+                            <a href="https://dw-anime.net/category/accion/" class="tag-item tag-xl" data-count="434">
+                    <span class="tag-name">Acción</span>
+                    <span class="tag-count">434</span>
+                </a>
+                            <a href="https://dw-anime.net/category/comedia/" class="tag-item tag-xl" data-count="410">
+                    <span class="tag-name">Comedia</span>
+                    <span class="tag-count">410</span>
+                </a>
+                            <a href="https://dw-anime.net/category/romance/" class="tag-item tag-xl" data-count="328">
+                    <span class="tag-name">Romance</span>
+                    <span class="tag-count">328</span>
+                </a>
+                            <a href="https://dw-anime.net/category/shounen/" class="tag-item tag-xl" data-count="268">
+                    <span class="tag-name">Shounen</span>
+                    <span class="tag-count">268</span>
+                </a>
+                            <a href="https://dw-anime.net/category/colegial/" class="tag-item tag-xl" data-count="246">
+                    <span class="tag-name">Colegial</span>
+                    <span class="tag-count">246</span>
+                </a>
+                            <a href="https://dw-anime.net/category/aventura/" class="tag-item tag-xl" data-count="239">
+                    <span class="tag-name">Aventura</span>
+                    <span class="tag-count">239</span>
+                </a>
+                            <a href="https://dw-anime.net/category/drama/" class="tag-item tag-xl" data-count="185">
+                    <span class="tag-name">Drama</span>
+                    <span class="tag-count">185</span>
+                </a>
+                            <a href="https://dw-anime.net/category/sobrenatural/" class="tag-item tag-xl" data-count="151">
+                    <span class="tag-name">Sobrenatural</span>
+                    <span class="tag-count">151</span>
+                </a>
+                            <a href="https://dw-anime.net/category/cosas-de-la-vida/" class="tag-item tag-xl" data-count="109">
+                    <span class="tag-name">Cosas de la Vida</span>
+                    <span class="tag-count">109</span>
+                </a>
+                            <a href="https://dw-anime.net/category/ciencia-ficcion/" class="tag-item tag-xl" data-count="106">
+                    <span class="tag-name">Ciencia Ficción</span>
+                    <span class="tag-count">106</span>
+                </a>
+                            <a href="https://dw-anime.net/category/seinen/" class="tag-item tag-xl" data-count="105">
+                    <span class="tag-name">Seinen</span>
+                    <span class="tag-count">105</span>
+                </a>
+                            <a href="https://dw-anime.net/category/ecchi/" class="tag-item tag-xl" data-count="103">
+                    <span class="tag-name">Ecchi</span>
+                    <span class="tag-count">103</span>
+                </a>
+                            <a href="https://dw-anime.net/category/isekai/" class="tag-item tag-xl" data-count="102">
+                    <span class="tag-name">Isekai</span>
+                    <span class="tag-count">102</span>
+                </a>
+                            <a href="https://dw-anime.net/category/harem/" class="tag-item tag-xl" data-count="86">
+                    <span class="tag-name">Harem</span>
+                    <span class="tag-count">86</span>
+                </a>
+                            <a href="https://dw-anime.net/category/misterio/" class="tag-item tag-xl" data-count="77">
+                    <span class="tag-name">Misterio</span>
+                    <span class="tag-count">77</span>
+                </a>
+                            <a href="https://dw-anime.net/category/reencarnacion/" class="tag-item tag-xl" data-count="71">
+                    <span class="tag-name">Reencarnación</span>
+                    <span class="tag-count">71</span>
+                </a>
+                            <a href="https://dw-anime.net/category/magia/" class="tag-item tag-xl" data-count="47">
+                    <span class="tag-name">Magia</span>
+                    <span class="tag-count">47</span>
+                </a>
+                            <a href="https://dw-anime.net/category/psicologico/" class="tag-item tag-xl" data-count="47">
+                    <span class="tag-name">Psicológico</span>
+                    <span class="tag-count">47</span>
+                </a>
+                            <a href="https://dw-anime.net/category/historico-2/" class="tag-item tag-xl" data-count="42">
+                    <span class="tag-name">Histórico</span>
+                    <span class="tag-count">42</span>
+                </a>
+                            <a href="https://dw-anime.net/category/juegos/" class="tag-item tag-xl" data-count="40">
+                    <span class="tag-name">Juegos</span>
+                    <span class="tag-count">40</span>
+                </a>
+                            <a href="https://dw-anime.net/category/superpoderes/" class="tag-item tag-xl" data-count="37">
+                    <span class="tag-name">Superpoderes</span>
+                    <span class="tag-count">37</span>
+                </a>
+                            <a href="https://dw-anime.net/category/militar/" class="tag-item tag-xl" data-count="34">
+                    <span class="tag-name">Militar</span>
+                    <span class="tag-count">34</span>
+                </a>
+                            <a href="https://dw-anime.net/category/demonios/" class="tag-item tag-xl" data-count="30">
+                    <span class="tag-name">Demonios</span>
+                    <span class="tag-count">30</span>
+                </a>
+                            <a href="https://dw-anime.net/category/shoujo/" class="tag-item tag-xl" data-count="28">
+                    <span class="tag-name">Shoujo</span>
+                    <span class="tag-count">28</span>
+                </a>
+                            <a href="https://dw-anime.net/category/vampiros/" class="tag-item tag-xl" data-count="21">
+                    <span class="tag-name">Vampiros</span>
+                    <span class="tag-count">21</span>
+                </a>
+                            <a href="https://dw-anime.net/category/mecha/" class="tag-item tag-lg" data-count="19">
+                    <span class="tag-name">Mecha</span>
+                    <span class="tag-count">19</span>
+                </a>
+                            <a href="https://dw-anime.net/category/terror/" class="tag-item tag-lg" data-count="19">
+                    <span class="tag-name">Terror</span>
+                    <span class="tag-count">19</span>
+                </a>
+                            <a href="https://dw-anime.net/category/deportes/" class="tag-item tag-lg" data-count="18">
+                    <span class="tag-name">Deportes</span>
+                    <span class="tag-count">18</span>
+                </a>
+                            <a href="https://dw-anime.net/category/parodia/" class="tag-item tag-lg" data-count="17">
+                    <span class="tag-name">Parodia</span>
+                    <span class="tag-count">17</span>
+                </a>
+                            <a href="https://dw-anime.net/category/thriller/" class="tag-item tag-lg" data-count="16">
+                    <span class="tag-name">Thriller</span>
+                    <span class="tag-count">16</span>
+                </a>
+                            <a href="https://dw-anime.net/category/mitologia/" class="tag-item tag-lg" data-count="15">
+                    <span class="tag-name">Mitología</span>
+                    <span class="tag-count">15</span>
+                </a>
+                            <a href="https://dw-anime.net/category/gore/" class="tag-item tag-lg" data-count="12">
+                    <span class="tag-name">Gore</span>
+                    <span class="tag-count">12</span>
+                </a>
+                            <a href="https://dw-anime.net/category/josei/" class="tag-item tag-lg" data-count="12">
+                    <span class="tag-name">Josei</span>
+                    <span class="tag-count">12</span>
+                </a>
+                            <a href="https://dw-anime.net/category/suspenso/" class="tag-item tag-lg" data-count="12">
+                    <span class="tag-name">Suspenso</span>
+                    <span class="tag-count">12</span>
+                </a>
+                            <a href="https://dw-anime.net/category/musical/" class="tag-item tag-lg" data-count="12">
+                    <span class="tag-name">Musical</span>
+                    <span class="tag-count">12</span>
+                </a>
+                            <a href="https://dw-anime.net/category/yuri/" class="tag-item tag-lg" data-count="11">
+                    <span class="tag-name">Yuri</span>
+                    <span class="tag-count">11</span>
+                </a>
+                            <a href="https://dw-anime.net/category/espacial/" class="tag-item tag-lg" data-count="10">
+                    <span class="tag-name">Espacial</span>
+                    <span class="tag-count">10</span>
+                </a>
+                            <a href="https://dw-anime.net/category/crimen-organizado/" class="tag-item tag-md" data-count="7">
+                    <span class="tag-name">Crimen organizado</span>
+                    <span class="tag-count">7</span>
+                </a>
+                            <a href="https://dw-anime.net/category/shoujo-ai/" class="tag-item tag-md" data-count="7">
+                    <span class="tag-name">Shoujo Ai</span>
+                    <span class="tag-count">7</span>
+                </a>
+                            <a href="https://dw-anime.net/category/gastronomia/" class="tag-item tag-md" data-count="7">
+                    <span class="tag-name">Gastronomía</span>
+                    <span class="tag-count">7</span>
+                </a>
+                            <a href="https://dw-anime.net/category/erotica/" class="tag-item tag-md" data-count="6">
+                    <span class="tag-name">Erotica</span>
+                    <span class="tag-count">6</span>
+                </a>
+                            <a href="https://dw-anime.net/category/artes-marciales/" class="tag-item tag-md" data-count="5">
+                    <span class="tag-name">Artes Marciales</span>
+                    <span class="tag-count">5</span>
+                </a>
+                            <a href="https://dw-anime.net/category/policial/" class="tag-item tag-sm" data-count="3">
+                    <span class="tag-name">Policial</span>
+                    <span class="tag-count">3</span>
+                </a>
+                            <a href="https://dw-anime.net/category/samurai/" class="tag-item tag-sm" data-count="3">
+                    <span class="tag-name">Samurai</span>
+                    <span class="tag-count">3</span>
+                </a>
+                            <a href="https://dw-anime.net/category/shounen-ai/" class="tag-item tag-sm" data-count="2">
+                    <span class="tag-name">Shounen Ai</span>
+                    <span class="tag-count">2</span>
+                </a>
+                            <a href="https://dw-anime.net/category/demencia/" class="tag-item tag-sm" data-count="1">
+                    <span class="tag-name">Demencia</span>
+                    <span class="tag-count">1</span>
+                </a>
+                            <a href="https://dw-anime.net/category/uncategorized/" class="tag-item tag-sm" data-count="1">
+                    <span class="tag-name">Uncategorized</span>
+                    <span class="tag-count">1</span>
+                </a>
+                            <a href="https://dw-anime.net/category/yaoi/" class="tag-item tag-sm" data-count="1">
+                    <span class="tag-name">Yaoi</span>
+                    <span class="tag-count">1</span>
+                </a>
+                            <a href="https://dw-anime.net/category/supervivencia/" class="tag-item tag-sm" data-count="1">
+                    <span class="tag-name">Supervivencia</span>
+                    <span class="tag-count">1</span>
+                </a>
+            </div>    </div>
+</div>
+
+<!-- Footer Ad -->
+
+<footer class="site-footer">
+    <div class="container">
+        <div class="footer-content">
+                        
+                        <p class="footer-copyright">© 2026 Dw-anime.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- Back to Top Button -->
+<button id="back-to-top" class="back-to-top" aria-label="Volver arriba">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
+    </svg>
+</button>
+
+<script>
+// Trailer Modal Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const trailerBtns = document.querySelectorAll('.featured-trailer-btn');
+    const trailerModal = document.getElementById('trailer-modal');
+    const trailerIframe = document.getElementById('trailer-iframe');
+    const modalClose = document.querySelector('.trailer-modal-close');
+    const modalOverlay = document.querySelector('.trailer-modal-overlay');
+    
+    if (trailerBtns.length > 0 && trailerModal) {
+        // Open modal - attach to all trailer buttons
+        trailerBtns.forEach(function(trailerBtn) {
+            trailerBtn.addEventListener('click', function() {
+                const trailerUrl = this.getAttribute('data-trailer-url');
+                
+                // Convert YouTube URL to embed format
+                let embedUrl = trailerUrl;
+                if (trailerUrl.includes('youtube.com/watch?v=')) {
+                    const videoId = trailerUrl.split('v=')[1].split('&')[0];
+                    embedUrl = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
+                } else if (trailerUrl.includes('youtu.be/')) {
+                    const videoId = trailerUrl.split('youtu.be/')[1].split('?')[0];
+                    embedUrl = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1';
+                }
+                
+                trailerIframe.src = embedUrl;
+                trailerModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+        
+        // Close modal function
+        function closeModal() {
+            trailerModal.classList.remove('active');
+            trailerIframe.src = '';
+            document.body.style.overflow = '';
+        }
+        
+        // Close on button click
+        if (modalClose) {
+            modalClose.addEventListener('click', closeModal);
+        }
+        
+        // Close on overlay click
+        if (modalOverlay) {
+            modalOverlay.addEventListener('click', closeModal);
+        }
+        
+        // Close on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && trailerModal.classList.contains('active')) {
+                closeModal();
+            }
+        });
+    }
+});
+</script>
+
+<script type="speculationrules">
+{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp-*.php","/wp-admin/*","/wp-content/uploads/*","/wp-content/*","/wp-content/plugins/*","/wp-content/themes/pulsegrid-pro/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
+</script>
+        <div id="pulsegrid-license-notice" style="position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: #fff; padding: 15px 20px; text-align: center; z-index: 999999; box-shadow: 0 -2px 10px rgba(0,0,0,0.3); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, sans-serif;">
+            <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap;">
+                <span style="font-size: 20px;">🔐</span>
+                <span style="font-weight: 600; font-size: 15px;">
+                    Licencia no activada                </span>
+                <span style="font-size: 14px; opacity: 0.95;">
+                    Activa tu licencia para ocultar este mensaje y acceder a todas las funciones.                </span>
+                            </div>
+        </div>
+        <style>
+            [data-theme="dark"] #pulsegrid-license-notice {
+                background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            }
+            @media (max-width: 768px) {
+                #pulsegrid-license-notice {
+                    padding: 12px 15px;
+                }
+                #pulsegrid-license-notice > div {
+                    font-size: 13px;
+                    gap: 10px;
+                }
+                #pulsegrid-license-notice span {
+                    font-size: 13px !important;
+                }
+                #pulsegrid-license-notice a {
+                    font-size: 13px !important;
+                    padding: 6px 15px !important;
+                }
+            }
+        </style>
+        
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  document.querySelectorAll(".acordeon-titulo").forEach(boton => {
+
+    boton.addEventListener("click", () => {
+
+      const contenido = boton.nextElementSibling;
+      const galeria = contenido.querySelector(".galeria");
+
+      /* ABRIR / CERRAR */
+      if (contenido.style.maxHeight) {
+        contenido.style.maxHeight = null;
+      } else {
+        contenido.style.maxHeight = contenido.scrollHeight + "px";
+      }
+
+      /* CARGA REAL DE IMAGENES (SOLO UNA VEZ) */
+      if (!galeria.dataset.cargado) {
+
+        const imgs = JSON.parse(galeria.dataset.imgs);
+
+        imgs.forEach(data => {
+          const img = document.createElement("img");
+          img.src = data.thumb;
+          img.dataset.full = data.full;
+          img.loading = "lazy";
+
+          /* LIGHTBOX NATIVO SIMPLE */
+          img.addEventListener("click", () => {
+            const overlay = document.createElement("div");
+            overlay.style.cssText = `
+              position: fixed;
+              inset: 0;
+              background: rgba(0,0,0,.9);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              z-index: 9999;
+              cursor: pointer;
+            `;
+
+            const fullImg = document.createElement("img");
+            fullImg.src = img.dataset.full;
+            fullImg.style.cssText = `
+              max-width: 95%;
+              max-height: 95%;
+            `;
+
+            overlay.appendChild(fullImg);
+            document.body.appendChild(overlay);
+
+            overlay.addEventListener("click", () => {
+              overlay.remove();
+            });
+          });
+
+          galeria.appendChild(img);
+        });
+
+        galeria.dataset.cargado = "1";
+
+        /* RECALCULAR ALTURA */
+        setTimeout(() => {
+          contenido.style.maxHeight = contenido.scrollHeight + "px";
+        }, 100);
+      }
+
+    });
+
+  });
+
+});
+</script>
+
+<style>
+#encuesta-popup {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    background: rgba(10, 5, 25, .70);
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+}
+
+#encuesta-popup .popup-content {
+    position: relative;
+    width: 100%;
+    max-width: 650px;
+    max-height: 85vh;
+}
+
+#encuesta-popup img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 12px;
+}
+
+#encuesta-popup .popup-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    width: 44px;
+    height: 44px;
+    border: 2px solid white;
+    border-radius: 50%;
+    background: #21143D;
+    color: white;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    touch-action: manipulation;
+}
+
+@media (max-width: 480px) {
+    #encuesta-popup .popup-content {
+        max-width: 100%;
+    }
+}
+</style>
+
+<div id="encuesta-popup" role="dialog"
+     aria-label="Encuesta de la comunidad"
+     aria-modal="true">
+
+    <div class="popup-content">
+
+        <button type="button"
+                class="popup-close"
+                aria-label="Cerrar">×</button>
+
+        <a href="https://bit.ly/4jZRFMz"
+           target="_blank"
+           rel="noopener noreferrer">
+
+            <img fetchpriority="high"
+                data-src="https://dw-anime.net/wp-content/uploads/2026/11/Encu12-2.webp"
+                alt="Participa en nuestra encuesta y danos tu opinión"
+                width="750"
+                height="500">
+        </a>
+
+    </div>
+</div>
+
+<script>
+(function() {
+    const popup = document.getElementById('encuesta-popup');
+    if (!popup) return;
+
+    const key = 'encuesta_popup_fecha';
+
+    function getToday() {
+        const d = new Date();
+
+        return [
+            d.getFullYear(),
+            String(d.getMonth() + 1).padStart(2, '0'),
+            String(d.getDate()).padStart(2, '0')
+        ].join('-');
+    }
+
+    try {
+        if (localStorage.getItem(key) === getToday()) return;
+    } catch(e) {}
+
+    const image = popup.querySelector('img');
+    const close = popup.querySelector('.popup-close');
+
+    function closePopup() {
+        popup.style.display = 'none';
+    }
+
+    close.addEventListener('click', closePopup);
+
+    popup.addEventListener('click', function(e) {
+        if (e.target === popup) closePopup();
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' &&
+            popup.style.display === 'flex') {
+            closePopup();
+        }
+    });
+
+    function showPopup() {
+        try {
+            localStorage.setItem(key, getToday());
+        } catch(e) {}
+
+        image.src = image.dataset.src;
+
+        popup.style.display = 'flex';
+    }
+
+    function schedulePopup() {
+        setTimeout(showPopup, 2000);
+    }
+
+    if (document.readyState === 'complete') {
+        schedulePopup();
+    } else {
+        window.addEventListener('load', schedulePopup, {
+            once: true
+        });
+    }
+
+})();
+</script>
+
+			<script>
+				( () => {
+					const lazyloadRunObserver = () => {
+						const lazyloadBackgrounds = document.querySelectorAll( `.e-con.e-parent:not(.e-lazyloaded)` );
+						const lazyloadBackgroundObserver = new IntersectionObserver( ( entries ) => {
+							entries.forEach( ( entry ) => {
+								if ( entry.isIntersecting ) {
+									let lazyloadBackground = entry.target;
+									if( lazyloadBackground ) {
+										lazyloadBackground.classList.add( 'e-lazyloaded' );
+									}
+									lazyloadBackgroundObserver.unobserve( entry.target );
+								}
+							});
+						}, { rootMargin: '200px 0px 200px 0px' } );
+						lazyloadBackgrounds.forEach( ( lazyloadBackground ) => {
+							lazyloadBackgroundObserver.observe( lazyloadBackground );
+						} );
+					};
+					const events = [
+						'DOMContentLoaded',
+						'elementor/lazyload/observe',
+					];
+					events.forEach( ( event ) => {
+						document.addEventListener( event, lazyloadRunObserver );
+					} );
+				} )();
+			</script>
+			<script id="pulsegrid-script-js" src="https://dw-anime.net/wp-content/themes/pulsegrid-pro/js/main.js?ver=2.0"></script>
+<script id="wp-emoji-settings" type="application/json">
+{"baseUrl":"https://s.w.org/images/core/emoji/17.0.2/72x72/","ext":".png","svgUrl":"https://s.w.org/images/core/emoji/17.0.2/svg/","svgExt":".svg","source":{"concatemoji":"https://dw-anime.net/wp-includes/js/wp-emoji-release.min.js?ver=7.1.4"}}
+</script>
+<script type="module">
+/*! This file is auto-generated */
+var e="script#wp-emoji-settings",t=document.querySelector(e);if(!(t instanceof HTMLScriptElement))throw new Error("Element missing: "+e);const r=JSON.parse(t.text),s=(window._wpemojiSettings=r,"wpEmojiSettingsSupports"),o=["flag","emoji"];function i(e){try{var t={supportTests:e,timestamp:(new Date).valueOf()};sessionStorage.setItem(s,JSON.stringify(t))}catch(e){}}function c(e,t,n){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);t=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(n,0,0);const r=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);return t.every((e,t)=>e===r[t])}function p(e,t){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);var n=e.getImageData(16,16,1,1);for(let e=0;e<n.data.length;e++)if(0!==n.data[e])return!1;return!0}function u(e,t,n,r){switch(t){case"flag":return n(e,"\ud83c\udff3\ufe0f\u200d\u26a7\ufe0f","\ud83c\udff3\ufe0f\u200b\u26a7\ufe0f")?!1:!n(e,"\ud83c\udde8\ud83c\uddf6","\ud83c\udde8\u200b\ud83c\uddf6")&&!n(e,"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f","\ud83c\udff4\u200b\udb40\udc67\u200b\udb40\udc62\u200b\udb40\udc65\u200b\udb40\udc6e\u200b\udb40\udc67\u200b\udb40\udc7f");case"emoji":return!r(e,"\ud83e\u1fac8")}return!1}function f(e,t,n,r){let a;const s=(a="undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?new OffscreenCanvas(300,150):document.createElement("canvas")).getContext("2d",{willReadFrequently:!0}),o=(s.textBaseline="top",s.font="600 32px Arial",{});return e.forEach(e=>{o[e]=t(s,e,n,r)}),o}function a(e){var t=document.createElement("script");t.src=e,t.defer=!0,document.head.appendChild(t)}r.supports={everything:!0,everythingExceptFlag:!0},new Promise(t=>{let n=function(){try{var e=JSON.parse(sessionStorage.getItem(s));if("object"==typeof e&&"number"==typeof e.timestamp&&(new Date).valueOf()<e.timestamp+604800&&"object"==typeof e.supportTests)return e.supportTests}catch(e){}return null}();if(!n){if("undefined"!=typeof Worker&&"undefined"!=typeof OffscreenCanvas&&"undefined"!=typeof URL&&URL.createObjectURL&&"undefined"!=typeof Blob)try{var e="postMessage("+f.toString()+"("+[JSON.stringify(o),u.toString(),c.toString(),p.toString()].join(",")+"));",r=new Blob([e],{type:"text/javascript"});const a=new Worker(URL.createObjectURL(r),{name:"wpTestEmojiSupports"});return void(a.onmessage=e=>{i(n=e.data),a.terminate(),t(n)})}catch(e){}i(n=f(o,u,c,p))}t(n)}).then(e=>{for(const n in e)r.supports[n]=e[n],r.supports.everything=r.supports.everything&&r.supports[n],"flag"!==n&&(r.supports.everythingExceptFlag=r.supports.everythingExceptFlag&&r.supports[n]);var t;r.supports.everythingExceptFlag=r.supports.everythingExceptFlag&&!r.supports.flag,r.supports.everything||((t=r.source||{}).concatemoji?a(t.concatemoji):t.wpemoji&&t.twemoji&&(a(t.twemoji),a(t.wpemoji)))});
+//# sourceURL=https://dw-anime.net/wp-includes/js/wp-emoji-loader.min.js
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a58120d238bfcfe5',t:'MTc5NDI3MjUwOQ=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a58120d238bfcfe5',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
+
+
+<!-- Page cached by LiteSpeed Cache 7.9.3 on 2026-11-09 19:52:30 -->

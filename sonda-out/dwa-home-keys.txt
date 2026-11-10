@@ -1,0 +1,29 @@
+231:.chapter-accordion {
+238:.chapter-accordion summary {
+250:.chapter-accordion summary::-webkit-details-marker {
+254:.chapter-accordion summary::before {
+260:.chapter-accordion[open] summary::before {
+264:/* ===== TABLA ===== */
+265:.chapter-table.light {
+271:.chapter-table.light td {
+277:/* CAPITULO */
+278:.chapter-table.light .chapter-td {
+289:.chapter-table.light .chapter-links {
+293:.chapter-table.light strong {
+301:  .chapter-table.light strong {
+308:  .chapter-table.light a.srv {
+313:  .chapter-table.light strong::after {
+323:.chapter-table.light a.srv {
+336:.chapter-table.light a.srv-blue  { background-color: #2196f3 !important; }
+337:.chapter-table.light a.srv-green { background-color: #4caf50 !important; }
+338:.chapter-table.light a.srv-red   { background-color: #f44336 !important; }
+339:.chapter-table.light a.srv-black   { background-color: #000000 !important; }
+340:.chapter-table.light a.srv-orange{ background-color: #ff9800 !important; }
+343:.chapter-table.light a.srv:hover {
+631:                                                            <div class="post-episode-number">Episodio 5</div>
+641:                                                            <div class="post-episode-number">Episodio 5</div>
+651:                                                            <div class="post-episode-number">Episodio 5</div>
+661:                                                            <div class="post-episode-number">Episodio 5</div>
+671:                                                            <div class="post-episode-number">Episodio 6</div>
+681:                                                            <div class="post-episode-number">Episodio 6</div>
+691:                                                            <div class="post-episode-number">Episodio 6</div>

@@ -1,0 +1,25 @@
+230:.chapter-accordion {
+237:.chapter-accordion summary {
+249:.chapter-accordion summary::-webkit-details-marker {
+253:.chapter-accordion summary::before {
+259:.chapter-accordion[open] summary::before {
+263:/* ===== TABLA ===== */
+264:.chapter-table.light {
+270:.chapter-table.light td {
+276:/* CAPITULO */
+277:.chapter-table.light .chapter-td {
+288:.chapter-table.light .chapter-links {
+292:.chapter-table.light strong {
+300:  .chapter-table.light strong {
+307:  .chapter-table.light a.srv {
+312:  .chapter-table.light strong::after {
+322:.chapter-table.light a.srv {
+335:.chapter-table.light a.srv-blue  { background-color: #2196f3 !important; }
+336:.chapter-table.light a.srv-green { background-color: #4caf50 !important; }
+337:.chapter-table.light a.srv-red   { background-color: #f44336 !important; }
+338:.chapter-table.light a.srv-black   { background-color: #000000 !important; }
+339:.chapter-table.light a.srv-orange{ background-color: #ff9800 !important; }
+342:.chapter-table.light a.srv:hover {
+645:    const trailerIframe = document.getElementById('trailer-iframe');
+665:                trailerIframe.src = embedUrl;
+674:            trailerIframe.src = '';
