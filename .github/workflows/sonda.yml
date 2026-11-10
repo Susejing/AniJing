@@ -8,30 +8,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: fireload ajax
+      - name: file listing
         run: |
           mkdir -p sonda-out
-          : > sonda-out/fireload4.txt
+          : > sonda-out/fireload5.txt
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
-          curl -sL --max-time 30 -A "$UA" "https://www.fireload.com/folder/4fbe306e2d5a7dd4fe235763e8a495a2/Kimi_wa_Houkago_Insomnia_BD" -o /tmp/fl.html || true
-          echo "== scripts:" >> sonda-out/fireload4.txt
-          grep -oE 'src="[^"]*\.js[^"]*"' /tmp/fl.html | sort -u | head -12 >> sonda-out/fireload4.txt || true
-          echo "== folder ajax endpoints en el html:" >> sonda-out/fireload4.txt
-          grep -oE 'ajax/[_A-Za-z0-9]*folder[_A-Za-z0-9]*\.ajax\.php' /tmp/fl.html | sort -u | head -10 >> sonda-out/fireload4.txt || echo "(nada)" >> sonda-out/fireload4.txt
-          echo "== intentos POST:" >> sonda-out/fireload4.txt
-          for ep in "_folder_itemlist.ajax.php" "_folder_get_folder.ajax.php" "_folder_list.ajax.php"; do
-            echo "-- $ep:" >> sonda-out/fireload4.txt
-            curl -sL --max-time 20 -A "$UA" -X POST "https://www.fireload.com/ajax/$ep" -d "folderId=51319&page=1" | head -c 300 >> sonda-out/fireload4.txt || true
-            echo "" >> sonda-out/fireload4.txt
+          curl -sL --max-time 25 -A "$UA" "https://www.fireload.com/themes/flow/js/flow-api.js" -o /tmp/flow.js || true
+          echo "== contexto del endpoint en flow-api.js:" >> sonda-out/fireload5.txt
+          grep -oE '.{0,150}_view_folder_v2_file_listing.{0,250}' /tmp/flow.js | head -4 >> sonda-out/fireload5.txt || echo "(nada)" >> sonda-out/fireload5.txt
+          echo "== intentos POST:" >> sonda-out/fireload5.txt
+          for d in "folderId=51319" "folderId=51319&page=1" "folderId=4fbe306e2d5a7dd4fe235763e8a495a2" "pageNodeId=51319" "nodeId=51319"; do
+            echo "-- $d:" >> sonda-out/fireload5.txt
+            curl -sL --max-time 20 -A "$UA" -X POST "https://www.fireload.com/ajax/_view_folder_v2_file_listing.ajax.php" -H "X-Requested-With: XMLHttpRequest" --data "$d" | head -c 400 >> sonda-out/fireload5.txt || true
+            echo "" >> sonda-out/fireload5.txt
           done
-          J=$(grep -oE 'src="[^"]*core[^"]*\.js[^"]*"' /tmp/fl.html | head -2 | sed 's/src="//;s/"$//' || true)
-          echo "== JS core: $J" >> sonda-out/fireload4.txt
-          for j in $J; do
-            case "$j" in /*) u="https://www.fireload.com$j" ;; *) u="https://www.fireload.com/$j" ;; esac
-            curl -sL --max-time 30 -A "$UA" "$u" -o /tmp/c.js || true
-            grep -oE 'ajax/[_A-Za-z0-9.]*' /tmp/c.js | sort -u | head -15 >> sonda-out/fireload4.txt || true
-            grep -oE '.{0,40}folderId.{0,60}' /tmp/c.js | head -6 >> sonda-out/fireload4.txt || true
-          done
+          echo "== tambien global.js:" >> sonda-out/fireload5.txt
+          curl -sL --max-time 25 -A "$UA" "https://www.fireload.com/themes/flow/js/global.js" -o /tmp/g.js || true
+          grep -oE '.{0,120}file_listing.{0,200}' /tmp/g.js | head -3 >> sonda-out/fireload5.txt || echo "(nada)" >> sonda-out/fireload5.txt
       - name: commit
         run: |
           git config user.name "github-actions[bot]"
