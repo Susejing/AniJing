@@ -10,48 +10,40 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: sondas v80
+      - name: sondas v81
         run: |
           mkdir -p sonda-out
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
           {
-            echo "===== shadowrangers ficha bleach ====="
-            curl -sL --max-time 25 -A "$UA" "https://shadowrangers.net/anime/bleach/" -o /tmp/sr.html || true
-            grep -oE 'href="[^"]*episodio[^"]*"' /tmp/sr.html | sort -u | head -8 || true
-            grep -oE 'href="[^"]*/(ver|watch|capitulo)[^"]*"' /tmp/sr.html | sort -u | head -8 || true
-            echo "--- primer episodio ---"
-            EP=$(grep -oE 'href="[^"]*episodio[^"]*"' /tmp/sr.html | head -1 | sed 's/href="//;s/"$//')
-            echo "EP=$EP"
-            if [ -n "$EP" ]; then
-              curl -sL --max-time 25 -A "$UA" "$EP" -o /tmp/sre.html || true
-              grep -oiE 'https?://[^"'"'"' <>]*(mega\.nz|drive\.google|pixeldrain|fireload|terabox|streamtape|voe\.|filemoon|streamwish|mp4upload|dood|uqload|yourupload|mixdrop|ok\.ru|savefiles|lulustream|vidhide|byse|zippyshare|gofile|krakenfiles)[^"'"'"' <>]*' /tmp/sre.html | sort -u | head -15 || true
-              grep -o 'doo_player_ajax\|data-player\|iframe[^>]*src' /tmp/sre.html | sort | uniq -c | head -8 || true
-            fi
-            echo "===== kurosaki estructura ====="
-            curl -sL --max-time 25 -A "$UA" "https://teamkurosaki.net/" -o /tmp/tk.html || true
-            grep -oE 'href="https://teamkurosaki\.net/[^"]*"' /tmp/tk.html | sort -u | head -20 || true
-            echo "--- ¿wp? ¿nubes? ---"
-            grep -o 'wp-content\|dooplay' /tmp/tk.html | sort | uniq -c | head -3 || true
-            grep -oiE 'https?://[^"'"'"' <>]*(mega\.nz|drive\.google|pixeldrain|fireload|terabox|streamtape|voe\.|filemoon|streamwish|mp4upload|dood|uqload|yourupload|mixdrop|ok\.ru|savefiles|lulustream|vidhide|byse|zippy|gofile)[^"'"'"' <>]*' /tmp/tk.html | sort -u | head -10 || true
-            echo "===== sphinx post de descargas ====="
-            curl -sL --max-time 25 -A "$UA" "https://sphinxanime.com/animes-del-studio-colorido/" -o /tmp/sp.html || true
-            grep -oiE 'https?://[^"'"'"' <>]*(mega\.nz|drive\.google|pixeldrain|fireload|terabox|streamtape|voe\.|filemoon|streamwish|mp4upload|dood|uqload|yourupload|mixdrop|ok\.ru|savefiles|lulustream|vidhide|byse|zippy|gofile|mediafire)[^"'"'"' <>]*' /tmp/sp.html | sort -u | head -15 || true
-            grep -oE 'href="https://sphinxanime\.com/[^"]*"' /tmp/sp.html | sort -u | head -15 || true
-            echo "===== animegx con http1.1 ====="
-            curl -sL --http1.1 --max-time 25 -A "$UA" -o /tmp/gx.html -w 'status %{http_code} bytes %{size_download}\n' "https://animegx.com/" || true
-            grep -o '<title>[^<]*</title>' /tmp/gx.html | head -2 || true
-            grep -oiE '(mega\.nz|drive\.google|pixeldrain|fireload|terabox|streamtape|voe|filemoon|streamwish|mp4upload|dood|uqload|yourupload|mixdrop|ok\.ru|savefiles|lulustream|vidhide|byse|zippy|gofile)' /tmp/gx.html | sort | uniq -c | head -10 || true
-            echo "===== dengeki otras puertas ====="
-            for D in "https://dengekiplus.net/" "https://www.dengekiplus.com/" "https://dengeki-plus.net/" "https://ddplusanime.com/"; do
-              echo "--- $D ---"
-              curl -sL --max-time 15 -A "$UA" -o /tmp/dp.html -w 'status %{http_code} bytes %{size_download}\n' "$D" || true
-              grep -o '<title>[^<]*</title>' /tmp/dp.html | head -1 || true
-            done
-          } > sonda-out/v80-profundidad.txt 2>&1 || true
+            echo "===== shadowrangers: diagnóstico de la ficha ====="
+            curl -sL --max-time 25 -A "$UA" -o /tmp/sr.html -w 'status %{http_code} bytes %{size_download}\n' "https://shadowrangers.net/anime/bleach/" || true
+            grep -o '<title>[^<]*</title>' /tmp/sr.html | head -1 || true
+            grep -oE 'href="https://shadowrangers\.net/[^"]*"' /tmp/sr.html | sort -u | head -25 || true
+            echo "--- episode patterns ---"
+            grep -oE 'href="[^"]*(episode|episodio|capitulo|/ver/)[^"]*"' /tmp/sr.html | sort -u | head -10 || true
+            echo "--- ¿list-mode? ---"
+            curl -sL --max-time 25 -A "$UA" -o /tmp/srl.html -w 'status %{http_code} bytes %{size_download}\n' "https://shadowrangers.net/anime/list-mode/" || true
+            grep -oE 'href="https://shadowrangers\.net/anime/[^"]*"' /tmp/srl.html | sort -u | wc -l || true
+            echo "===== kurosaki: diagnóstico ====="
+            curl -sL --max-time 25 -A "$UA" -o /tmp/tk.html -w 'status %{http_code} bytes %{size_download}\n' "https://teamkurosaki.net/" || true
+            grep -o '<title>[^<]*</title>' /tmp/tk.html | head -1 || true
+            head -c 600 /tmp/tk.html || true
+            echo ""
+            grep -oE 'href="[^"]+"' /tmp/tk.html | sort -u | head -25 || true
+            echo "===== sphinx: post BD con descargas ====="
+            curl -sL --max-time 25 -A "$UA" -o /tmp/sp.html -w 'status %{http_code} bytes %{size_download}\n' "https://sphinxanime.com/all-you-need-is-kill-bd-1080p-latino-japones-26694/" || true
+            grep -oiE 'https?://[^"'"'"' <>]*(mega\.nz|drive\.google|pixeldrain|fireload|terabox|streamtape|voe\.|filemoon|streamwish|mp4upload|dood|uqload|yourupload|mixdrop|ok\.ru|savefiles|lulustream|vidhide|byse|zippy|gofile|mediafire|1fichier)[^"'"'"' <>]*' /tmp/sp.html | sort -u | head -20 || true
+            grep -o 'descarga\|Descargar\|contraseña' /tmp/sp.html | sort | uniq -c | head -6 || true
+            echo "===== animegx vía espejo jina ====="
+            curl -sL --max-time 40 -A "$UA" -o /tmp/gx.txt -w 'status %{http_code} bytes %{size_download}\n' "https://r.jina.ai/https://animegx.com/" || true
+            head -c 1200 /tmp/gx.txt || true
+            echo ""
+            grep -oiE '(mega\.nz|drive\.google|pixeldrain|fireload|terabox|streamtape|voe|filemoon|streamwish|mp4upload|dood|uqload|yourupload|mixdrop|ok\.ru|savefiles|lulustream|vidhide|byse|zippy|gofile)' /tmp/gx.txt | sort | uniq -c | head -10 || true
+          } > sonda-out/v81-diagnostico.txt 2>&1 || true
       - name: commit
         run: |
           git config user.name "sonda"
           git config user.email "sonda@users.noreply.github.com"
           git add sonda-out || true
-          git commit -m "sonda v80: profundidad en los 5 candidatos" || true
+          git commit -m "sonda v81: diagnóstico de fichas y espejos" || true
           git push || true
