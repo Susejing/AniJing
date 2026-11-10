@@ -447,6 +447,25 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.35 «La mudanza» — el teléfono probó el atajo y dejó dos
+// lecciones más. FireLoad: el atajo funcionaba (el dlink en crudo
+// llegó), pero el Play fallaba con «formato no reconocido» — la
+// sonda v61 lo explicó con exactitud: el dlink ?pt= es DE UN SOLO
+// USO y solo la galleta filehosting del frasco + el Referer lo
+// canjean; sin ellos FireLoad devuelve la página HTML otra vez (y
+// eso es lo que el reproductor recibía). La cura: el plugin canjea
+// él mismo el pt (fetch con redirect 'manual' y su frasco) y le
+// entrega al reproductor la URL del SERVIDOR de archivos que sale
+// del 302 (srv4.fireload.com/…?download_token=…) — la sonda v62
+// probó que esa URL es reutilizable y funciona hasta pelada, sin
+// galleta ni Referer. TeraBox: la ventanita de login abría
+// terabox.com/passport/login, que no es una página sino un API —
+// responde el JSON del captcha (errno 460030 «dragdrop/rotate») y
+// eso fue lo que se vio en el teléfono; la página de login de
+// verdad está en terabox.com/spanish/login (la halló la sonda v60
+// siguiendo los saltos de terabox.com/main) y esa es la que abre
+// la ventanilla ahora.
+//
 // v0.6.34 «El atajo» — el teléfono probó la aduana y dejó dos
 // lecciones. TeraBox: la ventanilla abría la portada de terabox.com
 // y en el móvil esa portada es un escaparate de «descarga la app»
@@ -699,7 +718,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.34';
+const VERSION = '0.6.35';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -5648,31 +5667,57 @@ function azFldHash(url) {
   return m ? m[1] : '';
 }
 
+/* v0.6.35 «La mudanza»: el canje. El dlink ?pt= de FireLoad es de
+ * un solo uso y solo lo entregan las galletas del frasco + el
+ * Referer; el plugin lo canjea él mismo (redirect 'manual') por la
+ * URL del servidor de archivos que viaja en el Location del 302 —
+ * reutilizable y sin requisitos (sonda v62). */
+async function azFldSrv4(dl) {
+  try {
+    const r = await kino.fetch(dl, {
+      redirect: 'manual',
+      headers: { 'User-Agent': UA, 'Referer': 'https://www.fireload.com/' },
+      timeoutMs: 15000,
+      maxBytes: 2048
+    });
+    const loc = r && r.headers ? String(r.headers.location || r.headers.Location || '') : '';
+    if (r && r.status >= 300 && r.status < 400 && loc) {
+      const u = /^https?:\/\//i.test(loc) ? loc : 'https://www.fireload.com' + loc;
+      return u.replace(/\[/g, '%5B').replace(/\]/g, '%5D').replace(/ /g, '%20');
+    }
+  } catch (eC) {}
+  return '';
+}
+
 async function azFldResolver(slug, num, url) {
   /* v0.6.34 «El atajo»: la página del archivo trae el enlace directo
-   * INCORPORADO en el crudo — window.Fl = {"dlink": "…?pt=…",
-   * "dwait": "0"} — se pesca con el UA de navegador y se entrega
-   * fresco (los pt caducan). */
+   * INCORPORADO en el crudo — window.Fl = {"dlink": "…?pt=…"}. Se
+   * pesca con el UA de navegador, fresco en cada Play. */
   const r = await traer(url, { headers: { 'User-Agent': UA, 'Referer': 'https://www.fireload.com/' }, timeoutMs: 15000 });
+  let fresco = '';
   if (r.ok) {
     const m = /window\.Fl\s*=\s*\{[^}]*?"dlink":\s*"([^"]+)"/.exec(String(r.text)) ||
       /(https?:\/\/(?:www\.)?fireload\.com\/[a-f0-9]{16}\/[^\s"'<>]+?\.(?:mp4|mkv|avi|mov|wmv|mpg|flv)\?pt=[A-Za-z0-9%=_-]+)/.exec(String(r.text));
-    if (m && m[1]) {
-      log('az fireload: dlink directo en crudo para «' + slug + '» (el atajo)');
-      return { url: m[1], label: 'FireLoad', headers: { 'User-Agent': UA, 'Referer': 'https://www.fireload.com/' } };
-    }
-    log('az fireload: la página de «' + slug + '» llegó sin dlink (¿cascarón?) — a la ventanilla');
+    if (m && m[1]) fresco = m[1];
+    else log('az fireload: la página de «' + slug + '» llegó sin dlink (¿cascarón?)');
   }
-  /* respaldo: el enlace que la persona preparó en la ventanilla. */
+  /* v0.6.35: cada candidato se canjea por la URL del servidor; el
+   * respaldo es el enlace que la persona preparó en la ventanilla. */
+  const candidatos = [];
+  if (fresco) candidatos.push(fresco);
   const clave = 'ajFld:' + azFldHash(url);
   let g = null;
   try { g = kino.storage.get(clave); } catch (eG) { g = null; }
-  if (g && g.url && Date.now() - (g.t || 0) < 6 * 3600 * 1000) {
-    log('az fireload: enlace guardado para «' + slug + '» (' + Math.round((Date.now() - (g.t || 0)) / 60000) + ' min)');
-    return { url: g.url, label: 'FireLoad' };
+  if (g && g.url && Date.now() - (g.t || 0) < 6 * 3600 * 1000) candidatos.push(g.url);
+  for (let i = 0; i < candidatos.length; i++) {
+    const srv = await azFldSrv4(candidatos[i]);
+    if (srv) {
+      log('az fireload: canjeado al servidor de archivos para «' + slug + '» (la mudanza)');
+      return { url: srv, label: 'FireLoad', headers: { 'User-Agent': UA, 'Referer': 'https://www.fireload.com/' } };
+    }
   }
+  log('az fireload: el canje falló para «' + slug + '» — el aviso manda a «Preparar FireLoad»');
   try { kino.storage.set('ajFldPend', url); } catch (eP) {}
-  log('az fireload: captcha pendiente para «' + slug + '» — el aviso manda a «Preparar FireLoad»');
   throw kino.error('unavailable', 'Az-Animex: FireLoad pide captcha', {
     userMessage: 'FireLoad no entregó el enlace directo. En los ajustes del plugin AniJing toca «Preparar FireLoad»: en la ventanita toca «Download File», espera a que cargue el enlace y toca Listo; luego vuelve a darle Play a este episodio.'
   });
@@ -6625,7 +6670,7 @@ async function action(key) {
   }
   if (key === 'teraboxLogin') {
     const r = await kino.visualBrowser.open({
-      url: 'https://www.terabox.com/passport/login',
+      url: 'https://www.terabox.com/spanish/login',
       title: 'Inicia sesión en TeraBox',
       doneWhen: { cookies: ['ndus'] },
       collect: { cookies: ['ndus', 'lang'], storeAs: { setting: 'teraboxCookie', format: 'header' } },

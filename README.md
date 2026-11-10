@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.34 «El atajo»)
+## Qué hace (v0.6.35 «La mudanza»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -32,6 +32,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.35 «La mudanza»
+
+El teléfono probó el atajo y dejó dos lecciones que esta versión cobra. **FireLoad**: el atajo funcionaba — el `dlink` en crudo llegó — pero el Play fallaba con «formato no reconocido». La sonda v61 lo explicó con exactitud: el `dlink ?pt=` es **de un solo uso** y solo lo canjean la galleta `filehosting` del frasco del plugin + el `Referer`; sin ellos FireLoad devuelve la página HTML otra vez, y eso es lo que el reproductor recibía. La cura es la mudanza: el plugin **canjea él mismo** el `pt` (fetch con `redirect: 'manual'` y su frasco de galletas) y le entrega al reproductor la URL del **servidor de archivos** que sale del 302 (`srv4.fireload.com/…?download_token=…`) — la sonda v62 probó que esa URL es reutilizable y funciona hasta pelada, sin galleta ni Referer. **TeraBox**: la ventanita abría `terabox.com/passport/login`, que no es una página sino un API — responde el JSON del captcha (`errno 460030 «dragdrop/rotate»`) y eso fue lo que se vio en el teléfono; la página de login de verdad está en `terabox.com/spanish/login` (la halló la sonda v60 siguiendo los saltos de `terabox.com/main`) y esa es la que abre la ventanilla ahora. Sin hosts nuevos: `*.fireload.com` ya cubría el servidor de archivos, así que la actualización no pide re-aprobación.
 
 ## v0.6.34 «El atajo»
 
