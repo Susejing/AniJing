@@ -1,0 +1,13 @@
+== folder (tamanio):
+291756
+-- links de archivo:
+-- head del html:
+<!DOCTYPE html>
+<html lang="en" dir="LTR" class="directionLtr">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<meta name="viewport" content="width=device-width, minimum-scale=0.7, maximum-scale=0.7, user-scalable=no">
+        <title>Kimi wa Houkago Insomnia BD shared by k**go - Fireload</title>
+        <meta name="viewport" content="width=device-width, initial-
