@@ -447,6 +447,23 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.29 «El bibliotecario» — el usuario echó de menos títulos: la
+// búsqueda de «grisaia no kajitsu» no lo encontró y en la web sí
+// está (sonda v51: el ?s= de WordPress SÍ lo lista y azTarjetas
+// peina esa página bien — el fallo del teléfono fue de la petición
+// viva, así que la búsqueda gana un espejo de rescate). Pero la
+// queja de fondo era CIERTA: az publica 1831 fichas (wp-json
+// X-WP-Total, sonda v51) y el plugin solo enseñaba 7 filas de
+// género (~140 tarjetas). La cura: el REST API de WordPress está
+// ABIERTO (wp-json/wp/v2/posts con slug y título, orderby=title
+// A-Z, 40 por página, 46 páginas) → nueva fila «Directorio A-Z»
+// que pagina el catálogo COMPLETO de az; los géneros crecen de 7
+// a 17 (escolar, harem, misterio, aventura, sobrenatural, ciencia
+// ficción, mecha, superpoderes, psicológico y deportes — az tiene
+// 44); y las tarjetas de búsqueda/género leen el kind de verdad
+// del <li> (tipo-pelicula → película). Sin hosts nuevos: wp-json
+// vive en www.az-animex.com, ya aprobado.
+//
 // v0.6.28 «El archivista» — el teléfono dio el visto bueno a la 0.6.27
 // (Monogatari reproduce vía rentry) y el usuario pidió la búsqueda
 // general: la sonda v49 recorrió ~140 fichas de az y las clasificó.
@@ -577,7 +594,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.28';
+const VERSION = '0.6.29';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4976,7 +4993,7 @@ function azTarjetas(html) {
       ref: 'az:' + slug,
       title: (decHtml(m[4]).trim() || slugATitulo(slug)).slice(0, 200),
       poster: m[3],
-      kind: 'series'
+      kind: azKindCerca(texto, m.index)
     });
   }
   if (items.length) return items;
@@ -4994,6 +5011,80 @@ function azTarjetas(html) {
       ref: 'az:' + slug,
       title: (decHtml(m[3]).trim() || slugATitulo(slug)).slice(0, 200),
       poster: poster ? absolutizar(poster, BASE_AZ) : '',
+      kind: azKindCerca(texto, m.index)
+    });
+  }
+  return items;
+}
+
+/* v0.6.29 «El bibliotecario»: el catálogo COMPLETO de az por el
+ * REST API de WordPress — 1831 fichas ordenadas A-Z, 40 por
+ * página (sonda v51: el endpoint es público y no pide cuenta;
+ * los títulos viajan en title.rendered y a veces traen corchetes
+ * promocionales como «[Oshi no Ko]» que se pelan igual que el
+ * h1 de la ficha). Sin póster: la API no lo trae y la ficha
+ * viste el suyo al abrirse. */
+async function azDirectorio(pag) {
+  const num = Number.isFinite(pag) && pag > 0 ? pag : 1;
+  const url = BASE_AZ + '/wp-json/wp/v2/posts?per_page=40&orderby=title&order=asc&page=' + num + '&_fields=slug,title';
+  const r = await traer(url, { headers: { Referer: BASE_AZ + '/', Accept: 'application/json,*/*' }, timeoutMs: 12000 });
+  if (!r.ok || !r.text) return { items: [], next: null };
+  let j = null;
+  try { j = JSON.parse(r.text); } catch (e) { j = null; }
+  if (!Array.isArray(j)) return { items: [], next: null };
+  const items = [];
+  const vistos = new Set();
+  for (const p of j) {
+    const slug = p && p.slug;
+    if (!slug || vistos.has(slug)) continue;
+    const tit = limpio((p.title && p.title.rendered) || '').replace(/^\[/, '').replace(/\]\s*$/, '').trim();
+    vistos.add(slug);
+    items.push({
+      id: 'az-' + slug,
+      ref: 'az:' + slug,
+      title: (tit || slugATitulo(slug)).slice(0, 200),
+      kind: 'series'
+    });
+  }
+  /* X-WP-Total es 1831 (46 páginas de 40): mientras la página
+   * venga llena, hay más biblioteca detrás. */
+  return { items: items, next: items.length >= 40 ? String(num + 1) : null };
+}
+
+/* v0.6.29: el kind de verdad vive en la clase del <li> que
+ * envuelve la tarjeta (tipo-pelicula / tipo-serie / tipo-
+ * especial, sonda v51) — se mira el li más cercano hacia atrás
+ * para no mancharse con la tarjeta vecina. */
+function azKindCerca(texto, indice) {
+  const li = texto.lastIndexOf('<li ', indice);
+  if (li < 0) return 'series';
+  const seg = texto.slice(li, indice);
+  if (/tipo-pelicula/.test(seg)) return 'movie';
+  return 'series';
+}
+
+/* v0.6.29: el espejo de lectura devuelve markdown — las tarjetas
+ * llegan como [Título](https://www.az-animex.com/<slug>/) y se
+ * filtran los caminos que no son fichas (géneros, feeds, páginas
+ * del sitio, imágenes). Es el bote salvavidas de la búsqueda
+ * cuando el ?s= crudo no llega al teléfono. */
+function azTarjetasJina(texto) {
+  const t = String(texto || '');
+  const items = [];
+  const vistos = new Set();
+  const ajenos = /\/(genero|feed|tag|category|author|page|wp-content|wp-json|wp-admin|wp-login|acerca-de|preguntas-frecuentes|registrarse|comentarios|search|sitemap)/i;
+  const re = /\[([^\][\n]{1,200})\]\((https:\/\/www\.az-animex\.com\/([a-z0-9-]+)\/?)\)/gi;
+  let m;
+  while ((m = re.exec(t)) && items.length < 40) {
+    const slug = m[3];
+    if (!slug || vistos.has(slug) || ajenos.test(m[2])) continue;
+    vistos.add(slug);
+    const tit = limpio(m[1]).trim();
+    items.push({
+      id: 'az-' + slug,
+      ref: 'az:' + slug,
+      title: (tit || slugATitulo(slug)).slice(0, 200),
+      poster: '',
       kind: 'series'
     });
   }
@@ -5186,9 +5277,16 @@ registrarFuente({
     const texto = String(q || '').trim().slice(0, 100);
     if (texto.length < 2) return [];
     try {
-      const r = await traer(BASE_AZ + '/?s=' + encodeURIComponent(texto), { headers: { Referer: BASE_AZ + '/' }, timeoutMs: 12000 });
-      if (!r.ok) return [];
-      const items = azTarjetas(r.text).slice(0, 25);
+      let items = [];
+      const url = BASE_AZ + '/?s=' + encodeURIComponent(texto);
+      const r = await traer(url, { headers: { Referer: BASE_AZ + '/' }, timeoutMs: 12000 });
+      if (r.ok) items = azTarjetas(r.text).slice(0, 25);
+      else log('az buscar: el ?s= no llegó (status ' + r.status + ') — probando el espejo');
+      /* v0.6.29: si la página viva falló o no traía tarjetas (muro,
+       * timeout, vacío), el espejo de lectura rescata la búsqueda. */
+      if (!items.length) {
+        try { items = azTarjetasJina(await azJina(url)).slice(0, 25); } catch (e2) { }
+      }
       for (const it of items) it.badges = ['Az-Animex'];
       return items;
     } catch (e) {
@@ -5201,15 +5299,28 @@ registrarFuente({
     /* El directorio-anime/ y el home de az son JavaScript puro (sonda
      * v46: cero entradas en el HTML crudo) — las filas viven de los
      * géneros, WordPress de verdad que pagina /page/N/ (66 páginas
-     * en acción, v43). */
+     * en acción, v43). v0.6.29: el wp-json trae el catálogo COMPLETO
+     * (1831 fichas A-Z, sonda v51) → fila «Directorio A-Z» arriba;
+     * y los géneros crecen de 7 a 17 (az tiene 44, sonda v51). */
     let defs = [
+      { id: 'az-directorio', titulo: 'Directorio A-Z · Az-Animex', ref: 'az-directorio' },
       { id: 'az-genero-accion', titulo: 'Acción · Az-Animex', ref: 'az-genero-accion', camino: '/genero/accion' },
       { id: 'az-genero-comedia', titulo: 'Comedia · Az-Animex', ref: 'az-genero-comedia', camino: '/genero/comedia' },
+      { id: 'az-genero-escolar', titulo: 'Escolar · Az-Animex', ref: 'az-genero-escolar', camino: '/genero/escolar' },
       { id: 'az-genero-romance', titulo: 'Romance · Az-Animex', ref: 'az-genero-romance', camino: '/genero/romance' },
       { id: 'az-genero-drama', titulo: 'Drama · Az-Animex', ref: 'az-genero-drama', camino: '/genero/drama' },
       { id: 'az-genero-shounen', titulo: 'Shounen · Az-Animex', ref: 'az-genero-shounen', camino: '/genero/shounen' },
       { id: 'az-genero-seinen', titulo: 'Seinen · Az-Animex', ref: 'az-genero-seinen', camino: '/genero/seinen' },
-      { id: 'az-genero-fantasia', titulo: 'Fantasía · Az-Animex', ref: 'az-genero-fantasia', camino: '/genero/fantasia' }
+      { id: 'az-genero-fantasia', titulo: 'Fantasía · Az-Animex', ref: 'az-genero-fantasia', camino: '/genero/fantasia' },
+      { id: 'az-genero-harem', titulo: 'Harem · Az-Animex', ref: 'az-genero-harem', camino: '/genero/harem' },
+      { id: 'az-genero-misterio', titulo: 'Misterio · Az-Animex', ref: 'az-genero-misterio', camino: '/genero/misterio' },
+      { id: 'az-genero-aventura', titulo: 'Aventura · Az-Animex', ref: 'az-genero-aventura', camino: '/genero/aventura' },
+      { id: 'az-genero-sobrenatural', titulo: 'Sobrenatural · Az-Animex', ref: 'az-genero-sobrenatural', camino: '/genero/sobrenatural' },
+      { id: 'az-genero-ciencia-ficcion', titulo: 'Ciencia ficción · Az-Animex', ref: 'az-genero-ciencia-ficcion', camino: '/genero/ciencia-ficcion' },
+      { id: 'az-genero-mecha', titulo: 'Mecha · Az-Animex', ref: 'az-genero-mecha', camino: '/genero/mecha' },
+      { id: 'az-genero-superpoderes', titulo: 'Superpoderes · Az-Animex', ref: 'az-genero-superpoderes', camino: '/genero/superpoderes' },
+      { id: 'az-genero-psicologico', titulo: 'Psicológico · Az-Animex', ref: 'az-genero-psicologico', camino: '/genero/psicologico' },
+      { id: 'az-genero-deportes', titulo: 'Deportes · Az-Animex', ref: 'az-genero-deportes', camino: '/genero/deportes' }
     ];
     /* v0.6.26: en «Todas» solo se consulta el núcleo (tope de Kino:
      * 60 peticiones por llamada — la 0.6.25 lo reventó). */
@@ -5219,6 +5330,13 @@ registrarFuente({
     }
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
+        /* v0.6.29: el directorio A-Z vive del wp-json, no de una
+         * página de género — primera página (A y B), el resto
+         * en el «Ver más» con su cursor. */
+        if (def.id === 'az-directorio') {
+          const d = await azDirectorio(1);
+          return d.items.length ? { id: def.id, title: def.titulo, ref: def.ref, items: d.items.slice(0, 20) } : null;
+        }
         const r = await traer(BASE_AZ + def.camino + '/', { headers: { Referer: BASE_AZ + '/' }, timeoutMs: 12000 });
         if (!r.ok) return null;
         const items = azTarjetas(r.text).slice(0, 20);
@@ -5234,6 +5352,14 @@ registrarFuente({
   },
 
   async hoja(ref, cursor) {
+    /* v0.6.29: el directorio A-Z pagina el catálogo completo con
+     * su cursor propio (40 por página, 46 páginas en total). */
+    if (ref === 'az-directorio') {
+      const pag = parseInt(cursor, 10);
+      const num = Number.isFinite(pag) && pag > 1 ? pag : 1;
+      const d = await azDirectorio(num);
+      return { items: d.items, next: d.next };
+    }
     const m = /^az-genero-([a-z-]+)$/.exec(ref);
     if (!m) return null;
     const camino = '/genero/' + m[1] + '/';
@@ -5571,8 +5697,9 @@ const NUCLEO_TODAS = {
   jara: ['jara-emision', 'jara-catalogo'],
   van: ['van-anime', 'van-peliculas'],
   iva: ['iva-emision', 'iva-directorio'],
-  /* v0.6.25: Az-Animex entra con el par de géneros esencial. */
-  az: ['az-genero-accion', 'az-genero-comedia']
+  /* v0.6.25: Az-Animex entra con el par de géneros esencial.
+   * v0.6.29: y el Directorio A-Z — el catálogo entero a la vista. */
+  az: ['az-genero-accion', 'az-genero-comedia', 'az-directorio']
 };
 
 async function cargarPantalla(fuente) {

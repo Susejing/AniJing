@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.28 «El archivista»)
+## Qué hace (v0.6.29 «El bibliotecario»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -32,6 +32,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.29 «El bibliotecario»
+
+El catálogo de Az-Animex se quedaba corto: el plugin enseñaba 7 filas de género (~140 tarjetas) y el usuario echó de menos títulos que en la web sí están (Grisaia no Kajitsu y otros). La sonda midió la biblioteca entera: az publica **1831 fichas** — y su REST API de WordPress está abierto al público (slug y título, orden A-Z, 40 por página). Así nace la fila **«Directorio A-Z»**: el catálogo completo de az, pagina que pagina, con su «Ver más»; y los géneros crecen de 7 a 17 (escolar, harem, misterio, aventura, sobrenatural, ciencia ficción, mecha, superpoderes, psicológico y deportes — az tiene 44). La búsqueda de az también gana un bote salvavidas: si el `?s=` vivo no llega (muro, timeout), el espejo de lectura r.jina rescata los resultados en vez de devolver nada en silencio; y las tarjetas leen el tipo de verdad del HTML (`tipo-pelicula` → película). Sin hosts nuevos: el wp-json vive en www.az-animex.com, ya aprobado — esta vez Kino NO pide re-aprobación.
 
 ## v0.6.28 «El archivista»
 
