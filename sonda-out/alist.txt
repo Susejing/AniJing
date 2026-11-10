@@ -1,9 +1,0 @@
-== settings publicos
-{"code":200,"message":"success","data":{"allow_indexed":"false","allow_mounted":"true","allow_register":"false","announcement":"Disfruten y recuerden reportar problemas","audio_autoplay":"true","audio_cover":"https://jsd.nn.ci/gh/alist-org/logo@main/logo.svg","auto_update_index":"true","default_page_size":"50","default_role":"1","device_evict_policy":"deny","device_session_ttl":"86400","external_previews":"{}","favicon":"https://i.imgur.com/4lG1th0.png","filename_char_mapping":"{\"/\": \"|\"}","filter_readme_scripts":"true","forward_direct_link_params":"false","frontend_remember_sort":"false","frp_status":"stopped","hide_files":"/\\/README.md/i","home_container":"max_980px","home_icon":"🏠","iframe_previews":"{\n\t\"doc,docx,xls,xlsx,ppt,pptx\": {\n\t\t\"Microsoft\":\"https://view.office
-== fs/list /Anime
-{"code":401,"message":"Guest user is disabled, login please","data":null}
-== fs/list Monogatari
-{"code":401,"message":"Guest user is disabled, login please","data":null}
-== primer archivo: null
-== cossette (solo serveraz+multiup)
-{"code":401,"message":"Guest user is disabled, login please","data":null}
