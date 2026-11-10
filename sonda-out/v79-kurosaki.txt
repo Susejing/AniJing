@@ -1,4 +1,0 @@
-===== https://teamkurosaki.net/ =====
-status 200, bytes 109489
-===== https://teamkurosaki.net/animes/ =====
-status 404, bytes 39499
