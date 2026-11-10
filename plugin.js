@@ -447,6 +447,20 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.39 «El inventario» — pedido del teléfono: «sáquenle todo el
+// catálogo a las fuentes». Auditoría completa (sondas v92-v94): las
+// nueve fuentes viejas ya tenían su directorio (MonosChinos, LataAnime,
+// OtakusTV, AnimeYT, AnimeJara, VerAnime, IvAnime) menos DOS. (1)
+// AnimeAV1: la fila «Catálogo completo» estaba HUÉRFANA — el código la
+// sabía paginar (paramsDeFila la reconocía desde siempre) pero la
+// portada nunca la ofrecía; ahora se ve en su sección: 50 páginas × 20
+// fichas (sonda v94: pagination totalPages:50, totalRecords:1000). (2)
+// EstrenosAnime: su directorio vive en /anime y nadie lo sabía (sonda
+// v94: 58 fichas por página, paginado ?sort_alphabet=a-z&page=N hasta
+// la página 169 — casi 10.000 entradas) — fila nueva «Directorio» con
+// su Ver más paginado de verdad. Las demás fuentes ya mostraban todo:
+// auditadas y confirmadas, sin fila callada.
+
 // v0.6.38 «El almacén» — fuente nueva: BeatZ-Anime (la descarga BD de
 // OneFansub). Las sondas v76-v78 desmontaron el misterio: los botones
 // «Descargar» de las fichas /bd/<slug>.html no llevan href sino
@@ -770,7 +784,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.38';
+const VERSION = '0.6.39';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -1996,6 +2010,10 @@ registrarFuente({
       { id: 'av1-latest', titulo: 'Últimos agregados', ref: 'av1-latest', params: { orden: 'latest_added' } },
       { id: 'av1-populares', titulo: 'Populares', ref: 'av1-populares', params: { orden: 'popular' } },
       { id: 'av1-score', titulo: 'Mejor puntuados', ref: 'av1-score', params: { orden: 'score' } },
+      /* v0.6.39 «El inventario»: la fila estaba huérfana — el hoja la
+       * sabía paginar (paramsDeFila la reconoce) pero la portada nunca
+       * la ofrecía. El catálogo completo: 50 páginas × 20 (sonda v94). */
+      { id: 'av1-catalogo', titulo: 'Catálogo completo · AnimeAV1', ref: 'av1-catalogo' },
       { id: 'av1-peliculas', titulo: 'Películas', ref: 'av1-peliculas', params: { categoria: 'pelicula' } },
       { id: 'av1-gen-accion', titulo: 'Acción', ref: 'av1-gen:accion', params: { genero: 'accion' } },
       { id: 'av1-gen-fantasia', titulo: 'Fantasía', ref: 'av1-gen:fantasia', params: { genero: 'fantasia' } }
@@ -3915,7 +3933,11 @@ registrarFuente({
        * /tipo/OVA/page/2/ responde 404: una página por hoja, honesto. */
       { id: 'eas-ova', titulo: 'OVAs · EstrenosAnime', ref: 'eas-ova', camino: '/tipo/OVA' },
       { id: 'eas-especial', titulo: 'Especiales · EstrenosAnime', ref: 'eas-especial', camino: '/tipo/Especial' },
-      { id: 'eas-emision', titulo: 'En emisión · EstrenosAnime', ref: 'eas-emision', camino: '/estado/En+Emision' }
+      { id: 'eas-emision', titulo: 'En emisión · EstrenosAnime', ref: 'eas-emision', camino: '/estado/En+Emision' },
+      /* v0.6.39 «El inventario»: el directorio de verdad — /anime con
+       * 58 fichas por página y paginado ?sort_alphabet=a-z&page=N hasta
+       * la página 169 (sonda v94). easFichas ya entiende sus anclas. */
+      { id: 'eas-directorio', titulo: 'Directorio · EstrenosAnime', ref: 'eas-directorio', camino: '/anime' }
     ];
     /* v0.6.26: en «Todas» solo se consulta el núcleo (tope de Kino:
      * 60 peticiones por llamada — la 0.6.25 lo reventó). */
@@ -3938,9 +3960,12 @@ registrarFuente({
     return filas;
   },
 
-  async hoja(ref) {
+  async hoja(ref, cursor) {
     let camino = null;
     let eps = false;
+    /* v0.6.39: el directorio /anime pagina de verdad (?sort_alphabet=
+     * a-z&page=N, sonda v94: 169 páginas); el resto no paga. */
+    const pagEas = parseInt(String(cursor || '1'), 10) || 1;
     if (ref === 'eas-eps') { camino = '/ultimo-episodios'; eps = true; }
     else if (ref === 'eas-sub') camino = '/ultimo-subtitulado';
     else if (ref === 'eas-lat') camino = '/ultimo-latino';
@@ -3950,6 +3975,7 @@ registrarFuente({
     else if (ref === 'eas-ova') camino = '/tipo/OVA';
     else if (ref === 'eas-especial') camino = '/tipo/Especial';
     else if (ref === 'eas-emision') camino = '/estado/En+Emision';
+    else if (ref === 'eas-directorio') camino = '/anime' + (pagEas > 1 ? '?sort_alphabet=a-z&page=' + pagEas : '');
     if (!camino) return null;
     const r = await traer(BASE_EAS + camino, { headers: { Referer: BASE_EAS + '/' }, timeoutMs: 12000 });
     if (!r.ok) {
@@ -3958,9 +3984,10 @@ registrarFuente({
       });
     }
     const items = (eps ? easEpisodiosDe(r.text) : easFichas(r.text)).slice(0, 60);
-    /* La paginación de sus listados no se pudo verificar: se entrega una
-     * página por hoja, sin inventar ?page= que no existe. */
-    return { items: items, next: null };
+    /* v0.6.39: el directorio pagina (página llena → hay más; las
+     * páginas reales traen 58 fichas, sonda v94); el resto de listados
+     * sigue de una página, honesto. */
+    return { items: items, next: ref === 'eas-directorio' && items.length >= 20 ? String(pagEas + 1) : null };
   },
 
   async detalle(slug) {
