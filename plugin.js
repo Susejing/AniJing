@@ -447,6 +447,22 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.38 «El almacén» — fuente nueva: BeatZ-Anime (la descarga BD de
+// OneFansub). Las sondas v76-v78 desmontaron el misterio: los botones
+// «Descargar» de las fichas /bd/<slug>.html no llevan href sino
+// onclick, y detrás no hay Mega ni Drive sino un OpenList propio
+// (bz.beatz-anime.net) con API JSON pública: /api/fs/list trae las
+// carpetas de series y los archivos de cada una, y /d/<ruta> sirve el
+// .mkv DIRECTO (206 Partial Content, sin login ni captcha, sonda v78:
+// «Matroska data» en los primeros bytes). Fuente de 4 piezas: catálogo
+// paginado desde la API (sin HTML que descifrar), búsqueda filtrando
+// el padrón de carpetas, fichas con póster y sinopsis de la ficha web
+// (og:image/og:description) y resolve que arma el /d/ con el nombre
+// exacto del archivo codificado. Todo subtitulado (el sitio es BD con
+// subs, nada latino). Unión Fansub se queda fuera: sus descargas son
+// torrent con cuenta y Mega — muros honestos. El menú de fuentes de
+// la pantalla crece a 12.
+
 // v0.6.37 «El padrón» — el teléfono probó el recadero (Ano Hana 11,
 // Ano Natsu 13, Arakawa 13 episodios: la cosecha de carpetas ya
 // anda) y dejó dos cuentas pendientes. (1) Mitad de las carpetas NO
@@ -754,7 +770,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.37';
+const VERSION = '0.6.38';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -6170,6 +6186,216 @@ registrarFuente({
   }
 });
 
+/* ---------- fuente: BeatZ-Anime (www.beatz-anime.net, descargas BD por su OpenList bz.beatz-anime.net) ---------- */
+/* v0.6.38 «El almacén»: los botones «Descargar» de las fichas /bd/
+ * van en onclick (sonda v76) y su destino no es una nube de terceros
+ * sino un OpenList propio (bz.beatz-anime.net, sonda v77) con API
+ * JSON pública: /api/fs/list da las carpetas de series y los archivos
+ * de cada una; /d/<ruta>/<archivo> sirve el .mkv DIRECTO con rangos
+ * de bytes (206, sonda v78) — sin login, sin captcha, sin canje. */
+
+const BASE_BTZ = 'https://www.beatz-anime.net';
+const BTZ_API = 'https://bz.beatz-anime.net';
+const BTZ_RAIZ = 'BeatZ-Anime/Anime';
+const BTZ_SERIES = { t: 0, lista: null };
+const BTZ_EPS = {};
+const BTZ_FICHA = {};
+
+/* El número del episodio vive en el nombre de archivo
+ * («[BeatZ-Anime] Bakemonogatari - 01 [BDRip …].mkv»). */
+function btzNumDe(nombre) {
+  const s = String(nombre || '');
+  let m = /-\s*(\d{1,4})\s*(?:\[|\()/.exec(s);
+  if (!m) m = /-\s*(\d{1,4})\s*$/.exec(s.replace(/\.[a-z0-9]{2,4}$/i, ''));
+  if (!m) m = /(?:^|[^0-9a-z])(\d{1,4})(?=[^0-9a-z]|$)/i.exec(s);
+  return m ? parseInt(m[1], 10) : 0;
+}
+
+function btzTituloDe(nombre) {
+  let t = String(nombre || '').replace(/\.[a-z0-9]{2,4}$/i, '');
+  t = t.replace(/\[[^\]]*\]/g, ' ').replace(/\([^)]*\)/g, ' ');
+  t = t.replace(/\s*-\s*$/, '').replace(/\s{2,}/g, ' ').trim();
+  return t || String(nombre || '');
+}
+
+function btzRutaDe(nombre) {
+  return BTZ_RAIZ + '/' + String(nombre || '').trim();
+}
+
+async function btzListar(ruta, pagina) {
+  const r = await traer(BTZ_API + '/api/fs/list', {
+    json: { path: '/' + ruta, page: pagina || 1, per_page: 200, refresh: false },
+    headers: { Referer: BTZ_API + '/' },
+    timeoutMs: 15000
+  });
+  if (!r.ok || !r.text) {
+    throw kino.error('unavailable', 'BeatZ: el almacén no respondió (status ' + r.status + ')', {
+      userMessage: 'BeatZ-Anime no respondió. Revisa tu conexión o inténtalo en un rato.'
+    });
+  }
+  let j = null;
+  try { j = JSON.parse(r.text); } catch (e) { j = null; }
+  const data = j && j.data && Array.isArray(j.data.content) ? j.data.content : null;
+  if (!data) {
+    throw kino.error('unavailable', 'BeatZ: listado ilegible', {
+      userMessage: 'BeatZ-Anime no entregó su listado. Revisa tu conexión o inténtalo en un rato.'
+    });
+  }
+  return data;
+}
+
+/* El padrón de series: carpetas de /BeatZ-Anime/Anime, paginado de 200
+ * (cache 10 minutos; con ~200 carpetas caben en 1-2 páginas). */
+async function btzSeries() {
+  if (BTZ_SERIES.lista && Date.now() - BTZ_SERIES.t < 10 * 60 * 1000) return BTZ_SERIES.lista;
+  const out = [];
+  for (let p = 1; p <= 4; p++) {
+    const data = await btzListar(BTZ_RAIZ, p);
+    for (const x of data) {
+      const n = x && x.is_dir ? String(x.name || '').trim() : '';
+      if (n && out.indexOf(n) === -1) out.push(n);
+    }
+    if (data.length < 200) break;
+  }
+  BTZ_SERIES.t = Date.now();
+  BTZ_SERIES.lista = out;
+  return out;
+}
+
+function btzItemDe(nombre) {
+  return {
+    id: 'btz-' + String(nombre).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    ref: 'btz:' + btzRutaDe(nombre),
+    title: String(nombre),
+    kind: 'series',
+    badges: ['BeatZ-Anime']
+  };
+}
+
+/* Ficha web: og:image y og:description de /bd/<slug>.html (el slug se
+ * adivina del nombre de carpeta; si no existe la ficha, la serie va
+ * sin póster y sin sinopsis — honesto). */
+async function btzFicha(nombre) {
+  if (Object.prototype.hasOwnProperty.call(BTZ_FICHA, nombre)) return BTZ_FICHA[nombre];
+  const slug = String(nombre).toLowerCase().replace(/[.']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  let out = null;
+  try {
+    const r = await traer(BASE_BTZ + '/bd/' + slug + '.html', { headers: { Referer: BASE_BTZ + '/' }, timeoutMs: 10000 });
+    if (r.ok && r.text) {
+      out = {};
+      const og = /<meta property="og:image" content="([^"]+)"/i.exec(r.text);
+      if (og) out.poster = og[1];
+      const sin = /<meta (?:property="og:description"|name="description") content="([^"]+)"/i.exec(r.text);
+      if (sin) out.overview = decHtml(sin[1]).slice(0, 400);
+    }
+  } catch (e) {}
+  BTZ_FICHA[nombre] = out;
+  return out;
+}
+
+function btzVideosDe(data) {
+  const vids = (data || []).filter((x) => x && !x.is_dir && /\.(mkv|mp4|avi|mov|wmv|mpg|flv)$/i.test(String(x.name || '')));
+  vids.sort((a, b) => (btzNumDe(a.name) - btzNumDe(b.name)) || String(a.name).localeCompare(String(b.name)));
+  return vids.map((x) => String(x.name));
+}
+
+registrarFuente({
+  id: 'btz',
+  etiqueta: 'BeatZ-Anime',
+
+  async buscar(q) {
+    const texto = String(q || '').trim().slice(0, 100);
+    if (texto.length < 2) return [];
+    try {
+      const series = await btzSeries();
+      return series.filter((n) => titulosParecen(texto, n)).map(btzItemDe).slice(0, 25);
+    } catch (e) {
+      log('btz buscar', (e && e.message) || String(e));
+      return [];
+    }
+  },
+
+  async portada(solo) {
+    let defs = [
+      { id: 'btz-catalogo', titulo: 'Catálogo BD · BeatZ-Anime', ref: 'btz-catalogo' }
+    ];
+    if (solo === true) {
+      const nucleo = NUCLEO_TODAS.btz;
+      if (nucleo) defs = defs.filter(function (d) { return nucleo.indexOf(d.id) >= 0; });
+    }
+    const data = await btzListar(BTZ_RAIZ, 1);
+    const items = data.filter((x) => x && x.is_dir).map((x) => btzItemDe(String(x.name || '').trim())).filter((x) => x.title).slice(0, 24);
+    if (!items.length) return [];
+    return [{ id: defs[0].id, title: defs[0].titulo, ref: defs[0].ref, items: items }];
+  },
+
+  async hoja(ref, cursor) {
+    if (ref !== 'btz-catalogo') return null;
+    const pag = parseInt(String(cursor || '1'), 10) || 1;
+    const data = await btzListar(BTZ_RAIZ, pag);
+    const items = data.filter((x) => x && x.is_dir).map((x) => btzItemDe(String(x.name || '').trim())).filter((x) => x.title).slice(0, 60);
+    return { items: items, next: data.length >= 200 ? String(pag + 1) : null };
+  },
+
+  async detalle(ruta) {
+    const partes = String(ruta).split('/');
+    const nombre = partes[partes.length - 1] || String(ruta);
+    const serie = { title: nombre };
+    const ficha = await btzFicha(nombre);
+    if (ficha) {
+      if (ficha.poster) serie.poster = ficha.poster;
+      if (ficha.overview) serie.overview = ficha.overview;
+    }
+    return serie;
+  },
+
+  async episodios(ruta) {
+    const data = await btzListar(ruta, 1);
+    const nombres = btzVideosDe(data);
+    if (!nombres.length) {
+      throw kino.error('not_found', 'BeatZ: carpeta sin videos', {
+        userMessage: 'Esta serie no tiene episodios publicados en BeatZ-Anime.'
+      });
+    }
+    BTZ_EPS[ruta] = nombres;
+    const lista = nombres.map((x, i) => {
+      const n = btzNumDe(x) || (i + 1);
+      return { season: 1, number: n, ref: 'btz:' + ruta + ':' + n, title: btzTituloDe(x) };
+    });
+    const partes = String(ruta).split('/');
+    const nombre = partes[partes.length - 1] || String(ruta);
+    const serie = { title: nombre };
+    const ficha = await btzFicha(nombre);
+    if (ficha) {
+      if (ficha.poster) serie.poster = ficha.poster;
+      if (ficha.overview) serie.overview = ficha.overview;
+    }
+    log('btz ficha «' + nombre + '»: ' + lista.length + ' archivo(s) del almacén');
+    return { series: serie, episodes: lista };
+  },
+
+  async resolver(ruta, n, idx) {
+    const num = n || 1;
+    let nombres = BTZ_EPS[ruta];
+    if (!nombres || !nombres.length) {
+      const data = await btzListar(ruta, 1);
+      nombres = btzVideosDe(data);
+      BTZ_EPS[ruta] = nombres;
+    }
+    let nombre = '';
+    for (const x of nombres) if (btzNumDe(x) === num) { nombre = x; break; }
+    if (!nombre) nombre = nombres[Math.min(num, nombres.length) - 1] || '';
+    if (!nombre) {
+      throw kino.error('not_found', 'BeatZ: episodio ausente', {
+        userMessage: 'No se encontró ese episodio en el almacén de BeatZ-Anime.'
+      });
+    }
+    const url = BTZ_API + '/d/' + ruta + '/' + encodeURIComponent(nombre);
+    log('btz resolve «' + nombre + '» (el almacén)');
+    return { url: url, label: 'BeatZ-Anime', headers: { 'User-Agent': UA } };
+  }
+});
+
 /* ---------- exportaciones de Kino (el abanico del agregador) ---------- */
 
 function partirRef(ref) {
@@ -6298,7 +6524,8 @@ const FUENTES_PANTALLA = [
   { id: 'jara', nombre: 'AnimeJara' },
   { id: 'van', nombre: 'VerAnime' },
   { id: 'iva', nombre: 'IvAnime' },
-  { id: 'az', nombre: 'Az-Animex' }
+  { id: 'az', nombre: 'Az-Animex' },
+  { id: 'btz', nombre: 'BeatZ-Anime' }
 ];
 
 function fuenteValida(id) {
@@ -6390,7 +6617,9 @@ const NUCLEO_TODAS = {
   iva: ['iva-emision', 'iva-directorio'],
   /* v0.6.25: Az-Animex entra con el par de géneros esencial.
    * v0.6.29: y el Directorio A-Z — el catálogo entero a la vista. */
-  az: ['az-genero-accion', 'az-genero-comedia', 'az-directorio']
+  az: ['az-genero-accion', 'az-genero-comedia', 'az-directorio'],
+  /* v0.6.38: BeatZ-Anime entra con su catálogo BD. */
+  btz: ['btz-catalogo']
 };
 
 async function cargarPantalla(fuente) {
