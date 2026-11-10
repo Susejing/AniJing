@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.33 «La aduana»)
+## Qué hace (v0.6.34 «El atajo»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -32,6 +32,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.34 «El atajo»
+
+El teléfono probó la aduana y dejó dos lecciones que esta versión cobra. **TeraBox**: la ventanilla abría la portada de terabox.com y en el móvil esa portada es un escaparate de «descarga la app» sin ningún botón de Login — ahora la ventanilla abre directo la página de iniciar sesión (`terabox.com/passport/login`): entras, se cierra sola y las fichas reproducen. **FireLoad**: al revisar la página de la sonda v57 con ojos nuevos, el enlace directo **viaja incorporado en el HTML crudo** — `window.Fl = {"dlink": "…mp4?pt=…", "dwait": "0"}` — y nadie lo había mirado. Así que el resolve ya ni abre la ventanilla: pesca el `dlink` en crudo con el UA de navegador y lo entrega fresco en cada Play (los tokens `pt` caducan). La ventanilla de «Preparar FireLoad» queda de respaldo para el día en que FireLoad sirva un cascarón sin dlink — y en ese caso, si tocas «Download File» y esperas a que cargue el enlace antes de dar Listo, queda guardado y el Play lo respeta. Y el aviso honesto de las fichas con muros de verdad (Server Az premium, MultiUp, carpetas de FireLoad) sigue con nombre y apellido: «Bungaku Shoujo» Memoire, por ejemplo, solo publica en el Server Az premium y MultiUp, y eso es lo que dice.
 
 ## v0.6.33 «La aduana»
 

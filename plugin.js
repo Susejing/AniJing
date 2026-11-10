@@ -447,6 +447,20 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.34 «El atajo» — el teléfono probó la aduana y dejó dos
+// lecciones. TeraBox: la ventanilla abría la portada de terabox.com
+// y en el móvil esa portada es un escaparate de «descarga la app»
+// sin ningún botón de Login — la ventanilla ahora abre directo la
+// página de iniciar sesión (terabox.com/passport/login). FireLoad:
+// al revisar la página de la sonda v57 con ojos nuevos resultó que
+// el enlace directo VIAJA INCORPORADO en el HTML crudo — window.Fl
+// = {"dlink": "…mp4?pt=…", "dwait": "0"} — la sonda lo tenía
+// delante y nadie lo miró. Así que el resolve ya ni abre la
+// ventanilla: pesca el dlink en crudo con el UA de navegador y lo
+// entrega fresco (los pt caducan); la ventanilla queda de respaldo
+// para el día en que FireLoad sirva un cascarón sin dlink, y en ese
+// caso el enlace listo de «Preparar FireLoad» también se respeta.
+//
 // v0.6.33 «La aduana» — el usuario pidió las ventanillas y Kino las
 // traía de fábrica desde la apiVersion 20: kino.visualBrowser, la
 // ventana de navegador que la persona ve y maneja (la misma idea de
@@ -685,7 +699,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.33';
+const VERSION = '0.6.34';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -5635,6 +5649,21 @@ function azFldHash(url) {
 }
 
 async function azFldResolver(slug, num, url) {
+  /* v0.6.34 «El atajo»: la página del archivo trae el enlace directo
+   * INCORPORADO en el crudo — window.Fl = {"dlink": "…?pt=…",
+   * "dwait": "0"} — se pesca con el UA de navegador y se entrega
+   * fresco (los pt caducan). */
+  const r = await traer(url, { headers: { 'User-Agent': UA, 'Referer': 'https://www.fireload.com/' }, timeoutMs: 15000 });
+  if (r.ok) {
+    const m = /window\.Fl\s*=\s*\{[^}]*?"dlink":\s*"([^"]+)"/.exec(String(r.text)) ||
+      /(https?:\/\/(?:www\.)?fireload\.com\/[a-f0-9]{16}\/[^\s"'<>]+?\.(?:mp4|mkv|avi|mov|wmv|mpg|flv)\?pt=[A-Za-z0-9%=_-]+)/.exec(String(r.text));
+    if (m && m[1]) {
+      log('az fireload: dlink directo en crudo para «' + slug + '» (el atajo)');
+      return { url: m[1], label: 'FireLoad', headers: { 'User-Agent': UA, 'Referer': 'https://www.fireload.com/' } };
+    }
+    log('az fireload: la página de «' + slug + '» llegó sin dlink (¿cascarón?) — a la ventanilla');
+  }
+  /* respaldo: el enlace que la persona preparó en la ventanilla. */
   const clave = 'ajFld:' + azFldHash(url);
   let g = null;
   try { g = kino.storage.get(clave); } catch (eG) { g = null; }
@@ -5645,7 +5674,7 @@ async function azFldResolver(slug, num, url) {
   try { kino.storage.set('ajFldPend', url); } catch (eP) {}
   log('az fireload: captcha pendiente para «' + slug + '» — el aviso manda a «Preparar FireLoad»');
   throw kino.error('unavailable', 'Az-Animex: FireLoad pide captcha', {
-    userMessage: 'FireLoad pide resolver un captcha una vez. En los ajustes del plugin AniJing toca «Preparar FireLoad» (toca Descargar en la ventanita, espera el enlace, Listo); luego vuelve a darle Play a este episodio.'
+    userMessage: 'FireLoad no entregó el enlace directo. En los ajustes del plugin AniJing toca «Preparar FireLoad»: en la ventanita toca «Download File», espera a que cargue el enlace y toca Listo; luego vuelve a darle Play a este episodio.'
   });
 }
 
@@ -6596,7 +6625,7 @@ async function action(key) {
   }
   if (key === 'teraboxLogin') {
     const r = await kino.visualBrowser.open({
-      url: 'https://www.terabox.com/',
+      url: 'https://www.terabox.com/passport/login',
       title: 'Inicia sesión en TeraBox',
       doneWhen: { cookies: ['ndus'] },
       collect: { cookies: ['ndus', 'lang'], storeAs: { setting: 'teraboxCookie', format: 'header' } },
