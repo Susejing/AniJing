@@ -1,7 +1,0 @@
-=== compresor de icono v3 (Pillow) ===
-original: 1004824 bytes
-modo: RGB, tamano original: (1254, 1254)
-transparencia: False
-Traceback (most recent call last):
-  File "<stdin>", line 42, in <module>
-TypeError: not enough arguments for format string
