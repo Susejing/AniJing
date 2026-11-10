@@ -1,0 +1,12 @@
+===== kurosaki: tema de Frieren (descargas) =====
+status 403 bytes 41076
+https://www.teamkurosaki.net/uploads/css_built_21/90eb5adf50a8c640f633d47fd7eb1778_core.css?v=4e52a1ea3c1782361959
+--- ¿login requerido? ---
+===== shadowrangers: objetivo de los «Descargar» =====
+grep: /tmp/sr.html: No such file or directory
+--- todos los href externos de la ficha ---
+grep: /tmp/sr.html: No such file or directory
+===== sphinx: objetivo de los «Descargar» =====
+grep: /tmp/sp.html: No such file or directory
+--- hrefs externos del post ---
+grep: /tmp/sp.html: No such file or directory
