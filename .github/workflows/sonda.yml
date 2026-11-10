@@ -1,0 +1,38 @@
+name: sonda
+on:
+  push:
+    branches: [main]
+jobs:
+  sonda:
+    if: contains(github.event.head_commit.message, '[sonda]')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: sondas v86
+        run: |
+          mkdir -p sonda-out
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+          {
+            echo "===== UF: subforos de Fansubs (fid=52) ====="
+            curl -sL --max-time 25 -A "$UA" "https://foro.unionfansub.com/forumdisplay.php?fid=52" -o /tmp/uf52.html || true
+            grep -oE 'forumdisplay\.php\?fid=[0-9]+' /tmp/uf52.html | sort -u | head -20 || true
+            grep -oE '<title>[^<]*</title>' /tmp/uf52.html | head -1 || true
+            echo "===== UF: títulos de fids 40-60 ====="
+            for F in $(seq 40 60); do
+              T=$(curl -sL --max-time 12 -A "$UA" "https://foro.unionfansub.com/forumdisplay.php?fid=$F" | grep -oE '<title>[^<]*</title>' | head -1)
+              echo "fid $F: $T"
+            done
+            echo "===== UF: archivo (archive) ====="
+            curl -sL --max-time 20 -A "$UA" "https://foro.unionfansub.com/archive/index.php" -o /tmp/ufa.html || true
+            grep -oE '<title>[^<]*</title>' /tmp/ufa.html | head -1 || true
+            grep -oE 'href="[^"]*archive[^"]*"' /tmp/ufa.html | head -10 || true
+          } > sonda-out/v86-uf-foros.txt 2>&1 || true
+      - name: commit
+        run: |
+          git config user.name "sonda"
+          git config user.email "sonda@users.noreply.github.com"
+          git add sonda-out || true
+          git commit -m "sonda v86: foros de unión fansub" || true
+          git push || true
