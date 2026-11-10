@@ -10,38 +10,32 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: sondas v74
+      - name: sondas v75
         run: |
           mkdir -p sonda-out
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
           {
-            echo "===== BEATZ ficha bakemonogatari ====="
+            echo "===== BEATZ ficha: menciones de nubes en crudo ====="
             curl -sL --max-time 25 -A "$UA" "https://www.beatz-anime.net/bd/bakemonogatari.html" -o /tmp/bf.html || true
-            echo "bytes: $(wc -c < /tmp/bf.html)"
-            echo "--- hosts de descarga ---"
-            grep -o 'href="[^"]*"' /tmp/bf.html | grep -i -E "mega\.nz|drive\.google|1fichier|fireload|terabox|mediafire|pixeldrain|krakenfiles|gofile|mirrored|multiup" | sort -u | head -30 || true
-            echo "--- enlaces totales raros ---"
-            grep -o 'href="[^"]*"' /tmp/bf.html | grep -v -E "css|\.js|\.png|\.jpg|\.ico|beatz-anime\.net|#|facebook|twitter" | sort -u | head -30 || true
-            echo "--- primeros 3000 chars del cuerpo ---"
-            sed 's/<[^>]*>/ /g' /tmp/bf.html | tr -s ' \n' ' \n' | head -c 3000 || true
-            echo ""
-            echo "===== UNION FANSUB: un foro de descarga directa ====="
-            curl -sL --max-time 25 -A "$UA" "https://foro.unionfansub.com/forumdisplay.php?fid=3" -o /tmp/uf1.html || true
-            echo "bytes: $(wc -c < /tmp/uf1.html)"
-            grep -o '<title>[^<]*' /tmp/uf1.html || true
-            grep -o 'href="showthread.php?tid=[0-9]*[^"]*"' /tmp/uf1.html | head -10 || true
-            T=$(grep -o 'href="showthread.php?tid=[0-9]*' /tmp/uf1.html | head -1 | sed 's/href="//' || true)
-            echo "tema: $T"
-            if [ -n "$T" ]; then
-              curl -sL --max-time 25 -A "$UA" "https://foro.unionfansub.com/$T" -o /tmp/uft.html || true
-              echo "bytes tema: $(wc -c < /tmp/uft.html)"
-              grep -o 'href="[^"]*"' /tmp/uft.html | grep -i -E "mega\.nz|drive\.google|1fichier|fireload|terabox|mediafire|pixeldrain|krakenfiles|gofile|mirrored|multiup|torrent" | sort -u | head -20 || true
-            fi
-          } > sonda-out/v74-fichas.txt 2>&1 || true
+            grep -o -i 'mega[^"'"'"'<> ]*' /tmp/bf.html | sort -u | head -15 || echo "sin mega"
+            grep -o -i 'drive\.google[^"'"'"'<> ]*' /tmp/bf.html | sort -u | head -10 || echo "sin drive"
+            grep -o -i 'fireload[^"'"'"'<> ]*' /tmp/bf.html | sort -u | head -10 || echo "sin fireload"
+            grep -o -i 'terabox[^"'"'"'<> ]*' /tmp/bf.html | sort -u | head -10 || echo "sin terabox"
+            echo "--- scripts de la ficha ---"
+            grep -o '<script[^>]*src="[^"]*"' /tmp/bf.html | head -10 || true
+            echo "--- botones/descarga en crudo ---"
+            grep -o -i 'descarg[a-z]*[^<]\{0,80\}' /tmp/bf.html | head -15 || true
+            echo "--- fetch/ajax en el js inline ---"
+            grep -o -i 'fetch([^)]\{0,90\}' /tmp/bf.html | head -10 || true
+            grep -o -i 'XMLHttpRequest\|\.ajax\|axios[^)]\{0,60\}' /tmp/bf.html | head -5 || true
+            echo "===== UNION FANSUB: títulos de foros ====="
+            curl -sL --max-time 25 -A "$UA" "https://foro.unionfansub.com/index.php" -o /tmp/uf.html || true
+            grep -o 'forumdisplay.php?fid=[0-9]*"[^>]*>[^<]*' /tmp/uf.html | sed 's/"/ | /;s/">/ | /' | head -30 || true
+          } > sonda-out/v75-nubes.txt 2>&1 || true
       - name: commit
         run: |
           git config user.name "sonda"
           git config user.email "sonda@users.noreply.github.com"
           git add sonda-out || true
-          git commit -m "sonda v74: ficha beatz y tema unionfansub" || true
+          git commit -m "sonda v75: nubes de beatz y foros unionfansub" || true
           git push || true
