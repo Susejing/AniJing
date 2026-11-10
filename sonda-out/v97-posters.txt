@@ -1,5 +1,0 @@
-3-gatsu-no-lion -> 200 image/jpeg
-3-gatsu-no-lion-2 -> 200 image/jpeg
-5-toubun-no-hanayome -> 200 image/jpeg
-bakemonogatari -> 200 image/jpeg
-overgeared -> 404 text/html; charset=UTF-8
