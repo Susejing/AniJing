@@ -1,0 +1,86 @@
+name: compresor de icono
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  comprimir:
+    runs-on: ubuntu-latest
+    if: ${{ !startsWith(github.event.head_commit.message, '[icono]') }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: instalar pillow
+        run: |
+          python3 -m venv /tmp/v
+          /tmp/v/bin/pip -q install pillow
+      - name: comprimir icon.png bajo el tope de 128 KB del contrato de Kino
+        run: |
+          /tmp/v/bin/python - <<'PYEOF'
+          import io, os, sys
+          from PIL import Image
+
+          LIMITE = 131072
+          p = 'icon.png'
+          print('original: %d bytes' % os.path.getsize(p))
+          img = Image.open(p)
+          print('modo: %s, tamano original: %s' % (img.mode, img.size))
+          w, h = img.size
+          rgba = img.convert('RGBA')
+          if w != h:
+              lado = max(w, h)
+              px = rgba.load()
+              esquinas = [px[0, 0], px[w - 1, 0], px[0, h - 1], px[w - 1, h - 1]]
+              fondo = tuple(sum(c[i] for c in esquinas) // 4 for i in range(4))
+              lienzo = Image.new('RGBA', (lado, lado), fondo)
+              lienzo.paste(rgba, ((lado - w) // 2, (lado - h) // 2))
+              rgba = lienzo
+              print('no era cuadrado: acolchado a %dx%d con fondo %s' % (lado, lado, fondo))
+          alfa = rgba.getchannel('A').getextrema()[0] != 255
+          print('transparencia: %s' % alfa)
+
+          def cuantizar(base, colores):
+              if alfa:
+                  return base.quantize(colors=colores, method=Image.FASTOCTREE)
+              try:
+                  return base.convert('RGB').quantize(colors=colores, method=Image.MEDIANCUT, dither=Image.Dither.NONE)
+              except Exception:
+                  return base.convert('RGB').quantize(colors=colores, method=Image.MEDIANCUT)
+
+          def embudo(lado, colores):
+              base = rgba if rgba.size == (lado, lado) else rgba.resize((lado, lado), Image.LANCZOS)
+              q = cuantizar(base, colores) if colores else base
+              buf = io.BytesIO()
+              q.save(buf, 'PNG', optimize=True)
+              return buf.getvalue()
+
+          mejor = None
+          for lado in (512, 384, 320, 256):
+              for colores in (None, 256):
+                  datos = embudo(lado, colores)
+                  print('intento %dx%d cuantizado=%s -> %d bytes' % (lado, bool(colores), len(datos)))
+                  if len(datos) <= LIMITE:
+                      mejor = (lado, colores, datos)
+                      break
+              if mejor:
+                  break
+          if not mejor:
+              print('NINGUN intento bajo el limite de %d bytes' % LIMITE)
+              sys.exit(1)
+          lado, colores, datos = mejor
+          with open(p, 'wb') as f:
+              f.write(datos)
+          print('FINAL: %dx%d cuantizado=%s -> %d bytes (tope %d)' % (lado, bool(colores), len(datos), LIMITE))
+          PYEOF
+      - name: commit
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add icon.png
+          if git diff --cached --quiet; then
+            echo "sin cambios: el icono ya estaba bajo el tope"
+          else
+            git commit -m "[icono] icon.png comprimido bajo el tope de 128 KB del contrato de Kino"
+            git push
+          fi
