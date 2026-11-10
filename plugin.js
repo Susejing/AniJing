@@ -447,6 +447,22 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.40 «El retratista» — tres achaques del teléfono, dos curados.
+// (1) BeatZ sin pósters: el listado del OpenList no trae thumbs, pero el
+//     sitio guarda las portadas con patrón fijo /img/img-anime/<slug>/
+//     <slug>-port.jpg (sonda v97: 4 de 5 slugs 200 image/jpeg) — btzItemDe
+//     viste el catálogo, la búsqueda y las hojas sin una petición extra
+//     (el que no encaja, placeholder de Kino). (2) VerAnime muerto: el
+//     sitio se puso tras Cloudflare («Just a moment», 403 en todo y en el
+//     espejo r.jina.ai también; vanime.ninja y veranime.tv, muertos —
+//     sonda v96) — ventanilla nueva «Pasar la revisión de VerAnime» en los
+//     ajustes: guarda cf_clearance sellada y vanCabeceras la lleva como
+//     Cookie en TODAS las peticiones de la fuente (portada, búsqueda,
+//     ficha, hoja, servidores); si el muro no cede, queda el aviso
+//     honesto. (3) EstrenosAnime «muestra poco»: no era avería — el
+//     Directorio de la 0.6.39 ya pagina completo y los recortes por riel
+//     son el tope de la pantalla de Kino (con su Ver más).
+
 // v0.6.39 «El inventario» — pedido del teléfono: «sáquenle todo el
 // catálogo a las fuentes». Auditoría completa (sondas v92-v94): las
 // nueve fuentes viejas ya tenían su directorio (MonosChinos, LataAnime,
@@ -784,7 +800,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.39';
+const VERSION = '0.6.40';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4360,6 +4376,19 @@ registrarFuente({
  * <nume> y su multiserver es darkanimes.com, pariente del saidochesto:
  * lista sus hosters en onclick('URL'). */
 const BASE_VAN = 'https://veranime.ninja';
+/* v0.6.40: VerAnime se puso tras Cloudflare («Just a moment», 403) y sus
+ * espejos históricos (vanime.ninja, veranime.tv) están muertos. La
+ * ventanilla «Pasar la revisión» guarda la galleta cf_clearance y las
+ * peticiones de la fuente la llevan como Cookie — mismo trato que la
+ * sesión de TeraBox. Si el muro sigue, la fuente queda callada con su
+ * bitácora honesta (portada vacía, mensaje en el teléfono). */
+function vanCabeceras(extra) {
+  const h = { Referer: BASE_VAN + '/' };
+  const galleta = String(configDe('veranimeCf') || '').trim();
+  if (galleta) h.Cookie = galleta;
+  if (extra) for (const k in extra) h[k] = extra[k];
+  return h;
+}
 
 function vanTarjetas(html) {
   const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/(?:anime|pelicula)\/([^"\/?#]+)[^>]*>([\s\S]{0,900}?)<\/a>/gi;
@@ -4410,11 +4439,11 @@ function vanTarjetas(html) {
 }
 
 async function vanFicha(slug) {
-  const a = await traer(BASE_VAN + '/anime/' + slug + '/', { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 10000 });
+  const a = await traer(BASE_VAN + '/anime/' + slug + '/', { headers: vanCabeceras(), timeoutMs: 10000 });
   if (a.ok && a.text) return a;
-  const o = await traer(BASE_VAN + '/online/' + slug + '/', { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 10000 });
+  const o = await traer(BASE_VAN + '/online/' + slug + '/', { headers: vanCabeceras(), timeoutMs: 10000 });
   if (o.ok && o.text) return o;
-  const p = await traer(BASE_VAN + '/pelicula/' + slug + '/', { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 10000 });
+  const p = await traer(BASE_VAN + '/pelicula/' + slug + '/', { headers: vanCabeceras(), timeoutMs: 10000 });
   return p;
 }
 
@@ -4458,7 +4487,7 @@ async function vanServersDe(html) {
       const r = await traer(BASE_VAN + '/wp-admin/admin-ajax.php', {
         metodo: 'POST',
         form: { action: 'doo_player_ajax', post: o.post, nume: o.nume, type: o.tipo },
-        headers: { Referer: BASE_VAN + '/', 'User-Agent': UA, 'X-Requested-With': 'XMLHttpRequest' },
+        headers: vanCabeceras({ 'User-Agent': UA, 'X-Requested-With': 'XMLHttpRequest' }),
         timeoutMs: 8000
       });
       if (r.ok && r.text) {
@@ -4475,7 +4504,7 @@ async function vanServersDe(html) {
       try {
         const r = await traer(BASE_VAN + '/wp-json/dooplayer/v2/' + encodeURIComponent(o.post) +
           '/' + encodeURIComponent(o.tipo) + '/' + encodeURIComponent(o.nume),
-          { headers: { Referer: BASE_VAN + '/', 'User-Agent': UA }, timeoutMs: 8000 });
+          { headers: vanCabeceras({ 'User-Agent': UA }), timeoutMs: 8000 });
         if (!r.ok || !r.text) continue;
         const em = /["']embed_url["']\s*:\s*["']([^"']+)["']/.exec(r.text);
         if (em) embed = desescapar(em[1]).replace(/\\\//g, '/');
@@ -4489,7 +4518,7 @@ async function vanServersDe(html) {
        * vive en la API que anuncia el div #msp (data-api). Respaldos:
        * el onclick('URL') de siempre y, si nada, fuera. */
       try {
-        const r2 = await traer(embed, { headers: { Referer: BASE_VAN + '/', 'User-Agent': UA }, timeoutMs: 9000 });
+        const r2 = await traer(embed, { headers: vanCabeceras({ 'User-Agent': UA }), timeoutMs: 9000 });
         if (!r2.ok || !r2.text) { log('van multiserver: status ' + r2.status); continue; }
         let pk = '';
         const apiM = /data-api\s*=\s*["']([^"']+)["']/i.exec(r2.text);
@@ -4569,7 +4598,7 @@ registrarFuente({
     const texto = String(q || '').trim().slice(0, 100);
     if (texto.length < 2) return [];
     try {
-      const r = await traer(BASE_VAN + '/?s=' + encodeURIComponent(texto), { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 10000 });
+      const r = await traer(BASE_VAN + '/?s=' + encodeURIComponent(texto), { headers: vanCabeceras(), timeoutMs: 10000 });
       if (!r.ok) return [];
       const items = vanTarjetas(r.text).slice(0, 25);
       for (const it of items) it.badges = ['VerAnime'];
@@ -4621,14 +4650,14 @@ registrarFuente({
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
         const destino = def.camino || ('/genero/' + def.genero + '/');
-        const r = await traer(BASE_VAN + destino, { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 11000, cuerpoSiempre: true });
+        const r = await traer(BASE_VAN + destino, { headers: vanCabeceras(), timeoutMs: 11000, cuerpoSiempre: true });
         let items = r && r.ok ? vanTarjetas(r.text).slice(0, 20) : [];
         /* v0.6.10 conservada: SOLO el riel «Anime» conserva su respaldo
          * en la home del sitio — es el género maestro; los demás viven
          * o mueren por su género, con bitácora honesta. */
         if (!items.length && def.ref === 'van-anime') {
           try {
-            const h = await traer(BASE_VAN + '/', { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 10000, cuerpoSiempre: true });
+            const h = await traer(BASE_VAN + '/', { headers: vanCabeceras(), timeoutMs: 10000, cuerpoSiempre: true });
             if (h.ok) items = vanTarjetas(h.text).slice(0, 20);
             if (!items.length && h.text) {
               log('van home: status ' + h.status + ', ' + h.text.length + ' letras, 0 tarjetas');
@@ -4670,7 +4699,7 @@ registrarFuente({
     const pagina = parseInt(cursor, 10);
     const num = Number.isFinite(pagina) && pagina > 1 ? pagina : 1;
     const camino = num > 1 ? base + '/page/' + num + '/' : base + '/';
-    const r = await traer(BASE_VAN + camino, { headers: { Referer: BASE_VAN + '/' }, timeoutMs: 12000 });
+    const r = await traer(BASE_VAN + camino, { headers: vanCabeceras(), timeoutMs: 12000 });
     if (!r.ok) {
       throw kino.error('unavailable', 'VerAnime no respondió (status ' + r.status + ')', {
         userMessage: 'VerAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
@@ -4742,7 +4771,7 @@ registrarFuente({
 
   async resolver(epslug, n, idx) {
     let epUrl = BASE_VAN + '/ver/' + epslug + '/';
-    let r = await traer(epUrl, { headers: { Referer: BASE_VAN + '/', 'User-Agent': UA }, timeoutMs: 10000 });
+    let r = await traer(epUrl, { headers: vanCabeceras({ 'User-Agent': UA }), timeoutMs: 10000 });
     /* si la página de episodio no existe, puede ser una PELÍCULA: su
      * ficha lleva el dooplayer a cuestas. */
     if (!r.ok || !r.text) {
@@ -6290,11 +6319,18 @@ async function btzSeries() {
 }
 
 function btzItemDe(nombre) {
+  /* v0.6.40 «El retratista»: el listado del OpenList no trae thumbs, pero
+   * el sitio guarda las portadas con patrón fijo /img/img-anime/<slug>/
+   * <slug>-port.jpg (sonda v97: 4 de 5 slugs responden 200 image/jpeg; el
+   * que no, cae al placeholder de Kino sin romper nada). Mismo slug que
+   * btzFicha adivina para las fichas. */
+  const slug = String(nombre).toLowerCase().replace(/[.']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   return {
     id: 'btz-' + String(nombre).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
     ref: 'btz:' + btzRutaDe(nombre),
     title: String(nombre),
     kind: 'series',
+    poster: BASE_BTZ + '/img/img-anime/' + slug + '/' + slug + '-port.jpg',
     badges: ['BeatZ-Anime']
   };
 }
@@ -7139,9 +7175,27 @@ async function image(arg) {
  * y solo tras el toque de la persona; el plugin nunca ve lo que se
  * teclea adentro. */
 async function action(key) {
-  if (key !== 'teraboxLogin' && key !== 'fireloadPrep') return null;
+  if (key !== 'teraboxLogin' && key !== 'fireloadPrep' && key !== 'veranimeCf') return null;
   if (!kino.visualBrowser || !kino.visualBrowser.available) {
     return { message: 'Este aparato no puede abrir la ventanita (solo en el teléfono o la tablet).' };
+  }
+  if (key === 'veranimeCf') {
+    /* v0.6.40 «El retratista»: VerAnime se escondió tras Cloudflare. La
+     * ventanita abre el sitio de verdad; al pasar la revisión aparece la
+     * galleta cf_clearance, se guarda sellada y las peticiones de la
+     * fuente la llevan. Si el muro exige el mismo navegador que la pasó,
+     * la fuente seguirá callada — se dice con honestidad. */
+    const r = await kino.visualBrowser.open({
+      url: 'https://veranime.ninja/',
+      title: 'Pasa la revisión de VerAnime',
+      doneWhen: { cookies: ['cf_clearance'] },
+      collect: { cookies: ['cf_clearance'], storeAs: { setting: 'veranimeCf', format: 'header' } },
+      userAgent: 'browser',
+      timeoutMs: 600000
+    });
+    if (r.status === 'done' && r.stored) return { message: 'Revisión guardada. Dale al botón Reintentar en VerAnime; si sigue sin cargar, el muro no cedió.' };
+    if (r.status === 'timeout') return { message: 'La ventanita se quedó esperando. Vuelve a «Pasar la revisión de VerAnime».' };
+    return { message: 'No se guardó la revisión (¿cerraste antes de tiempo?). Vuelve a intentarlo.' };
   }
   if (key === 'teraboxLogin') {
     /* v0.6.36: la sonda v63 — /spanish/login salta en el teléfono a
