@@ -1,0 +1,108 @@
+name: sonda
+on:
+  push:
+    branches: [main]
+jobs:
+  sonda:
+    if: contains(github.event.head_commit.message, '[sonda]')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: v60
+        run: |
+          set -u
+          mkdir -p sonda-out
+          cd sonda-out
+          UA='Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.82 Mobile Safari/537.36'
+          UAW='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+          FL='https://www.fireload.com/afc05582085b18ad/[Az-Animex]_Bungaku_Shoujo_Movie_[BD][Osoku].mp4'
+          rm -f jar1 jar2 jar3 p1.html p2.html p3.html b.bin c.bin d.bin e.bin f.bin g.hdr h.bin tbx.jar
+          {
+          echo "== A: pagina FireLoad x3 (UA navegador, jars aparte) =="
+          curl -s -g -L -c jar1 -A "$UA" --max-time 20 "$FL" -o p1.html || true
+          curl -s -g -L -c jar2 -A "$UA" --max-time 20 "$FL" -o p2.html || true
+          curl -s -g -L -c jar3 -A "$UA" --max-time 20 "$FL" -o p3.html || true
+          echo "bytes p1/p2/p3: $(wc -c < p1.html 2>/dev/null || echo 0) / $(wc -c < p2.html 2>/dev/null || echo 0) / $(wc -c < p3.html 2>/dev/null || echo 0)"
+          D1=$(grep -o 'window\\.Fl = {"dlink": "[^"]*"' p1.html | head -1 | sed 's/.*"dlink": "//; s/"$//' || true)
+          D2=$(grep -o 'window\\.Fl = {"dlink": "[^"]*"' p2.html | head -1 | sed 's/.*"dlink": "//; s/"$//' || true)
+          D3=$(grep -o 'window\\.Fl = {"dlink": "[^"]*"' p3.html | head -1 | sed 's/.*"dlink": "//; s/"$//' || true)
+          echo "dlink1: [$D1]"
+          echo "dlink2: [$D2]"
+          echo "dlink3: [$D3]"
+          echo "== jar1: nombres de galletas tras la pagina =="
+          grep -v '^#' jar1 | grep . || true
+          echo
+          echo "== B: D1 con jar1+Referer+UA (uso 1 de D1) =="
+          curl -s -g -D - -b jar1 -A "$UA" -e 'https://www.fireload.com/' -r 0-1023 --max-time 20 "$D1" -o b.bin || true
+          echo "bytes: $(wc -c < b.bin 2>/dev/null || echo 0)"
+          file b.bin || true
+          head -c 32 b.bin | od -An -tx1 || true
+          echo
+          echo "== C: D2 con jar2+UA, SIN Referer =="
+          curl -s -g -D - -b jar2 -A "$UA" -r 0-1023 --max-time 20 "$D2" -o c.bin || true
+          echo "bytes: $(wc -c < c.bin 2>/dev/null || echo 0)"
+          file c.bin || true
+          head -c 32 c.bin | od -An -tx1 || true
+          head -c 200 c.bin || true
+          echo
+          echo "== D: D1 OTRA VEZ con jar1+Referer+UA (uso 2: jagoda de un solo uso?) =="
+          curl -s -g -D - -b jar1 -A "$UA" -e 'https://www.fireload.com/' -r 0-1023 --max-time 20 "$D1" -o d.bin || true
+          echo "bytes: $(wc -c < d.bin 2>/dev/null || echo 0)"
+          file d.bin || true
+          echo
+          echo "== E: D2 SIN cookies, con UA+Referer =="
+          curl -s -g -D - -A "$UA" -e 'https://www.fireload.com/' -r 0-1023 --max-time 20 "$D2" -o e.bin || true
+          echo "bytes: $(wc -c < e.bin 2>/dev/null || echo 0)"
+          file e.bin || true
+          echo
+          echo "== F: D3 con jar3+Referer, UA de curl (sin navegador) =="
+          curl -s -g -D - -b jar3 -e 'https://www.fireload.com/' -r 0-1023 --max-time 20 "$D3" -o f.bin || true
+          echo "bytes: $(wc -c < f.bin 2>/dev/null || echo 0)"
+          file f.bin || true
+          echo
+          echo "== G: D1 GET completo (uso 3), cortado a 4KB, jar1+Referer+UA =="
+          curl -s -g -D g.hdr -b jar1 -A "$UA" -e 'https://www.fireload.com/' --max-time 25 "$D1" | head -c 4096 > g.bin || true
+          cat g.hdr || true
+          echo "bytes g: $(wc -c < g.bin 2>/dev/null || echo 0)"
+          file g.bin || true
+          echo
+          echo "== H: D2 codificado (corchetes a %5B/%5D) con jar2+Referer+UA =="
+          DE=$(printf '%s' "$D2" | sed 's/\[/%5B/g; s/\]/%5D/g; s/ /%20/g')
+          echo "DE: [$DE]"
+          curl -s -g -D - -b jar2 -A "$UA" -e 'https://www.fireload.com/' -r 0-1023 --max-time 20 "$DE" -o h.bin || true
+          echo "bytes: $(wc -c < h.bin 2>/dev/null || echo 0)"
+          file h.bin || true
+          } > v60-fireload.txt 2>&1
+          rm -f b.bin c.bin d.bin e.bin f.bin g.bin h.bin g.hdr
+          head -c 60000 p1.html > fl-page-v60.html 2>/dev/null || true
+          rm -f p1.html p2.html p3.html
+          {
+          for U in "https://www.terabox.com/passport/login" "https://www.teraboxapp.com/passport/login" "https://1024terabox.com/passport/login" "https://www.terabox.com/" "https://www.terabox.com/main"; do
+            echo "===== $U ====="
+            curl -s -g -L -D - -A "$UAW" -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' -H 'Accept-Language: es-419,es;q=0.9,en;q=0.8' --max-time 20 "$U" -o tbx.html || true
+            echo "bytes: $(wc -c < tbx.html 2>/dev/null || echo 0)"
+            head -c 160 tbx.html || true
+            echo
+            grep -o 'errno\|dragdrop\|rotate\|type="password"\|Log in\|Sign in\|passport/login' tbx.html | sort | uniq -c || true
+            echo
+          done
+          echo "===== calentado: home con jar y luego passport/login ====="
+          rm -f tbx.jar
+          curl -s -g -c tbx.jar -A "$UAW" -H 'Accept-Language: es-419,es;q=0.9' --max-time 20 'https://www.terabox.com/' -o /dev/null || true
+          echo "jar tras home:"
+          grep -v '^#' tbx.jar | grep . || true
+          curl -s -g -L -b tbx.jar -c tbx.jar -D - -A "$UAW" -H 'Accept: text/html,*/*;q=0.8' --max-time 20 'https://www.terabox.com/passport/login' -o tbx2.html || true
+          echo "bytes: $(wc -c < tbx2.html 2>/dev/null || echo 0)"
+          head -c 200 tbx2.html || true
+          echo
+          grep -o 'errno\|dragdrop\|rotate\|password\|Sign in' tbx2.html | sort | uniq -c || true
+          rm -f tbx.html tbx2.html
+          } > v60-terabox.txt 2>&1
+          cd ..
+          git config user.name 'sonda'
+          git config user.email 'sonda@users.noreply.github.com'
+          git add sonda-out
+          git commit -m 'sonda v60: dlink fireload + login terabox' || true
+          git push || true
