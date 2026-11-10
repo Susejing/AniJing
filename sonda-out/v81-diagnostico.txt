@@ -1,0 +1,110 @@
+===== shadowrangers: diagnóstico de la ficha =====
+status 200 bytes 106278
+<title>[BDrip] Bleach (Lat-Cast-Jap) [1080p] [366/366] | Shadow-Rangers</title>
+href="https://shadowrangers.net/"
+href="https://shadowrangers.net/?p=616"
+href="https://shadowrangers.net/anime/bastard-ankoku-no-hakaishin/"
+href="https://shadowrangers.net/anime/bleach/"
+href="https://shadowrangers.net/anime/bleach/feed/"
+href="https://shadowrangers.net/anime/dr-stone-science-future/"
+href="https://shadowrangers.net/anime/dragon-ball-selecta-vision/"
+href="https://shadowrangers.net/anime/dragon-ball-super-beerus/"
+href="https://shadowrangers.net/anime/dragon-quest-dai-no-daibouken-2020/"
+href="https://shadowrangers.net/anime/fairy-tail/"
+href="https://shadowrangers.net/anime/fullmetal-alchemist-the-sacred-star-of-milos/"
+href="https://shadowrangers.net/anime/jojo-no-kimyou-na-bouken-tv/"
+href="https://shadowrangers.net/anime/kakuseihunter-omegahorn/"
+href="https://shadowrangers.net/anime/kamen-rider-my-th/"
+href="https://shadowrangers.net/anime/list-mode/"
+href="https://shadowrangers.net/anime/maison-ikkoku/"
+href="https://shadowrangers.net/anime/naruto-shippuuden/"
+href="https://shadowrangers.net/anime/one-piece2/"
+href="https://shadowrangers.net/anime/shin-samurai-den-yaiba/"
+href="https://shadowrangers.net/anime/splinter-cell-deathwatch/"
+href="https://shadowrangers.net/anime/super-dragon-ball-heroes/"
+href="https://shadowrangers.net/anime/tokyo-revengers-live-action/"
+href="https://shadowrangers.net/anime/tsubasa-chronicle/"
+href="https://shadowrangers.net/cast/hayami-show/"
+href="https://shadowrangers.net/cast/itou-kentarou/"
+--- episode patterns ---
+--- ¿list-mode? ---
+status 200 bytes 385451
+1187
+===== kurosaki: diagnóstico =====
+status 200 bytes 109489
+<title>Portal - TeamKurosaki</title>
+<!DOCTYPE html>
+<html id="focus" lang="es-MX" dir="ltr" 
+data-focus-guest
+data-focus-group-id='2'
+data-focus-theme-id='21'
+data-focus-alt-theme='22'
+data-focus-navigation='dropdown'
+
+
+
+
+data-focus-picker='scroll'
+
+data-focus-scheme='light'
+
+data-focus-cookie='21'
+
+data-focus-userlinks='border'
+data-focus-post='margin'
+data-focus-post-header='border-v'
+data-focus-post-controls='transparent buttons'
+data-focus-blocks='pages sectiontitle'
+data-focus-ui="new-badge transparent-ficon guest-alert" data-globaltemplate='4.7.0'>
+	<head>
+		<meta charset="utf-8">
+        
+		<title>Portal - TeamKurosaki</t
+href="#"
+href="//www.teamkurosaki.net/applications/core/interface/font/fontawesome-webfont.woff2?v=4.7.0"
+href="https://acortar.link/ListadeProyectos"
+href="https://acortar.link/reglasTK"
+href="https://ko-fi.com/teamkurosaki"
+href="https://www.facebook.com/TeamKurosaki"
+href="https://www.facebook.com/TeamKurosaki/"
+href="https://www.ipsfocus.com"
+href="https://www.teamkurosaki.net"
+href="https://www.teamkurosaki.net/?page=2"
+href="https://www.teamkurosaki.net/?page=273"
+href="https://www.teamkurosaki.net/discover/"
+href="https://www.teamkurosaki.net/forums/"
+href="https://www.teamkurosaki.net/forums/forum/725-proyectos-hentai-18-vip/"
+href="https://www.teamkurosaki.net/forums/topic/4098-donaciones-para-teamkurosaki/"
+href="https://www.teamkurosaki.net/forums/topic/6109-tk-tb-kobayashi-san-chi-no-maid-dragon-miss-kobayashis-dragon-maid-season-22ovasmovie-%C2%ABlatengjapsubs%C2%BB-bdrip-1080p-x265-10bitsv2/#comment-19347"
+href="https://www.teamkurosaki.net/forums/topic/6305-tk-tb-ookami-to-koushinryou-merchant-meets-the-wise-wolf-2525-%C2%ABlatengjapsubs%C2%BB-bdrip-1080p-x265-10bits/#comment-19901"
+href="https://www.teamkurosaki.net/forums/topic/6408-tk-tb-kusuriya-no-hitorigoto-season-2-2424-bd-1080p-hevc-flac-multi-audiosubs/?do=findComment&amp;comment=20251"
+href="https://www.teamkurosaki.net/forums/topic/6408-tk-tb-kusuriya-no-hitorigoto-season-2-2424-bd-1080p-hevc-flac-multi-audiosubs/?do=findComment&amp;comment=20253"
+href="https://www.teamkurosaki.net/forums/topic/6408-tk-tb-kusuriya-no-hitorigoto-season-2-2424-bd-1080p-hevc-flac-multi-audiosubs/?do=findComment&amp;comment=20283"
+href="https://www.teamkurosaki.net/forums/topic/6450-m%C3%A1s-animes-con-doblajes-para-el-team/?do=findComment&amp;comment=20256"
+href="https://www.teamkurosaki.net/forums/topic/6451-tk-top-cat-1130-bdrip-1080p-latino-ingles-subt/?do=findComment&amp;comment=20259"
+href="https://www.teamkurosaki.net/forums/topic/6452-tk-tb-sousou-no-frieren-season-22-especiales-bd-1080p-hevc-flac-eac3-multi-audiosubs/"
+href="https://www.teamkurosaki.net/forums/topic/6453-m%C3%A1s-animes-con-doblajes-para-el-team/?do=findComment&amp;comment=20266"
+href="https://www.teamkurosaki.net/forums/topic/6454-tk-tb-eiyuu-kyoushitsu-1212-ovas-%C2%ABlat-japsubs%C2%BB-bdrip-1080p/?do=findComment&amp;comment=20270"
+===== sphinx: post BD con descargas =====
+status 200 bytes 267983
+     15 Descargar
+      5 descarga
+===== animegx vía espejo jina =====
+status 200 bytes 537
+Title: Just a moment...
+
+URL Source: https://animegx.com/
+
+Final URL: https://www.hugedomains.com/domain_profile.cfm?d=animegx.com
+
+Warning: This page maybe requiring CAPTCHA, please make sure you are authorized to access this page.
+
+Markdown Content:
+![Image 1: Icon for www.hugedomains.com](https://www.hugedomains.com/favicon.ico)
+
+## www.hugedomains.com
+
+## Performing security verification
+
+This website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.
+
