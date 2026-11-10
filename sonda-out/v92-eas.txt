@@ -1,7 +1,0 @@
-##### eas #####
-  https://www.estrenosanime.net/directorio-anime -> 404 (1 clases)
-  https://www.estrenosanime.net/directorio-anime/page/2/ -> 404 (1 clases)
-  https://www.estrenosanime.net/directorio-anime?p=2 -> 404 (1 clases)
-  https://www.estrenosanime.net/directorio-anime?page=2 -> 404 (1 clases)
-  --- ¿wp-json? ---
-  wp-json posts: 403 — total 
