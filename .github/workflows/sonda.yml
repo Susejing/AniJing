@@ -8,51 +8,44 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: mediafire
+      - name: mediafire directo
         run: |
           mkdir -p sonda-out
-          : > sonda-out/mediafire.txt
+          : > sonda-out/mf-directo.txt
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
-          echo "== folder page (tamanio):" >> sonda-out/mediafire.txt
-          curl -sL --max-time 30 -A "$UA" "https://www.mediafire.com/folder/zazj9a02ircch/Bakemonogatari+BD" -o /tmp/mf.html && wc -c < /tmp/mf.html >> sonda-out/mediafire.txt || true
-          echo "-- mp4/hrefs en la carpeta:" >> sonda-out/mediafire.txt
-          grep -oE '"[a-z0-9]{15}"[^}]{0,120}\.mp4' /tmp/mf.html | head -8 >> sonda-out/mediafire.txt || echo "(nada)" >> sonda-out/mediafire.txt
-          grep -oE 'href="[^"]*mediafire.com[^"]*"' /tmp/mf.html | sort -u | head -12 >> sonda-out/mediafire.txt || true
-          echo "-- api get_content:" >> sonda-out/mediafire.txt
-          curl -sL --max-time 30 -A "$UA" "https://www.mediafire.com/api/1.4/folder/get_content.php?folder_key=zazj9a02ircch&content_type=files&response_format=json&chunk_size=100" | head -c 1500 >> sonda-out/mediafire.txt || true
-          echo "" >> sonda-out/mediafire.txt
-      - name: fireload
+          echo "== pagina /file/ (tamanio):" >> sonda-out/mf-directo.txt
+          curl -sL --max-time 30 -A "$UA" "https://www.mediafire.com/file/mi218yjanhmkbth/%255BAz-Animex%255D_Bakemonogatari_-_01_%255BBD%255D%255B%25C3%2591-RadioG%255D.mp4/file" -o /tmp/mf2.html && wc -c < /tmp/mf2.html >> sonda-out/mf-directo.txt || true
+          echo "-- download####.mediafire.com:" >> sonda-out/mf-directo.txt
+          grep -oE 'https://download[a-z0-9]*\.mediafire\.com/[^"<> ]*' /tmp/mf2.html | sort -u | head -5 >> sonda-out/mf-directo.txt || echo "(nada)" >> sonda-out/mf-directo.txt
+          echo "-- hrefs con download:" >> sonda-out/mf-directo.txt
+          grep -oE 'href="[^"]*download[^"]*"' /tmp/mf2.html | sort -u | head -8 >> sonda-out/mf-directo.txt || echo "(nada)" >> sonda-out/mf-directo.txt
+      - name: fireload estructura
         run: |
-          : > sonda-out/fireload.txt
+          : > sonda-out/fireload2.txt
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
-          echo "== folder (tamanio):" >> sonda-out/fireload.txt
-          curl -sL --max-time 30 -A "$UA" "https://www.fireload.com/folder/4fbe306e2d5a7dd4fe235763e8a495a2/Kimi_wa_Houkago_Insomnia_BD" -o /tmp/fl.html && wc -c < /tmp/fl.html >> sonda-out/fireload.txt || true
-          echo "-- links de archivo:" >> sonda-out/fireload.txt
-          grep -oE 'href="https://www\.fireload\.com/[a-z0-9]{8,}/[^"]*"' /tmp/fl.html | sort -u | head -12 >> sonda-out/fireload.txt || echo "(nada)" >> sonda-out/fireload.txt
-          echo "-- head del html:" >> sonda-out/fireload.txt
-          head -c 500 /tmp/fl.html >> sonda-out/fireload.txt || true
-      - name: multiup
+          curl -sL --max-time 30 -A "$UA" "https://www.fireload.com/folder/4fbe306e2d5a7dd4fe235763e8a495a2/Kimi_wa_Houkago_Insomnia_BD" -o /tmp/fl.html || true
+          echo "== todos los href fireload:" >> sonda-out/fireload2.txt
+          grep -oE 'href="https://www\.fireload\.com[^"]*"' /tmp/fl.html | sort -u | head -20 >> sonda-out/fireload2.txt || echo "(nada)" >> sonda-out/fireload2.txt
+          echo "== mp4 en la pagina:" >> sonda-out/fireload2.txt
+          grep -oE '[A-Za-z0-9_ .()\[\]-]{0,60}\.mp4' /tmp/fl.html | sort -u | head -8 >> sonda-out/fireload2.txt || echo "(nada)" >> sonda-out/fireload2.txt
+      - name: multiup estructura
         run: |
-          : > sonda-out/multiup.txt
+          : > sonda-out/multiup2.txt
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
-          echo "== project (tamanio):" >> sonda-out/multiup.txt
-          curl -sL --max-time 30 -A "$UA" "https://multiup.io/en/project/2d5bb8039e78b31e01a1bac884d2669c" -o /tmp/mu.html && wc -c < /tmp/mu.html >> sonda-out/multiup.txt || true
-          echo "-- enlaces de subida:" >> sonda-out/multiup.txt
-          grep -oE 'href="https://multiup\.[a-z]+/[a-z]+/[a-z0-9]{20,}[^"]*"' /tmp/mu.html | sort -u | head -10 >> sonda-out/multiup.txt || echo "(nada)" >> sonda-out/multiup.txt
-          echo "-- nombre episodios:" >> sonda-out/multiup.txt
-          grep -oE 'Cossette[^"<>]{0,80}' /tmp/mu.html | sort -u | head -8 >> sonda-out/multiup.txt || echo "(nada)" >> sonda-out/multiup.txt
-      - name: terabox
+          curl -sL --max-time 30 -A "$UA" "https://multiup.io/en/project/2d5bb8039e78b31e01a1bac884d2669c" -o /tmp/mu.html || true
+          echo "== hrefs con a/ o download:" >> sonda-out/multiup2.txt
+          grep -oE 'href="[^"]*(/a/|download|mirror)[^"]*"' /tmp/mu.html | sort -u | head -15 >> sonda-out/multiup2.txt || echo "(nada)" >> sonda-out/multiup2.txt
+      - name: vinland ficha
         run: |
-          : > sonda-out/terabox.txt
+          : > sonda-out/vinland.txt
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
-          S="1ga6uV15sy9ddG1WO4HJ3Iw"
-          for host in www.terabox.com terabox.com 1024terabox.com teraboxapp.com; do
-            echo "== $host share/list:" >> sonda-out/terabox.txt
-            curl -sL --max-time 25 -A "$UA" "https://$host/share/list?shorturl=1&surl=$S" | head -c 500 >> sonda-out/terabox.txt || true
-            echo "" >> sonda-out/terabox.txt
-          done
-          echo "== terabox api shorturlinfo (terabox.app):" >> sonda-out/terabox.txt
-          curl -sL --max-time 25 -A "$UA" -H "Referer: https://teraboxapp.com/" "https://www.terabox.app/api/shorturlinfo?app_id=250528&web=1&shorturl=1&surl=$S&root=1" | head -c 700 >> sonda-out/terabox.txt || true
+          curl -sL --max-time 30 -A "$UA" "https://www.az-animex.com/vinland-saga-season-2/" -o /tmp/v.html || true
+          echo "== contexto filemoon:" >> sonda-out/vinland.txt
+          grep -oE '.{0,120}filemoon[^"<>]{0,80}' /tmp/v.html | head -6 >> sonda-out/vinland.txt || echo "(nada)" >> sonda-out/vinland.txt
+          echo "== contexto fireload:" >> sonda-out/vinland.txt
+          grep -oE '.{0,120}fireload[^"<>]{0,80}' /tmp/v.html | head -6 >> sonda-out/vinland.txt || echo "(nada)" >> sonda-out/vinland.txt
+          echo "== epoca de la ficha (fecha):" >> sonda-out/vinland.txt
+          grep -oE '[0-9]{2}/[0-9]{2}/[0-9]{4}' /tmp/v.html | head -3 >> sonda-out/vinland.txt || true
       - name: commit
         run: |
           git config user.name "github-actions[bot]"
