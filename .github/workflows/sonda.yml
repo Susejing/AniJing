@@ -1,0 +1,25 @@
+name: sonde
+on: push
+permissions:
+  contents: write
+jobs:
+  sonde:
+    if: contains(github.event.head_commit.message, '[sonda]')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: sonda v52
+        run: |
+          mkdir -p sonda-out
+          UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
+          curl -sL -A "$UA" 'https://www.az-animex.com/wp-json/' -o sonda-out/wpjson-root.json
+          curl -sL -A "$UA" 'https://www.az-animex.com/bungaku-shoujo-memoire/' -o sonda-out/f-memoire.html
+          curl -sL -A "$UA" 'https://www.az-animex.com/bungaku-shoujo-kyou-no-oyatsu-hatsukoi/' -o sonda-out/f-oyatsu.html
+          curl -sL -A "$UA" 'https://www.az-animex.com/bungaku-shoujo-movie/' -o sonda-out/f-movie.html
+          curl -sL -A "$UA" 'https://www.az-animex.com/eiyuu-kaitai/' -o sonda-out/f-eiyuu.html
+          curl -sL -A "$UA" 'https://www.az-animex.com/wp-json/wp/v2/media?parent=5962&per_page=2&_fields=source_url,media_details' -o sonda-out/api-media.json
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add sonda-out
+          git commit -m 'sonda out v52' || true
+          git push
