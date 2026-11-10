@@ -447,6 +447,35 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.33 «La aduana» — el usuario pidió las ventanillas y Kino las
+// traía de fábrica desde la apiVersion 20: kino.visualBrowser, la
+// ventana de navegador que la persona ve y maneja (la misma idea de
+// la vieja revisión de AnimeOnline). TeraBox (26 fichas en A-C): sus
+// botones /s/<código> se cosechan como episodios y al reproducir, si
+// no hay sesión, el aviso manda a los ajustes → «Vincular TeraBox»:
+// la ventanilla se cierra sola al aparecer la galleta ndus (doneWhen)
+// y Kino la guarda sellada en el ajuste teraboxCookie (el plugin
+// nunca ve su valor en la ventanita; lo lee de su configuración).
+// Con la galleta, el resolve repite el baile público de la
+// comunidad: página del share → jsToken y logid escondidos →
+// /share/list → dlink directo, que además va más rápido que el
+// reproductor web de TeraBox (que se auto-frena a 500 KB/s).
+// FireLoad (79 fichas en A-C): la sonda v57 llamó «carpeta» a sus
+// botones /<16-hex>/, pero la comprobación viva enseñó el título
+// real («…mp4 - shared via Fireload») — son PÁGINAS DE ARCHIVO con
+// un reCaptcha invisible que corre solo en un navegador de verdad.
+// Cada ficha con FireLoad suelto es un episodio; al darle Play, si
+// no hay enlace guardado, AniJing apunta cuál toca (ajFldPend) y el
+// aviso manda a los ajustes → «Preparar FireLoad»: la ventanilla
+// abre la página del archivo, el captcha invisible corre solo, el
+// enlace directo (?pt=…) queda cosechado del HTML renderizado (o de
+// la dirección final de la ventana) y guardado en kino.storage con
+// su hora — luego Play reproduce sin más vueltas. Las carpetas de
+// verdad (fireload.com/folder/…) siguen con su muro honesto, y
+// Mega, FileMoon suelto, MultiUp y el Server Az premium también.
+// Hosts nuevos (la familia terabox y fireload) → Kino pedirá
+// re-aprobación una sola vez al actualizar.
+//
 // v0.6.32 «El prestamista» — el Directorio A-Z ya viste sus pósters y
 // el usuario revisó las fichas que «no cargan» (Air, Amagami SS,
 // Bungaku Memoire). El censo de la sonda v56 (200 fichas A-C) puso
@@ -656,7 +685,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.32';
+const VERSION = '0.6.33';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -5445,6 +5474,46 @@ async function azEpsDe(slug) {
       tipo = 'mf';
     }
   }
+  /* v0.6.33 «La aduana»: TeraBox — 26 fichas en A-C viven aquí; con
+   * la sesión de la ventanilla cada botón /s/<código> es un episodio
+   * y el resolve consigue el dlink directo. */
+  if (!lista.length) {
+    const tbxUrls = [];
+    const vistosTbx = new Set();
+    const reTbx = /https?:\/\/(?:www\.)?(?:1024terabox|teraboxapp|terabox)\.com\/s\/([A-Za-z0-9_-]{5,60})\/?/gi;
+    let mTbx;
+    while ((mTbx = reTbx.exec(r.text))) {
+      if (!vistosTbx.has(mTbx[1])) { vistosTbx.add(mTbx[1]); tbxUrls.push(mTbx[0]); }
+    }
+    if (tbxUrls.length) {
+      lista = tbxUrls.slice(0, 12).map(function (u, i) {
+        return { num: i + 1, tbx: u, titulo: tbxUrls.length === 1 ? 'Película' : 'Parte ' + (i + 1) };
+      });
+      tipo = 'tbx';
+      log('az ficha «' + slug + '»: ' + tbxUrls.length + ' archivo(s) de TeraBox (necesita sesión)');
+    }
+  }
+  /* v0.6.33: FireLoad archivo suelto — /<16-hex>/ es PÁGINA DE
+   * ARCHIVO con reCaptcha invisible (la sonda v57 la llamó carpeta;
+   * la comprobación viva enseñó el título «…mp4 - shared via
+   * Fireload»). El captcha se resuelve en la ventanilla; el enlace
+   * queda guardado en kino.storage y Play reproduce. */
+  if (!lista.length) {
+    const fldUrls = [];
+    const vistosFld = new Set();
+    const reFld = /https?:\/\/(?:www\.)?fireload\.com\/([a-f0-9]{16})\/[^\s"'<>]*\/?/gi;
+    let mFld;
+    while ((mFld = reFld.exec(r.text))) {
+      if (!vistosFld.has(mFld[1])) { vistosFld.add(mFld[1]); fldUrls.push('https://www.fireload.com/' + mFld[1] + '/'); }
+    }
+    if (fldUrls.length) {
+      lista = fldUrls.slice(0, 12).map(function (u, i) {
+        return { num: i + 1, fld: u, titulo: fldUrls.length === 1 ? 'Película' : 'Parte ' + (i + 1) };
+      });
+      tipo = 'fld';
+      log('az ficha «' + slug + '»: ' + fldUrls.length + ' archivo(s) de FireLoad (captcha en la ventanilla)');
+    }
+  }
   if (!lista.length) {
     if (mensajero) {
       throw kino.error('not_found', 'Az-Animex: 0 episodios', {
@@ -5462,10 +5531,9 @@ async function azEpsDe(slug) {
      * servidores propios de az están caídos (peliculas, onas,
      * series-am, especiales y ovas ya ni resuelven DNS). */
     const muros = [];
-    if (/terabox\.com\//i.test(r.text)) muros.push('TeraBox');
     if (/dire\.az-animex\.com\//i.test(r.text)) muros.push('el Server Az premium');
     if (/multiup\.(io|org)\//i.test(r.text)) muros.push('MultiUp');
-    if (/fireload\.com\//i.test(r.text)) muros.push('FireLoad');
+    if (/fireload\.com\/(?:folder|f)\//i.test(r.text)) muros.push('FireLoad');
     if (/filemoon\.[a-z]{2,3}\/[fd]\//i.test(r.text)) muros.push('FileMoon');
     if (/mega\.nz\//i.test(r.text)) muros.push('Mega');
     const caidos = /(series-am|peliculas|onas|especiales|ovas)\.az-animex\.com\//i.test(r.text);
@@ -5490,6 +5558,95 @@ async function azEpsDe(slug) {
   const datos = { t: Date.now(), lista: lista, serie: serie, tipo: tipo };
   AZ_EPS[slug] = datos;
   return datos;
+}
+
+/* ---------- v0.6.33 «La aduana»: TeraBox y FireLoad ---------- */
+
+/* Trozo entre dos marcas (el jsToken de TeraBox va escondido como
+ * fn%28%22…%22%29, URL-encoded, en el crudo de su página). */
+function azEntre(texto, a, b) {
+  const t = String(texto || '');
+  const i = t.indexOf(a);
+  if (i < 0) return '';
+  const j = t.indexOf(b, i + a.length);
+  if (j < 0) return '';
+  return t.slice(i + a.length, j);
+}
+
+/* TeraBox con sesión: página del share (con la galleta ndus) →
+ * jsToken/logid escondidos → /share/list → dlink directo. El baile
+ * es el mismo que usan las herramientas públicas de la comunidad
+ * (TeraboxDL y compañía), reimplementado; la galleta la gana la
+ * persona en la ventanilla y Kino la guarda sellada. */
+async function azTbxDlink(url) {
+  const galleta = String(configDe('teraboxCookie') || '').trim();
+  if (!/ndus=/.test(galleta)) {
+    log('az terabox: sin galleta de sesión — el aviso manda a «Vincular TeraBox»');
+    throw kino.error('unavailable', 'Az-Animex: TeraBox sin sesión', {
+      userMessage: 'TeraBox pide iniciar sesión. En los ajustes del plugin AniJing toca «Vincular TeraBox»: la ventanita se cierra sola cuando entres, y este episodio ya reproduce.'
+    });
+  }
+  const base = String(url).replace(/^(https?:\/\/[^\/]+).*/, '$1');
+  const cabeceras = { 'Cookie': galleta, 'User-Agent': UA, 'Referer': base + '/' };
+  const r1 = await traer(url, { headers: cabeceras, timeoutMs: 15000 });
+  if (!r1.ok) {
+    throw kino.error('not_found', 'Az-Animex: TeraBox no respondió', {
+      userMessage: 'TeraBox no respondió. Inténtalo en un rato.'
+    });
+  }
+  const jsToken = azEntre(r1.text, 'fn%28%22', '%22%29') || azEntre(r1.text, 'fn("', '")');
+  const logid = azEntre(r1.text, 'dp-logid=', '&');
+  const mS = /\/s\/([A-Za-z0-9_-]+)/.exec(String(url));
+  const surls = mS ? [mS[1]] : [];
+  if (surls.length && surls[0].charAt(0) === '1' && surls[0].length > 1) surls.push(surls[0].slice(1));
+  let dlink = '';
+  let nombre = '';
+  for (let si = 0; si < surls.length && !dlink; si++) {
+    const surl = surls[si];
+    const api = base + '/share/list?app_id=250528&web=1&channel=dubox&clienttype=0&jsToken=' +
+      encodeURIComponent(jsToken) + '&dp-logid=' + encodeURIComponent(logid) +
+      '&page=1&num=20&by=name&order=asc&site_referer=' + encodeURIComponent(url) +
+      '&shorturl=' + encodeURIComponent(surl) + '&root=1';
+    const r2 = await traer(api, { headers: cabeceras, timeoutMs: 15000 });
+    let j = null;
+    try { j = JSON.parse(r2.text); } catch (eJ) { j = null; }
+    const l = j && Array.isArray(j.list) ? j.list : [];
+    for (let ii = 0; ii < l.length; ii++) {
+      if (l[ii] && l[ii].dlink) { dlink = l[ii].dlink; nombre = l[ii].server_filename || ''; break; }
+    }
+  }
+  if (!dlink) {
+    log('az terabox: sin dlink (surl ' + (surls[0] || '?') + ') — ¿galleta caducada?');
+    throw kino.error('not_found', 'Az-Animex: TeraBox no entregó el archivo', {
+      userMessage: 'TeraBox no entregó el archivo (quizás la sesión caducó). Vuelve a «Vincular TeraBox» en los ajustes del plugin y reintenta.'
+    });
+  }
+  log('az terabox: dlink listo' + (nombre ? ' («' + nombre + '»)' : ''));
+  return { url: dlink, label: 'TeraBox', headers: { 'Cookie': galleta, 'User-Agent': UA, 'Referer': base + '/' } };
+}
+
+/* FireLoad: el reCaptcha invisible de la página del archivo se
+ * resuelve en la ventanilla («Preparar FireLoad») y el enlace directo
+ * (?pt=…) queda guardado aquí con su hora; el Play posterior lo
+ * encuentra sin más vueltas. */
+function azFldHash(url) {
+  const m = /fireload\.com\/([a-f0-9]{16})/i.exec(String(url || ''));
+  return m ? m[1] : '';
+}
+
+async function azFldResolver(slug, num, url) {
+  const clave = 'ajFld:' + azFldHash(url);
+  let g = null;
+  try { g = kino.storage.get(clave); } catch (eG) { g = null; }
+  if (g && g.url && Date.now() - (g.t || 0) < 6 * 3600 * 1000) {
+    log('az fireload: enlace guardado para «' + slug + '» (' + Math.round((Date.now() - (g.t || 0)) / 60000) + ' min)');
+    return { url: g.url, label: 'FireLoad' };
+  }
+  try { kino.storage.set('ajFldPend', url); } catch (eP) {}
+  log('az fireload: captcha pendiente para «' + slug + '» — el aviso manda a «Preparar FireLoad»');
+  throw kino.error('unavailable', 'Az-Animex: FireLoad pide captcha', {
+    userMessage: 'FireLoad pide resolver un captcha una vez. En los ajustes del plugin AniJing toca «Preparar FireLoad» (toca Descargar en la ventanita, espera el enlace, Listo); luego vuelve a darle Play a este episodio.'
+  });
 }
 
 /* El enlace ?hash=…&dl=0 vive en la página del _links (v47: crudo y
@@ -5674,6 +5831,9 @@ registrarFuente({
         userMessage: 'Ese episodio no está publicado en Az-Animex.'
       });
     }
+    /* v0.6.33 «La aduana»: TeraBox con sesión, FireLoad con captcha. */
+    if (ep.tbx) return await azTbxDlink(ep.tbx);
+    if (ep.fld) return await azFldResolver(slug, num, ep.fld);
     /* v0.6.28 «El archivista»: carpeta MediaFire — la página del
      * archivo trae el enlace directo al .mp4 en crudo (v50), sin
      * espejos ni bailes de cifrado. */
@@ -6421,4 +6581,58 @@ async function image(arg) {
   return { bytes: bytes, mime: mime };
 }
 
-export { search, home, browse, episodes, details, resolve, screen, screenEvent, image };
+/* ---------- v0.6.33 «La aduana»: las ventanillas de los ajustes ---------- */
+
+/* Los dos botones de los ajustes del plugin: «Vincular TeraBox»
+ * (inicia sesión una vez; la galleta la guarda Kino, sellada) y
+ * «Preparar FireLoad» (resuelve el captcha invisible del episodio
+ * pendiente y guarda el enlace directo). Solo Kino abre ventanitas
+ * y solo tras el toque de la persona; el plugin nunca ve lo que se
+ * teclea adentro. */
+async function action(key) {
+  if (key !== 'teraboxLogin' && key !== 'fireloadPrep') return null;
+  if (!kino.visualBrowser || !kino.visualBrowser.available) {
+    return { message: 'Este aparato no puede abrir la ventanita (solo en el teléfono o la tablet).' };
+  }
+  if (key === 'teraboxLogin') {
+    const r = await kino.visualBrowser.open({
+      url: 'https://www.terabox.com/',
+      title: 'Inicia sesión en TeraBox',
+      doneWhen: { cookies: ['ndus'] },
+      collect: { cookies: ['ndus', 'lang'], storeAs: { setting: 'teraboxCookie', format: 'header' } },
+      userAgent: 'browser',
+      timeoutMs: 600000
+    });
+    if (r.status === 'done' && r.stored) return { message: 'TeraBox vinculado: sus fichas ya reproducen.' };
+    if (r.status === 'timeout') return { message: 'La ventanita se quedó esperando. Vuelve a «Vincular TeraBox».' };
+    return { message: 'No se guardó la sesión (¿cerraste sin entrar?). Vuelve a «Vincular TeraBox».' };
+  }
+  let pend = '';
+  try { pend = String(kino.storage.get('ajFldPend') || ''); } catch (eP) { pend = ''; }
+  if (!pend) {
+    return { message: 'Primero dale Play al episodio de FireLoad: AniJing recordará cuál hay que preparar.' };
+  }
+  const r = await kino.visualBrowser.open({
+    url: pend,
+    title: 'Resuelve el captcha de FireLoad',
+    collect: { html: true, finalUrl: true },
+    userAgent: 'browser',
+    timeoutMs: 600000
+  });
+  let dl = '';
+  const fu = String(r.finalUrl || '');
+  if (r.status === 'done' && fu.indexOf('pt=') >= 0 && /fireload\.com\/[a-f0-9]{16}\//i.test(fu)) dl = fu;
+  if (!dl && r.status === 'done' && r.html) {
+    const m = /https?:\/\/(?:www\.)?fireload\.com\/[a-f0-9]{16}\/[^\s"'<>]+?\.(?:mp4|mkv|avi|mov|wmv|mpg|flv)\?pt=[A-Za-z0-9%=_-]+/i.exec(String(r.html));
+    if (m) dl = m[0];
+  }
+  if (!dl) {
+    return { message: 'No apareció el enlace: vuelve a «Preparar FireLoad», toca Descargar en la ventanita, espera el enlace y toca Listo.' };
+  }
+  const clave = 'ajFld:' + azFldHash(pend);
+  try { kino.storage.set(clave, { t: Date.now(), url: dl }); } catch (eS) {}
+  log('az fireload: enlace preparado en la ventanilla (' + clave + ')');
+  return { message: 'Enlace listo: vuelve al episodio y dale Play.' };
+}
+
+export { search, home, browse, episodes, details, resolve, screen, screenEvent, image, action };

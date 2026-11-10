@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.32 «El prestamista»)
+## Qué hace (v0.6.33 «La aduana»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -32,6 +32,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.33 «La aduana»
+
+Las dos ventanillas que el usuario pidió. **TeraBox** (26 fichas solo en A-C): sus botones `/s/<código>` ahora se cosechan como episodios («Película» o «Parte N») y al darle Play, si no hay sesión, el aviso manda a los ajustes del plugin → **«Vincular TeraBox»**: una ventanita de navegador que tú manejas, inicias sesión una vez y se cierra sola al aparecer la galleta de sesión — Kino la guarda sellada y el plugin solo la lee de su configuración, nunca ve tu clave. Con la sesión puesta, el resolve repite el baile público de la comunidad (página del share → tokens escondidos → `share/list` → enlace directo) y de paso esquiva el reproductor web de TeraBox, que se auto-frena a 500 KB/s. **FireLoad** (79 fichas en A-C): la sonda v57 creyó que sus botones eran carpetas — la comprobación viva enseñó que son PÁGINAS DE ARCHIVO con un reCaptcha **invisible** que corre solo en un navegador de verdad. Cada ficha con FireLoad suelto es un episodio; al darle Play, AniJing apunta cuál toca y el aviso manda a los ajustes → **«Preparar FireLoad»**: la ventanita abre la página del archivo, tocas Descargar, el captcha invisible corre solo, esperas el enlace y Listo — el enlace directo (`?pt=…`) queda guardado y el Play reproduce sin más vueltas. Las carpetas de verdad (`fireload.com/folder/…`) y Mega, FileMoon suelto, MultiUp y el Server Az premium siguen con su muro honesto, con nombre y apellido. Los hosts nuevos (la familia terabox y fireload) hacen que Kino pida **re-aprobación una sola vez** al actualizar.
 
 ## v0.6.32 «El prestamista»
 
@@ -190,7 +194,7 @@ En Kino: Ajustes → Plugins → «+» y escribe:
 Susejing/AniJing
 ```
 
-Esta versión pide los mismos dos permisos de siempre — abrir páginas web ocultas para encontrar el video y conectarse a cualquier servidor público para el stream — más uno nuevo y honesto: la **ventanita de revisión** de AnimeOnline, una ventana de navegador que solo se abre cuando tú tocas «Pasar la revisión», que ves y manejas tú (nunca sola ni escondida). La pantalla propia no pide ningún permiso nuevo, pero sí un Kino reciente (0.9.81 o mayor, el de la barrita única): con uno más viejo la app pedirá actualizarse antes de instalar esta versión.
+Esta versión pide los mismos dos permisos de siempre — abrir páginas web ocultas para encontrar el video y conectarse a cualquier servidor público para el stream — más los hosts de la familia TeraBox y de FireLoad (para sus ventanillas y sus descargas), así que Kino pedirá re-aprobación una vez al actualizar. Las ventanillas de TeraBox y FireLoad son ventanas de navegador que solo se abren cuando tú tocas su botón en los ajustes del plugin, que ves y manejas tú (nunca solas ni escondidas); lo que tecles adentro jamás pasa por el plugin — Kino guarda la sesión sellada. La pantalla propia no pide ningún permiso nuevo, pero sí un Kino reciente (0.9.81 o mayor, el de la barrita única): con uno más viejo la app pedirá actualizarse antes de instalar esta versión.
 
 ## Licencia
 
