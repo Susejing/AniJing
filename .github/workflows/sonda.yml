@@ -10,34 +10,30 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: sondas v88
+      - name: sondas v89
         run: |
           mkdir -p sonda-out
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
           {
-            echo "===== fid=52: lista de temas ====="
-            curl -sL --max-time 25 -A "$UA" "https://foro.unionfansub.com/forumdisplay.php?fid=52" -o /tmp/uf52.html || true
-            grep -oE 'showthread\.php\?tid=[0-9]+' /tmp/uf52.html | sort -u | head -12 || true
-            echo "--- títulos ---"
-            grep -oE 'showthread\.php\?tid=[0-9]+"[^>]*>[^<]{3,80}' /tmp/uf52.html | head -12 || true
-            for TID in $(grep -oE 'showthread\.php\?tid=[0-9]+' /tmp/uf52.html | grep -oE '[0-9]+' | sort -un | head -3); do
-              echo "===== tema $TID ====="
-              curl -sL --max-time 25 -A "$UA" "https://foro.unionfansub.com/showthread.php?tid=$TID" -o /tmp/uft.html || true
-              grep -o '<title>[^<]*</title>' /tmp/uft.html | head -1 || true
-              echo "--- TODOS los enlaces externos del primer post ---"
-              grep -oE 'href="https?://[^"]*"' /tmp/uft.html | grep -v 'unionfansub\|gravatar\|google\|w3\.org\|mybb\|youtube\|twitter\|facebook\|discord' | sort -u | head -20 || true
-              echo "--- nubes en texto ---"
-              grep -oiE '(mega\.nz|drive\.google|pixeldrain|gofile|krakenfiles|1fichier|mediafire|zippy|terabox|fireload|streamtape|voe|filemoon)[^"<> ]*' /tmp/uft.html | sort -u | head -12 || true
-            done
-            echo "===== archive de un tema ====="
-            TID2=$(grep -oE 'showthread\.php\?tid=[0-9]+' /tmp/uf52.html | grep -oE '[0-9]+' | sort -un | head -1)
-            curl -sL --max-time 20 -A "$UA" "https://foro.unionfansub.com/archive/index.php/tid-$TID2.html" -o /tmp/ufa.html -w 'status %{http_code} bytes %{size_download}\n' || true
-            grep -oiE '(mega\.nz|pixeldrain|gofile|drive\.google)[^"<> ]*' /tmp/ufa.html | sort -u | head -8 || true
-          } > sonda-out/v88-uf-temas.txt 2>&1 || true
+            echo "===== archive: índice ====="
+            curl -sL --max-time 25 -A "$UA" "https://foro.unionfansub.com/archive/index.php" -o /tmp/ufa.html || true
+            grep -oE 'href="[^"]*archive/index.php/forum-[0-9]+[^"]*">[^<]+' /tmp/ufa.html | sed 's/.*">//' | head -40 || true
+            echo "--- foros crudos ---"
+            grep -oE 'forum-[0-9]+\.html' /tmp/ufa.html | sort -u | tr '\n' ' ' || true
+            echo ""
+            echo "===== torrent.unionfansub.com ====="
+            curl -sL --max-time 20 -A "$UA" "https://torrent.unionfansub.com/" -o /tmp/uft.html -w 'status %{http_code} bytes %{size_download}\n' || true
+            grep -o '<title>[^<]*</title>' /tmp/uft.html | head -1 || true
+            grep -oE 'href="[^"]*"' /tmp/uft.html | sort -u | head -15 || true
+            echo "===== un tema de release vía Google-cache-free: buscar en portada temas con BDRip ====="
+            curl -sL --max-time 25 -A "$UA" "https://foro.unionfansub.com/search.php?action=getdaily" -o /tmp/ufs.html -w 'status %{http_code} bytes %{size_download}\n' || true
+            grep -oE 'showthread\.php\?tid=[0-9]+' /tmp/ufs.html | sort -u | head -10 || true
+            grep -o 'No autorizado\|iniciar sesión\|not logged in\| guests' /tmp/ufs.html | sort | uniq -c | head -5 || true
+          } > sonda-out/v89-uf-archive.txt 2>&1 || true
       - name: commit
         run: |
           git config user.name "sonda"
           git config user.email "sonda@users.noreply.github.com"
           git add sonda-out || true
-          git commit -m "sonda v88: temas de descarga de UF" || true
+          git commit -m "sonda v89: archive y tracker de UF" || true
           git push || true
