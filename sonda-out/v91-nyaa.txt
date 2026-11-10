@@ -1,0 +1,25 @@
+===== nyaa.si portada =====
+status 200 bytes 18142
+0
+===== nyaa RSS API =====
+status 200 bytes 73670
+<title>Nyaa - &#34;bakemonogatari&#34; - Torrent File RSS
+<title>[BogarD] Monogatari (2009) - S01 - Bakemonogatari (BD 1080p x265 10-bit Opus 2.0) [Multi-A
+<title>化物語 第01-22巻 [Bakemonogatari vol 01-22]
+<title>[WF] Bakemonogatari - 12 [BD 1080p x265 OPUS][PT-BR] (Monogatari Series)
+<title>[WF] Bakemonogatari - 11 [BD 1080p x265 OPUS][PT-BR] (Monogatari Series)
+<title>[Ñ-RadioG] Bakemonogatari [BD 1080p]
+grep: write error: Broken pipe
+<link>https://nyaa.si/
+<link>https://nyaa.si/download/2156929.torrent
+<link>https://nyaa.si/download/2079667.torrent
+<link>https://nyaa.si/download/2056593.torrent
+===== una ficha /view: ¿DDL en la descripción? =====
+VID=
+===== espejos =====
+--- https://nyaa.iss.one/ ---
+status 200 bytes 128626
+<title>Browse :: Nyaa ISS</title>
+--- https://nyaa.land/ ---
+status 200 bytes 70226
+<title>Browse :: Nyaa</title>
