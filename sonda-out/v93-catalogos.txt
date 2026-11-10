@@ -1,0 +1,22 @@
+===== av1: catálogo completo y paginación =====
+href="/catalogo?page=2"
+href="/catalogo?page=3"
+href="/catalogo?page=4"
+href="/catalogo?page=5"
+href="/catalogo?page=50"
+href="/catalogo?page=6"
+href="/catalogo?page=7"
+--- géneros del filtro ---
+--- ¿estado/tipo? ---
+===== eas: rutas de directorio =====
+  /animes -> 404 (28767 bytes)
+  /anime -> 200 (86964 bytes)
+  /directorio -> 404 (28783 bytes)
+  /lista-anime -> 404 (28787 bytes)
+  /series -> 404 (28767 bytes)
+  /animes-lista -> 404 (28791 bytes)
+===== mc: películas y profundidad del directorio =====
+  /peliculas -> 404 (20 clases)
+  /pelicula -> 404 (20 clases)
+  /animes?p=10 -> 200 (280 clases)
+  /animes?p=30 -> 200 (280 clases)
