@@ -12,43 +12,75 @@ jobs:
         run: |
           set +e
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
-          R="sonda-out/v44-resumen.txt"
-          bajar() { curl -sL -A "$UA" -m 45 "$1" -o "$2" 2>/dev/null; echo "$2: $(wc -c < "$2" 2>/dev/null || echo 0)" >> $R; }
-          echo "SONDA V44" > $R
-          echo "=== A. multilink crudo diagnostico ===" >> $R
-          bajar "https://www.mirrored.to/multilinks/fe371ce9c1" ml.html
-          head -c 1200 ml.html >> $R
-          echo "" >> $R
-          echo "apariciones files/: $(grep -c "files/" ml.html)" >> $R
-          echo "=== B. multilink via jina (markdown FIDs) ===" >> $R
-          bajar "https://r.jina.ai/https://www.mirrored.to/multilinks/fe371ce9c1" ml.md
-          echo "enlaces _links en jina: $(grep -c "_links" ml.md)" >> $R
-          grep -oE 'files/[A-F0-9]+/[^) ]*_links' ml.md | head -3 >> $R
-          echo "=== C. files _links via jina (hash) ===" >> $R
-          bajar "https://r.jina.ai/https://www.mirrored.to/files/F38E5A6B/[Az-Animex]_Oshi_no_Ko_-_01_[BD][Kashikoi].mp4_links" fl.md
-          grep -oE 'hash=[a-f0-9]+' fl.md | head -2 >> $R
-          HASH=$(grep -oE "hash=[a-f0-9]+" fl.md | head -1)
-          echo "hash extraido: $HASH" >> $R
-          echo "=== D. hash-page via jina (getlinks) ===" >> $R
-          bajar "https://r.jina.ai/https://www.mirrored.to/files/F38E5A6B/?$HASH&dl=0" hp.md
-          echo "getlinks en jina: $(grep -c "getlink" hp.md)" >> $R
-          grep -oE 'getlink/[A-F0-9]+/[0-9]+/[^) "]*' hp.md | head -10 >> $R
-          echo "=== E. getlink crudo redirect ===" >> $R
-          GLVOE=$(grep -oE 'https://www.mirrored.to/getlink/F38E5A6B/156/[^) "]*' hp.md | head -1)
-          echo "voe getlink: $GLVOE" >> $R
-          curl -s -o /dev/null -A "$UA" -m 40 -w "voe-redirect: %{http_code} -> %{redirect_url}\n" "$GLVOE" >> $R
-          GLTAPE=$(grep -oE 'https://www.mirrored.to/getlink/F38E5A6B/149/[^) "]*' hp.md | head -1)
-          curl -s -o /dev/null -A "$UA" -m 40 -w "tape-redirect: %{http_code} -> %{redirect_url}\n" "$GLTAPE" >> $R
-          echo "=== F. az directorio: estructura entrada con imagen ===" >> $R
+          R="sonda-out/v45-resumen.txt"
+          bajar() { curl -g -sL -A "$UA" -m 45 "$1" -o "$2" 2>/dev/null; echo "$2: $(wc -c < "$2" 2>/dev/null || echo 0)" >> $R; }
+          jina() { for t in 1 2 3; do curl -g -s -m 70 "$1" -o "$2" 2>/dev/null; [ -s "$2" ] && break; sleep 12; done; echo "$2: $(wc -c < "$2" 2>/dev/null || echo 0)" >> $R; }
+          echo "SONDA V45" > $R
+          echo "=== A. azd estructura entrada ===" >> $R
           bajar "https://www.az-animex.com/directorio-anime/" azd.html
-          tr '\n' ' ' < azd.html | grep -oE '.{900}[a-z0-9-]+/" target="_self".{700}' | head -1 | cut -c1-1600 >> $R
-          echo "" >> $R
-          echo "=== G. az ficha: anchors y sinopsis ===" >> $R
+          python3 - <<'PYEOF'
+          h = open('azd.html', encoding='utf-8', errors='replace').read()
+          o = open('sonda-out/v45-resumen.txt', 'a', encoding='utf-8')
+          i = h.find('entradas-titulo')
+          while i >= 0 and 'href' not in h[i:i+400]:
+              i = h.find('entradas-titulo', i+10)
+          if i > 0:
+              o.write('AZD: ' + h[max(0,i-1400):i+600].replace(chr(10),' ') + chr(10))
+          else:
+              o.write('AZD: sin entrada con href' + chr(10))
+          o.close()
+          PYEOF
+          echo "=== B. azh home card ===" >> $R
+          bajar "https://www.az-animex.com/" azh.html
+          python3 - <<'PYEOF'
+          h = open('azh.html', encoding='utf-8', errors='replace').read()
+          o = open('sonda-out/v45-resumen.txt', 'a', encoding='utf-8')
+          i = h.find('lcpag-card')
+          while i >= 0 and 'href' not in h[i:i+900]:
+              i = h.find('lcpag-card', i+10)
+          if i > 0:
+              o.write('AZH: ' + h[i:i+1700].replace(chr(10),' ') + chr(10))
+          else:
+              o.write('AZH: sin card con href' + chr(10))
+          o.close()
+          PYEOF
+          echo "=== C. cadena mirrored via jina ===" >> $R
+          jina "https://r.jina.ai/https://www.mirrored.to/multilinks/fe371ce9c1" ml.md
+          FIDURL=$(grep -oE "https://www.mirrored.to/files/[A-F0-9]+/[^) ]*_links" ml.md | head -1)
+          echo "fidurl: $FIDURL" >> $R
+          jina "https://r.jina.ai/$FIDURL" fl.md
+          grep -oE "hash=[a-f0-9]+" fl.md | head -2 >> $R
+          HASH=$(grep -oE "hash=[a-f0-9]+" fl.md | head -1)
+          FID=$(echo "$FIDURL" | grep -oE "files/[A-F0-9]+/" | head -1 | cut -d/ -f2)
+          echo "hash: $HASH fid: $FID" >> $R
+          jina "https://r.jina.ai/https://www.mirrored.to/files/$FID/?$HASH&dl=0" hp.md
+          echo "getlinks: $(grep -c getlink hp.md)" >> $R
+          grep -oE 'getlink/[A-F0-9]+/[0-9]+/[^) "]*' hp.md | head -8 >> $R
+          GLVOE=$(grep -oE 'https://www.mirrored.to/getlink/[A-F0-9]+/156/[^) "]*' hp.md | head -1)
+          echo "voe-getlink: $GLVOE" >> $R
+          echo "=== D. getlink redirect crudo ===" >> $R
+          curl -g -s -D hdr.txt -o /dev/null -A "$UA" -m 35 "$GLVOE"
+          grep -iE '^(HTTP|location)' hdr.txt >> $R
+          echo "=== E. getlink final via jina ===" >> $R
+          jina "https://r.jina.ai/$GLVOE" gl.md
+          grep -oE 'Title: .*' gl.md | head -2 >> $R
+          echo "=== F. ficha sinopsis y ancla ===" >> $R
           bajar "https://www.az-animex.com/oshi-no-ko/" azf.html
-          grep -oE '<a[^>]{0,280}multilinks' azf.html | head -2 >> $R
-          tr '\n' ' ' < azf.html | grep -oE 'post-excerpt[^>]{0,80}>.{0,550}' | head -1 >> $R
-          echo "" >> $R
-          grep -oE 'col1-(topspan|mega|mirror)[^>]{0,70}>[^<]{0,50}' azf.html | grep -v hover | head -5 >> $R
+          python3 - <<'PYEOF'
+          h = open('azf.html', encoding='utf-8', errors='replace').read()
+          o = open('sonda-out/v45-resumen.txt', 'a', encoding='utf-8')
+          i = h.find('post-excerpt__excerpt')
+          if i > 0:
+              o.write('SINOPSIS: ' + h[i:i+700].replace(chr(10),' ') + chr(10))
+          i = h.find('col1-mirror')
+          if i > 0:
+              j = h.rfind('<a ', 0, i)
+              o.write('ANCLA: ' + h[j:j+420].replace(chr(10),' ') + chr(10))
+          i = h.find('az-ptl-wrapper')
+          if i > 0:
+              o.write('PTL: ' + h[i:i+600].replace(chr(10),' ') + chr(10))
+          o.close()
+          PYEOF
           echo FIN >> $R
       - name: bitacora
         if: failure()
@@ -56,12 +88,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "[sonda] log de fallo v44" --allow-empty
+          git commit -m "[sonda] log de fallo v45" --allow-empty
           git push
       - name: resultados
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add sonda-out
-          git commit -m "[sonda] resultados v44" --allow-empty
+          git commit -m "[sonda] resultados v45" --allow-empty
           git push
