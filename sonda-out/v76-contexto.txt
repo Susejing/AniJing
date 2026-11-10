@@ -1,0 +1,45 @@
+===== BEATZ: contexto de los botones Descargar =====
+onclick="window.open('https://bz.beatz-anime.net/BeatZ-Anime/Anime/Bakemonogatari', '_blank').focus();"
+onclick="window.open('?php echo $link_carpetaop2.$mostrar['anime_name'].'/' ?>', '_blank').focus();"
+onclick="window.open('https://bz.beatz-anime.net/d/BeatZ-Anime/Anime/Bakemonogatari/Bakemonogatari-Subt%C3%ADtulos%20(Opcional).rar', '_blank').focus();"
+onclick="copiarLink('https://bz.beatz-anime.net/d/BeatZ-Anime/Anime/Bakemonogatari/%5BBeatZ-Anime%5D%20Bakemonogatari%20-%2001%20%5BBDRip%201080p%20HEVC-10bits%20FLAC%5D.mkv', this)"
+onclick="copiarLink('https://bz.beatz-anime.net/d/BeatZ-Anime/Anime/Bakemonogatari/%5BBeatZ-Anime%5D%20Bakemonogatari%20-%2002%20%5BBDRip%201080p%20HEVC-10bits%20FLAC%5D.mkv', this)"
+onclick="copiarLink('https://bz.beatz-anime.net/d/BeatZ-Anime/Anime/Bakemonogatari/%5BBeatZ-Anime%5D%20Bakemonogatari%20-%2003%20%5BBDRip%201080p%20HEVC-10bits%20FLAC%5D.mkv', this)"
+onclick="copiarLink('https://bz.beatz-anime.net/d/BeatZ-Anime/Anime/Bakemonogatari/%5BBeatZ-Anime%5D%20Bakemonogatari%20-%2004%20%5BBDRip%201080p%20HEVC-10bits%20FLAC%5D.mkv', this)"
+onclick="copiarLink('https://bz.beatz-anime.net/d/BeatZ-Anime/Anime/Bakemonogatari/%5BBeatZ-Anime%5D%20Bakemonogatari%20-%2005%20%5BBDRip%201080p%20HEVC-10bits%20FLAC%5D.mkv', this)"
+onclick="copiarLink('https://bz.beatz-anime.net/d/BeatZ-Anime/Anime/Bakemonogatari/%5BBeatZ-Anime%5D%20Bakemonogatari%20-%2006%20%5BBDRip%201080p%20HEVC-10bits%20FLAC%5D.mkv', this)"
+onclick="copiarLink('https://bz.beatz-anime.net/d/BeatZ-Anime/Anime/Bakemonogatari/%5BBeatZ-Anime%5D%20Bakemonogatari%20-%2007%20%5BBDRip%201080p%20HEVC-10bits%20FLAC%5D.mkv', this)"
+--- zona de episodios (texto plano alrededor) ---
+--- cualquier URL externa en crudo ---
+===== UNION FANSUB: todos los foros con tid (descarga directa) =====
+forumdisplay.php?fid=33
+forumdisplay.php?fid=34
+forumdisplay.php?fid=35
+forumdisplay.php?fid=36
+forumdisplay.php?fid=37
+forumdisplay.php?fid=39
+forumdisplay.php?fid=4
+forumdisplay.php?fid=5
+forumdisplay.php?fid=52
+forumdisplay.php?fid=53
+forumdisplay.php?fid=54
+forumdisplay.php?fid=61
+forumdisplay.php?fid=62
+forumdisplay.php?fid=84
+forumdisplay.php?fid=86
+fid=40 <title>Unión Fansub: Descarga Calidad
+fid=41 <title>Unión Fansub: Descarga Calidad
+fid=42 <title>Unión Fansub: Descarga Calidad
+fid=43 <title>Unión Fansub: Descarga Calidad
+fid=44 <title>Unión Fansub: Descarga Calidad
+fid=45 <title>Unión Fansub: Descarga Calidad
+fid=46 <title>Unión Fansub: Descarga Calidad
+fid=47 <title>Unión Fansub: Descarga Calidad
+fid=48 <title>Unión Fansub: Descarga Calidad
+fid=49 <title>Unión Fansub: Descarga Calidad
+fid=55 <title>Unión Fansub: Descarga Calidad
+fid=56 <title>Unión Fansub: Descarga Calidad
+fid=57 <title>Unión Fansub: Descarga Calidad
+fid=58 <title>Unión Fansub: Descarga Calidad
+fid=59 <title>Unión Fansub: Descarga Calidad
+fid=60 <title>Unión Fansub: Descarga Calidad
