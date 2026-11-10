@@ -1,0 +1,23 @@
+HTTP/2 200 
+date: Tue, 10 Nov 2026 04:34:29 GMT
+content-type: image/jpeg
+content-length: 65163
+cache-control: public, max-age=604800
+expires: Thu, 12 Nov 2026 05:31:31 GMT
+last-modified: Mon, 29 Apr 2024 23:29:05 GMT
+accept-ranges: bytes
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+strict-transport-security: max-age=31536000
+referrer-policy: strict-origin-when-cross-origin
+content-security-policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data: https:; connect-src 'self' https:; media-src 'self' blob: https:; frame-src 'self' https: blob:; worker-src 'self' blob: https:; object-src 'none'; frame-ancestors 'self'; base-uri 'self'; form-action 'self';
+permissions-policy: geolocation=(), microphone=(), camera=()
+alt-svc: h3=":443"; ma=86400
+cf-cache-status: HIT
+speculation-rules: "/cdn-cgi/speculation"
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=7TEJ9apXi0jLoIPAP4bW34bqYcliws4nz0%2BonWTNvJx48iEZCxjXOqLmgtB5Eb%2FRMKG4Paq5HESpdkLtfSWqZDqCbLVAOu9F58UeovDGKcTHdC5TR0iTMAPANY26WhTEsnvM7g%3D%3D"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+server: cloudflare
+cf-ray: a58258558a7f1855-ORD
+
+sinUA-Referer: HTTP 200 type image/jpeg len 65163
