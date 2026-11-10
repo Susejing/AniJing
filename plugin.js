@@ -447,6 +447,25 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.26 «Sesenta y no una» — la 0.6.25 murió en el teléfono: al
+// actualizar, NADA cargó y el log confesó con la firma exacta:
+// «too many requests in one call (at most 60)». Kino limita las
+// peticiones por llamada (60) y la fan-out de «Todas» ya venía
+// rozando el tope (54 peticiones en la 0.6.24: cada portada
+// consultaba TODAS sus filas aunque «Todas» solo muestra el
+// núcleo); Az-Animex sumó 7 más y el aviso llegó: van, iva y az
+// contestaron status 0 (kino.fetch se negó), los pósters de IvAnime
+// estallaron con el mismo mensaje y la pantalla quedó en rojo.
+// Cura: en «Todas» (y en el home() de Kino) cada fuente consulta
+// SOLO su núcleo — las filas que de verdad se muestran ahí: 37
+// peticiones en vez de 61. Las secciones individuales siguen
+// trayendo sus rieles completos (van con sus 15, az con sus 7 — cada
+// una sola bajo el tope). Queda la deuda anotada: mc, lat, otv y
+// ayt arman sus filas en tareas ansiosas (IIFE) y aún pagan un
+// puñado de fetches de más en «Todas» — con 37 de holgura no
+// aprieta, pero si las fuentes siguen creciendo habrá que
+// reestructurarlas al patrón de defs.
+//
 // v0.6.25 «El tesoro de las nubes» — «integra az-animex.com y
 // dw-anime.net… ver la manera de reproducir los vídeos así sea por
 // la nube o algún truco». Las sondas v40–v47 midieron los dos:
@@ -524,7 +543,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.25';
+const VERSION = '0.6.26';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -1744,8 +1763,8 @@ registrarFuente({
     return [];
   },
 
-  async portada() {
-    const defs = [
+  async portada(solo) {
+    let defs = [
       { id: 'av1-row-eps', titulo: 'Últimos episodios', ref: 'av1-ultimos-eps', episodios: true },
       { id: 'av1-latest', titulo: 'Últimos agregados', ref: 'av1-latest', params: { orden: 'latest_added' } },
       { id: 'av1-populares', titulo: 'Populares', ref: 'av1-populares', params: { orden: 'popular' } },
@@ -1754,6 +1773,14 @@ registrarFuente({
       { id: 'av1-gen-accion', titulo: 'Acción', ref: 'av1-gen:accion', params: { genero: 'accion' } },
       { id: 'av1-gen-fantasia', titulo: 'Fantasía', ref: 'av1-gen:fantasia', params: { genero: 'fantasia' } }
     ];
+    /* v0.6.26: en «Todas» (y el home de Kino) solo se consulta el
+     * núcleo — Kino limita las peticiones por llamada (60) y la
+     * fan-out completa de las diez fuentes lo reventaba (la 0.6.25
+     * murió así en el teléfono). */
+    if (solo === true) {
+      const nucleo = NUCLEO_TODAS.av1;
+      if (nucleo) defs = defs.filter(function (d) { return nucleo.indexOf(d.id) >= 0; });
+    }
     const filas = [];
     for (let i = 0; i < defs.length; i += FILAS_EN_PARALELO) {
       const lote = defs.slice(i, i + FILAS_EN_PARALELO);
@@ -3646,8 +3673,8 @@ registrarFuente({
     return [];
   },
 
-  async portada() {
-    const defs = [
+  async portada(solo) {
+    let defs = [
       { id: 'eas-eps', titulo: 'Últimos episodios · EstrenosAnime', ref: 'eas-eps', camino: '/ultimo-episodios', eps: true },
       { id: 'eas-sub', titulo: 'Sub español · EstrenosAnime', ref: 'eas-sub', camino: '/ultimo-subtitulado' },
       { id: 'eas-lat', titulo: 'Latino · EstrenosAnime', ref: 'eas-lat', camino: '/ultimo-latino' },
@@ -3663,6 +3690,12 @@ registrarFuente({
       { id: 'eas-especial', titulo: 'Especiales · EstrenosAnime', ref: 'eas-especial', camino: '/tipo/Especial' },
       { id: 'eas-emision', titulo: 'En emisión · EstrenosAnime', ref: 'eas-emision', camino: '/estado/En+Emision' }
     ];
+    /* v0.6.26: en «Todas» solo se consulta el núcleo (tope de Kino:
+     * 60 peticiones por llamada — la 0.6.25 lo reventó). */
+    if (solo === true) {
+      const nucleo = NUCLEO_TODAS.eas;
+      if (nucleo) defs = defs.filter(function (d) { return nucleo.indexOf(d.id) >= 0; });
+    }
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
         const r = await traer(BASE_EAS + def.camino, { headers: { Referer: BASE_EAS + '/' }, timeoutMs: 9000 });
@@ -3855,8 +3888,8 @@ registrarFuente({
     }
   },
 
-  async portada() {
-    const defs = [
+  async portada(solo) {
+    let defs = [
       { id: 'jara-emision', titulo: 'En emisión · AnimeJara', ref: 'jara-emision', camino: '/emision' },
       { id: 'jara-catalogo', titulo: 'Catálogo · AnimeJara', ref: 'jara-catalogo', camino: '/catalogo' },
       /* v0.6.24: géneros verificados por sonda v39 — todos responden
@@ -3866,6 +3899,12 @@ registrarFuente({
       { id: 'jara-genero-comedia', titulo: 'Comedia · AnimeJara', ref: 'jara-genero-comedia', camino: '/genero/comedia' },
       { id: 'jara-genero-drama', titulo: 'Drama · AnimeJara', ref: 'jara-genero-drama', camino: '/genero/drama' }
     ];
+    /* v0.6.26: en «Todas» solo se consulta el núcleo (tope de Kino:
+     * 60 peticiones por llamada — la 0.6.25 lo reventó). */
+    if (solo === true) {
+      const nucleo = NUCLEO_TODAS.jara;
+      if (nucleo) defs = defs.filter(function (d) { return nucleo.indexOf(d.id) >= 0; });
+    }
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
         const r = await traer(BASE_JARA + def.camino, { headers: { Referer: BASE_JARA + '/' }, timeoutMs: 10000 });
@@ -4287,14 +4326,14 @@ registrarFuente({
     }
   },
 
-  async portada() {
+  async portada(solo) {
     /* v0.6.13 «El escaparate»: el Inicio de VerAnime crece — el riel
      * «Anime» de siempre más un riel por género, verificados por sonda
      * uno a uno (accion 36 páginas, comedia 39, fantasia 40, aventura
      * 32, drama 26, romance 19; shonen/escolar/peliculas NO existen y
      * se quedan fuera). Cada riel trae 20 tarjetas y su «Ver más»
      * pagina en /genero/<slug>/page/N/. */
-    const defs = [
+    let defs = [
       { id: 'van-anime', titulo: 'Anime · VerAnime', ref: 'van-anime', genero: 'ver-anime' },
       { id: 'van-genero-accion', titulo: 'Acción · VerAnime', ref: 'van-genero-accion', genero: 'accion' },
       { id: 'van-genero-aventura', titulo: 'Aventura · VerAnime', ref: 'van-genero-aventura', genero: 'aventura' },
@@ -4319,6 +4358,12 @@ registrarFuente({
        * géneros. */
       { id: 'van-peliculas', titulo: 'Películas · VerAnime', ref: 'van-peliculas', camino: '/pelicula/' }
     ];
+    /* v0.6.26: en «Todas» solo se consulta el núcleo (tope de Kino:
+     * 60 peticiones por llamada — la 0.6.25 lo reventó). */
+    if (solo === true) {
+      const nucleo = NUCLEO_TODAS.van;
+      if (nucleo) defs = defs.filter(function (d) { return nucleo.indexOf(d.id) >= 0; });
+    }
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
         const destino = def.camino || ('/genero/' + def.genero + '/');
@@ -4663,10 +4708,10 @@ registrarFuente({
     }
   },
 
-  async portada() {
+  async portada(solo) {
     /* v0.6.5: la sección se llena con tres rieles (en emisión,
      * directorio y últimos agregados) traídos en paralelo. */
-    const defs = [
+    let defs = [
       { id: 'iva-emision', titulo: 'En emisión · IvAnime', ref: 'iva-emision', camino: '/emision' },
       { id: 'iva-directorio', titulo: 'Directorio · IvAnime', ref: 'iva-directorio', camino: '/animes' },
       { id: 'iva-nuevos', titulo: 'Últimos agregados · IvAnime', ref: 'iva-nuevos', camino: '/' },
@@ -4676,6 +4721,12 @@ registrarFuente({
       { id: 'iva-genero-romance', titulo: 'Romance · IvAnime', ref: 'iva-genero-romance', camino: '/genero/romance' },
       { id: 'iva-genero-comedia', titulo: 'Comedia · IvAnime', ref: 'iva-genero-comedia', camino: '/genero/comedia' }
     ];
+    /* v0.6.26: en «Todas» solo se consulta el núcleo (tope de Kino:
+     * 60 peticiones por llamada — la 0.6.25 lo reventó). */
+    if (solo === true) {
+      const nucleo = NUCLEO_TODAS.iva;
+      if (nucleo) defs = defs.filter(function (d) { return nucleo.indexOf(d.id) >= 0; });
+    }
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
         /* v0.6.13: las páginas de IvAnime son pesadas (la home pasa de
@@ -5041,12 +5092,12 @@ registrarFuente({
     }
   },
 
-  async portada() {
+  async portada(solo) {
     /* El directorio-anime/ y el home de az son JavaScript puro (sonda
      * v46: cero entradas en el HTML crudo) — las filas viven de los
      * géneros, WordPress de verdad que pagina /page/N/ (66 páginas
      * en acción, v43). */
-    const defs = [
+    let defs = [
       { id: 'az-genero-accion', titulo: 'Acción · Az-Animex', ref: 'az-genero-accion', camino: '/genero/accion' },
       { id: 'az-genero-comedia', titulo: 'Comedia · Az-Animex', ref: 'az-genero-comedia', camino: '/genero/comedia' },
       { id: 'az-genero-romance', titulo: 'Romance · Az-Animex', ref: 'az-genero-romance', camino: '/genero/romance' },
@@ -5055,6 +5106,12 @@ registrarFuente({
       { id: 'az-genero-seinen', titulo: 'Seinen · Az-Animex', ref: 'az-genero-seinen', camino: '/genero/seinen' },
       { id: 'az-genero-fantasia', titulo: 'Fantasía · Az-Animex', ref: 'az-genero-fantasia', camino: '/genero/fantasia' }
     ];
+    /* v0.6.26: en «Todas» solo se consulta el núcleo (tope de Kino:
+     * 60 peticiones por llamada — la 0.6.25 lo reventó). */
+    if (solo === true) {
+      const nucleo = NUCLEO_TODAS.az;
+      if (nucleo) defs = defs.filter(function (d) { return nucleo.indexOf(d.id) >= 0; });
+    }
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
         const r = await traer(BASE_AZ + def.camino + '/', { headers: { Referer: BASE_AZ + '/' }, timeoutMs: 12000 });
@@ -5227,7 +5284,7 @@ async function home() {
   const errores = [];
   const rtas = await Promise.all(fuentes.map(async (f) => {
     try {
-      return await f.portada();
+      return await f.portada(true);
     } catch (e) {
       log('portada falló en ' + f.id, (e && e.message) || String(e));
       errores.push(e);
@@ -5406,7 +5463,7 @@ async function cargarPantalla(fuente) {
     const fuentes = Object.values(FUENTES);
     const rtas = await Promise.all(fuentes.map(async (f) => {
       try {
-        return await f.portada();
+        return await f.portada(true);
       } catch (e) {
         log('portada de ' + f.id + ' falló', (e && e.message) || String(e));
         return null;

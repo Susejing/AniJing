@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.25 «El tesoro de las nubes»)
+## Qué hace (v0.6.26 «Sesenta y no una»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -32,6 +32,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.26 «Sesenta y no una»
+
+La 0.6.25 murió en el teléfono a los dos minutos de nacer: al actualizar, «Todas» no cargó nada y el log confesó con la firma exacta — `too many requests in one call (at most 60)`. Kino limita las peticiones por llamada y la fan-out de «Todas» ya venía rozando el tope (54 en la 0.6.24); Az-Animex sumó 7 géneros más y el vaso se derramó: kino.fetch se negó a salir, las fuentes contestaron status 0 y hasta los pósters estallaron con el mismo mensaje. La cura: en «Todas» (y en el Inicio) cada fuente consulta SOLO su núcleo — las filas que de verdad se muestran ahí — y el gasto baja de 61 a ~37 peticiones. Las secciones individuales siguen trayendo sus rieles completos: la de VerAnime con sus 15 filas, la de Az-Animex con sus 7 — cada una sola va sobrada bajo el tope. Deuda anotada: MonosChinos, Lata, OtakusTV y AnimeYT arman sus filas en tareas ansiosas y aún pagan unos fetches de más en «Todas»; con 23 de holgura no aprieta.
 
 ## v0.6.25 «El tesoro de las nubes»
 
