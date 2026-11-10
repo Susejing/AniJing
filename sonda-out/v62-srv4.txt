@@ -1,0 +1,127 @@
+dlink: [https://www.fireload.com/afc05582085b18ad/[Az-Animex]_Bungaku_Shoujo_Movie_[BD][Osoku].mp4?pt=YTFBdkx6ZEVaemRTVUZOVmRuVlFkRGRyYTNGS1p6MDlPbUpJR2VFVUFHYittbGdoYmFtVXlsUT0%3D]
+srv4 bruto: [https://srv4.fireload.com/afc05582085b18ad/[Az-Animex]_Bungaku_Shoujo_Movie_[BD][Osoku].mp4?download_token=0410d28cfc4ea28b02b6a251323c02beb4548d34ddaf253e76f9097c47705899]
+srv4 codificado: [https://srv4.fireload.com/afc05582085b18ad/%5BAz-Animex%5D_Bungaku_Shoujo_Movie_%5BBD%5D%5BOsoku%5D.mp4?download_token=0410d28cfc4ea28b02b6a251323c02beb4548d34ddaf253e76f9097c47705899]
+
+== T1: GET rango 0-1023 con UA+Referer+cookie (uso 1) ==
+HTTP/2 206 
+server: nginx/1.24.0 (Ubuntu)
+date: Tue, 10 Nov 2026 06:14:26 GMT
+content-type: video/mp4
+content-length: 1024
+last-modified: Thu, 11 Nov 2021 22:56:35 GMT
+expires: 0
+cache-control: must-revalidate, post-check=0, pre-check=0
+accept-ranges: bytes
+content-disposition: attachment; filename="[Az-Animex] Bungaku Shoujo Movie [BD][Osoku].mp4"
+etag: "618d9fa3-22b39903"
+x-robots-tag: noindex, nofollow, nosnippet, noarchive
+content-range: bytes 0-1023/582195459
+
+bytes: 1024
+t1.bin: ISO Media, MP4 Base Media v1 [ISO 14496-12:2003]
+ 00 00 00 20 66 74 79 70 69 73 6f 6d 00 00 02 00
+ 69 73 6f 6d 69 73 6f 32 61 76 63 31 6d 70 34 31
+
+== T2: GET rango 1024-2047 (uso 2 del MISMO token) ==
+HTTP/2 206 
+server: nginx/1.24.0 (Ubuntu)
+date: Tue, 10 Nov 2026 06:14:26 GMT
+content-type: video/mp4
+content-length: 1024
+last-modified: Thu, 11 Nov 2021 22:56:35 GMT
+expires: 0
+cache-control: must-revalidate, post-check=0, pre-check=0
+accept-ranges: bytes
+content-disposition: attachment; filename="[Az-Animex] Bungaku Shoujo Movie [BD][Osoku].mp4"
+etag: "618d9fa3-22b39903"
+x-robots-tag: noindex, nofollow, nosnippet, noarchive
+content-range: bytes 1024-2047/582195459
+
+bytes: 1024
+t2.bin: data
+
+== T3: GET rango 0-1023 SIN cookie (UA+Referer) ==
+HTTP/2 206 
+server: nginx/1.24.0 (Ubuntu)
+date: Tue, 10 Nov 2026 06:14:27 GMT
+content-type: video/mp4
+content-length: 1024
+last-modified: Thu, 11 Nov 2021 22:56:35 GMT
+set-cookie: filehosting=0bk0s8gj4saokrnnk9fb846h59; expires=Tue, 24-Nov-2026 06:14:26 GMT; Max-Age=1209600; path=/; domain=.fireload.com
+expires: 0
+cache-control: must-revalidate, post-check=0, pre-check=0
+accept-ranges: bytes
+content-disposition: attachment; filename="[Az-Animex] Bungaku Shoujo Movie [BD][Osoku].mp4"
+etag: "618d9fa3-22b39903"
+x-robots-tag: noindex, nofollow, nosnippet, noarchive
+content-range: bytes 0-1023/582195459
+
+bytes: 1024
+t3.bin: ISO Media, MP4 Base Media v1 [ISO 14496-12:2003]
+
+== T4: GET rango 0-1023 SIN Referer (cookie+UA) ==
+HTTP/2 206 
+server: nginx/1.24.0 (Ubuntu)
+date: Tue, 10 Nov 2026 06:14:27 GMT
+content-type: video/mp4
+content-length: 1024
+last-modified: Thu, 11 Nov 2021 22:56:35 GMT
+expires: 0
+cache-control: must-revalidate, post-check=0, pre-check=0
+accept-ranges: bytes
+content-disposition: attachment; filename="[Az-Animex] Bungaku Shoujo Movie [BD][Osoku].mp4"
+etag: "618d9fa3-22b39903"
+x-robots-tag: noindex, nofollow, nosnippet, noarchive
+content-range: bytes 0-1023/582195459
+
+bytes: 1024
+t4.bin: ISO Media, MP4 Base Media v1 [ISO 14496-12:2003]
+
+== T5: HEAD con todo ==
+HTTP/2 200 
+HTTP/2 200 
+server: nginx/1.24.0 (Ubuntu)
+server: nginx/1.24.0 (Ubuntu)
+date: Tue, 10 Nov 2026 06:14:27 GMT
+date: Tue, 10 Nov 2026 06:14:27 GMT
+content-type: video/mp4
+content-type: video/mp4
+content-length: 582195459
+content-length: 582195459
+last-modified: Thu, 11 Nov 2021 22:56:35 GMT
+last-modified: Thu, 11 Nov 2021 22:56:35 GMT
+expires: 0
+expires: 0
+cache-control: must-revalidate, post-check=0, pre-check=0
+cache-control: must-revalidate, post-check=0, pre-check=0
+accept-ranges: bytes
+accept-ranges: bytes
+content-disposition: attachment; filename="[Az-Animex] Bungaku Shoujo Movie [BD][Osoku].mp4"
+content-disposition: attachment; filename="[Az-Animex] Bungaku Shoujo Movie [BD][Osoku].mp4"
+etag: "618d9fa3-22b39903"
+etag: "618d9fa3-22b39903"
+x-robots-tag: noindex, nofollow, nosnippet, noarchive
+x-robots-tag: noindex, nofollow, nosnippet, noarchive
+accept-ranges: bytes
+accept-ranges: bytes
+
+
+
+== T6: GET rango 0-1023 pelado (sin UA, sin Referer, sin cookie) ==
+HTTP/2 206 
+server: nginx/1.24.0 (Ubuntu)
+date: Tue, 10 Nov 2026 06:14:27 GMT
+content-type: video/mp4
+content-length: 1024
+last-modified: Thu, 11 Nov 2021 22:56:35 GMT
+set-cookie: filehosting=fbskcdpkkqjjj4bfeqhr6vu7f5; expires=Tue, 24-Nov-2026 06:14:27 GMT; Max-Age=1209600; path=/; domain=.fireload.com
+expires: 0
+cache-control: must-revalidate, post-check=0, pre-check=0
+accept-ranges: bytes
+content-disposition: attachment; filename="[Az-Animex] Bungaku Shoujo Movie [BD][Osoku].mp4"
+etag: "618d9fa3-22b39903"
+x-robots-tag: noindex, nofollow, nosnippet, noarchive
+content-range: bytes 0-1023/582195459
+
+bytes: 1024
+t6.bin: ISO Media, MP4 Base Media v1 [ISO 14496-12:2003]
