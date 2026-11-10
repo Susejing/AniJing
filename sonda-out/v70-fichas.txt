@@ -1,0 +1,44 @@
+===== FICHA amagami-ss-plus =====
+220102 /tmp/f.html
+href="https://filemoon.to/f/ivz1xfljsw"
+href="https://www.fireload.com/folder/24361/Amagami_SS+_Plus_BD"
+--- botones col1 ---
+<a class="gs-parent-hover gs_button_w_icon gs_icon_always col1-boton col1-fireload gsbp-d4b1f3b" href="https://www.fireload.com/folder/24361/Amagami_SS+_Plus_BD"
+<a class="gs-parent-hover gs_button_w_icon gs_icon_always col1-boton col1-filemoon gsbp-61d32c1" href="https://filemoon.to/f/ivz1xfljsw"
+===== FICHA asobi-ni-iku-yo =====
+216693 /tmp/f.html
+href="https://www.fireload.com/folder/28771/Asobi_ni_Iku_yo!_BD"
+--- botones col1 ---
+<a class="gs-parent-hover gs_button_w_icon gs_icon_always col1-boton col1-fireload gsbp-16ceae9" href="https://www.fireload.com/folder/28771/Asobi_ni_Iku_yo!_BD"
+<a class="gs-parent-hover gs_button_w_icon gs_icon_always col1-boton col1-serveraz col1-premium gsbp-8ee96f0" href="https://series-am.az-animex.com/es/A/Asobi%20ni%20Iku%20yo!%20BD"
+===== FICHA anne-happy =====
+214383 /tmp/f.html
+href="https://www.fireload.com/folder/17692/Anne_Happy_BD"
+--- botones col1 ---
+<a class="gs-parent-hover gs_button_w_icon gs_icon_always col1-boton col1-fireload gsbp-6bfad01" href="https://www.fireload.com/folder/17692/Anne_Happy_BD"
+===== FICHA dagashi-kashi =====
+216245 /tmp/f.html
+href="https://www.fireload.com/folder/25018/Dagashi_Kashi_BD"
+--- botones col1 ---
+<a class="gs-parent-hover gs_button_w_icon gs_icon_always col1-boton col1-fireload gsbp-06973b9" href="https://www.fireload.com/folder/25018/Dagashi_Kashi_BD"
+<a class="gs-parent-hover gs_button_w_icon gs_icon_always col1-boton col1-serveraz col1-premium gsbp-15b26db" href="https://series-am.az-animex.com/es/D/Dagashi%20Kashi%20BD/"
+===== FICHA busou-shoujo-machiavellianism =====
+217191 /tmp/f.html
+href="https://www.fireload.com/folder/40580/Busou_Shoujo_Machiavellianism_BD"
+--- botones col1 ---
+<a class="gs-parent-hover gs_button_w_icon gs_icon_always col1-boton col1-fireload gsbp-702ae8e" href="https://www.fireload.com/folder/40580/Busou_Shoujo_Machiavellianism_BD"
+<a class="gs-parent-hover gs_button_w_icon gs_icon_always col1-boton col1-serveraz col1-premium gsbp-85ce43f" href="https://series-am.az-animex.com/es/B/Busou%20Shoujo%20Machiavellianism%20BD/"
+===== FICHA ben-to =====
+214418 /tmp/f.html
+href="https://1024terabox.com/s/1ab3uDjAT3lZILMf_gZBJ2w"
+--- botones col1 ---
+<a class="gs-parent-hover gs_button_w_icon gs_icon_always col1-boton col1-terabox gsbp-871c771" href="https://1024terabox.com/s/1ab3uDjAT3lZILMf_gZBJ2w"
+<a class="gs-parent-hover gs_button_w_icon gs_icon_always col1-boton col1-serveraz col1-premium gsbp-9f4d6c1" href="https://dire.az-animex.com/Anime/Ben-To%20BD"
+===== AJAX carpeta de asobi (si hay hash en su ficha) =====
+hash asobi: 
+
+	     <div class="col-md-12 text-center p-t-50" align="center"><div class="uploadCenter">
+			<i class="fa fa-folder-open fa-4x"></i>
+			<p>The owner of this folder has not added any files.</p><p>
+		 </p></div></div>
+	<input id="rspFolderTotalFiles" value="0" type="hidden"/><input id="rspFolderTotalSize" value="" type="hidden"/><input id="rspTotalPerPage" value="100" type="hidden"/><input id="rspTotalResults" value="0" type="hidden"/><input id="rspCurrentStart" value="0" type="hidden"/><input id="rspCurrentPage" value="1" type="hidden"/><input id="rspTotalPages" value="0" type="hidden"/><input id="rspPageTitle" value="Your Account" type="hidden"/><input id="rspPageUrl" value="https://www.fireload.com/account_home.html" type="hidden"/><input id="rspFolderStatus" value="active" type="hidden"/>
