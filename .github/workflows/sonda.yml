@@ -10,29 +10,30 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: sondas v82
+      - name: sondas v83
         run: |
           mkdir -p sonda-out
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
-          {
-            echo "===== kurosaki: tema de Frieren (descargas) ====="
-            curl -sL --max-time 25 -A "$UA" -o /tmp/tk2.html -w 'status %{http_code} bytes %{size_download}\n' "https://www.teamkurosaki.net/forums/topic/6452-tk-tb-sousou-no-frieren-season-22-especiales-bd-1080p-hevc-flac-eac3-multi-audiosubs/" || true
-            grep -oiE 'https?://[^"'"'"' <>]*(mega\.nz|drive\.google|pixeldrain|fireload|terabox|streamtape|voe\.|filemoon|streamwish|mp4upload|dood|uqload|yourupload|mixdrop|ok\.ru|savefiles|lulustream|vidhide|byse|zippy|gofile|mediafire|1fichier|acortar|shrink|ouo|adf|linkvertise)[^"'"'"' <>]*' /tmp/tk2.html | sort -u | head -20 || true
-            echo "--- ¿login requerido? ---"
-            grep -o 'Iniciar sesión\|Debes ser un miembro\|regístrate\|sign in to' /tmp/tk2.html | sort | uniq -c | head -5 || true
-            echo "===== shadowrangers: objetivo de los «Descargar» ====="
-            grep -oE '.{80}Descargar.{200}' /tmp/sr.html | head -4 || true
-            echo "--- todos los href externos de la ficha ---"
-            grep -oE 'href="https?://[^"]*"' /tmp/sr.html | grep -v 'shadowrangers\|gravatar\|gmpg\|w3\.org\|googleapis\|gstatic\|schema\.org\|youtube\|twitter\|facebook\|discord' | sort -u | head -15 || true
-            echo "===== sphinx: objetivo de los «Descargar» ====="
-            grep -oE '.{80}Descargar.{200}' /tmp/sp.html | head -4 || true
-            echo "--- hrefs externos del post ---"
-            grep -oE 'href="https?://[^"]*"' /tmp/sp.html | grep -v 'sphinxanime\|gravatar\|gmpg\|w3\.org\|googleapis\|gstatic\|schema\.org\|youtube\|twitter\|facebook\|discord\|wp-content\|wp-json\|feed' | sort -u | head -20 || true
-          } > sonda-out/v82-descargas.txt 2>&1 || true
+          echo "===== shadowrangers: objetivo de los «Descargar» ====="
+          curl -sL --max-time 25 -A "$UA" "https://shadowrangers.net/anime/bleach/" -o /tmp/sr.html || true
+          grep -oE '.{60}Descargar.{260}' /tmp/sr.html | head -3 || true
+          echo "--- hrefs externos de la ficha ---"
+          grep -oE 'href="https?://[^"]*"' /tmp/sr.html | grep -v 'shadowrangers\|gravatar\|gmpg\|w3\.org\|googleapis\|gstatic\|schema\.org\|youtube\|twitter\|facebook\|discord\|wp-content\|wp-json' | sort -u | head -15 || true
+          echo "===== sphinx: objetivo de los «Descargar» ====="
+          curl -sL --max-time 25 -A "$UA" "https://sphinxanime.com/all-you-need-is-kill-bd-1080p-latino-japones-26694/" -o /tmp/sp.html || true
+          grep -oE '.{60}Descargar.{260}' /tmp/sp.html | head -3 || true
+          echo "--- hrefs externos del post ---"
+          grep -oE 'href="https?://[^"]*"' /tmp/sp.html | grep -v 'sphinxanime\|gravatar\|gmpg\|w3\.org\|googleapis\|gstatic\|schema\.org\|youtube\|twitter\|facebook\|discord\|wp-content\|wp-json\|feed' | sort -u | head -20 || true
+          echo "===== kurosaki: tema con otra puerta ====="
+          curl -sL --max-time 25 -A "$UA" -H "Accept: text/html" -e "https://www.teamkurosaki.net/" "https://www.teamkurosaki.net/forums/topic/6452-tk-tb-sousou-no-frieren-season-22-especiales-bd-1080p-hevc-flac-eac3-multi-audiosubs/" -o /tmp/tk2.html -w 'status %{http_code} bytes %{size_download}\n' || true
+          grep -o '<title>[^<]*</title>' /tmp/tk2.html | head -1 || true
+          grep -oiE 'https?://[^"'"'"' <>]*(mega\.nz|drive\.google|pixeldrain|fireload|terabox|mediafire|1fichier|gofile|krakenfiles)[^"'"'"' <>]*' /tmp/tk2.html | sort -u | head -12 || true
+          grep -o 'Debes ser un miembro\|Iniciar sesión\|cloudflare\|Just a moment' /tmp/tk2.html | sort | uniq -c | head -5 || true
+        } > sonda-out/v83-descargas.txt 2>&1 || true
       - name: commit
         run: |
           git config user.name "sonda"
           git config user.email "sonda@users.noreply.github.com"
           git add sonda-out || true
-          git commit -m "sonda v82: interior de temas y posts" || true
+          git commit -m "sonda v83: descargas en el mismo paso" || true
           git push || true
