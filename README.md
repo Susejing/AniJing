@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.26 «Sesenta y no una»)
+## Qué hace (v0.6.27 «El mensajero»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -32,6 +32,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.27 «El mensajero»
+
+La 0.6.26 revivió «Todas»… y el teléfono encontró el siguiente eslabón flojo: algunas fichas nuevas de Az-Animex (Monogatari Second Season, Kimi no Koto ga Daidaidaidaidaisuki) caían con «ficha sin descargas» aunque la web sí las sirve. La sonda lo vio: az cambió de cartero — sus fichas de octubre 2026 ya no traen el botón `mirrored.to/multilinks/…` en el HTML crudo; el botón «Mirrored» apunta a un paste de **rentry.co** que lista los mismos `files/<FID>/…mp4_links` de siempre, uno por episodio. La cura: si la ficha no trae multilink, AniJing sigue el paste (crudo primero, espejo r.jina de respaldo) y la cadena entera sigue igual por debajo. Y las fichas que solo ofrecen TeraBox o el «Server Az» (una app de JavaScript ilegible sin navegador) ahora lo dicen con un aviso honesto en vez de fingir «sin descargas». rentry.co entra al manifest: Kino pedirá re-aprobación una vez al actualizar.
 
 ## v0.6.26 «Sesenta y no una»
 

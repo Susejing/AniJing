@@ -447,6 +447,20 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.27 «El mensajero» — el teléfono juzgó la 0.6.26 y dio su
+// veredicto: «Todas» cargó, az reproduce… pero algunas fichas nuevas
+// (Monogatari Second Season, Kimi no Koto ga Daidaidaidaidaisuki)
+// caían con «ficha sin descargas». La sonda v48 halló al culpable: az
+// cambió de mensajero — las fichas de oct 2026+ ya no traen el botón
+// mirrored.to/multilinks/ en crudo; su «Mirrored» apunta a un paste de
+// rentry.co que lista los files/<FID>/…mp4_links de siempre, uno por
+// episodio (26 en Monogatari). Misma cadena después del paste, otro
+// cartero: se lee rentry crudo primero y el espejo r.jina como respaldo.
+// Y las fichas que solo ofrecen TeraBox o el Server Az (app JavaScript,
+// ilegible sin navegador) ahora lo DICEN en el mensaje honesto en vez
+// de fingir «sin descargas». rentry.co entra al manifest: Kino pedirá
+// re-aprobación una vez al actualizar.
+//
 // v0.6.26 «Sesenta y no una» — la 0.6.25 murió en el teléfono: al
 // actualizar, NADA cargó y el log confesó con la firma exacta:
 // «too many requests in one call (at most 60)». Kino limita las
@@ -543,7 +557,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.26';
+const VERSION = '0.6.27';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -5014,22 +5028,44 @@ async function azEpsDe(slug) {
   if (og) serie.poster = og[1].indexOf('//') === 0 ? 'https:' + og[1] : og[1];
   const sin = /post-excerpt__excerpt">\s*<p>([\s\S]{30,2000}?)<\/p>/i.exec(r.text) || /<p[^>]*>([\s\S]{80,1500}?)<\/p>/i.exec(r.text);
   if (sin) serie.overview = limpio(sin[1]).slice(0, 400);
+  /* v0.6.25: el mensajero clásico — el botón «Mirrored» de la ficha
+   * apunta a mirrored.to/multilinks/<id> y allí vive la lista. */
+  let mensajero = '';
   const ml = /mirrored\.to\/multilinks\/([a-z0-9]+)/i.exec(r.text);
-  if (!ml) {
-    throw kino.error('not_found', 'Az-Animex: ficha sin descargas', {
-      userMessage: 'Esta ficha de Az-Animex todavía no tiene descargas publicadas.'
-    });
-  }
-  const multilink = 'https://www.mirrored.to/multilinks/' + ml[1];
+  if (ml) mensajero = 'https://www.mirrored.to/multilinks/' + ml[1];
   let lista = azEpsDeTexto(r.text);
-  if (!lista.length) {
-    const crudo = await traer(multilink, { timeoutMs: 12000 });
+  if (!lista.length && mensajero) {
+    const crudo = await traer(mensajero, { timeoutMs: 12000 });
     if (crudo.ok) lista = azEpsDeTexto(crudo.text);
   }
-  if (!lista.length) lista = azEpsDeTexto(await azJina(multilink));
+  if (!lista.length && mensajero) lista = azEpsDeTexto(await azJina(mensajero));
+  /* v0.6.27: las fichas nuevas (oct 2026+) mandan el «Mirrored» a un
+   * paste de rentry.co con los files/<FID>/…mp4_links de siempre, uno
+   * por episodio — mismo formato, otro mensajero (sonda v48). */
   if (!lista.length) {
-    throw kino.error('not_found', 'Az-Animex: 0 episodios', {
-      userMessage: 'No se pudieron leer los episodios de esta serie en Az-Animex.'
+    const rn = /rentry\.co\/([a-z0-9]+)/i.exec(r.text);
+    if (rn) {
+      mensajero = 'https://rentry.co/' + rn[1];
+      const pr = await traer(mensajero, { timeoutMs: 15000 });
+      if (pr.ok) lista = azEpsDeTexto(pr.text);
+      if (!lista.length) lista = azEpsDeTexto(await azJina(mensajero));
+    }
+  }
+  if (!lista.length) {
+    if (mensajero) {
+      throw kino.error('not_found', 'Az-Animex: 0 episodios', {
+        userMessage: 'No se pudieron leer los episodios de esta serie en Az-Animex.'
+      });
+    }
+    /* v0.6.27: si la ficha solo ofrece TeraBox o su Server Az (app
+     * de JavaScript, ilegible sin navegador), se dice la verdad. */
+    if (/terabox\.com\//i.test(r.text) || /dire\.az-animex\.com\//i.test(r.text)) {
+      throw kino.error('not_found', 'Az-Animex: solo nubes no soportadas', {
+        userMessage: 'Esta ficha solo publica descargas por TeraBox o el Server Az de Az-Animex — AniJing todavía no sabe abrirlos.'
+      });
+    }
+    throw kino.error('not_found', 'Az-Animex: ficha sin descargas', {
+      userMessage: 'Esta ficha de Az-Animex todavía no tiene descargas publicadas.'
     });
   }
   const datos = { t: Date.now(), lista: lista, serie: serie };
