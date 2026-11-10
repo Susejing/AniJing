@@ -1,0 +1,25 @@
+===== https://shadowrangers.net/ =====
+status 200, bytes 175227
+    175 wp-content
+href="https://shadowrangers.net/anime/akane-banashi/"
+href="https://shadowrangers.net/anime/bleach/"
+href="https://shadowrangers.net/anime/bobobo-bo-bo-bobo/"
+href="https://shadowrangers.net/anime/bullet-bullet/"
+href="https://shadowrangers.net/anime/dandelion/"
+href="https://shadowrangers.net/anime/devil-may-cry-2025-s2/"
+href="https://shadowrangers.net/anime/dorohedoro-season-2/"
+href="https://shadowrangers.net/anime/dr-stone-science-future/"
+href="https://shadowrangers.net/anime/dragon-ball-selecta-vision/"
+href="https://shadowrangers.net/anime/dragon-ball-super-beerus/"
+===== https://shadowrangers.net/animes/ =====
+status 404, bytes 21211
+     41 wp-content
+href="https://shadowrangers.net/anime/list-mode/"
+href="https://shadowrangers.net/wp-content/plugins/anime-membership/assets/style.css?ver=0.1.0"
+href="https://shadowrangers.net/wp-content/plugins/animestream-direct-messages/assets/style.css?ver=1.0.0"
+href="https://shadowrangers.net/wp-content/plugins/animestream-reportes/assets/css/style.css?ver=1.0.0"
+href="https://shadowrangers.net/wp-content/plugins/animestream-updates/assets/style.css?ver=1.0.0"
+href="https://shadowrangers.net/wp-content/themes/animestream/assets/css/darkmode.css?ver=2.3.2"
+href="https://shadowrangers.net/wp-content/themes/animestream/assets/css/font-awesome.min.css?ver=5.13.0"
+href="https://shadowrangers.net/wp-content/themes/animestream/assets/css/owl.carousel.css?ver=2.3.2"
+href="https://shadowrangers.net/wp-content/themes/animestream/style.css?ver=2.3.2"
