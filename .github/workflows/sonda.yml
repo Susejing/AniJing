@@ -13,74 +13,84 @@ jobs:
           cat > /tmp/sondea.sh <<'SONDA_EOF'
           #!/bin/bash
           set -u
-          OUT="sonda-v39-resultado.txt"
+          OUT="sonda-v39b-resultado.txt"
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
           > "$OUT"
-          probe() {
-            local sitio="$1" url="$2" r code size
+          # probe5 <sitio> <url> <patron-de-tarjeta>: primeras 5 tarjetas
+          probe5() {
+            local sitio="$1" url="$2" patron="$3" r code size lista
             r=$(curl -sL --max-time 25 -A "$UA" -H "Referer: $sitio/" -o /tmp/p.html -w "%{http_code} %{size_download}" "$url" 2>/dev/null || echo "ERR 0")
             code=$(echo "$r" | awk '{print $1}')
             size=$(echo "$r" | awk '{print $2}')
-            local nhrefs nanime primero
-            nhrefs=$(grep -oE 'href="[^"]*"' /tmp/p.html 2>/dev/null | wc -l)
-            nanime=$(grep -oE 'href="[^"]*(anime|tv|series|ver)[^"]*"' /tmp/p.html 2>/dev/null | wc -l)
-            primero=$(grep -oE 'href="[^"]*(/anime/|/animes|/tv/|/ver/)[^"]*"' /tmp/p.html 2>/dev/null | head -1 | cut -c1-140)
-            echo "$url -> $code ${size}B hrefs:$nhrefs anime:$nanime | 1ro: $primero" >> "$OUT"
+            lista=$(grep -oE "href=\"[^\"]*\"" /tmp/p.html 2>/dev/null | sed 's/href="//;s/"$//' | grep -E "$patron" | grep -vE '(login|register|calendario|horario)' | head -5 | tr '\n' ' | ' | cut -c1-450)
+            echo "$url -> $code ${size}B | $lista" >> "$OUT"
           }
-          nav() {
-            local sitio="$1" host
-            host=$(echo "$sitio" | sed 's|https\?://||')
-            curl -sL --max-time 25 -A "$UA" -H "Referer: $sitio/" -o /tmp/n.html "$sitio/" 2>/dev/null || true
+          # generos <sitio> <url-de-pagina-con-menu-de-generos>
+          generos() {
+            local sitio="$1" url="$2"
+            curl -sL --max-time 25 -A "$UA" -H "Referer: $sitio/" -o /tmp/g.html "$url" 2>/dev/null || true
             echo "" >> "$OUT"
-            echo "### NAV $sitio" >> "$OUT"
-            grep -oE 'href="[^"]+"' /tmp/n.html 2>/dev/null | sed 's/href="//;s/"$//' \
-              | grep -vE '\.(css|js|png|jpe?g|webp|svg|ico|woff2?|gif)' \
-              | grep -E "(^/|//$host)" | sort -u | head -130 >> "$OUT"
+            echo "### GENEROS visibles en $url" >> "$OUT"
+            grep -oE 'href="[^"]*genero[^"]*"' /tmp/g.html 2>/dev/null | sed 's/href="//;s/"$//' | sort -u | head -60 >> "$OUT"
           }
           # AnimeJara
-          nav https://animejara.com
-          for u in /emision /catalogo /catalogo?page=2 /catalogo?page=3 /peliculas /generos /genero/accion /year/2026 /top /directorio /movies; do
-            probe https://animejara.com "https://animejara.com$u"
-          done
+          generos https://animejara.com https://animejara.com/genero/accion
+          probe5 https://animejara.com "https://animejara.com/emision" 'animejara\.com/anime/'
+          probe5 https://animejara.com "https://animejara.com/genero/accion" 'animejara\.com/anime/'
+          probe5 https://animejara.com "https://animejara.com/genero/romance" 'animejara\.com/anime/'
+          probe5 https://animejara.com "https://animejara.com/genero/isekai" 'animejara\.com/anime/'
           # MonosChinos
-          nav https://monoschinos.st
-          for u in /emision /emision?p=2 /animes /animes?p=2 /animes?p=3 /peliculas /generos /genero/accion /year/2026 /top; do
-            probe https://monoschinos.st "https://monoschinos.st$u"
-          done
+          generos https://monoschinos.st https://monoschinos.st/genero/accion
+          probe5 https://monoschinos.st "https://monoschinos.st/animes" 'monoschinos\.st/anime/'
+          probe5 https://monoschinos.st "https://monoschinos.st/animes?p=2" 'monoschinos\.st/anime/'
+          probe5 https://monoschinos.st "https://monoschinos.st/animes?p=3" 'monoschinos\.st/anime/'
+          probe5 https://monoschinos.st "https://monoschinos.st/genero/accion" 'monoschinos\.st/anime/'
           # LataAnime
-          nav https://latanime.org
-          for u in / /directorio /peliculas /generos /genero/accion /top /year/2026 "/buscar?q=latino" "/buscar?q=latino&page=2" "/buscar?q=latino&pag=2" /emision; do
-            probe https://latanime.org "https://latanime.org$u"
-          done
+          generos https://latanime.org https://latanime.org/genero/accion
+          probe5 https://latanime.org "https://latanime.org/animes" 'latanime\.org/anime/'
+          probe5 https://latanime.org "https://latanime.org/animes?page=2" 'latanime\.org/anime/'
+          probe5 https://latanime.org "https://latanime.org/animes?pag=2" 'latanime\.org/anime/'
+          probe5 https://latanime.org "https://latanime.org/animes?page=3" 'latanime\.org/anime/'
+          probe5 https://latanime.org "https://latanime.org/emision" 'latanime\.org/anime/'
+          probe5 https://latanime.org "https://latanime.org/emision?page=2" 'latanime\.org/anime/'
+          echo "" >> "$OUT"; echo "### latanime /buscar sin Referer:" >> "$OUT"
+          curl -sL --max-time 20 -A "$UA" -o /tmp/lb.html -w "buscar sin referer -> %{http_code} %{size_download}B\n" "https://latanime.org/buscar?q=latino" >> "$OUT" 2>/dev/null
+          grep -oE 'href="[^"]*anime/[^"]*"' /tmp/lb.html 2>/dev/null | head -3 >> "$OUT"
           # OtakusTV
-          nav https://www.otakustv.net
-          for u in /animes?pag=1 /animes?pag=2 /animes?pag=3 /animes-en-emision /peliculas /generos /genero/accion /top "/animes?tipo=pelicula" /ovas; do
-            probe https://www.otakustv.net "https://www.otakustv.net$u"
-          done
-          # AnimeYT
-          nav https://animeyt.cc
-          for u in /tv/ /tv/page/2/ /tv/page/3/ "/tv/?tipo=pelicula" /peliculas /generos /genero/accion /top "/tv/?tipo=ova" /ovas; do
-            probe https://animeyt.cc "https://animeyt.cc$u"
-          done
+          probe5 https://www.otakustv.net "https://www.otakustv.net/animes?pag=1" 'otakustv\.net/anime/'
+          probe5 https://www.otakustv.net "https://www.otakustv.net/animes?pag=2" 'otakustv\.net/anime/'
           # IvAnime
-          nav https://ivanime.buzz
-          for u in /emision /emision?page=2 /animes /animes?page=2 /animes?page=3 /peliculas /generos /genero/accion /top /year/2026 /directorio; do
-            probe https://ivanime.buzz "https://ivanime.buzz$u"
-          done
+          generos https://ivanime.buzz https://ivanime.buzz/genero/accion
+          probe5 https://ivanime.buzz "https://ivanime.buzz/animes" 'ivanime\.buzz/anime/'
+          probe5 https://ivanime.buzz "https://ivanime.buzz/animes?page=2" 'ivanime\.buzz/anime/'
+          probe5 https://ivanime.buzz "https://ivanime.buzz/animes?page=3" 'ivanime\.buzz/anime/'
+          probe5 https://ivanime.buzz "https://ivanime.buzz/emision" 'ivanime\.buzz/anime/'
+          probe5 https://ivanime.buzz "https://ivanime.buzz/emision?page=2" 'ivanime\.buzz/anime/'
+          probe5 https://ivanime.buzz "https://ivanime.buzz/genero/accion" 'ivanime\.buzz/anime/'
+          # AnimeYT
+          generos https://animeyt.cc https://animeyt.cc/genero/accion
+          probe5 https://animeyt.cc "https://animeyt.cc/tv/" 'animeyt\.cc/tv/'
+          probe5 https://animeyt.cc "https://animeyt.cc/tv/page/2/" 'animeyt\.cc/tv/'
+          probe5 https://animeyt.cc "https://animeyt.cc/pelicula/" 'animeyt\.cc/(pelicula|tv)/'
+          probe5 https://animeyt.cc "https://animeyt.cc/ranking/" 'animeyt\.cc/tv/'
+          probe5 https://animeyt.cc "https://animeyt.cc/temporada/otono-2026/" 'animeyt\.cc/tv/'
+          probe5 https://animeyt.cc "https://animeyt.cc/genero/accion" 'animeyt\.cc/(tv|pelicula)/'
           # VerAnime
-          nav https://veranime.ninja
-          for u in /genero/accion /peliculas /pelicula /top /directorio /animes /generos /year/2026; do
-            probe https://veranime.ninja "https://veranime.ninja$u"
-          done
+          generos https://veranime.ninja https://veranime.ninja/genero/accion
+          probe5 https://veranime.ninja "https://veranime.ninja/pelicula/" 'veranime\.ninja/pelicula/'
+          probe5 https://veranime.ninja "https://veranime.ninja/genero/accion" 'veranime\.ninja/anime/'
+          probe5 https://veranime.ninja "https://veranime.ninja/genero/accion/page/2/" 'veranime\.ninja/anime/'
           # EstrenosAnime
-          nav https://estrenosanime.net
-          for u in /genero/accion /generos /year/2026 /top /tipo/OVA /tipo/Especial /tipo/Pelicula /popular; do
-            probe https://estrenosanime.net "https://estrenosanime.net$u"
-          done
+          probe5 https://estrenosanime.net "https://estrenosanime.net/tipo/OVA" 'estrenosanime\.net/anime/'
+          probe5 https://estrenosanime.net "https://estrenosanime.net/tipo/Especial" 'estrenosanime\.net/anime/'
+          probe5 https://estrenosanime.net "https://estrenosanime.net/tipo/Pelicula?page=2" 'estrenosanime\.net/anime/'
+          probe5 https://estrenosanime.net "https://estrenosanime.net/tipo/Pelicula" 'estrenosanime\.net/anime/'
+          probe5 https://estrenosanime.net "https://estrenosanime.net/estado/En+Emision" 'estrenosanime\.net/anime/'
+          probe5 https://estrenosanime.net "https://estrenosanime.net/popular" 'estrenosanime\.net/anime/'
           SONDA_EOF
           bash /tmp/sondea.sh
           git config user.name "sonda-bot"
           git config user.email "actions@github.com"
-          git add sonda-v39-resultado.txt
-          git commit -m "[sonda] resultados v39"
+          git add sonda-v39b-resultado.txt
+          git commit -m "[sonda] resultados v39b"
           git push
