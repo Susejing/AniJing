@@ -1,0 +1,11 @@
+##### iva #####
+  https://ivanime.buzz/animes -> 403 (0
+0 clases)
+  https://ivanime.buzz/animes/page/2/ -> 403 (0
+0 clases)
+  https://ivanime.buzz/animes?p=2 -> 403 (0
+0 clases)
+  https://ivanime.buzz/animes?page=2 -> 403 (0
+0 clases)
+  --- ¿wp-json? ---
+  wp-json posts: 403 — total 

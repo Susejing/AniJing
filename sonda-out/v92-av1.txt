@@ -1,0 +1,7 @@
+##### av1 #####
+  https://animeav1.com/catalogo -> 200 (9 clases)
+  https://animeav1.com/catalogo/page/2/ -> 404 (1 clases)
+  https://animeav1.com/catalogo?p=2 -> 200 (9 clases)
+  https://animeav1.com/catalogo?page=2 -> 200 (5 clases)
+  --- ¿wp-json? ---
+  wp-json posts: 404 — total 

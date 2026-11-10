@@ -1,0 +1,7 @@
+##### lat #####
+  https://latanime.org/directorio -> 404 (11 clases)
+  https://latanime.org/directorio/page/2/ -> 404 (11 clases)
+  https://latanime.org/directorio?p=2 -> 404 (11 clases)
+  https://latanime.org/directorio?page=2 -> 404 (11 clases)
+  --- ¿wp-json? ---
+  wp-json posts: 404 — total 

@@ -1,0 +1,10 @@
+##### ayt #####
+  https://animeyt.cc/tv -> 200 (125 clases)
+  https://animeyt.cc/tv/page/2/ -> 200 (125 clases)
+  https://animeyt.cc/tv?p=2 -> 404 (11 clases)
+  https://animeyt.cc/tv?page=2 -> 200 (125 clases)
+  --- ¿wp-json? ---
+  wp-json posts: 200 — total 
+access-control-expose-headers: X-WP-Total, X-WP-TotalPages, Link
+x-wp-total: 14295
+x-wp-totalpages: 14295
