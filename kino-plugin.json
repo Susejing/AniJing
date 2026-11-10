@@ -376,7 +376,7 @@
       "key": "veranimeCf",
       "type": "action",
       "label": "Pasar la revisión de VerAnime",
-      "hint": "VerAnime está tras Cloudflare: abre la ventanita, pasa la revisión y se guarda sola"
+      "hint": "Abre la ventanita, pasa la revisión de Cloudflare y la galleta se guarda sola"
     },
     {
       "key": "veranimeCfCookie",
