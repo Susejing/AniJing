@@ -447,6 +447,25 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.36 «El recadero» — el teléfono probó la mudanza y dejó
+// tres recados. (1) Las fichas «con muros: FireLoad» eran en
+// realidad CARPETAS de FireLoad (fireload.com/folder/<hash32>/…,
+// sondas v63-v68: amagami-ss-plus, d-frag, aiura, ano-natsu,
+// arakawa, black-lagoon…) y ya se sabía leerlas: la página de la
+// carpeta siembra la galleta filehosting y su listado AJAX (POST
+// _view_folder_v2_file_listing.ajax.php con url_hash y nodeId -1)
+// trae cada archivo <hash16>/[Az-Animex]_Serie_-_NN_[BD][JPU].mp4
+// — episodios que la mudanza ya canjea tal cual. El regex que las
+// llamaba «muro FireLoad» se retira. (2) La lupa del lienzo mandaba
+// una búsqueda VACÍA (go search q='') y Kino la descarta — de ahí
+// el «no pasa nada»; ahora hay un campo de búsqueda en la pantalla:
+// el botón lo enfoca y el Enter manda la palabra a la búsqueda de
+// Kino con AniJing entre las fuentes (así aparece Grisaia, que el
+// catálogo por géneros no siempre trae). (3) TeraBox: la ventanita
+// abría /spanish/login, que en el teléfono salta 302 a una wap que
+// da 404 — la sonda v63 encontró la puerta buena: /wap/outlogin
+// responde 200 con cualquier UA y sin captcha.
+//
 // v0.6.35 «La mudanza» — el teléfono probó el atajo y dejó dos
 // lecciones más. FireLoad: el atajo funcionaba (el dlink en crudo
 // llegó), pero el Play fallaba con «formato no reconocido» — la
@@ -718,7 +737,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.35';
+const VERSION = '0.6.36';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -5547,6 +5566,38 @@ async function azEpsDe(slug) {
       log('az ficha «' + slug + '»: ' + fldUrls.length + ' archivo(s) de FireLoad (captcha en la ventanilla)');
     }
   }
+  /* v0.6.36 «El recadero»: fichas con CARPETA de FireLoad — el
+   * regex de muros las llamaba «FireLoad» y eran casi todas las
+   * fichas grises (sondas v63-v68). El listado AJAX de la carpeta
+   * trae cada archivo, y cada archivo reproduce igual que los
+   * sueltos que la mudanza ya canjea. */
+  let azCarpetas = [];
+  if (!lista.length) {
+    const vistosCarpetas = new Set();
+    const reCarpetas = /https?:\/\/(?:www\.)?fireload\.com\/(?:folder|f)\/([a-f0-9]{32})\/?([^\s"'<>]*)?/gi;
+    let mCarpetas;
+    while ((mCarpetas = reCarpetas.exec(r.text))) {
+      if (!vistosCarpetas.has(mCarpetas[1])) {
+        vistosCarpetas.add(mCarpetas[1]);
+        azCarpetas.push(mCarpetas[0]);
+      }
+    }
+    const epsCarpeta = [];
+    for (let ci = 0; ci < azCarpetas.length && ci < 4; ci++) {
+      const mas = await azFldCarpeta(azCarpetas[ci]);
+      for (let ei = 0; ei < mas.length; ei++) epsCarpeta.push(mas[ei]);
+    }
+    if (epsCarpeta.length) {
+      epsCarpeta.sort(function (a, b) { return a.num - b.num; });
+      lista = epsCarpeta.map(function (ep) {
+        return { num: ep.num, fld: 'https://www.fireload.com/' + ep.id + '/', titulo: ep.titulo };
+      });
+      tipo = 'fld';
+      log('az ficha «' + slug + '»: ' + lista.length + ' archivo(s) en ' + azCarpetas.length + ' carpeta(s) de FireLoad (el recadero)');
+    } else if (azCarpetas.length) {
+      log('az ficha «' + slug + '»: ' + azCarpetas.length + ' carpeta(s) de FireLoad sin listado (¿caído?)');
+    }
+  }
   if (!lista.length) {
     if (mensajero) {
       throw kino.error('not_found', 'Az-Animex: 0 episodios', {
@@ -5566,16 +5617,18 @@ async function azEpsDe(slug) {
     const muros = [];
     if (/dire\.az-animex\.com\//i.test(r.text)) muros.push('el Server Az premium');
     if (/multiup\.(io|org)\//i.test(r.text)) muros.push('MultiUp');
-    if (/fireload\.com\/(?:folder|f)\//i.test(r.text)) muros.push('FireLoad');
     if (/filemoon\.[a-z]{2,3}\/[fd]\//i.test(r.text)) muros.push('FileMoon');
     if (/mega\.nz\//i.test(r.text)) muros.push('Mega');
     const caidos = /(series-am|peliculas|onas|especiales|ovas)\.az-animex\.com\//i.test(r.text);
-    if (muros.length || caidos) {
+    const carpetaCaida = azCarpetas.length > 0;
+    if (muros.length || caidos || carpetaCaida) {
       let aviso = '';
       if (muros.length) aviso = 'Esta ficha solo publica descargas en servicios que AniJing todavía no sabe abrir: ' + muros.join(', ') + '.';
+      else if (carpetaCaida) aviso = 'La carpeta de FireLoad de esta ficha no respondió. Inténtalo en un rato.';
       else aviso = 'Esta ficha solo publica descargas en servidores de Az-Animex que están caídos.';
-      if (caidos && muros.length) aviso += ' Sus otros servidores propios están caídos.';
-      log('az ficha «' + slug + '» con muros: ' + muros.join(', ') + (caidos ? ' + servidores caídos' : ''));
+      if (carpetaCaida && muros.length) aviso += ' La carpeta de FireLoad de esta ficha no respondió; inténtalo en un rato.';
+      if (caidos && (muros.length || carpetaCaida)) aviso += ' Sus otros servidores propios están caídos.';
+      log('az ficha «' + slug + '» con muros: ' + (muros.join(', ') || (carpetaCaida ? 'carpeta de FireLoad sin listado' : '')) + (caidos ? ' + servidores caídos' : ''));
       throw kino.error('not_found', 'Az-Animex: solo nubes no soportadas', {
         userMessage: aviso
       });
@@ -5665,6 +5718,73 @@ async function azTbxDlink(url) {
 function azFldHash(url) {
   const m = /fireload\.com\/([a-f0-9]{16})/i.exec(String(url || ''));
   return m ? m[1] : '';
+}
+
+/* v0.6.36 «El recadero»: el listado de una CARPETA de FireLoad
+ * (sonda v68). La página de la carpeta siembra la galleta
+ * filehosting en el frasco; el POST del listado AJAX devuelve el
+ * HTML con cada archivo — <hash16>/[Az-Animex]_Serie_-_NN_[BD]
+ * [JPU].mp4 — y el mismo archivo aparece varias veces en ese HTML
+ * (href, script y BBCode), así que se deduplica por su hash. El
+ * número del episodio sale del nombre; sin número manda el orden
+ * alfabético del listado. El resolve no cambia: cada archivo se
+ * canjea igual que los sueltos (la mudanza v0.6.35). */
+function azFldNum(nombre, indice) {
+  const sinExt = String(nombre).replace(/\.[a-z0-9]{2,5}$/i, '');
+  const m = /_-_(\d{1,4})_/.exec(sinExt) ||
+    /[\s._\[-](\d{1,4})[\s._\]-]/.exec(sinExt) ||
+    /#(\d{1,4})\b/.exec(sinExt);
+  if (m) {
+    const n = parseInt(m[1], 10);
+    if (n >= 1 && n <= 999 && !(n >= 1900 && n <= 2099)) return n;
+  }
+  return indice + 1;
+}
+
+function azFldTitulo(nombre) {
+  let t = String(nombre).replace(/\.[a-z0-9]{2,5}$/i, '');
+  t = t.replace(/^\[Az-Animex\][_ ]*/i, '');
+  t = t.replace(/\[[^\]]*\]/g, ' ');
+  t = t.replace(/_/g, ' ');
+  t = t.replace(/\s{2,}/g, ' ').trim();
+  return t || 'Episodio';
+}
+
+async function azFldCarpeta(urlCarpeta) {
+  const url = /^https?:\/\//i.test(String(urlCarpeta || '')) ? String(urlCarpeta)
+    : 'https://www.fireload.com/folder/' + urlCarpeta + '/';
+  const mMismo = /fireload\.com\/(?:folder|f)\/([a-f0-9]{32})/i.exec(url);
+  if (!mMismo) return [];
+  /* La visita a la carpeta calienta la galleta del frasco; su
+   * respuesta no se lee (la del POST sí). */
+  await traer(url, { headers: { Referer: 'https://www.fireload.com/' }, timeoutMs: 15000 });
+  const r = await traer('https://www.fireload.com/ajax/_view_folder_v2_file_listing.ajax.php', {
+    metodo: 'POST',
+    form: {
+      url_hash: mMismo[1],
+      nodeId: '-1',
+      filterText: '',
+      filterUploadedDateRange: '',
+      filterOrderBy: 'order_by_filename_asc',
+      pageStart: '0',
+      perPage: '100'
+    },
+    headers: { Referer: url },
+    timeoutMs: 20000
+  });
+  if (!r.ok) return [];
+  const html = String(r.text || '');
+  const vistos = new Set();
+  const eps = [];
+  const re = /fireload\.com\/([a-f0-9]{16})\/([^\s"'<>]+?\.(?:mp4|mkv|avi|mov|wmv|mpg|mpeg|flv|m4v))/gi;
+  let m;
+  while ((m = re.exec(html))) {
+    if (vistos.has(m[1])) continue;
+    vistos.add(m[1]);
+    const nombre = String(m[2]).replace(/&amp;/g, '&');
+    eps.push({ id: m[1], nombre: nombre, num: azFldNum(nombre, eps.length), titulo: azFldTitulo(nombre) });
+  }
+  return eps;
 }
 
 /* v0.6.35 «La mudanza»: el canje. El dlink ?pt= de FireLoad es de
@@ -6465,7 +6585,7 @@ async function screen(arg) {
       leading: { type: 'IconButton', icon: 'arrow_back', labelText: 'Cerrar', onPressed: { go: { close: true } } },
       title: 'AniJing',
       actions: [
-        { type: 'IconButton', icon: 'search', labelText: 'Buscar', onPressed: { go: { search: { q: '' } } } },
+        { type: 'IconButton', icon: 'search', labelText: 'Buscar', onPressed: 'buscarLupa' },
         { type: 'IconButton', icon: 'tune', labelText: 'Elegir fuente', onPressed: 'fuentes' }
       ]
     },
@@ -6475,7 +6595,19 @@ async function screen(arg) {
         type: 'Column',
         gap: 16,
         padding: { compact: 12, medium: 16, expanded: 24 },
-        children: cuerpo
+        children: [{
+          /* v0.6.36 «El recadero»: el campo de búsqueda de verdad.
+           * La lupa del appBar lo enfoca; el Enter (o su propia
+           * lupa) manda la palabra a la búsqueda de Kino. */
+          type: 'TextField',
+          key: 'ajq',
+          kind: 'search',
+          maxLength: 100,
+          labelText: 'Buscar', labelTextEn: 'Search',
+          hintText: 'Buscar en AniJing (p. ej. grisaia)', hintTextEn: 'Search AniJing (e.g. grisaia)',
+          onSubmitted: 'buscar',
+          trailingIcon: 'search', trailingLabel: 'Buscar', trailingLabelEn: 'Search', onTrailingTap: 'buscar'
+        }].concat(cuerpo)
       }]
     }
   };
@@ -6499,6 +6631,18 @@ async function screenEvent(e) {
    * viejo de la pantalla lo manda, se recarga sin ventanitas. */
   if (nombre === 'revisionAon') {
     return { toast: 'AnimeOnline ya no está en AniJing. Elige otra fuente.' };
+  }
+  /* v0.6.36 «El recadero»: la lupa mandaba una búsqueda VACÍA y
+   * Kino la descartaba — el botón era un adorno. Ahora el botón
+   * enfoca el campo de búsqueda de la pantalla, y el Enter (o la
+   * lupa del campo) manda la palabra a la búsqueda global de Kino
+   * con AniJing entre las fuentes: así salen títulos como Grisaia
+   * que el catálogo por géneros no trae. */
+  if (nombre === 'buscarLupa') return { focus: 'ajq' };
+  if (nombre === 'buscar') {
+    const q = String(ev.value || '').trim();
+    if (!q) return { toast: 'Escribe qué buscar — por ejemplo «grisaia».' };
+    return { go: { search: { q: q } } };
   }
   if (nombre === 'fuentes') {
     /* v0.6.11: ya no es el menú nativo (corta en 8) sino el selector del
@@ -6669,8 +6813,11 @@ async function action(key) {
     return { message: 'Este aparato no puede abrir la ventanita (solo en el teléfono o la tablet).' };
   }
   if (key === 'teraboxLogin') {
+    /* v0.6.36: la sonda v63 — /spanish/login salta en el teléfono a
+     * una wap que da 404; /wap/outlogin responde 200 con cualquier
+     * UA y sin captcha. Es la puerta de siempre del móvil. */
     const r = await kino.visualBrowser.open({
-      url: 'https://www.terabox.com/spanish/login',
+      url: 'https://www.terabox.com/wap/outlogin',
       title: 'Inicia sesión en TeraBox',
       doneWhen: { cookies: ['ndus'] },
       collect: { cookies: ['ndus', 'lang'], storeAs: { setting: 'teraboxCookie', format: 'header' } },

@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.35 «La mudanza»)
+## Qué hace (v0.6.36 «El recadero»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -32,6 +32,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.36 «El recadero»
+
+El teléfono probó la mudanza (FireLoad ya reproduce: «canjeado al servidor de archivos», primer cuadro en unos 20 s en un archivo de 555 MB) y dejó tres recados que esta versión hace. **Carpetas de FireLoad**: las fichas que el aviso llamaba «muros: FireLoad» (Amagami SS+, D-Frag, Aiura, Ano Natsu, Arakawa, Black Lagoon…) no eran muros sino **carpetas** — `fireload.com/folder/<hash32>/…`. La página de la carpeta siembra la galleta y su listado AJAX (POST `_view_folder_v2_file_listing.ajax.php` con `url_hash` y `nodeId -1`, sonda v68) trae cada archivo `<hash16>/[Az-Animex]_Serie_-_NN_[BD][JPU].mp4`: cada uno es un episodio con su número sacado del nombre, y reproduce igual que los sueltos que la mudanza ya canjea. **La lupa**: el botón mandaba una búsqueda vacía (`go search q=''`) y Kino la descarta — era un adorno. Ahora la pantalla tiene un **campo de búsqueda** de verdad: la lupa lo enfoca y el Enter (o su propia lupa) manda la palabra a la búsqueda global de Kino con AniJing entre las fuentes — así aparece Grisaia, que el catálogo por géneros no siempre trae. **TeraBox**: la ventanita abría `/spanish/login`, que en el teléfono salta a una wap que da 404 — ahora abre `/wap/outlogin`, la puerta del móvil de siempre (sonda v63: responde 200 con cualquier UA y sin captcha). Sin hosts nuevos: `*.fireload.com` y `*.terabox.com` ya estaban, así que la actualización no pide re-aprobación.
 
 ## v0.6.35 «La mudanza»
 
