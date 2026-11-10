@@ -1,4 +1,7 @@
-=== compresor de icono v2 (ImageMagick) ===
-herramienta: none
-/home/runner/work/_temp/3d8135c9-bd44-483c-b5f5-ac1f38a37505.sh: line 7: none: command not found
-/home/runner/work/_temp/3d8135c9-bd44-483c-b5f5-ac1f38a37505.sh: line 8: identify: command not found
+=== compresor de icono v3 (Pillow) ===
+original: 1004824 bytes
+modo: RGB, tamano original: (1254, 1254)
+transparencia: False
+Traceback (most recent call last):
+  File "<stdin>", line 42, in <module>
+TypeError: not enough arguments for format string
