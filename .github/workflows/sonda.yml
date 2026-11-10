@@ -8,18 +8,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: sonda v51
+      - name: sonda v51b
         run: |
           mkdir -p sonda-out
           UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
-          curl -sL -A "$UA" -H 'Referer: https://www.az-animex.com/' 'https://www.az-animex.com/?s=grisaia' -o sonda-out/s-grisaia.html
-          curl -sL -A "$UA" -H 'Referer: https://www.az-animex.com/' 'https://www.az-animex.com/?s=grisaia+no+kajitsu' -o sonda-out/s-kajitsu.html
-          curl -sL -A "$UA" -H 'Referer: https://www.az-animex.com/' 'https://www.az-animex.com/?s=naruto' -o sonda-out/s-naruto.html
-          curl -sL -A "$UA" -H 'Referer: https://www.az-animex.com/' 'https://www.az-animex.com/grisaia-no-kajitsu/' -o sonda-out/ficha-grisaia.html
-          curl -sL -A "$UA" 'https://www.az-animex.com/sitemap.xml' -o sonda-out/sitemap.xml
-          curl -sL -A "$UA" 'https://www.az-animex.com/wp-sitemap.xml' -o sonda-out/wp-sitemap.xml
+          curl -sL -A "$UA" 'https://www.az-animex.com/wp-sitemap-taxonomies-genero-1.xml' -o sonda-out/sm-generos.xml
+          curl -sL -A "$UA" 'https://www.az-animex.com/wp-sitemap-posts-post-1.xml' -o sonda-out/sm-posts.xml
+          curl -sL -A "$UA" 'https://www.az-animex.com/wp-sitemap-posts-az-tv-a-bd-1.xml' -o sonda-out/sm-tvbd.xml
+          curl -sL -A "$UA" 'https://www.az-animex.com/wp-sitemap-posts-azax-subs-1.xml' -o sonda-out/sm-azax.xml
+          curl -sL -A "$UA" 'https://www.az-animex.com/wp-sitemap-posts-az-oc-not-1.xml' -o sonda-out/sm-ocnot.xml
+          curl -s -A "$UA" -o /dev/null -w 's-kajitsu %{http_code} %{redirect_url}\n' 'https://www.az-animex.com/?s=grisaia+no+kajitsu' > sonda-out/redirect-check.txt
+          curl -s -A "$UA" -o /dev/null -w 's-grisaia %{http_code} %{redirect_url}\n' 'https://www.az-animex.com/?s=grisaia' >> sonda-out/redirect-check.txt
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add sonda-out
-          git commit -m 'sonda out v51' || true
+          git commit -m 'sonda out v51b' || true
           git push
