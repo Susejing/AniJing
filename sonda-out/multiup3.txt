@@ -1,0 +1,7 @@
+== tamanio: 57029
+== espejos (hrefs):
+href="https://bit.ly/2pw5x86"
+href="https://discord.gg/jRrmWTVhW5"
+href="https://geekdot.be"
+== nombres de hosts:
+1fichier.com

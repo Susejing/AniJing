@@ -1,0 +1,21 @@
+== contexto Insomnia:
+        <title>Kimi wa Houkago Insomnia BD shared by k**go - Fireload</title>
+        <meta name="description" content="Kimi wa Houkago Insomnia BD shared by k**go - View Folder" />
+        <meta name="keywords" content="Kimi wa Houkago Insomnia BD shared by k**go, fireload, folder, view, file, your, interface, upload, download, site" />
+                    <meta property="og:title" content="Kimi wa Houkago Insomnia BD - shared via Fireload" />
+="og:url" content="https://www.fireload.com/folder/4fbe306e2d5a7dd4fe235763e8a495a2/Kimi_wa_Houkago_Insomnia_BD" />
+":pageTitle}, "", "https://www.fireload.com/folder/4fbe306e2d5a7dd4fe235763e8a495a2/Kimi_wa_Houkago_Insomnia_BD");
+var folderArray = {"51319":"Kimi wa Houkago Insomnia BD"};
+var folderKeysArray = {"4fbe306e2d5a7dd4fe235763e8a495a2":"Kimi wa Houkago Insomnia BD"};
+== hrefs relativos:
+== ajax en html:
+POST
+ajax
+ajax({
+ajax({url: 
+ajax/_account_add_to_archive.ajax.php
+ajax/_account_extract_archive.ajax.php
+ajax/_account_get_account_file_stats.ajax.php
+ajax/_account_image_rotate.ajax.php
+ajax/_account_internal_notification_mark_all_read.ajax.php
+ajax/_account_join_files.ajax.php
