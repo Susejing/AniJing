@@ -11,74 +11,31 @@ jobs:
       - name: sondear
         run: |
           mkdir -p sonda-out
-          python3 << 'PYEOF'
-          import json, re, html, urllib.request
-          BASE = 'https://www.az-animex.com'
-          UA = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'}
-          def get(u):
-              try:
-                  req = urllib.request.Request(u, headers=UA)
-                  with urllib.request.urlopen(req, timeout=20) as r:
-                      return r.read().decode('utf-8', 'replace')
-              except Exception:
-                  return ''
-          # slugs de las primeras 5 paginas del A-Z
-          slugs = []
-          for p in range(1, 6):
-              t = get(BASE + '/wp-json/wp/v2/posts?per_page=40&orderby=title&order=asc&page=' + str(p) + '&_fields=slug')
-              try:
-                  slugs += [x['slug'] for x in json.loads(t)]
-              except Exception:
-                  pass
-          open('sonda-out/slugs.txt', 'w').write('\n'.join(slugs))
-          # fichas crudas de los dos reclamados
-          for s in ['air', 'amagami-ss']:
-              open('sonda-out/f-' + s + '.html', 'w').write(get(BASE + '/' + s + '/'))
-          def clasif(host, path):
-              h = host.lower()
-              if 'mirrored.to' in h: return 'mirrored'
-              if 'rentry.co' in h: return 'rentry'
-              if 'mediafire.com' in h: return 'mediafire'
-              if 'fireload.com' in h: return 'fireload-' + ('d' if re.match(r'^/d', path) else ('folder' if re.match(r'^/folder', path) else 'otro'))
-              if any(t in h for t in ['terabox', '4funbox', 'mirrobox', 'teraboxapp', '1024tera', 'freeterabox', 'gibitbox', 'momerybox', 'tibibox']): return 'terabox'
-              if 'filemoon' in h: return 'filemoon-' + (path.split('/')[1] if len(path) > 1 and path.split('/')[1] else 'raiz')
-              if 'dire.az-animex.com' in h: return 'serveraz-dire'
-              if 'ovas.az-animex.com' in h: return 'serveraz-ovas'
-              if 'multiup' in h: return 'multiup'
-              if 'az-animex.com' in h: return 'az-otro'
-              return 'otro:' + h
-          censo = []
-          for s in slugs:
-              t = get(BASE + '/' + s + '/')
-              botones = []
-              for a in re.findall(r'<a[^>]*col1-boton[^>]*>', t):
-                  m = re.search(r'href="([^"]+)"', a)
-                  if not m: continue
-                  u = html.unescape(m.group(1))
-                  mm = re.match(r'https?://([^/]+)(/[^\?]*)?', u)
-                  if mm:
-                      botones.append({'c': clasif(mm.group(1), mm.group(2) or '/'), 'u': u[:180]})
-                  else:
-                      botones.append({'c': 'relativa', 'u': u[:180]})
-              censo.append({'slug': s, 'n': len(botones), 'botones': botones})
-          open('sonda-out/censo-v56.json', 'w').write(json.dumps(censo, ensure_ascii=False, indent=1))
-          # resumen: conteo por mensajero y por combinacion
-          cont = {}
-          combos = {}
-          for e in censo:
-              claves = sorted(set(b['c'] for b in e['botones']))
-              for b in e['botones']:
-                  cont[b['c']] = cont.get(b['c'], 0) + 1
-              if claves:
-                  k = '+'.join(claves)
-                  combos[k] = combos.get(k, 0) + 1
-          resumen = {'fichas': len(censo), 'con_botones': sum(1 for e in censo if e['n']), 'por_mensajero': cont, 'por_combinacion': sorted(combos.items(), key=lambda kv: -kv[1])}
-          open('sonda-out/censo-resumen-v56.json', 'w').write(json.dumps(resumen, ensure_ascii=False, indent=1))
-          PYEOF
+          UA='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+          # mp4 directo de peliculas.az-animex.com
+          curl -s -o sonda-out/peliculas-head.txt -D sonda-out/peliculas-h.txt -A "$UA" -H 'Referer: https://www.az-animex.com/' -r 0-1023 --max-time 20 -w 'STATUS %{http_code} TYPE %{content_type} SIZE %{size_download}\n' 'https://peliculas.az-animex.com/B/Break%20Blade%201%20-%20Kakusei%20no%20Toki%20BD/%5BAz-Animex%5D%20Break%20Blade%201%20-%20Kakusei%20no%20Toki%20%5BBD%5D%5BDS%5D.mp4' || true
+          # mp4 directo de onas.az-animex.com
+          curl -s -o /dev/null -D sonda-out/onas-h.txt -A "$UA" -H 'Referer: https://www.az-animex.com/' -r 0-1023 --max-time 20 -w 'ONAS STATUS %{http_code} TYPE %{content_type} SIZE %{size_download}\n' 'https://onas.az-animex.com/es/B/Bubble/%5BAz-Animex%5D%20Bubble%20%5BHakoniwa%5D.mp4' || true
+          # listado de series-am.az-animex.com (¿AList? ¿HTML?)
+          curl -s -L -o sonda-out/seriesam-ajin.html -D sonda-out/seriesam-h.txt -A "$UA" -H 'Referer: https://www.az-animex.com/' --max-time 20 'https://series-am.az-animex.com/es/A/Ajin%20BD' || true
+          # raiz de series-am por si la ruta larga no existe tal cual
+          curl -s -L -o sonda-out/seriesam-raiz.html -A "$UA" --max-time 20 'https://series-am.az-animex.com/' || true
+          # filemoon /f/ de AIR
+          curl -s -L -o sonda-out/filemoon-f.html -A "$UA" --max-time 20 'https://filemoon.to/f/i2vnsvccef' || true
+          # api de embed de ese mismo id
+          curl -s -o sonda-out/filemoon-api.json -A "$UA" -H 'Referer: https://filemoon.to/f/i2vnsvccef' --max-time 20 'https://filemoon.to/api/videos/i2vnsvccef/embed/details' || true
+          # filemoon /d/ de ai-wo-komete
+          curl -s -L -o sonda-out/filemoon-d.html -A "$UA" --max-time 20 'https://filemoon.to/d/m90vqze7ym00' || true
+          # api de ese id
+          curl -s -o sonda-out/filemoon-api-d.json -A "$UA" --max-time 20 'https://filemoon.to/api/videos/m90vqze7ym00/embed/details' || true
+          # carpeta de fireload (3-gatsu no lion)
+          curl -s -L -o sonda-out/fireload-folder.html -A "$UA" --max-time 20 'https://www.fireload.com/folder/40917/3-gatsu_no_Lion_BD' || true
+          # pagina de archivo suelto de fireload
+          curl -s -L -o sonda-out/fireload-file.html -A "$UA" --max-time 20 'https://www.fireload.com/afc05582085b18ad/' || true
       - name: commit
         run: |
-          git config user.name "sonda-bot" 
+          git config user.name "sonda-bot"
           git config user.email "sonda@users.noreply.github.com"
           git add sonda-out .github/workflows/sonda.yml
-          git commit -m "sonda v56 out" || true
+          git commit -m "sonda v57 out" || true
           git push || true
