@@ -1,0 +1,84 @@
+== dire-raiz (tamanio 3989)
+<!DOCTYPE html>
+<html lang="en" translate="no">
+  <head>
+    
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <meta name="referrer" content="same-origin" >
+    <meta name="generator" content="AList V3" >
+    <meta name="theme-color" content="#000000" >
+    <meta name="google" content="notranslate" >
+    
+    <meta name="apple-mobile-web-app-capable" content="yes" >
+    <meta name="apple-mobile-web-app-title" content="AList" >
+    <link       rel="apple-touch-icon"
+      href="https://jsd.nn.ci/gh/alist-org/logo@main/logo.png"
+    >
+    
+-- js/css:
+src="/assets/index-legacy.2ab05dfe.js"
+src="/assets/polyfills-legacy.2ae8dfb3.js"
+src="https://g.alicdn.com/IMM/office-js/1.1.5/aliyun-web-office-sdk.min.js"
+== dire-anime (tamanio 3989)
+<!DOCTYPE html>
+<html lang="en" translate="no">
+  <head>
+    
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <meta name="referrer" content="same-origin" >
+    <meta name="generator" content="AList V3" >
+    <meta name="theme-color" content="#000000" >
+    <meta name="google" content="notranslate" >
+    
+    <meta name="apple-mobile-web-app-capable" content="yes" >
+    <meta name="apple-mobile-web-app-title" content="AList" >
+    <link       rel="apple-touch-icon"
+      href="https://jsd.nn.ci/gh/alist-org/logo@main/logo.png"
+    >
+    
+-- js/css:
+src="/assets/index-legacy.2ab05dfe.js"
+src="/assets/polyfills-legacy.2ae8dfb3.js"
+src="https://g.alicdn.com/IMM/office-js/1.1.5/aliyun-web-office-sdk.min.js"
+== dire-mono (tamanio 3989)
+<!DOCTYPE html>
+<html lang="en" translate="no">
+  <head>
+    
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <meta name="referrer" content="same-origin" >
+    <meta name="generator" content="AList V3" >
+    <meta name="theme-color" content="#000000" >
+    <meta name="google" content="notranslate" >
+    
+    <meta name="apple-mobile-web-app-capable" content="yes" >
+    <meta name="apple-mobile-web-app-title" content="AList" >
+    <link       rel="apple-touch-icon"
+      href="https://jsd.nn.ci/gh/alist-org/logo@main/logo.png"
+    >
+    
+-- js/css:
+src="/assets/index-legacy.2ab05dfe.js"
+src="/assets/polyfills-legacy.2ae8dfb3.js"
+src="https://g.alicdn.com/IMM/office-js/1.1.5/aliyun-web-office-sdk.min.js"
+== mono json:
+<!DOCTYPE html>
+<html lang="en" translate="no">
+  <head>
+    
+    <meta charset="utf-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1" >
+    <meta name="referrer" content="same-origin" >
+    <meta name="generator" content="AList V3" >
+    <meta name="theme-color" content="#000000" >
+    <meta name="google" content="notranslate" >
+    
+    <meta name="apple-mobile-web-app-capable" content="yes" >
+    <meta name="apple-mobile-web-app-title" content="AList" >
+    <link       rel="apple-touch-icon"
+      href="https://jsd.nn.ci/gh/alist-org/logo@main/logo.png"
+    >
+    
