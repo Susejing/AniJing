@@ -1,6 +1,0 @@
-===== https://animegx.com/ =====
-status 403, bytes 5723
-===== https://www.animegx.org/ =====
-status 000, bytes 5723
-===== https://animegx.org/ =====
-status 000, bytes 5723
