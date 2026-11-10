@@ -38,6 +38,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.46 «El retrato rescatado»
+
+El teléfono confirmó las letras de BeatZ, pero las portadas seguían grises a montones: el patrón `<slug>-port.jpg` solo sirve cuando el folder del almacén coincide con el slug de la web, y las secuelas (3-gatsu-no-lion-2 vs «2nd Season») no coinciden. Ahora los pósters de BeatZ viajan con handle propio y los sirve el plugin con cadena de dos pasos: el patrón del almacén primero y, si lo rompe, el **og:image de la ficha web** — el mismo salvavidas de Az-Animex. Quien no tenga ni ficha, placeholder honesto.
+
 ## v0.6.45 «El sondeo del almacén»
 
 La 0.6.44 llegó al teléfono (0.6.44 en pantalla) y aun así BeatZ siguió igual: algunas portadas cargan, otras quedan grises y el catálogo se corta. Se acabó el adivinar: ajustes estrena el botón **«Sondear BeatZ»**, que recorre el almacén paso a paso (raíz, las 4 páginas del padrón, conteo por rango de letras y 3 pósters de muestra) y escribe todo en el log — el mismo camino con el que se curó Az-Animex: sondear desde el teléfono de verdad, leer el log y arreglar con datos, no con teorías.

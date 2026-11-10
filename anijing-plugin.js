@@ -447,6 +447,16 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.46 «El retrato rescatado» — el teléfono confirmó las letras
+// (captura 16:45) pero las portadas de BeatZ seguían grises a montones:
+// el patrón <slug>-port.jpg solo sirve cuando el folder del almacén
+// coincide con el slug de la web, y las secuelas (3-gatsu-no-lion-2 vs
+// «2nd Season») no coinciden. Ahora los pósters de BeatZ viajan con
+// handle «btz-poster-<slug>» y image() los sirve con cadena de dos
+// pasos: el patrón primero y, si el almacén lo rompe, el og:image de
+// la ficha /bd/<slug>.html — el mismo salvavidas de Az-Animex. Quien
+// no tenga ni ficha, placeholder honesto.
+//
 // v0.6.45 «El sondeo del almacén» — la 0.6.44 llegó al teléfono (0.6.44
 // en pantalla) y AUN ASÍ la vista de BeatZ siguió igual: algunas
 // portadas cargan, otras quedan grises y el catálogo se corta. Se
@@ -859,7 +869,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.45';
+const VERSION = '0.6.46';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -6475,9 +6485,50 @@ function btzItemDe(nombre, base) {
     ref: 'btz:' + (base || BTZ_RAIZ) + '/' + String(nombre || '').trim(),
     title: String(nombre),
     kind: 'series',
-    poster: BASE_BTZ + '/img/img-anime/' + slug + '/' + slug + '-port.jpg',
+    /* v0.6.46: el póster viaja como handle y image() lo sirve — primero
+     * el patrón <slug>-port.jpg y, si el almacén lo rompe (secuelas cuyo
+     * folder no coincide), el og:image de la ficha /bd/<slug>.html. */
+    poster: { source: 'plugin', handle: 'btz-poster-' + slug },
     badges: ['BeatZ-Anime']
   };
+}
+
+/* v0.6.46 «El retrato rescatado»: la cadena del póster de BeatZ. */
+async function btzPosterDe(slug) {
+  const directo = BASE_BTZ + '/img/img-anime/' + slug + '/' + slug + '-port.jpg';
+  let r = null;
+  try {
+    r = await kino.fetch(directo, { headers: { Referer: BASE_BTZ + '/', 'User-Agent': UA }, timeoutMs: 9000, maxBytes: 262145 });
+  } catch (eF) { r = null; }
+  if (r && r.status === 200 && r.truncated !== true) {
+    const ct = String((r.headers && (r.headers['content-type'] || r.headers['Content-Type'])) || '');
+    if (!/text\/html/i.test(ct)) {
+      let bytes = '';
+      try { bytes = r.base64(); } catch (eB) { bytes = ''; }
+      if (bytes) return { bytes: bytes, mime: /png/i.test(ct) ? 'image/png' : (/webp/i.test(ct) ? 'image/webp' : 'image/jpeg') };
+    }
+  }
+  let f = null;
+  try { f = await btzFicha(slug); } catch (eFi) { f = null; }
+  if (f && f.poster) {
+    let r2 = null;
+    try {
+      r2 = await kino.fetch(f.poster, { headers: { Referer: BASE_BTZ + '/', 'User-Agent': UA }, timeoutMs: 9000, maxBytes: 262145 });
+    } catch (eF2) { r2 = null; }
+    if (r2 && r2.status === 200 && r2.truncated !== true) {
+      const ct2 = String((r2.headers && (r2.headers['content-type'] || r2.headers['Content-Type'])) || '');
+      if (!/text\/html/i.test(ct2)) {
+        let bytes2 = '';
+        try { bytes2 = r2.base64(); } catch (eB2) { bytes2 = ''; }
+        if (bytes2) {
+          log('btz póster «' + slug + '»: el patrón falló — servido el og:image de su ficha');
+          return { bytes: bytes2, mime: /png/i.test(ct2) ? 'image/png' : (/webp/i.test(ct2) ? 'image/webp' : 'image/jpeg') };
+        }
+      }
+    }
+  }
+  log('btz póster «' + slug + '»: ni el patrón ni la ficha lo dieron — placeholder honesto');
+  throw kino.error('unavailable', 'BeatZ no entregó la imagen');
 }
 
 /* Ficha web: og:image y og:description de /bd/<slug>.html (el slug se
@@ -7291,6 +7342,12 @@ async function image(arg) {
    * (con caché en kino.storage y grifo de caudal). */
   if (handle.indexOf('az-poster-') === 0) {
     return await azPosterDe(handle.slice('az-poster-'.length));
+  }
+  /* v0.6.46: los pósters de BeatZ viajan con handle «btz-poster-<slug>»
+   * y aquí se sirve su cadena: patrón del almacén primero, og:image de
+   * la ficha después. */
+  if (handle.indexOf('btz-poster-') === 0) {
+    return await btzPosterDe(handle.slice('btz-poster-'.length));
   }
   if (handle.indexOf('https://ivanime.buzz/') !== 0) {
     throw kino.error('not_found', 'imagen que no es de IvAnime');
