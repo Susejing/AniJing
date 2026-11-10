@@ -447,6 +447,26 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.31 «El galerista» — el teléfono validó la 0.6.30: los pósters
+// del Directorio A-Z SÍ salen, pero Kino los pide TODOS de golpe
+// (~230 en el log) y el grifo de 14 por ventana los dejó grises a
+// montones; y algunos og:image pesan más de los 256 KB de Kino
+// («la imagen no llegó (status 200)»). La sonda v54/v55 encontró la
+// vía barata que la v52 buscaba: _fields=slug,title,_links trae el
+// wp:featuredmedia de cada ficha (40 IDs por página) y media?include=
+// devuelve las 40 con source_url y media_details.sizes (medium
+// ~212x300 y ~20 KB) — DOS peticiones por página visten las 40
+// tarjetas, y el póster viaja como URL directa (Kino la carga solo,
+// sin gastar presupuesto del plugin: la sonda midió que az sirve las
+// imágenes sin Referer). El handle «az-poster-» queda de salvavidas
+// solo para fichas sin featured media (con su grifo), y cuando su
+// og:image pese de más se reintenta con la variante pequeña que
+// declara la propia ficha. Además: la portada se guarda 10 minutos
+// en kino.storage (el Inicio repetido no gasta peticiones) y el
+// estado de la pantalla se arma con guarda de tamaño (12/8/6/4
+// tarjetas por riel) para no pasarse de los 64 KB de Kino — sospecha
+// del Inicio en blanco.
+//
 // v0.6.30 «El retratista» — el teléfono validó la 0.6.29: el Directorio
 // A-Z lista las 1831 fichas, pero las tarjetas salen GRIS (el wp-json
 // no trae imágenes) y el usuario lo preguntó de una vez. La sonda v52
@@ -616,7 +636,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.30';
+const VERSION = '0.6.31';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -5048,12 +5068,59 @@ function azTarjetas(html) {
  * viste el suyo al abrirse. */
 async function azDirectorio(pag, conPoster) {
   const num = Number.isFinite(pag) && pag > 0 ? pag : 1;
-  const url = BASE_AZ + '/wp-json/wp/v2/posts?per_page=40&orderby=title&order=asc&page=' + num + '&_fields=slug,title';
+  const url = BASE_AZ + '/wp-json/wp/v2/posts?per_page=40&orderby=title&order=asc&page=' + num + '&_fields=slug,title,_links';
   const r = await traer(url, { headers: { Referer: BASE_AZ + '/', Accept: 'application/json,*/*' }, timeoutMs: 12000 });
   if (!r.ok || !r.text) return { items: [], next: null };
   let j = null;
   try { j = JSON.parse(r.text); } catch (e) { j = null; }
   if (!Array.isArray(j)) return { items: [], next: null };
+  /* v0.6.31 «El galerista»: _links declara el wp:featuredmedia de
+   * cada ficha (sonda v54) — con media?include= se cosechan TODOS
+   * los pósters de la página en UNA petición (sonda v55), y el póster
+   * viaja como URL directa: Kino la carga solo, sin gasto del
+   * plugin (az sirve las imágenes sin Referer, sonda v54). */
+  const slugAId = {};
+  for (const p of j) {
+    if (!p || !p.slug) continue;
+    const fm = p._links && Array.isArray(p._links['wp:featuredmedia']) ? p._links['wp:featuredmedia'][0] : null;
+    const m = fm && fm.href ? /media\/(\d+)$/.exec(String(fm.href)) : null;
+    if (m) slugAId[p.slug] = m[1];
+  }
+  const mapa = {};
+  const ids = [];
+  for (const s in slugAId) if (ids.indexOf(slugAId[s]) < 0) ids.push(slugAId[s]);
+  if (ids.length) {
+    const mr = await traer(BASE_AZ + '/wp-json/wp/v2/media?include=' + ids.join(',') + '&per_page=' + (ids.length > 40 ? 40 : ids.length) + '&_fields=id,source_url,media_details', { headers: { Referer: BASE_AZ + '/', Accept: 'application/json,*/*' }, timeoutMs: 12000 });
+    if (mr.ok && mr.text) {
+      let mj = null;
+      try { mj = JSON.parse(mr.text); } catch (eM) { mj = null; }
+      if (Array.isArray(mj)) {
+        const idAUrl = {};
+        for (const m of mj) {
+          if (!m || !m.id) continue;
+          const md = m.media_details || {};
+          const sizes = md.sizes || {};
+          /* medium (212x300, ~20 KB) es el equilibrio; si pesa más
+           * de 230 KB, thumbnail; si nada cabe, la original. */
+          let u = '';
+          let peso = Infinity;
+          for (const clave of ['medium', 'thumbnail']) {
+            const s = sizes[clave];
+            if (s && s.source_url) {
+              const fs = Number(s.filesize) || 0;
+              if (fs < 230000 && fs < peso) { peso = fs; u = s.source_url; }
+            }
+          }
+          if (!u && m.source_url) u = sizes.medium && sizes.medium.source_url ? sizes.medium.source_url : (sizes.thumbnail && sizes.thumbnail.source_url ? sizes.thumbnail.source_url : m.source_url);
+          idAUrl[String(m.id)] = u;
+        }
+        for (const s in slugAId) {
+          const u = idAUrl[slugAId[s]];
+          if (u) mapa[s] = u;
+        }
+      }
+    }
+  }
   const items = [];
   const vistos = new Set();
   for (const p of j) {
@@ -5067,10 +5134,8 @@ async function azDirectorio(pag, conPoster) {
       title: (tit || slugATitulo(slug)).slice(0, 200),
       kind: 'series'
     };
-    /* v0.6.30 «El retratista»: el wp-json no trae imágenes (v52:
-     * media?parent= [] y _embed vacío con _fields) — el póster
-     * viaja como handle y image() lo resuelve (ficha → og:image). */
-    if (conPoster === true) it.poster = { source: 'plugin', handle: 'az-poster-' + slug };
+    if (mapa[slug]) it.poster = mapa[slug];
+    else if (conPoster === true) it.poster = { source: 'plugin', handle: 'az-poster-' + slug };
     items.push(it);
   }
   /* X-WP-Total es 1831 (46 páginas de 40): mientras la página
@@ -5098,6 +5163,7 @@ async function azPosterDe(slug) {
   }
   azPosterMarcas.push(ahora);
   let og = '';
+  let fichaTxt = '';
   try { og = String(kino.storage.get('ajAzPoster:' + slug) || ''); } catch (eS) { og = ''; }
   if (og.indexOf('http') !== 0) {
     const r = await traer(BASE_AZ + '/' + slug + '/', { headers: { Referer: BASE_AZ + '/' }, timeoutMs: 12000 });
@@ -5105,7 +5171,8 @@ async function azPosterDe(slug) {
       log('az póster «' + slug + '»: la ficha no llegó (status ' + (r && r.status) + ')');
       throw kino.error('unavailable', 'az póster «' + slug + '»: la ficha no llegó');
     }
-    const m = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(r.text) || /content=["']([^"']+)["'][^>]*property=["']og:image["']/i.exec(r.text);
+    fichaTxt = r.text;
+    const m = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(fichaTxt) || /content=["']([^"']+)["'][^>]*property=["']og:image["']/i.exec(fichaTxt);
     if (!m) {
       log('az póster «' + slug + '»: la ficha no declara og:image');
       throw kino.error('unavailable', 'az póster «' + slug + '»: la ficha no declara og:image');
@@ -5124,6 +5191,33 @@ async function azPosterDe(slug) {
   } catch (eF) {
     log('az póster «' + slug + '»: la imagen no llegó (' + ((eF && eF.message) || String(eF)) + ')');
     throw kino.error('unavailable', 'az póster «' + slug + '»: la imagen no llegó');
+  }
+  /* v0.6.31: hay og:image que pesan más de los 256 KB de Kino
+   * («status 200» del teléfono) — la propia ficha declara la
+   * variante pequeña de WordPress (base-212x300.jpg en el srcset),
+   * se prueba esa antes de rendirse (lección del pulgar de iva). */
+  if (r && r.status === 200 && r.truncated === true && fichaTxt) {
+    const baseOg = (og.split('/').pop() || '').replace(/\.\w+$/, '');
+    const baseEsc = baseOg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const mv = new RegExp('(https?:\\/\\/www\\.az-animex\\.com\\/wp-content\\/uploads\\/[^"\'\\s]*' + baseEsc + '-\\d{2,3}x\\d{2,3}\\.(?:jpg|png|webp))').exec(fichaTxt);
+    if (mv) {
+      let rV = null;
+      try {
+        rV = await kino.fetch(mv[1], { headers: { Referer: BASE_AZ + '/', 'User-Agent': UA }, timeoutMs: 9000, maxBytes: 262145 });
+      } catch (eV) { rV = null; }
+      if (rV && rV.status === 200 && rV.truncated !== true) {
+        const bytesV = (function () { try { return rV.base64(); } catch (eB) { return ''; } })();
+        if (bytesV) {
+          const ctV = ((rV.headers && (rV.headers['content-type'] || rV.headers['Content-Type'])) || '') || 'image/jpeg';
+          let mimeV = 'image/jpeg';
+          if (/webp/i.test(ctV)) mimeV = 'image/webp';
+          else if (/png/i.test(ctV)) mimeV = 'image/png';
+          const kbV = Math.round((bytesV.length * 3 / 4) / 102.4) / 10;
+          log('az póster servido «' + slug + '» (variante pequeña «' + (mv[1].split('/').pop() || '') + '», ' + kbV + ' KB): la original pesaba de más');
+          return { bytes: bytesV, mime: mimeV };
+        }
+      }
+    }
   }
   if (!r || r.status !== 200 || r.truncated === true) {
     log('az póster «' + slug + '»: status ' + (r && r.status) + (r && r.truncated ? ' (pesa más del tope de Kino, 256 KB)' : ''));
@@ -5811,6 +5905,16 @@ const NUCLEO_TODAS = {
 };
 
 async function cargarPantalla(fuente) {
+  /* v0.6.31 «El galerista»: la portada se guarda 10 minutos en
+   * kino.storage — el Inicio repetido no gasta peticiones ni
+   * espera (y si una fuente tarda, la caché la salva). */
+  try {
+    const g = kino.storage.get('ajPantalla:' + (fuente || 'todas'));
+    if (g && typeof g === 'object' && g.datos && Array.isArray(g.datos.filas) && g.datos.filas.length && Date.now() - (g.t || 0) < 600000) {
+      log('pantalla «' + (fuente || 'todas') + '» servida de caché (' + g.datos.filas.length + ' filas)');
+      return g.datos;
+    }
+  } catch (eS) {}
   let filas = [];
   if (fuente === 'todas') {
     const fuentes = Object.values(FUENTES);
@@ -5853,17 +5957,31 @@ async function cargarPantalla(fuente) {
     }
   }
   const hero = fuente === 'todas' || fuente === 'av1' ? await heroDeAv1() : null;
-  /* v0.6.5: con las secciones llenas el estado de la pantalla crece y
-   * Kino la guarda con un tope de 64 KB: cuando hay muchas filas, cada
-   * riel muestra 8 tarjetas en vez de 12 para que «Todas» no desborde. */
-  const porRiel = filas.length > 18 ? 8 : 12;
-  const fuera = [];
-  for (const fila of filas) {
-    const items = (fila.items || []).slice(0, porRiel).map(compactarItem);
-    if (!items.length) continue;
-    fuera.push({ id: fila.id, title: fila.title, ref: fila.ref || null, fuente: fila.fuente || '', items: items });
+  /* v0.6.31: guarda de tamaño de verdad — se arma con 12/8/6/4
+   * tarjetas por riel y se queda con la PRIMERA versión que quepa
+   * bajo 55 KB (pasarse del tope de 64 KB deja el Inicio en blanco). */
+  let datos = null;
+  const anchos = filas.length > 18 ? [8, 6, 4] : [12, 8, 6, 4];
+  for (let ia = 0; ia < anchos.length; ia++) {
+    const porRiel = anchos[ia];
+    const fuera = [];
+    for (const fila of filas) {
+      const items = (fila.items || []).slice(0, porRiel).map(compactarItem);
+      if (!items.length) continue;
+      fuera.push({ id: fila.id, title: fila.title, ref: fila.ref || null, fuente: fila.fuente || '', items: items });
+    }
+    datos = { filas: fuera, hero: hero };
+    let peso = 0;
+    try { peso = JSON.stringify(datos).length; } catch (eJ) { peso = 0; }
+    if (peso <= 55000) break;
   }
-  return { filas: fuera, hero: hero };
+  let pesoFin = 0;
+  try { pesoFin = JSON.stringify(datos).length; } catch (eJ2) { pesoFin = 0; }
+  if (datos && pesoFin > 0 && pesoFin <= 45000) {
+    try { kino.storage.set('ajPantalla:' + (fuente || 'todas'), { t: Date.now(), datos: datos }); } catch (eS3) {}
+  }
+  log('pantalla «' + (fuente || 'todas') + '» armada: ' + ((datos && datos.filas) ? datos.filas.length : 0) + ' filas, ' + (Math.round(pesoFin / 102.4) / 10) + ' KB de estado');
+  return datos;
 }
 
 function esqueletoRiel() {

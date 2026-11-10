@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.30 «El retratista»)
+## Qué hace (v0.6.31 «El galerista»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -32,6 +32,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.31 «El galerista»
+
+La 0.6.30 vistió el Directorio A-Z… pero el teléfono confesó que Kino pide TODOS los pósters de golpe (~230 en un log) y el grifo de 14 por ventana dejó tarjetas grises a montones; además algunos pósters pesan más de los 256 KB que Kino acepta («la imagen no llegó (status 200)»). La cura de esta versión sondea una vía que la 0.6.30 no encontró: `wp-json` con `_fields=slug,title,_links` declara el `wp:featuredmedia` de cada ficha, y `media?include=` entrega las 40 imágenes de la página en UNA petición, con sus tamaños WordPress (medium ~212x300, ~20 KB). Así el póster viaja como **URL directa** en la tarjeta — Kino la carga solo, sin gastar presupuesto del plugin: dos peticiones visten las 40, sin grifo. El handle propio queda de salvavidas solo para fichas sin featured media, con reintento de la variante pequeña cuando la og:image pese de más. Y el Inicio recibe dos mimos: la portada se guarda 10 minutos (reabrirla no cuesta peticiones) y el estado de la pantalla se arma con guarda de tamaño (12/8/6/4 tarjetas por riel, bajo los 64 KB de Kino — sospecha del Inicio en blanco). Sin hosts nuevos: Kino NO pide re-aprobación.
 
 ## v0.6.30 «El retratista»
 
