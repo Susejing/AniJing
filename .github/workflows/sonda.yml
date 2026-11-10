@@ -10,33 +10,38 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: sondas v73
+      - name: sondas v74
         run: |
           mkdir -p sonda-out
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
           {
-            echo "===== BEATZ lista-animes: hrefs de fichas ====="
-            curl -sL --max-time 25 -A "$UA" "https://www.beatz-anime.net/lista-animes/index.php" -o /tmp/bl.html || true
-            echo "bytes: $(wc -c < /tmp/bl.html)"
-            grep -o 'href="[^"]*"' /tmp/bl.html | grep -v -E "css|js|png|jpg|ico|twitter|ko-fi|#" | sort -u | head -25 || true
-            echo "===== BEATZ: primera ficha (si el patrón es visible) ====="
-            F=$(grep -o 'href="[^"]*"' /tmp/bl.html | grep -i -E "anime|ficha|pagina" | grep -v lista | head -1 | sed 's/href="//;s/"//' || true)
-            echo "ficha: $F"
-            case "$F" in http*) FU="$F";; /*) FU="https://www.beatz-anime.net$F";; *) FU="https://www.beatz-anime.net/lista-animes/$F";; esac
-            curl -sL --max-time 25 -A "$UA" "$FU" -o /tmp/bf.html || true
-            echo "bytes ficha: $(wc -c < /tmp/bf.html)"
-            echo "--- hosts en la ficha ---"
-            grep -o 'href="[^"]*"' /tmp/bf.html | grep -i -E "mega|drive|1fichier|fireload|terabox|mediafire|pixeldrain|krakenfiles|gofile|mirror" | sort -u | head -30 || true
-            grep -o 'https://mega\.nz/[^"'"'"' <]*' /tmp/bf.html | head -5 || true
-            echo "===== UNION FANSUB: foro ====="
-            curl -sL --max-time 25 -A "$UA" "https://foro.unionfansub.com/index.php" -o /tmp/uf.html || true
-            echo "bytes: $(wc -c < /tmp/uf.html)"
-            grep -o 'href="[^"]*"' /tmp/uf.html | sort -u | head -20 || true
-          } > sonda-out/v73-beatz-uf.txt 2>&1 || true
+            echo "===== BEATZ ficha bakemonogatari ====="
+            curl -sL --max-time 25 -A "$UA" "https://www.beatz-anime.net/bd/bakemonogatari.html" -o /tmp/bf.html || true
+            echo "bytes: $(wc -c < /tmp/bf.html)"
+            echo "--- hosts de descarga ---"
+            grep -o 'href="[^"]*"' /tmp/bf.html | grep -i -E "mega\.nz|drive\.google|1fichier|fireload|terabox|mediafire|pixeldrain|krakenfiles|gofile|mirrored|multiup" | sort -u | head -30 || true
+            echo "--- enlaces totales raros ---"
+            grep -o 'href="[^"]*"' /tmp/bf.html | grep -v -E "css|\.js|\.png|\.jpg|\.ico|beatz-anime\.net|#|facebook|twitter" | sort -u | head -30 || true
+            echo "--- primeros 3000 chars del cuerpo ---"
+            sed 's/<[^>]*>/ /g' /tmp/bf.html | tr -s ' \n' ' \n' | head -c 3000 || true
+            echo ""
+            echo "===== UNION FANSUB: un foro de descarga directa ====="
+            curl -sL --max-time 25 -A "$UA" "https://foro.unionfansub.com/forumdisplay.php?fid=3" -o /tmp/uf1.html || true
+            echo "bytes: $(wc -c < /tmp/uf1.html)"
+            grep -o '<title>[^<]*' /tmp/uf1.html || true
+            grep -o 'href="showthread.php?tid=[0-9]*[^"]*"' /tmp/uf1.html | head -10 || true
+            T=$(grep -o 'href="showthread.php?tid=[0-9]*' /tmp/uf1.html | head -1 | sed 's/href="//' || true)
+            echo "tema: $T"
+            if [ -n "$T" ]; then
+              curl -sL --max-time 25 -A "$UA" "https://foro.unionfansub.com/$T" -o /tmp/uft.html || true
+              echo "bytes tema: $(wc -c < /tmp/uft.html)"
+              grep -o 'href="[^"]*"' /tmp/uft.html | grep -i -E "mega\.nz|drive\.google|1fichier|fireload|terabox|mediafire|pixeldrain|krakenfiles|gofile|mirrored|multiup|torrent" | sort -u | head -20 || true
+            fi
+          } > sonda-out/v74-fichas.txt 2>&1 || true
       - name: commit
         run: |
           git config user.name "sonda"
           git config user.email "sonda@users.noreply.github.com"
           git add sonda-out || true
-          git commit -m "sonda v73: beatz y union fansub" || true
+          git commit -m "sonda v74: ficha beatz y tema unionfansub" || true
           git push || true
