@@ -8,41 +8,47 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: inventario de mensajeros
+      - name: dire
         run: |
           mkdir -p sonda-out
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
-          : > sonda-out/generos.html
-          for g in accion comedia romance drama seinen shounen fantasia; do
-            for p in "" "/page/2/" "/page/3/"; do
-              curl -sL --max-time 30 -A "$UA" "https://www.az-animex.com/genero/$g/$p" >> sonda-out/generos.html || true
-            done
+          curl -sL --max-time 30 -A "$UA" "https://dire.az-animex.com/" -o sonda-out/dire-raiz.html || true
+          curl -sL --max-time 30 -A "$UA" "https://dire.az-animex.com/Anime/" -o sonda-out/dire-anime.html || true
+          curl -sL --max-time 30 -A "$UA" "https://dire.az-animex.com/Anime/Monogatari%20Series%20-%20Second%20Season%20BD" -o sonda-out/dire-mono.html || true
+          curl -sL --max-time 30 -A "$UA" -H "Accept: application/json" "https://dire.az-animex.com/Anime/Monogatari%20Series%20-%20Second%20Season%20BD?json=1" -o sonda-out/dire-mono-json.txt || true
+          : > sonda-out/dire-greps.txt
+          for f in dire-raiz dire-anime dire-mono; do
+            echo "== $f (tamanio $(wc -c < sonda-out/$f.html))" >> sonda-out/dire-greps.txt
+            head -c 600 sonda-out/$f.html >> sonda-out/dire-greps.txt || true
+            echo "" >> sonda-out/dire-greps.txt
+            echo "-- js/css:" >> sonda-out/dire-greps.txt
+            grep -oE '(src|href)="[^"]*\.(js|css)[^"]*"' sonda-out/$f.html | sort -u | head -10 >> sonda-out/dire-greps.txt || echo "(nada)" >> sonda-out/dire-greps.txt
           done
-          grep -oE 'https://www\.az-animex\.com/[a-z0-9-]+/' sonda-out/generos.html | sort -u | grep -vE '/(genero|directorio-anime|feed|tag|category|author|wp-|proyectos|tops)/' | head -220 > sonda-out/slugs.txt || true
-          : > sonda-out/inventario.txt
-          echo "FICHAS: $(wc -l < sonda-out/slugs.txt)" >> sonda-out/inventario.txt
-          while read -r u; do
-            s=$(basename "$u")
-            h=$(curl -sL --max-time 25 -A "$UA" "$u") || true
-            m=""
-            if echo "$h" | grep -q "mirrored.to/multilinks/"; then m="$m,multilink"; fi
-            if echo "$h" | grep -q "rentry.co/"; then m="$m,rentry"; fi
-            if echo "$h" | grep -q "terabox.com/"; then m="$m,terabox"; fi
-            if echo "$h" | grep -q "dire.az-animex.com/"; then m="$m,serveraz"; fi
-            if echo "$h" | grep -q "mediafire.com/"; then m="$m,mediafire"; fi
-            if echo "$h" | grep -q "multiup.org"; then m="$m,multiup"; fi
-            if echo "$h" | grep -q "mega.nz"; then m="$m,mega"; fi
-            echo "$s:$m" >> sonda-out/inventario.txt
-          done < sonda-out/slugs.txt
-          rm -f sonda-out/generos.html || true
-      - name: ejemplos con hrefs
+          echo "== mono json:" >> sonda-out/dire-greps.txt
+          head -c 600 sonda-out/dire-mono-json.txt >> sonda-out/dire-greps.txt || true
+      - name: bundle js
+        run: |
+          : > sonda-out/dire-js.txt
+          JS=$(grep -oE 'src="[^"]*.js[^"]*"' sonda-out/dire-raiz.html | head -3 | sed 's/src="//;s/"$//' || true)
+          if [ -z "$JS" ]; then JS=$(grep -oE 'src="[^"]*.js[^"]*"' sonda-out/dire-mono.html | head -3 | sed 's/src="//;s/"$//' || true); fi
+          echo "BUNDLES: $JS" >> sonda-out/dire-js.txt
+          for j in $JS; do
+            case "$j" in
+              /*) u="https://dire.az-animex.com$j" ;;
+              http*) u="$j" ;;
+              *) u="https://dire.az-animex.com/$j" ;;
+            esac
+            echo "== $u (tamanio $(curl -sL --max-time 40 -A "Mozilla/5.0" "$u" -o /tmp/b.js && wc -c < /tmp/b.js))" >> sonda-out/dire-js.txt || true
+            grep -oE '.{0,50}(api|/Anime|\.mp4|fetch\(|axios).{0,50}' /tmp/b.js 2>/dev/null | head -25 >> sonda-out/dire-js.txt || echo "(sin matches)" >> sonda-out/dire-js.txt
+          done
+      - name: fichas sin marcador
         run: |
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
-          : > sonda-out/ejemplos.txt
-          for s in bakemonogatari cossette-no-shouzou; do
-            echo "== $s" >> sonda-out/ejemplos.txt
+          : > sonda-out/fichas-raras.txt
+          for s in kimi-wa-houkago-insomnia vinland-saga-season-2 cossette-no-shouzou bakemonogatari; do
+            echo "== $s" >> sonda-out/fichas-raras.txt
             curl -sL --max-time 25 -A "$UA" "https://www.az-animex.com/$s/" -o /tmp/f.html || true
-            grep -oE 'href="https://(www\.)?(mediafire|multiup|terabox|rentry|mirrored|dire\.az-animex)[^"]*"' /tmp/f.html | sort -u | head -8 >> sonda-out/ejemplos.txt || echo "(nada)" >> sonda-out/ejemplos.txt
+            grep -oE 'href="https://[^"]*"' /tmp/f.html | grep -vE 'az-animex.com|wp-|schema.org|w3.org|fonts' | sort -u | head -12 >> sonda-out/fichas-raras.txt || echo "(nada externo)" >> sonda-out/fichas-raras.txt
           done
       - name: commit
         run: |
