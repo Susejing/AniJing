@@ -10,33 +10,27 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: sondas v95
+      - name: sondas v96
         run: |
           mkdir -p sonda-out
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
           {
-            echo "===== veranime.ninja: estado ====="
-            for U in "https://veranime.ninja/" "https://www.veranime.ninja/" "https://veranime.ninja/genre/anime"; do
-              curl -sL --max-time 20 -A "$UA" -o /tmp/v.html -w "$U -> %{http_code} (%{size_download} bytes)\n" "$U" || true
-            done
-            grep -o '<title>[^<]*</title>' /tmp/v.html | head -1 || true
-            grep -o 'Just a moment\|cloudflare\|cf-chl' /tmp/v.html | sort | uniq -c | head -3 || true
-            echo "--- vía espejo jina ---"
-            curl -sL --max-time 40 -A "$UA" -o /tmp/vj.txt -w 'jina -> %{http_code} (%{size_download} bytes)\n' "https://r.jina.ai/https://veranime.ninja/" || true
-            head -c 700 /tmp/vj.txt || true
-            echo ""
-            echo "===== beatz lista-animes: ¿imágenes por ficha? ====="
+            echo "===== beatz: contexto tras anime-poster-link ====="
             curl -sL --max-time 25 -A "$UA" "https://www.beatz-anime.net/lista-animes/index.php" -o /tmp/la.html || true
-            grep -oE '<(img|a)[^>]*(bd/[a-z0-9-]+\.html|uploads)[^>]*>' /tmp/la.html | head -6 || true
-            echo "--- ventana de una ficha con su img ---"
-            grep -oE 'href="[^"]*bd/[a-z0-9-]+\.html"[^>]*>.{0,300}' /tmp/la.html | head -3 || true
-            echo "--- ¿imgs con slug en src? ---"
-            grep -oE 'src="[^"]+"[^>]*alt="[^"]+"' /tmp/la.html | head -6 || true
-          } > sonda-out/v95-ver-beatz.txt 2>&1 || true
+            grep -oE 'anime-poster-link" href="/bd/[a-z0-9-]+\.html">.{0,400}' /tmp/la.html | head -3 || true
+            echo "===== beatz: ficha bakemonogatari completa (head) ====="
+            curl -sL --max-time 25 -A "$UA" "https://www.beatz-anime.net/bd/bakemonogatari.html" -o /tmp/bf.html || true
+            grep -oE '<meta property="og:image" content="[^"]*"' /tmp/bf.html | head -2 || true
+            grep -oE '<img[^>]*(poster|cover|bd)[^>]*>' /tmp/bf.html | head -4 || true
+            echo "===== veranime: ¿otro dominio vivo? ====="
+            for D in "https://veranime.ninja" "https://vanime.ninja" "https://veranime.tv"; do
+              curl -sL --max-time 12 -A "$UA" -o /dev/null -w "$D -> %{http_code}\n" "$D/" || true
+            done
+          } > sonda-out/v96-beatz-img.txt 2>&1 || true
       - name: commit
         run: |
           git config user.name "sonda"
           git config user.email "sonda@users.noreply.github.com"
           git add sonda-out || true
-          git commit -m "sonda v95: veranime caído y pósters de beatz" || true
+          git commit -m "sonda v96: imágenes del listado de beatz" || true
           git push || true
