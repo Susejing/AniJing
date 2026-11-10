@@ -10,33 +10,32 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: sondas v70
+      - name: sondas v71
         run: |
           mkdir -p sonda-out
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
-          for slug in amagami-ss-plus asobi-ni-iku-yo anne-happy dagashi-kashi busou-shoujo-machiavellianism ben-to; do
-            {
-              echo "===== FICHA $slug ====="
-              curl -s --max-time 20 -A "$UA" "https://www.az-animex.com/$slug/" -o /tmp/f.html || true
-              wc -c /tmp/f.html || true
-              grep -o 'href="[^"]*"' /tmp/f.html | grep -i -E "fireload|filemoon|mega|multiup|terabox|mediafire|mirrored" | sort -u || true
-              echo "--- botones col1 ---"
-              grep -o '<a class="[^"]*col1-boton[^"]*"[^>]*href="[^"]*"' /tmp/f.html || true
-            } >> sonda-out/v70-fichas.txt 2>&1 || true
-          done
-          echo "===== AJAX carpeta de asobi (si hay hash en su ficha) =====" >> sonda-out/v70-fichas.txt
-          H=$(grep -o 'fireload.com/folder/[a-f0-9]\{32\}' /tmp/f.html | head -1 | sed 's|fireload.com/folder/||' || true)
-          echo "hash asobi: $H" >> sonda-out/v70-fichas.txt
-          curl -s --max-time 20 -A "$UA" -e "https://www.fireload.com/" -c /tmp/cj -b /tmp/cj "https://www.fireload.com/folder/$H/" -o /dev/null || true
-          curl -s --max-time 20 -A "$UA" -e "https://www.fireload.com/folder/$H/" -b /tmp/cj \
-            -d "url_hash=$H" -d "nodeId=-1" -d "filterText=" -d "filterUploadedDateRange=" \
-            -d "filterOrderBy=order_by_filename_asc" -d "pageStart=0" -d "perPage=100" \
-            "https://www.fireload.com/ajax/_view_folder_v2_file_listing.ajax.php" | head -c 3000 >> sonda-out/v70-fichas.txt 2>&1 || true
-          echo "" >> sonda-out/v70-fichas.txt
+          prueba() {
+            H="$1"; NOMBRE="$2"; URLC="https://www.fireload.com/folder/$H/$NOMBRE"
+            echo "===== CARPETA $H ($NOMBRE) =====" >> sonda-out/v71-ajax.txt
+            curl -s --max-time 20 -A "$UA" -c /tmp/cj "$URLC" -o /tmp/carpeta.html || true
+            wc -c /tmp/carpeta.html >> sonda-out/v71-ajax.txt || true
+            grep -o "id='url_hash'[^>]*" /tmp/carpeta.html >> sonda-out/v71-ajax.txt || true
+            grep -o "id='nodeId'[^>]*" /tmp/carpeta.html >> sonda-out/v71-ajax.txt || true
+            grep -o "id='rootfolderId'[^>]*" /tmp/carpeta.html >> sonda-out/v71-ajax.txt || true
+            curl -s --max-time 20 -A "$UA" -e "$URLC" -b /tmp/cj \
+              --data-urlencode "url_hash=$H" --data-urlencode "nodeId=-1" \
+              --data-urlencode "filterText=" --data-urlencode "filterUploadedDateRange=" \
+              --data-urlencode "filterOrderBy=order_by_filename_asc" \
+              --data-urlencode "pageStart=0" --data-urlencode "perPage=100" \
+              "https://www.fireload.com/ajax/_view_folder_v2_file_listing.ajax.php" | head -c 6000 >> sonda-out/v71-ajax.txt 2>&1 || true
+            echo "" >> sonda-out/v71-ajax.txt
+          }
+          prueba 24361 "Amagami_SS%2B_Plus_BD"
+          prueba 28771 "Asobi_ni_Iku_yo%21_BD"
       - name: commit
         run: |
           git config user.name "sonda"
           git config user.email "sonda@users.noreply.github.com"
           git add sonda-out || true
-          git commit -m "sonda v70: fichas y ajax" || true
+          git commit -m "sonda v71: ajax con id numérico" || true
           git push || true
