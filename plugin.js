@@ -447,6 +447,26 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.28 «El archivista» — el teléfono dio el visto bueno a la 0.6.27
+// (Monogatari reproduce vía rentry) y el usuario pidió la búsqueda
+// general: la sonda v49 recorrió ~140 fichas de az y las clasificó.
+// Resultado: multilink (22%) y rentry ya funcionan; el resto vive
+// tras TeraBox (API con muro de login: errno 140 en todos los
+// dominios — se descartó tras luchar), el Server Az (AList con
+// invitados desactivados: 401 «Guest user is disabled» — es el
+// servicio premium de az), MultiUp (espejos de descarga premium,
+// nada reproducible), FireLoad (YetiShare con lista AJAX de
+// parámetros esquivos) o Filemoon suelto. La excepción dorada:
+// MEDIAFIRE — las fichas viejas (2021–2023, como Bakemonogatari)
+// enlazan una carpeta cuya API PÚBLICA lista los .mp4 por episodio
+// sin pedir cuenta, y la página de cada archivo trae el enlace
+// directo download####.mediafire.com en crudo (v50): carpeta →
+// get_content → página del archivo → .mp4 directo. Y el aviso honesto
+// ahora reconoce TODOS los mensajeros no soportados (TeraBox,
+// Server Az, Filemoon suelto, MultiUp, FireLoad) en vez de fingir
+// «sin descargas». mediafire.com entra al manifest: Kino pedirá
+// re-aprobación una vez al actualizar.
+//
 // v0.6.27 «El mensajero» — el teléfono juzgó la 0.6.26 y dio su
 // veredicto: «Todas» cargó, az reproduce… pero algunas fichas nuevas
 // (Monogatari Second Season, Kimi no Koto ga Daidaidaidaidaisuki)
@@ -557,7 +577,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.27';
+const VERSION = '0.6.28';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -5008,6 +5028,41 @@ function azEpsDeTexto(texto) {
   return lista;
 }
 
+/* v0.6.28 «El archivista»: la API pública de carpetas de MediaFire
+ * lista los archivos de una carpeta compartida sin pedir cuenta
+ * (sonda v50: files[].filename + links.normal_download por episodio,
+ * .mp4 con número « - 01 [»; chunk_size 100 con total_chunks por si
+ * la serie es larga). */
+async function azMfEpis(folderKey) {
+  const lista = [];
+  const vistos = new Set();
+  let chunk = 1;
+  while (chunk <= 6) {
+    const url = 'https://www.mediafire.com/api/1.4/folder/get_content.php?folder_key=' + folderKey +
+      '&content_type=files&response_format=json&chunk_size=100&chunk_number=' + chunk;
+    const r = await traer(url, { headers: { Referer: 'https://www.mediafire.com/' }, timeoutMs: 15000 });
+    if (!r.ok) break;
+    let j = null;
+    try { j = JSON.parse(r.text); } catch (e) { j = null; }
+    const fc = j && j.response && j.response.folder_content;
+    const files = (fc && fc.files) || [];
+    for (const f of files) {
+      if (!f || !f.filename || !/\.mp4$/i.test(f.filename)) continue;
+      const dl = f.links && f.links.normal_download;
+      if (!dl || vistos.has(dl)) continue;
+      vistos.add(dl);
+      const nm = /[-_ ]0*(\d{1,4})\s*\[/.exec(f.filename) || /[-_ ]0*(\d{1,4})(?:[-_.\s]|$)/.exec(f.filename) || /(\d{1,4})/.exec(f.filename);
+      lista.push({ num: nm ? parseInt(nm[1], 10) : 0, mf: dl });
+    }
+    const total = parseInt(fc && fc.total_chunks, 10) || 1;
+    if (chunk >= total || !files.length) break;
+    chunk++;
+  }
+  lista.sort(function (a, b) { return a.num - b.num; });
+  for (let i = 0; i < lista.length; i++) if (!lista[i].num) lista[i].num = i + 1;
+  return lista;
+}
+
 /* La cosecha completa de una serie: ficha → multilink → episodios.
  * Devuelve { lista, serie } con la serie vestida (título, póster y
  * sinopsis leídos de la ficha: lección de la 0.6.22, episodes() es
@@ -5051,24 +5106,38 @@ async function azEpsDe(slug) {
       if (!lista.length) lista = azEpsDeTexto(await azJina(mensajero));
     }
   }
+  /* v0.6.28: fichas viejas (2021–2023) mandan a una CARPETA de
+   * MediaFire — su API pública lista los .mp4 por episodio (v50). */
+  let tipo = 'mirrored';
+  if (!lista.length) {
+    const mf = /mediafire\.com\/folder\/([a-z0-9]+)/i.exec(r.text);
+    if (mf) {
+      const eps = await azMfEpis(mf[1]);
+      if (eps.length) { lista = eps; tipo = 'mf'; }
+    }
+  }
   if (!lista.length) {
     if (mensajero) {
       throw kino.error('not_found', 'Az-Animex: 0 episodios', {
         userMessage: 'No se pudieron leer los episodios de esta serie en Az-Animex.'
       });
     }
-    /* v0.6.27: si la ficha solo ofrece TeraBox o su Server Az (app
-     * de JavaScript, ilegible sin navegador), se dice la verdad. */
-    if (/terabox\.com\//i.test(r.text) || /dire\.az-animex\.com\//i.test(r.text)) {
+    /* v0.6.28: el inventario de la sonda v49 — si la ficha solo
+     * ofrece mensajeros que AniJing no sabe abrir, se dice la
+     * verdad con sus nombres (TeraBox, Server Az, Filemoon suelto,
+     * MultiUp, FireLoad), no un «sin descargas» falso. */
+    if (/terabox\.com\//i.test(r.text) || /dire\.az-animex\.com\//i.test(r.text) ||
+        /filemoon\.to\/f\//i.test(r.text) || /multiup\.io\//i.test(r.text) ||
+        /fireload\.com\/folder\//i.test(r.text)) {
       throw kino.error('not_found', 'Az-Animex: solo nubes no soportadas', {
-        userMessage: 'Esta ficha solo publica descargas por TeraBox o el Server Az de Az-Animex — AniJing todavía no sabe abrirlos.'
+        userMessage: 'Esta ficha solo publica descargas en servicios que AniJing todavía no sabe abrir (TeraBox, el Server Az premium de Az-Animex, Filemoon suelto, MultiUp o FireLoad).'
       });
     }
     throw kino.error('not_found', 'Az-Animex: ficha sin descargas', {
       userMessage: 'Esta ficha de Az-Animex todavía no tiene descargas publicadas.'
     });
   }
-  const datos = { t: Date.now(), lista: lista, serie: serie };
+  const datos = { t: Date.now(), lista: lista, serie: serie, tipo: tipo };
   AZ_EPS[slug] = datos;
   return datos;
 }
@@ -5216,6 +5285,19 @@ registrarFuente({
       throw kino.error('not_found', 'Az-Animex: episodio ' + num + ' no existe', {
         userMessage: 'Ese episodio no está publicado en Az-Animex.'
       });
+    }
+    /* v0.6.28 «El archivista»: carpeta MediaFire — la página del
+     * archivo trae el enlace directo al .mp4 en crudo (v50), sin
+     * espejos ni bailes de cifrado. */
+    if (datos.tipo === 'mf') {
+      const rmf = await traer(ep.mf, { headers: { Referer: 'https://www.mediafire.com/' }, timeoutMs: 15000 });
+      const dl = rmf.ok ? (String(rmf.text).match(/https:\/\/download[a-z0-9]*\.mediafire\.com\/[^"'<>\s]+/) || [])[0] : '';
+      if (!dl) {
+        throw kino.error('not_found', 'Az-Animex: enlace MediaFire agotado', {
+          userMessage: 'El enlace de MediaFire de este episodio no entregó la descarga. Inténtalo en un rato.'
+        });
+      }
+      return { url: dl, label: 'MediaFire' };
     }
     /* 1. la página del episodio suelta el enlace ?hash=… (crudo, v47). */
     const flUrl = 'https://www.mirrored.to/files/' + ep.fid + '/' + ep.nombre + '_links';

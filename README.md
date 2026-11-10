@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.27 «El mensajero»)
+## Qué hace (v0.6.28 «El archivista»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -32,6 +32,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.28 «El archivista»
+
+La 0.6.27 entregó las fichas del cartero nuevo… y el teléfono señaló el archivo viejo: Bakemonogatari y otras fichas clásicas de Az-Animex seguían en «ficha sin descargas». La sonda inventarió ~140 fichas: unas 22% son multilink (funcionan), ~5 usan rentry (curadas en la 0.6.27), pero ~36% solo ofrecen el Server Az (un AList premium con la API de invitados apagada) y ~25% más van por TeraBox (que exige login y bloquea sus espejos), con restos de MultiUp y FireLoad que tampoco dejan tirar de un archivo en crudo. Tras luchar con los cuatro, quedaron descartados con honestidad. El que sí abrió la puerta: **MediaFire** — las fichas viejas enlazan una carpeta `mediafire.com/folder/<key>` y su API pública lista los archivos (uno por episodio) sin pedir nada a cambio; la página de cada archivo entrega el enlace directo. AniJing ahora sigue esa cadena completa: ficha → carpeta → episodios → descarga directa con etiqueta «MediaFire». Y las fichas serveraz/terabox/multiup/fireload/filemoon suelto dan el aviso honesto completo, ya sin fingir. `mediafire.com` y `*.mediafire.com` entran al manifest: Kino pedirá re-aprobación una vez al actualizar.
 
 ## v0.6.27 «El mensajero»
 
