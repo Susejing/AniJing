@@ -18,7 +18,7 @@ jobs:
         run: |
           set -o pipefail
           LOG=/tmp/icono.log
-          echo "=== compresor de icono v3 (Pillow) ===" > "$LOG"
+          echo "=== compresor de icono v4 (Pillow) ===" > "$LOG"
           /tmp/v/bin/python - <<'PYEOF' 2>&1 | tee -a "$LOG"
           import io, os, sys
           from PIL import Image
@@ -61,7 +61,7 @@ jobs:
           for lado in (512, 384, 320, 256):
               for colores in (None, 256):
                   datos = embudo(lado, colores)
-                  print('intento %dx%d cuantizado=%s -> %d bytes' % (lado, bool(colores), len(datos)))
+                  print('intento %sx%s cuantizado=%s -> %d bytes' % (lado, lado, bool(colores), len(datos)))
                   if len(datos) <= LIMITE:
                       mejor = (lado, colores, datos)
                       break
@@ -75,7 +75,7 @@ jobs:
               f.write(datos)
           ok = Image.open(p)
           ok.verify()
-          print('FINAL: %dx%d cuantizado=%s -> %d bytes (tope 128 KB)' % (lado, bool(colores), len(datos)))
+          print('FINAL: %sx%s cuantizado=%s -> %d bytes (tope 128 KB)' % (lado, lado, bool(colores), len(datos)))
           PYEOF
       - name: commit
         run: |
