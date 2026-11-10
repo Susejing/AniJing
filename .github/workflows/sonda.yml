@@ -10,39 +10,35 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: sondas v92
+      - name: sondas v93
         run: |
           mkdir -p sonda-out
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
-          audita() {
-            local N="$1"; local B="$2"; local D="$3"
-            {
-              echo "##### $N #####"
-              for P in "" "/page/2/" "?p=2" "?page=2"; do
-                U="$B$D$P"
-                C=$(curl -sL --max-time 20 -A "$UA" -o /tmp/a.html -w '%{http_code}' "$U" || true)
-                TARJ=$(grep -coE 'class="[^"]*(card|item|post|anime)[^"]*"' /tmp/a.html 2>/dev/null || echo 0)
-                echo "  $U -> $C ($TARJ clases)"
-              done
-              echo "  --- ¿wp-json? ---"
-              C=$(curl -sL --max-time 15 -A "$UA" -o /tmp/w.json -w '%{http_code}' "$B/wp-json/wp/v2/posts?per_page=1" || true)
-              echo "  wp-json posts: $C — total $(grep -oE 'x-wp-total[^,}]*' /tmp/w.json 2>/dev/null | head -1)"
-              curl -sI --max-time 15 -A "$UA" "$B/wp-json/wp/v2/posts?per_page=1" 2>/dev/null | grep -i 'x-wp-total' || true
-            } > "sonda-out/v92-$N.txt" 2>&1 || true
-          }
-          audita av1 "https://animeav1.com" "/catalogo"
-          audita mc "https://monoschinos.st" "/animes"
-          audita lat "https://latanime.org" "/directorio"
-          audita otv "https://www.otakustv.net" "/animes"
-          audita ayt "https://animeyt.cc" "/tv"
-          audita eas "https://www.estrenosanime.net" "/directorio-anime"
-          audita jara "https://www.animejara.com" "/catalogo"
-          audita van "https://veranime.ninja" "/genre/anime"
-          audita iva "https://ivanime.buzz" "/animes"
+          {
+            echo "===== av1: catálogo completo y paginación ====="
+            curl -sL --max-time 25 -A "$UA" "https://animeav1.com/catalogo" -o /tmp/a1.html || true
+            grep -oE '"totalPages":[0-9]+|"currentPage":[0-9]+|"perPage":[0-9]+' /tmp/a1.html | sort -u | head -6 || true
+            grep -oE 'href="/catalogo\?[^"]*"' /tmp/a1.html | sort -u | head -12 || true
+            echo "--- géneros del filtro ---"
+            grep -oE '(genero|genre)[=/][a-z0-9-]+' /tmp/a1.html | sort -u | head -30 || true
+            echo "--- ¿estado/tipo? ---"
+            grep -oE '(estado|tipo|categoria)[=/][a-z0-9-]+' /tmp/a1.html | sort -u | head -15 || true
+            echo "===== eas: rutas de directorio ====="
+            for P in "/animes" "/anime" "/directorio" "/lista-anime" "/series" "/animes-lista"; do
+              C=$(curl -sL --max-time 15 -A "$UA" -o /tmp/e.html -w '%{http_code}' "https://www.estrenosanime.net$P" || true)
+              echo "  $P -> $C ($(wc -c < /tmp/e.html 2>/dev/null || echo 0) bytes)"
+            done
+            echo "===== mc: películas y profundidad del directorio ====="
+            for P in "/peliculas" "/pelicula" "/animes?p=10" "/animes?p=30"; do
+              C=$(curl -sL --max-time 15 -A "$UA" -o /tmp/m.html -w '%{http_code}' "https://monoschinos.st$P" || true)
+              T=$(grep -coE 'class="[^"]*(card|item|anime)[^"]*"' /tmp/m.html 2>/dev/null || echo 0)
+              echo "  $P -> $C ($T clases)"
+            done
+          } > sonda-out/v93-catalogos.txt 2>&1 || true
       - name: commit
         run: |
           git config user.name "sonda"
           git config user.email "sonda@users.noreply.github.com"
           git add sonda-out || true
-          git commit -m "sonda v92: auditoría de catálogos (9 fuentes)" || true
+          git commit -m "sonda v93: catálogo completo av1, eas, mc" || true
           git push || true
