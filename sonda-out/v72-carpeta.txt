@@ -1,0 +1,55 @@
+===== GET directo con headers =====
+HTTP/2 302 
+date: Tue, 10 Nov 2026 17:47:17 GMT
+content-type: text/html; charset=UTF-8
+location: https://www.fireload.com/folder/636d47eeed62b7763f9457cf4e374c0d/Amagami_SS+_Plus_BD
+server: cloudflare
+set-cookie: filehosting=rhq09hkjcvvt0e6jvmu95ululg; expires=Tue, 24-Nov-2026 17:47:17 GMT; Max-Age=1209600; path=/; domain=.fireload.com
+expires: Thu, 19 Nov 1981 08:52:00 GMT
+cache-control: no-store, no-cache, must-revalidate
+pragma: no-cache
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=LRgBo7JNXtAIP9fD3cLM39a5qaqaO2ZYAIzUuWtGpr8Czdvq7BLQ%2BE%2FDRjYlZvwiax33MRiX%2FPUhruM45l9fewxnEApXYIOHGSFxlqZTHFt6AcJJG%2FmRdFikwVaTkcKbrupk"}]}
+cf-ray: a586e1aafaaa2cd7-DFW
+alt-svc: h3=":443"; ma=86400
+
+bytes: 0
+===== GET con -L y galletas =====
+HTTP/2 302 
+date: Tue, 10 Nov 2026 17:47:17 GMT
+content-type: text/html; charset=UTF-8
+location: https://www.fireload.com/folder/636d47eeed62b7763f9457cf4e374c0d/Amagami_SS+_Plus_BD
+server: cloudflare
+set-cookie: filehosting=qj1eacci7hn1d2ipvvs5s76sjh; expires=Tue, 24-Nov-2026 17:47:17 GMT; Max-Age=1209600; path=/; domain=.fireload.com
+expires: Thu, 19 Nov 1981 08:52:00 GMT
+cache-control: no-store, no-cache, must-revalidate
+pragma: no-cache
+cf-cache-status: DYNAMIC
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=6avXsLaPuWiUHIThj59NcRn%2B%2F%2FS23VeIC1bAewscqr%2BgpVv5FzAih9i2y7FvEZI4nc5q6XaUrtBgsXUa%2B85tTV4OSlSAZO%2FqagRFCxSKynG7LudFI2hRlWCHRQHsiFp%2BwKya"}]}
+bytes: 291675
+id='url_hash' type='hidden' value='636d47eeed62b7763f9457cf4e374c0d'
+id='nodeId' type='hidden' value='-1'
+id='rootfolderId' type='hidden' value='24361'
+===== primeros 1200 chars =====
+<!DOCTYPE html>
+<html lang="en" dir="LTR" class="directionLtr">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<meta name="viewport" content="width=device-width, minimum-scale=0.7, maximum-scale=0.7, user-scalable=no">
+        <title>Amagami SS+ Plus BD shared by k**go - Fireload</title>
+        <meta name="viewport" content="width=device-width, initial-scale=0.7">
+        <meta name="description" content="Amagami SS+ Plus BD shared by k**go - View Folder" />
+        <meta name="keywords" content="Amagami SS+ Plus BD shared by k**go, fireload, folder, view, file, your, interface, upload, download, site" />
+        <meta name="copyright" content="Copyright &copy; 2026 - Fireload" />
+                    <meta name="robots" content="noindex,nofollow">
+            <meta name="googlebot" content="noindex,nofollow">
+            <meta name="slurp" content="noindex,nofollow">
+                <meta http-equiv="Cache-Control" content="no-cache" />
+        <meta http-equiv="Expires" content="-1" />
+        <meta http-equiv="Pragma" content="no-cache" />    
+
+
