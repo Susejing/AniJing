@@ -1,0 +1,27 @@
+HTTP/2 200 
+date: Tue, 10 Nov 2026 03:46:41 GMT
+content-type: application/json; charset=UTF-8
+x-robots-tag: noindex
+x-content-type-options: nosniff
+access-control-expose-headers: X-WP-Total, X-WP-TotalPages, Link
+access-control-allow-headers: Authorization, X-WP-Nonce, Content-Disposition, Content-MD5, Content-Type
+x-wp-total: 1831
+x-wp-totalpages: 611
+link: <https://www.az-animex.com/wp-json/wp/v2/posts?per_page=3&orderby=title&order=asc&_fields=id%2Cslug%2Ctitle&_embed=wp%3Afeaturedmedia&page=2>; rel="next"
+allow: GET
+vary: Origin,Accept-Encoding
+x-litespeed-cache-control: no-cache
+cache-control: no-cache, must-revalidate, max-age=0, no-store, private
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=V%2BzTf4C9OZxlQu4Yb%2FRH5g9OW3VGcXF75jPrUB3IURMlHf6%2FLTUyZWn0%2Fn80im5njdg4ZYCT%2Bgw2QsoyDnbVVWNWu%2FWFYyq%2FnJOPEp4fEy4RrvEp8IcBma31%2FYgzKlQ9R9hJfA%3D%3D"}]}
+x-frame-options: SAMEORIGIN
+strict-transport-security: max-age=31536000
+referrer-policy: strict-origin-when-cross-origin
+content-security-policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data: https:; connect-src 'self' https:; media-src 'self' blob: https:; frame-src 'self' https: blob:; worker-src 'self' blob: https:; object-src 'none'; frame-ancestors 'self'; base-uri 'self'; form-action 'self';
+permissions-policy: geolocation=(), microphone=(), camera=()
+alt-svc: h3=":443"; ma=86400
+speculation-rules: "/cdn-cgi/speculation"
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+cf-cache-status: BYPASS
+server: cloudflare
+cf-ray: a582124f2ce8f14d-ORD
+
