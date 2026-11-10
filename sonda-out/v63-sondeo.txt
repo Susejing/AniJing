@@ -1,0 +1,147 @@
+===== ficha amagami-ss-plus =====
+bytes: 217699
+botones fireload: 
+botones todos: href="https://discord.gg/fDqWqR2u43" href="https://filemoon.to/f/ivz1xfljsw" href="https://twitter.com/AzAnimex" href="https://www.az-animex.com/amagami-ss-plus/" href="https://www.az-animex.com/amagami-ss-plus/feed/" href="https://www.az-animex.com/comments/feed/" href="https://www.az-animex.com/directorio-anime/" href="https://www.az-animex.com/feed/" 
+===== ficha arakawa-under-the-bridge =====
+bytes: 215395
+botones fireload: 
+botones todos: href="https://discord.gg/fDqWqR2u43" href="https://twitter.com/AzAnimex" href="https://www.az-animex.com/arakawa-under-the-bridge/" href="https://www.az-animex.com/arakawa-under-the-bridge/feed/" href="https://www.az-animex.com/comments/feed/" href="https://www.az-animex.com/directorio-anime/" href="https://www.az-animex.com/feed/" href="https://www.az-animex.com/genero/comedia/" 
+===== ficha d-frag =====
+bytes: 215374
+botones fireload: 
+botones todos: href="https://discord.gg/fDqWqR2u43" href="https://filemoon.to/f/mf0eypbfke" href="https://twitter.com/AzAnimex" href="https://www.az-animex.com/comments/feed/" href="https://www.az-animex.com/d-frag/" href="https://www.az-animex.com/d-frag/feed/" href="https://www.az-animex.com/directorio-anime/" href="https://www.az-animex.com/feed/" 
+===== ficha aiura =====
+bytes: 213824
+botones fireload: 
+botones todos: href="https://discord.gg/fDqWqR2u43" href="https://ficticiosubs.wordpress.com/" href="https://filemoon.to/f/x7udekvpyx" href="https://twitter.com/AzAnimex" href="https://www.az-animex.com/aiura/" href="https://www.az-animex.com/aiura/feed/" href="https://www.az-animex.com/comments/feed/" href="https://www.az-animex.com/directorio-anime/" 
+===== ficha black-lagoon =====
+bytes: 215552
+botones fireload: 
+botones todos: href="https://dire.az-animex.com/Anime/Black%20Lagoon%20BD" href="https://discord.gg/fDqWqR2u43" href="https://japanuniverse.wordpress.com/" href="https://twitter.com/AzAnimex" href="https://www.az-animex.com/black-lagoon/" href="https://www.az-animex.com/black-lagoon/feed/" href="https://www.az-animex.com/comments/feed/" href="https://www.az-animex.com/directorio-anime/" 
+===== ficha ano-natsu-de-matteru =====
+bytes: 217273
+botones fireload: 
+botones todos: href="https://discord.gg/fDqWqR2u43" href="https://japanuniverse.wordpress.com/" href="https://series-am.az-animex.com/es/A/Ano%20Natsu%20de%20Matteru%20BD" href="https://twitter.com/AzAnimex" href="https://www.az-animex.com/ano-natsu-de-matteru/" href="https://www.az-animex.com/ano-natsu-de-matteru/feed/" href="https://www.az-animex.com/comments/feed/" href="https://www.az-animex.com/directorio-anime/" 
+
+===== busqueda grisaia (?s=) =====
+bytes: 147026
+
+-- fichas grisaia: sus botones --
+== https://www.az-animex.com/grisaia-no-kajitsu/ ==
+fireload: 
+titulo: <title>Grisaia no Kajitsu - Az-Animex
+== https://www.az-animex.com/grisaia-no-meikyuu-caprice-no-mayu-0/ ==
+fireload: 
+titulo: <title>Grisaia no Meikyuu: Caprice no Mayu 0 - Az-Animex
+
+===== carpeta de fireload (si alguna ficha trae /folder/) =====
+folder: [https://www.fireload.com/folder/cac87056363111ce9ca201f09123a025/Ano_Natsu_de_Matteru_BD]
+bytes folder: 291716
+archivos dentro: 
+     54 ajax
+      7 fileList
+    350 folder
+     12 loadFiles
+
+===== terabox wap/outlogin (UA movil) =====
+HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Type: text/html; charset=utf-8
+Date: Tue, 10 Nov 2026 06:41:32 GMT
+Flow-Level: 3
+Logid: 356023028430653379
+Server: nginx
+Set-Cookie: csrfToken=_-JMjzcw4dPIbtOWrO3hWmk1; path=/
+Set-Cookie: browserid=PWAgOSR9PykovgMtIU8fMUp5tEGA2FxyMzFyiL4oJodBW3Fy0w8McUzokPo=; path=/; max-age=5184000; expires=Sat, 09 Jan 2027 06:41:32 GMT; domain=.terabox.com
+Set-Cookie: lang=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT
+Set-Cookie: lang=es; path=/; max-age=2592000; expires=Thu, 10 Dec 2026 06:41:32 GMT; domain=.terabox.com
+Set-Cookie: TSID=OiQYPDn58hi7NvaJm15cxdz9dTPOV6Zr; path=/; max-age=31536000; expires=Wed, 10 Nov 2027 06:41:32 GMT; domain=.terabox.com
+Strict-Transport-Security: max-age=172800
+Vary: Accept-Encoding
+Vary: Accept-Encoding
+X-Conteneur-Nom: wrJPGgAfwpIFFhXCusOVwp7Dtw4qwo5abnPDo8O+w63DkQ1hw7PCsMO7w67DoALCmHDDi0cnXMKmd0bCrkIjMcKHOcOzw7kUBRPCnsOgwrHDqA==
+X-Content-Type-Options: nosniff
+X-Download-Options: noopen
+X-Flow-Level: 3
+X-Frame-Options: SAMEORIGIN
+X-Powered-By: TeraBox
+X-Readtime: 6
+X-Request-Id: 356023028430653379
+X-Xss-Protection: 1; mode=block
+Yld: 356023028430653379
+Yme: ZIGW+Ss3QE0UaisESmriq29Xvv4cVAPzqR5LwCqBmO+w
+Transfer-Encoding: chunked
+
+bytes: 31144
+      1 <title>
+<html dir="ltr"><head><meta charset="UTF-8"><link rel="icon" type="module" href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAYAAACAvzbMAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAA
+===== terabox wap/outlogin (UA escritorio) =====
+HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Type: text/html; charset=utf-8
+Date: Tue, 10 Nov 2026 06:41:33 GMT
+Flow-Level: 3
+Logid: 356023230010343236
+Server: nginx
+Set-Cookie: csrfToken=_vMNKLK9dM_GCjWJhaMIs2AR; path=/
+Set-Cookie: browserid=RFy1Kz0erUcEGnO4WEp5cXWTqbaFhr2PAXgK0tdqdQgyuEf0mObmDME02r8=; path=/; max-age=5184000; expires=Sat, 09 Jan 2027 06:41:33 GMT; domain=.terabox.com
+Set-Cookie: lang=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT
+Set-Cookie: lang=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=.terabox.com
+Set-Cookie: TSID=jTMZ4eUXwdlPrB9koAcig9UfGvP3NR3Z; path=/; max-age=31536000; expires=Wed, 10 Nov 2027 06:41:33 GMT; domain=.terabox.com
+Strict-Transport-Security: max-age=172800
+Vary: Accept-Encoding
+Vary: Accept-Encoding
+X-Conteneur-Nom: wrVNGgAfwpIFFhXCusOVwp7Dtw4qwo5abnPDo8O+w63DkQ1hw7PCsMO7w67DoALCmHDDi0cnXMKmd0bCrkIjMcKHOcOzw7kUBRPCnsOgwrHDqA==
+X-Content-Type-Options: nosniff
+X-Download-Options: noopen
+X-Flow-Level: 3
+X-Frame-Options: SAMEORIGIN
+X-Powered-By: TeraBox
+X-Readtime: 6
+X-Request-Id: 356023230010343236
+X-Xss-Protection: 1; mode=block
+Yld: 356023230010343236
+Yme: ZIGW+Ss3QE0WaSsHTm7iq29Xvv4cVAPyqx5NwiqBmO63
+Transfer-Encoding: chunked
+
+bytes: 31144
+      1 <title>
+
+===== terabox /spanish/login con UA movil (que vio el telefono) =====
+HTTP/1.1 302 Found
+Connection: keep-alive
+Content-Type: text/html; charset=utf-8
+Date: Tue, 10 Nov 2026 06:41:34 GMT
+Flow-Level: 3
+Location: https://www.terabox.com/spanish/wap
+Logid: 356023438432505245
+Server: nginx
+Set-Cookie: csrfToken=lY8vlPL-P0x7-3OOFbeXM3RH; path=/
+X-Conteneur-Nom: wrJNGgAfwpIFFhXCusOVwp7Dtw4qwo5abnPDo8O+w63DkQ1hw7PCsMO7w67DoALCmHDDi0cnXMKmd0bCrkIjMcKHOcOzw7kUBRPCnsOgwrHDqA==
+X-Download-Options: noopen
+X-Flow-Level: 3
+X-Frame-Options: SAMEORIGIN
+X-Powered-By: TeraBox
+X-Readtime: 2
+X-Request-Id: 356023438432505245
+X-Xss-Protection: 1; mode=block
+Yld: 356023438432505245
+Content-Length: 51
+
+HTTP/1.1 404 Not Found
+Connection: keep-alive
+Content-Type: text/html
+Date: Tue, 10 Nov 2026 06:41:34 GMT
+Etag: "68d219ce-1765"
+Logid: 356023482371638929
+Server: nginx
+Vary: Accept-Encoding
+Vary: Accept-Encoding
+X-Powered-By: TeraBox
+Yld: 356023482371638929
+Yme: ZIGW+Ss3QE0WaysCTnb+qnFLufkASwTwtAJPyiqBmO63LTVRVRZjoV9d
+Transfer-Encoding: chunked
+
+bytes: 5989
+      1 <title>we can’t find the page you’re looking for
+      1 Error(404)
