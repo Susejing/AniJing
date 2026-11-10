@@ -1,0 +1,38 @@
+== contexto del endpoint en flow-api.js:
+== intentos POST:
+-- folderId=51319:
+
+	     <div class="col-md-12 text-center p-t-50" align="center"><div class="uploadCenter">
+			<i class="fa fa-folder-open fa-4x"></i>
+			<p>The owner of this folder has not added any files.</p><p>
+		 </p></div></div>
+	<input id="rspFolderTotalFiles" value="0" type="hidden"/><input id="rspFolderTotalSize" value="" type="hidden"/><input id="rspTotalPerPage" value="30" type="hidden"/><input id="rspTo
+-- folderId=51319&page=1:
+
+	     <div class="col-md-12 text-center p-t-50" align="center"><div class="uploadCenter">
+			<i class="fa fa-folder-open fa-4x"></i>
+			<p>The owner of this folder has not added any files.</p><p>
+		 </p></div></div>
+	<input id="rspFolderTotalFiles" value="0" type="hidden"/><input id="rspFolderTotalSize" value="" type="hidden"/><input id="rspTotalPerPage" value="30" type="hidden"/><input id="rspTo
+-- folderId=4fbe306e2d5a7dd4fe235763e8a495a2:
+
+	     <div class="col-md-12 text-center p-t-50" align="center"><div class="uploadCenter">
+			<i class="fa fa-folder-open fa-4x"></i>
+			<p>The owner of this folder has not added any files.</p><p>
+		 </p></div></div>
+	<input id="rspFolderTotalFiles" value="0" type="hidden"/><input id="rspFolderTotalSize" value="" type="hidden"/><input id="rspTotalPerPage" value="30" type="hidden"/><input id="rspTo
+-- pageNodeId=51319:
+
+	     <div class="col-md-12 text-center p-t-50" align="center"><div class="uploadCenter">
+			<i class="fa fa-folder-open fa-4x"></i>
+			<p>The owner of this folder has not added any files.</p><p>
+		 </p></div></div>
+	<input id="rspFolderTotalFiles" value="0" type="hidden"/><input id="rspFolderTotalSize" value="" type="hidden"/><input id="rspTotalPerPage" value="30" type="hidden"/><input id="rspTo
+-- nodeId=51319:
+
+	     <div class="col-md-12 text-center p-t-50" align="center"><div class="uploadCenter">
+			<i class="fa fa-folder-open fa-4x"></i>
+			<p>The owner of this folder has not added any files.</p><p>
+		 </p></div></div>
+	<input id="rspFolderTotalFiles" value="0" type="hidden"/><input id="rspFolderTotalSize" value="" type="hidden"/><input id="rspTotalPerPage" value="30" type="hidden"/><input id="rspTo
+== tambien global.js:
