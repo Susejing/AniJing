@@ -38,6 +38,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.44 «Las letras en su casa»
+
+La captura del teléfono destapó la metida de pata de la 0.6.43: las secciones de letras de BeatZ se añadían con «solo si no es fuente única», o sea, solo se veían en «Todas» y en el inicio — justo la pantalla que casi nadie usa. En la vista de BeatZ como fuente única (la de la captura) seguía el «Catálogo BD» solo de siempre, y por eso parecía que no había cambiado nada. Ahora las letras **0-9 · A-F, G-L, M-R y S-Z aparecen siempre**, también con la fuente seleccionada. VerAnime no cambia porque no puede: su muro es de Cloudflare, no del plugin.
+
 ## v0.6.43 «El alto en el muro»
 
 La segunda ronda del log sentenció las dos cosas. **VerAnime no se puede pasar**: el navegador oculto de Kino también es detectado por Cloudflare («blocked: the page stayed on the site's check») y Kino nunca resuelve retos por su cuenta — la fuente queda tras un muro que el plugin no puede cruzar. Para no quemar 15 peticiones por portada, al detectar el muro VerAnime entra en un descanso de 10 minutos y sus llamadas responden al instante con el vacío honesto; la ventanilla y la galleta quedan por si un día Cloudflare afloja. **BeatZ estrenó secciones de verdad**: la raíz del almacén solo tiene la carpeta «Anime» (por eso la 0.6.42 no mostró ninguna), así que las secciones ahora son por letras — **0-9 · A-F, G-L, M-R y S-Z**, servidas del padrón cacheado del plugin sin una petición extra, cada una con su «Ver más» que pagina dentro de su rango.

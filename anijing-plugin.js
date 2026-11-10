@@ -447,6 +447,15 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.44 «Las letras en su casa» — la captura del teléfono (v0.6.43,
+// BeatZ como fuente única) destapó la metida de pata: las secciones de
+// letras se añadían con «if (solo !== true)», o sea, SOLO en «Todas» y
+// en el inicio — justo la pantalla que el usuario casi nunca ve. En la
+// vista de fuente única (la de la captura) seguía el «Catálogo BD» solo
+// de siempre, y por eso parecía que no había cambiado nada. Ahora las
+// letras aparecen SIEMPRE, también en solo. VerAnime sigue igual: es un
+// muro de Cloudflare, no del plugin.
+//
 // v0.6.43 «El alto en el muro» — la segunda sonda del teléfono sentenció
 // las dos cosas. (1) VerAnime: kino.browser.page respondió «blocked: the
 // page stayed on the site's check» — el navegador oculto TAMBIÉN es
@@ -841,7 +850,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.43';
+const VERSION = '0.6.44';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -6545,22 +6554,23 @@ registrarFuente({
     /* v0.6.43: secciones por letras, servidas del padrón cacheado —
      * cero peticiones extra y cada fila con su «Ver más» que pagina
      * dentro de su rango. */
-    if (solo !== true) {
-      try {
-        const series = await btzSeries();
-        for (const rango of BTZ_RANGOS) {
-          const enRango = series.filter((n) => btzEnRango(n, rango.id));
-          if (!enRango.length) continue;
-          filas.push({
-            id: 'btz-letra-' + rango.id,
-            title: rango.titulo + ' · BeatZ-Anime',
-            ref: 'btz-letra:' + rango.id,
-            items: enRango.slice(0, 24).map((n) => btzItemDe(n))
-          });
-        }
-      } catch (e2) {
-        log('btz letras', (e2 && e2.message) || String(e2));
+    /* v0.6.44: las letras aparecen SIEMPRE — la captura del teléfono
+     * mostró que con «solo !== true» no se veían en la vista de fuente
+     * única, que es la que de verdad usa la gente. */
+    try {
+      const series = await btzSeries();
+      for (const rango of BTZ_RANGOS) {
+        const enRango = series.filter((n) => btzEnRango(n, rango.id));
+        if (!enRango.length) continue;
+        filas.push({
+          id: 'btz-letra-' + rango.id,
+          title: rango.titulo + ' · BeatZ-Anime',
+          ref: 'btz-letra:' + rango.id,
+          items: enRango.slice(0, 24).map((n) => btzItemDe(n))
+        });
       }
+    } catch (e2) {
+      log('btz letras', (e2 && e2.message) || String(e2));
     }
     return filas;
   },
