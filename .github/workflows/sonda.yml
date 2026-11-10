@@ -8,28 +8,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: fireload estructura 2
+      - name: fireload ajax
         run: |
           mkdir -p sonda-out
-          : > sonda-out/fireload3.txt
+          : > sonda-out/fireload4.txt
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
           curl -sL --max-time 30 -A "$UA" "https://www.fireload.com/folder/4fbe306e2d5a7dd4fe235763e8a495a2/Kimi_wa_Houkago_Insomnia_BD" -o /tmp/fl.html || true
-          echo "== contexto Insomnia:" >> sonda-out/fireload3.txt
-          grep -oE '.{0,100}Insomnia.{0,100}' /tmp/fl.html | head -8 >> sonda-out/fireload3.txt || echo "(nada)" >> sonda-out/fireload3.txt
-          echo "== hrefs relativos:" >> sonda-out/fireload3.txt
-          grep -oE 'href="/[a-zA-Z0-9]{10,}[^"]*"' /tmp/fl.html | sort -u | head -15 >> sonda-out/fireload3.txt || echo "(nada)" >> sonda-out/fireload3.txt
-          echo "== ajax en html:" >> sonda-out/fireload3.txt
-          grep -oE '(ajax[A-Za-z]*|POST|getJSON)[^"<>]{0,70}' /tmp/fl.html | sort -u | head -10 >> sonda-out/fireload3.txt || echo "(nada)" >> sonda-out/fireload3.txt
-      - name: multiup download page
-        run: |
-          : > sonda-out/multiup3.txt
-          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
-          curl -sL --max-time 30 -A "$UA" "https://multiup.io/download/3400770544259ab802f773c9950f26ff/%5BAz-Animex%5D%20Cossette%20no%20Shouzou%20-%2001%20%5BBD%5D%5BOtsalia%5D.mp4" -o /tmp/mud.html || true
-          echo "== tamanio: $(wc -c < /tmp/mud.html)" >> sonda-out/multiup3.txt
-          echo "== espejos (hrefs):" >> sonda-out/multiup3.txt
-          grep -oE 'href="https://[^"]*"' /tmp/mud.html | grep -viE 'multiup|twitter|facebook|google|jquery|bootstrap|font' | sort -u | head -20 >> sonda-out/multiup3.txt || echo "(nada)" >> sonda-out/multiup3.txt
-          echo "== nombres de hosts:" >> sonda-out/multiup3.txt
-          grep -oE '(rapidgator|turbobit|1fichier|uptobox|nitroflare|mediafire|mega\.nz|download\.com|ddl|fr)\.[a-z]{2,4}' /tmp/mud.html | sort -u | head -12 >> sonda-out/multiup3.txt || echo "(nada)" >> sonda-out/multiup3.txt
+          echo "== scripts:" >> sonda-out/fireload4.txt
+          grep -oE 'src="[^"]*\.js[^"]*"' /tmp/fl.html | sort -u | head -12 >> sonda-out/fireload4.txt || true
+          echo "== folder ajax endpoints en el html:" >> sonda-out/fireload4.txt
+          grep -oE 'ajax/[_A-Za-z0-9]*folder[_A-Za-z0-9]*\.ajax\.php' /tmp/fl.html | sort -u | head -10 >> sonda-out/fireload4.txt || echo "(nada)" >> sonda-out/fireload4.txt
+          echo "== intentos POST:" >> sonda-out/fireload4.txt
+          for ep in "_folder_itemlist.ajax.php" "_folder_get_folder.ajax.php" "_folder_list.ajax.php"; do
+            echo "-- $ep:" >> sonda-out/fireload4.txt
+            curl -sL --max-time 20 -A "$UA" -X POST "https://www.fireload.com/ajax/$ep" -d "folderId=51319&page=1" | head -c 300 >> sonda-out/fireload4.txt || true
+            echo "" >> sonda-out/fireload4.txt
+          done
+          J=$(grep -oE 'src="[^"]*core[^"]*\.js[^"]*"' /tmp/fl.html | head -2 | sed 's/src="//;s/"$//' || true)
+          echo "== JS core: $J" >> sonda-out/fireload4.txt
+          for j in $J; do
+            case "$j" in /*) u="https://www.fireload.com$j" ;; *) u="https://www.fireload.com/$j" ;; esac
+            curl -sL --max-time 30 -A "$UA" "$u" -o /tmp/c.js || true
+            grep -oE 'ajax/[_A-Za-z0-9.]*' /tmp/c.js | sort -u | head -15 >> sonda-out/fireload4.txt || true
+            grep -oE '.{0,40}folderId.{0,60}' /tmp/c.js | head -6 >> sonda-out/fireload4.txt || true
+          done
       - name: commit
         run: |
           git config user.name "github-actions[bot]"
