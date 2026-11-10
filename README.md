@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.31 «El galerista»)
+## Qué hace (v0.6.32 «El prestamista»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -32,6 +32,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.32 «El prestamista»
+
+El Directorio A-Z ya luce sus pósters y llegó la pregunta de fondo: ¿por qué algunas fichas «no cargan»? El censo de la sonda v56 recorrió 200 fichas A-C y puso números al inventario de mensajeros de descarga: 44 fichas ya funcionan (carpetas de MediaFire, mirrored y rentry); el resto vive detrás de muros que ni el navegador oculto pasa de verdad — TeraBox (su API contesta `errno 140` sin cuenta), el Server Az premium (AList con invitados desactivados), FireLoad (la carpeta lista por AJAX evasivo y el archivo suelto exige reCaptcha), FileMoon suelto (SPA de React sin API de video), MultiUp, Mega — y media docena de servidores propios de Az-Animex (`peliculas`, `onas`, `series-am`, `especiales`, `ovas`) que ya ni resuelven DNS: botones muertos que del lado de la web parece que funcionan pero no llevan a ninguna parte. La perla del censo: fichas de películas publican un ARCHIVO suelto de MediaFire (`/file/<clave>/`, `?<clave>` o `/download/<clave>`) que el plugin ignoraba porque solo conocía carpetas — ahora se cosechan esas claves y cada una abre como «Película» (o «Parte N» cuando son varias), con el enlace directo que la 0.6.28 ya sabía leer. Y el aviso honesto aprendió a dar nombre y apellido: en lugar de la lista genérica, dice qué servicios usa ESA ficha («TeraBox, FileMoon», «FireLoad»…) y avisa cuando sus servidores propios están caídos. Sin hosts nuevos: Kino NO pide re-aprobación.
 
 ## v0.6.31 «El galerista»
 

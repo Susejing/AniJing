@@ -447,6 +447,26 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.32 «El prestamista» — el Directorio A-Z ya viste sus pósters y
+// el usuario revisó las fichas que «no cargan» (Air, Amagami SS,
+// Bungaku Memoire). El censo de la sonda v56 (200 fichas A-C) puso
+// números al inventario: 44 fichas ya funcionan (MediaFire carpeta,
+// mirrored, rentry); el resto vive tras muros — TeraBox (API con
+// errno 140 sin cuenta), el Server Az premium (AList 401), FireLoad
+// (carpeta por AJAX evasiva + archivo con reCaptcha, v57), FileMoon
+// suelto (SPA de React sin API de video, v59), MultiUp, Mega — y
+// media docena de subdominios de az (peliculas, onas, series-am,
+// especiales, ovas) que YA NI RESUELVEN DNS (v58): botones muertos.
+// La perla del censo: fichas de PELÍCULAS con un ARCHIVO suelto de
+// MediaFire (/file/<clave>/, ?<clave> o /download/<clave>) que el
+// plugin ignoraba porque solo conocía carpetas — la página del
+// archivo ya se sabe abrir desde la 0.6.28, así que se cosechan las
+// claves y cada una es una «Película» (o «Parte N» si son varias).
+// Y el aviso honesto aprendió a dar nombre y apellido: dice QUÉ
+// servicios usa esa ficha (TeraBox, FireLoad, Mega…) y avisa cuando
+// sus servidores propios están caídos. Sin hosts nuevos → Kino no
+// pide re-aprobación.
+//
 // v0.6.31 «El galerista» — el teléfono validó la 0.6.30: los pósters
 // del Directorio A-Z SÍ salen, pero Kino los pide TODOS de golpe
 // (~230 en el log) y el grifo de 14 por ventana los dejó grises a
@@ -636,7 +656,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.31';
+const VERSION = '0.6.32';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -5398,6 +5418,33 @@ async function azEpsDe(slug) {
       if (eps.length) { lista = eps; tipo = 'mf'; }
     }
   }
+  /* v0.6.32 «El prestamista»: fichas de películas traen un ARCHIVO
+   * suelto de MediaFire — /file/<clave>/, ?<clave> o /download/<clave>
+   * (censo v56: ao-no-exorcist-movie, bakemono-no-ko, BnHA the Movie 1…
+   * ~10 solo en A-C) — la página del archivo ya se abre en el resolve
+   * tipo mf (v50); aquí solo faltaba cosechar la clave. */
+  if (!lista.length) {
+    const clavesMf = [];
+    const vistosMf = new Set();
+    const reMf = /mediafire\.com\/(?:file\/([a-z0-9]{5,20})\/?|(?:\?|download\/)([a-z0-9]{5,20}))/gi;
+    let mMf;
+    while ((mMf = reMf.exec(r.text))) {
+      const k = (mMf[1] || mMf[2] || '').toLowerCase();
+      if (!k || vistosMf.has(k)) continue;
+      vistosMf.add(k);
+      clavesMf.push(k);
+    }
+    if (clavesMf.length) {
+      lista = clavesMf.slice(0, 12).map(function (k, i) {
+        return {
+          num: i + 1,
+          mf: 'https://www.mediafire.com/file/' + k + '/archivo.mp4',
+          titulo: clavesMf.length === 1 ? 'Película' : 'Parte ' + (i + 1)
+        };
+      });
+      tipo = 'mf';
+    }
+  }
   if (!lista.length) {
     if (mensajero) {
       throw kino.error('not_found', 'Az-Animex: 0 episodios', {
@@ -5406,17 +5453,30 @@ async function azEpsDe(slug) {
     }
     /* v0.6.28: el inventario de la sonda v49 — si la ficha solo
      * ofrece mensajeros que AniJing no sabe abrir, se dice la
-     * verdad con sus nombres (TeraBox, Server Az, Filemoon suelto,
-     * MultiUp, FireLoad), no un «sin descargas» falso.
+     * verdad con sus nombres, no un «sin descargas» falso.
      * v0.6.30 (sonda v53): FireLoad también enlaza archivos sueltos
-     * con /d<hash>/ (página de descarga premium, no carpeta) y hay
-     * fichas con ovas.az-animex.com (que ya ni resuelve DNS) —
-     * ambas cuentan como nube no soportada. */
-    if (/terabox\.com\//i.test(r.text) || /dire\.az-animex\.com\//i.test(r.text) ||
-        /ovas\.az-animex\.com\//i.test(r.text) || /filemoon\.to\/f\//i.test(r.text) || /multiup\.io\//i.test(r.text) ||
-        /fireload\.com\//i.test(r.text)) {
+     * con /d<hash>/ y hay fichas con ovas.az-animex.com — ambas
+     * cuentan como nube no soportada.
+     * v0.6.32 (censo v56/v57/v58): el aviso da nombre y apellido —
+     * dice QUÉ servicios usa esta ficha y avisa cuando los
+     * servidores propios de az están caídos (peliculas, onas,
+     * series-am, especiales y ovas ya ni resuelven DNS). */
+    const muros = [];
+    if (/terabox\.com\//i.test(r.text)) muros.push('TeraBox');
+    if (/dire\.az-animex\.com\//i.test(r.text)) muros.push('el Server Az premium');
+    if (/multiup\.(io|org)\//i.test(r.text)) muros.push('MultiUp');
+    if (/fireload\.com\//i.test(r.text)) muros.push('FireLoad');
+    if (/filemoon\.[a-z]{2,3}\/[fd]\//i.test(r.text)) muros.push('FileMoon');
+    if (/mega\.nz\//i.test(r.text)) muros.push('Mega');
+    const caidos = /(series-am|peliculas|onas|especiales|ovas)\.az-animex\.com\//i.test(r.text);
+    if (muros.length || caidos) {
+      let aviso = '';
+      if (muros.length) aviso = 'Esta ficha solo publica descargas en servicios que AniJing todavía no sabe abrir: ' + muros.join(', ') + '.';
+      else aviso = 'Esta ficha solo publica descargas en servidores de Az-Animex que están caídos.';
+      if (caidos && muros.length) aviso += ' Sus otros servidores propios están caídos.';
+      log('az ficha «' + slug + '» con muros: ' + muros.join(', ') + (caidos ? ' + servidores caídos' : ''));
       throw kino.error('not_found', 'Az-Animex: solo nubes no soportadas', {
-        userMessage: 'Esta ficha solo publica descargas en servicios que AniJing todavía no sabe abrir (TeraBox, el Server Az premium de Az-Animex, Filemoon suelto, MultiUp o FireLoad).'
+        userMessage: aviso
       });
     }
     /* v0.6.30: si de verdad no hay botones, el log confiesa el
@@ -5599,7 +5659,7 @@ registrarFuente({
     const datos = await azEpsDe(slug);
     const lista = [];
     for (const e of datos.lista) {
-      lista.push({ season: 1, number: e.num, ref: 'az:' + slug + ':' + e.num, title: 'Episodio ' + e.num });
+      lista.push({ season: 1, number: e.num, ref: 'az:' + slug + ':' + e.num, title: e.titulo || 'Episodio ' + e.num });
     }
     return { series: datos.serie, episodes: lista };
   },
