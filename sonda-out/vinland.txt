@@ -1,0 +1,12 @@
+== contexto filemoon:
+px 0 0 0;padding:3px 8px!important;border-radius:5px!important}.col1-terabox:hover{box-shadow:0 0 9px 2px #5d5ddf}.col1-filemoon{max-width:130px;width:100%;font-size:17px;line-height:24px;font-weight:600;colo
+portant;background-color:#2A3352!important;margin:5px 0 0 0;padding:3px 8px!important;border-radius:5px!important}.col1-filemoon:hover{box-shadow:0 0 9px 2px #2a3352}.col1-serveraz{max-width:130px;width:100%;
+<a class="gs-parent-hover gs_button_w_icon gs_icon_always col1-boton col1-filemoon gsbp-1ab52c4" href="https://filemoon.to/f/39tvc4864x
+== contexto fireload:
+b(0 0 0 / .35);pointer-events:none}.col1-serveraz.col1-premium:hover{box-shadow:0 0 9px 2px rgb(245 166 35 / .55)}.col1-fireload{max-width:130px;width:100%;font-size:17px;line-height:24px;font-weight:600;colo
+portant;background-color:#15349E!important;margin:5px 0 0 0;padding:3px 8px!important;border-radius:5px!important}.col1-fireload:hover{box-shadow:0 0 9px 2px #112c88}.col1-mediafire{max-width:130px;width:100%
+<a class="gs-parent-hover gs_button_w_icon gs_icon_always col1-boton col1-fireload gsbp-4c2563c" href="https://www.fireload.com/folder/6cf108b80cd14f3d4e9a4f9444b6e770/Vinland_Saga_Season_2_BD
+== epoca de la ficha (fecha):
+23/12/1243
+23/12/1243
+23/12/1243
