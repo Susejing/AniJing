@@ -1,0 +1,240 @@
+===== https://www.terabox.com/passport/login =====
+HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Type: application/json; charset=UTF-8
+Date: Tue, 10 Nov 2026 06:11:43 GMT
+Flow-Level: 3
+Logid: 355542645369111240
+Server: nginx
+Vary: Accept-Encoding
+Yld: 355542645369111240
+Yme: ZIGW+Ss3QE0RYisES2o=
+Content-Length: 109
+
+bytes: 109
+{"errno":460030,"errmsg":"dragdrop","request_id":355542645369111240,"request_id_string":"355542645369111240"}
+      1 dragdrop
+      1 errno
+
+===== https://www.teraboxapp.com/passport/login =====
+HTTP/1.1 302 Found
+Connection: keep-alive
+Content-Length: 142
+Content-Type: text/html
+Date: Tue, 10 Nov 2026 06:11:44 GMT
+Location: http://www.1024terabox.com/passport/login
+Logid: 355542966132819279
+Server: openresty
+Yld: 355542966132819279
+
+HTTP/1.1 200 OK
+Date: Tue, 10 Nov 2026 06:11:45 GMT
+Content-Type: application/Json; charset=utf-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+Vary: Accept-Encoding
+yld: 355543053224618084
+Access-Control-Expose-Headers: yme
+yme: ZIGW+Ss3QE0XbysHTmPiq29Xvv4cVAPxqR5MxCqBmO22
+Server: nginx
+logid: 355543053224618084
+Flow-level: 3
+
+bytes: 74
+{"code":6,"logid":1884060513,"msg":"System error, please try again later"}
+
+===== https://1024terabox.com/passport/login =====
+HTTP/1.1 200 OK
+Date: Tue, 10 Nov 2026 06:11:46 GMT
+Content-Type: application/Json; charset=utf-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+Vary: Accept-Encoding
+yld: 355543322374591533
+Access-Control-Expose-Headers: yme
+yme: ZIGW+Ss3QE0WaSsCSHb+qnFLufkASwX0tAdKySKDmek=
+Server: nginx
+logid: 355543322374591533
+Flow-level: 3
+
+bytes: 74
+{"code":6,"logid":3550880894,"msg":"System error, please try again later"}
+
+===== https://www.terabox.com/ =====
+HTTP/1.1 302 Found
+Connection: keep-alive
+Content-Type: text/html; charset=utf-8
+Date: Tue, 10 Nov 2026 06:11:47 GMT
+Flow-Level: 3
+Location: /spanish
+Logid: 355543655824699232
+Server: nginx
+Set-Cookie: csrfToken=1SnpWgwgg7L4mBa8W_FZLcRG; path=/
+Set-Cookie: browserid=eMPXhhSjLkSt7WRMSZcEsNOmDmrnPg58HM9I1RoexkyumuqDhCQKUKqpl7Q=; path=/; max-age=5184000; expires=Sat, 09 Jan 2027 06:11:47 GMT; domain=.terabox.com
+Strict-Transport-Security: max-age=172800
+X-Conteneur-Nom: wrBPGgAfwpIFFhXCusOVwp7Dtw4qwo5abnPDo8O+w63DkQ1hw7PCsMO7w67DoAXCmXDDixJZA8OyPx/DtQs9a8KSPMOtwqcCClPCk8Ogw6DCtMKTMStZwoU=
+X-Download-Options: noopen
+X-Flow-Level: 3
+X-Frame-Options: SAMEORIGIN
+X-Powered-By: TeraBox
+X-Readtime: 2
+X-Request-Id: 355543655824699232
+X-Xss-Protection: 1; mode=block
+Yld: 355543655824699232
+Content-Length: 24
+
+HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Type: text/html; charset=utf-8
+Date: Tue, 10 Nov 2026 06:11:47 GMT
+Flow-Level: 3
+Logid: 355543712062473708
+Server: nginx
+Set-Cookie: csrfToken=uIwWX_8whEsZXpsNQs7cGZfu; path=/
+Set-Cookie: browserid=tJDjDz4lmVd7XmbDXYkxzNLU3Caf3psUtP0VWz6yemXmUV46B6m_KJxWJ8U=; path=/; max-age=5184000; expires=Sat, 09 Jan 2027 06:11:47 GMT; domain=.terabox.com
+Set-Cookie: lang=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT
+Set-Cookie: lang=es; path=/; max-age=2592000; expires=Thu, 10 Dec 2026 06:11:47 GMT; domain=.terabox.com
+Strict-Transport-Security: max-age=172800
+Vary: Accept-Encoding
+Vary: Accept-Encoding
+X-Conteneur-Nom: wrBGGgAfwpIFFhXCusOVwp7Dtw4qwo5abnPDo8O+w63DkQ1hw7PCsMO7w67DoAXCmXDDixJZA8OyPx/DtQs9a8KSPMOtwqcCClPCk8Ogw6DCtMKTMStZwoU=
+X-Content-Type-Options: nosniff
+X-Download-Options: noopen
+X-Flow-Level: 3
+X-Frame-Options: SAMEORIGIN
+X-Powered-By: TeraBox
+X-Readtime: 33
+X-Request-Id: 355543712062473708
+X-Xss-Protection: 1; mode=block
+Yld: 355543712062473708
+Yme: ZIGW+Ss3QE0WaysESmriq29Xvv4cVAPxqR5OwiqBmO2wmX8=
+Transfer-Encoding: chunked
+
+bytes: 19555
+<!doctype html><html lang="es" class="no-touch" dir="ltr"><head><meta charset="utf-8"><title>TeraBox - Hasta 1 TB de Almacenamiento Gratuito en la Nube, Envío 
+
+===== https://www.terabox.com/main =====
+HTTP/1.1 302 Found
+Connection: keep-alive
+Content-Type: text/html; charset=utf-8
+Date: Tue, 10 Nov 2026 06:11:48 GMT
+Flow-Level: 3
+Location: /spanish/main
+Logid: 355543964916265009
+Server: nginx
+Set-Cookie: csrfToken=8N7hD4Me4my_jI2ojixeI9cE; path=/
+Set-Cookie: browserid=VTM2w6dVGxQM7rK9SyWsdYyAWJ2zDb5SY9kUNGg_YC7SppxvYVAd_dEtI-Q=; path=/; max-age=5184000; expires=Sat, 09 Jan 2027 06:11:48 GMT; domain=.terabox.com
+Strict-Transport-Security: max-age=172800
+X-Conteneur-Nom: wrJHGgAfwpIFFhXCusOVwp7Dtw4qwo5abnPDo8O+w63DkQ1hw7PCsMO7w67DoALCmHDDi0cnXMKmd0bCrkIjMcKHOcOzw7kUBRPCnsOgwrHDqA==
+X-Download-Options: noopen
+X-Flow-Level: 3
+X-Frame-Options: SAMEORIGIN
+X-Powered-By: TeraBox
+X-Readtime: 2
+X-Request-Id: 355543964916265009
+X-Xss-Protection: 1; mode=block
+Yld: 355543964916265009
+Content-Length: 29
+
+HTTP/1.1 302 Found
+Connection: keep-alive
+Content-Type: text/html; charset=utf-8
+Date: Tue, 10 Nov 2026 06:11:48 GMT
+Flow-Level: 3
+Location: /login
+Logid: 355544011300192312
+Server: nginx
+Set-Cookie: csrfToken=sbDA1jospzr-EZ_UI2kEajrP; path=/
+Set-Cookie: browserid=up8Pg8bOG6UK72vtOn_AwDYnwATmy8tNHjl__KO-buDboEeuueks2OS1OqA=; path=/; max-age=5184000; expires=Sat, 09 Jan 2027 06:11:48 GMT; domain=.terabox.com
+Set-Cookie: lang=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT
+Set-Cookie: lang=es; path=/; max-age=2592000; expires=Thu, 10 Dec 2026 06:11:48 GMT; domain=.terabox.com
+Strict-Transport-Security: max-age=172800
+X-Conteneur-Nom: wrNJGgAfwpIFFhXCusOVwp7Dtw4qwo5abnPDo8O+w63DkQ1hw7PCsMO7w67DoALCmHDDi0cnXMKmd0bCrkIjMcKHOcOzw7kUBRPCnsOgwrHDqA==
+X-Download-Options: noopen
+X-Flow-Level: 3
+X-Frame-Options: SAMEORIGIN
+X-Powered-By: TeraBox
+X-Readtime: 2
+X-Request-Id: 355544011300192312
+X-Xss-Protection: 1; mode=block
+Yld: 355544011300192312
+Content-Length: 22
+
+HTTP/1.1 302 Found
+Connection: keep-alive
+Content-Type: text/html; charset=utf-8
+Date: Tue, 10 Nov 2026 06:11:48 GMT
+Flow-Level: 3
+Location: /spanish/login
+Logid: 355544056905608328
+Server: nginx
+Set-Cookie: csrfToken=x4859s000EroZ3iY5eY0h7zX; path=/
+Set-Cookie: browserid=l3tbS8yL2fmp8QA1fRswZ4YYtrY6KLiFxUvIXu2x2wnS8ZtHbu6Ru18dUik=; path=/; max-age=5184000; expires=Sat, 09 Jan 2027 06:11:48 GMT; domain=.terabox.com
+Strict-Transport-Security: max-age=172800
+X-Conteneur-Nom: wrJGGgAfwpIFFhXCusOVwp7Dtw4qwo5abnPDo8O+w63DkQ1hw7PCsMO7w67DoALCmHDDi0cnXMKmd0bCrkIjMcKHOcOzw7kUBRPCnsOgwrHDqA==
+X-Download-Options: noopen
+X-Flow-Level: 3
+X-Frame-Options: SAMEORIGIN
+X-Powered-By: TeraBox
+X-Readtime: 2
+X-Request-Id: 355544056905608328
+X-Xss-Protection: 1; mode=block
+Yld: 355544056905608328
+Content-Length: 30
+
+HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Type: text/html; charset=utf-8
+Date: Tue, 10 Nov 2026 06:11:48 GMT
+Flow-Level: 3
+Logid: 355544101600692216
+Server: nginx
+Set-Cookie: csrfToken=piivThn2q_ae9yzMf1A1gWPq; path=/
+Set-Cookie: browserid=OJkV81HIbI8n3zYr0Es0BQgVKEinjaleQDM6eqtdzYxEibrbv2kz5g3A47E=; path=/; max-age=5184000; expires=Sat, 09 Jan 2027 06:11:48 GMT; domain=.terabox.com
+Set-Cookie: lang=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT
+Set-Cookie: lang=es; path=/; max-age=2592000; expires=Thu, 10 Dec 2026 06:11:48 GMT; domain=.terabox.com
+Strict-Transport-Security: max-age=172800
+Vary: Accept-Encoding
+Vary: Accept-Encoding
+X-Conteneur-Nom: wrBLGgAfwpIFFhXCusOVwp7Dtw4qwo5abnPDo8O+w63DkQ1hw7PCsMO7w67DoALCmHDDi0cnXMKmd0bCrkIjMcKHOcOzw7kUBRPCnsOgwrHDqA==
+X-Content-Type-Options: nosniff
+X-Download-Options: noopen
+X-Flow-Level: 3
+X-Frame-Options: SAMEORIGIN
+X-Powered-By: TeraBox
+X-Readtime: 15
+X-Request-Id: 355544101600692216
+X-Xss-Protection: 1; mode=block
+Yld: 355544101600692216
+Yme: ZIGW+Ss3QE0VaisCRnb+qnFLufkASwT9tAJNxiqBmO+0awoT1mTblN9f
+Transfer-Encoding: chunked
+
+bytes: 776722
+<!DOCTYPE html>
+<html lang="es" class="no-touch" dir="ltr">
+
+<head>
+    <meta charset="utf-8">
+    <title>Inicie Sesión en TeraBox para obtener 1 TB de Almacen
+    117 rotate
+
+===== calentado: home con jar y luego passport/login =====
+jar tras home:
+.terabox.com	TRUE	/	FALSE	1799475110	browserid	8JOwVUxdLWbT5U4iRC1YIztlln3QCz5AIfUUTPhcQflFMCKLRnHuVSXWAm4=
+www.terabox.com	FALSE	/	FALSE	0	csrfToken	PB8tT-hMUYrCuMH04kFLB4bE
+HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Type: application/json; charset=UTF-8
+Date: Tue, 10 Nov 2026 06:11:51 GMT
+Flow-Level: 3
+Logid: 355544786816710197
+Server: nginx
+Vary: Accept-Encoding
+Yld: 355544786816710197
+Yme: ZIGW+Ss3QE0WaCsESWg=
+Content-Length: 109
+
+bytes: 109
+{"errno":460030,"errmsg":"dragdrop","request_id_string":"355544786816710197","request_id":355544786816710197}
+      1 dragdrop
+      1 errno
