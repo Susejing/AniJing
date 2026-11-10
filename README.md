@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.36 «El recadero»)
+## Qué hace (v0.6.37 «El padrón»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -32,6 +32,10 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.37 «El padrón»
+
+El teléfono probó el recadero (Ano Hana 11, Ano Natsu 13 y Arakawa 13 episodios: la cosecha de carpetas de FireLoad ya anda) y dejó dos cuentas que esta versión paga. **Carpetas con ID numérico**: la mitad de las carpetas no usa hash de 32 sino un ID corto (`fireload.com/folder/24361/Amagami_SS+_Plus_BD` — sonda v70: Amagami SS+ Plus, Asobi ni Iku yo, Anne Happy, Dagashi Kashi, Busou Shoujo…), que el recadero no veía y por eso quedaban «sin descargas» o con muros vacíos. La sonda v72 explicó el baile: la carpeta numérica responde **302** hacia la de hash32 de verdad (`24361` → `636d47ee…74c0d`) y el `url_hash` viaja en un input oculto de la página final — ahora se empadronan todas: se lee la página (el fetch sigue el salto), se pesca el `url_hash` y el listado AJAX va con él. **TeraBox en capítulos**: Ben-To mostraba «Película» porque un solo share guarda **los doce capítulos** — con sesión vinculada, cada share se expande a sus archivos (`share/list`, el mismo baile del resolve) y cada archivo es un capítulo con su número y su nombre; sin sesión sigue el aviso honesto de «Vincular TeraBox».
 
 ## v0.6.36 «El recadero»
 

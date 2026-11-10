@@ -447,6 +447,23 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.37 «El padrón» — el teléfono probó el recadero (Ano Hana 11,
+// Ano Natsu 13, Arakawa 13 episodios: la cosecha de carpetas ya
+// anda) y dejó dos cuentas pendientes. (1) Mitad de las carpetas NO
+// usa hash32 sino ID NUMÉRICO (sonda v70: fireload.com/folder/24361/
+// Amagami_SS+_Plus_BD, 28771 Asobi, 17692 Anne Happy, 25018 Dagashi,
+// 40580 Busou…) — el regex de 32 hex no las veía y quedaban «sin
+// descargas» o muros vacíos. La sonda v72 explicó el baile: la
+// carpeta numérica responde 302 hacia la de hash32 de verdad
+// (24361 → 636d47ee…74c0d) y el url_hash viaja en un input oculto
+// de la página final — ahora se empadronan TODAS: se lee la página
+// (kino.fetch sigue el salto), se pesca el url_hash y el listado
+// AJAX va con él. (2) TeraBox: Ben-To mostraba «Película» porque un
+// solo share guarda LOS DOCE CAPÍTULOS — con sesión, cada share se
+// expande a sus archivos (share/list ya se llamaba en el resolve;
+// ahora también en episodes) y cada archivo es un capítulo con su
+// número y su nombre; sin sesión sigue el aviso honesto.
+//
 // v0.6.36 «El recadero» — el teléfono probó la mudanza y dejó
 // tres recados. (1) Las fichas «con muros: FireLoad» eran en
 // realidad CARPETAS de FireLoad (fireload.com/folder/<hash32>/…,
@@ -737,7 +754,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.36';
+const VERSION = '0.6.37';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -5538,11 +5555,43 @@ async function azEpsDe(slug) {
       if (!vistosTbx.has(mTbx[1])) { vistosTbx.add(mTbx[1]); tbxUrls.push(mTbx[0]); }
     }
     if (tbxUrls.length) {
-      lista = tbxUrls.slice(0, 12).map(function (u, i) {
-        return { num: i + 1, tbx: u, titulo: tbxUrls.length === 1 ? 'Película' : 'Parte ' + (i + 1) };
-      });
-      tipo = 'tbx';
-      log('az ficha «' + slug + '»: ' + tbxUrls.length + ' archivo(s) de TeraBox (necesita sesión)');
+      /* v0.6.37 «El padrón»: con sesión, cada share se EXPANDE a sus
+       * archivos (Ben-To: un share con toda la serie ya no es
+       * «Película»); sin sesión o si el share no se pudo leer, un
+       * episodio por share con el aviso de siempre. */
+      const galletaT = String(configDe('teraboxCookie') || '').trim();
+      const expandidos = [];
+      if (/ndus=/.test(galletaT)) {
+        for (let ti = 0; ti < tbxUrls.length && ti < 4; ti++) {
+          try {
+            const sesT = await azTbxLista(tbxUrls[ti]);
+            for (let ai = 0; ai < sesT.archivos.length; ai++) {
+              expandidos.push({ tbx: tbxUrls[ti], tbxi: ai, nombre: sesT.archivos[ai].nombre });
+            }
+          } catch (eT) { /* share caído o sesión caducada: formato simple */ }
+        }
+      }
+      if (expandidos.length > 1) {
+        /* Un share con toda la serie → los nombres de archivo mandan;
+         * varios shares → «Parte N» como siempre (aoki: 2 partes). */
+        const unShare = tbxUrls.length === 1;
+        lista = expandidos.map(function (x, i) {
+          return {
+            num: azFldNum(x.nombre || '', i),
+            tbx: x.tbx,
+            tbxi: x.tbxi,
+            titulo: unShare ? azFldTitulo(x.nombre || '') : 'Parte ' + (i + 1)
+          };
+        }).sort(function (a, b) { return a.num - b.num; });
+        tipo = 'tbx';
+        log('az ficha «' + slug + '»: ' + lista.length + ' archivo(s) de TeraBox (share expandido)');
+      } else {
+        lista = tbxUrls.slice(0, 12).map(function (u, i) {
+          return { num: i + 1, tbx: u, titulo: tbxUrls.length === 1 ? 'Película' : 'Parte ' + (i + 1) };
+        });
+        tipo = 'tbx';
+        log('az ficha «' + slug + '»: ' + tbxUrls.length + ' archivo(s) de TeraBox (necesita sesión)');
+      }
     }
   }
   /* v0.6.33: FireLoad archivo suelto — /<16-hex>/ es PÁGINA DE
@@ -5574,11 +5623,16 @@ async function azEpsDe(slug) {
   let azCarpetas = [];
   if (!lista.length) {
     const vistosCarpetas = new Set();
-    const reCarpetas = /https?:\/\/(?:www\.)?fireload\.com\/(?:folder|f)\/([a-f0-9]{32})\/?([^\s"'<>]*)?/gi;
+    /* v0.6.37 «El padrón»: las carpetas vienen con hash32 (sonda
+     * v68) o con ID numérico que redirige 302 a la de hash32
+     * (sonda v72: /folder/24361/… → /folder/636d47ee…/…). El /f/ de
+     * 16 hex es archivo suelto y ya se cosechó arriba. */
+    const reCarpetas = /https?:\/\/(?:www\.)?fireload\.com\/(?:folder\/([A-Za-z0-9]{2,40})|f\/([a-f0-9]{32}))\/?([^\s"'<>]*)?/gi;
     let mCarpetas;
     while ((mCarpetas = reCarpetas.exec(r.text))) {
-      if (!vistosCarpetas.has(mCarpetas[1])) {
-        vistosCarpetas.add(mCarpetas[1]);
+      const idCarpeta = mCarpetas[1] || mCarpetas[2] || '';
+      if (idCarpeta && !vistosCarpetas.has(idCarpeta)) {
+        vistosCarpetas.add(idCarpeta);
         azCarpetas.push(mCarpetas[0]);
       }
     }
@@ -5663,8 +5717,12 @@ function azEntre(texto, a, b) {
  * jsToken/logid escondidos → /share/list → dlink directo. El baile
  * es el mismo que usan las herramientas públicas de la comunidad
  * (TeraboxDL y compañía), reimplementado; la galleta la gana la
- * persona en la ventanilla y Kino la guarda sellada. */
-async function azTbxDlink(url) {
+ * persona en la ventanilla y Kino la guarda sellada.
+ * v0.6.37 «El padrón»: la lista de archivos se separa del resolve —
+ * un share puede guardar TODA la serie (Ben-To: 12 capítulos en un
+ * share) y episodes la expande; el resolve pide su archivo por
+ * índice. */
+async function azTbxLista(url) {
   const galleta = String(configDe('teraboxCookie') || '').trim();
   if (!/ndus=/.test(galleta)) {
     log('az terabox: sin galleta de sesión — el aviso manda a «Vincular TeraBox»');
@@ -5685,9 +5743,8 @@ async function azTbxDlink(url) {
   const mS = /\/s\/([A-Za-z0-9_-]+)/.exec(String(url));
   const surls = mS ? [mS[1]] : [];
   if (surls.length && surls[0].charAt(0) === '1' && surls[0].length > 1) surls.push(surls[0].slice(1));
-  let dlink = '';
-  let nombre = '';
-  for (let si = 0; si < surls.length && !dlink; si++) {
+  const archivos = [];
+  for (let si = 0; si < surls.length && !archivos.length; si++) {
     const surl = surls[si];
     const api = base + '/share/list?app_id=250528&web=1&channel=dubox&clienttype=0&jsToken=' +
       encodeURIComponent(jsToken) + '&dp-logid=' + encodeURIComponent(logid) +
@@ -5698,17 +5755,24 @@ async function azTbxDlink(url) {
     try { j = JSON.parse(r2.text); } catch (eJ) { j = null; }
     const l = j && Array.isArray(j.list) ? j.list : [];
     for (let ii = 0; ii < l.length; ii++) {
-      if (l[ii] && l[ii].dlink) { dlink = l[ii].dlink; nombre = l[ii].server_filename || ''; break; }
+      if (l[ii] && l[ii].dlink) archivos.push({ dlink: l[ii].dlink, nombre: l[ii].server_filename || '' });
     }
   }
-  if (!dlink) {
-    log('az terabox: sin dlink (surl ' + (surls[0] || '?') + ') — ¿galleta caducada?');
+  return { base: base, galleta: galleta, archivos: archivos };
+}
+
+async function azTbxDlink(url, idx) {
+  const ses = await azTbxLista(url);
+  const i = Number(idx) > 0 ? Number(idx) : 0;
+  const a = ses.archivos[i] || ses.archivos[0];
+  if (!a || !a.dlink) {
+    log('az terabox: sin dlink (surl ' + String(url).replace(/^.*\/s\//, '').replace(/\/$/, '') + ') — ¿galleta caducada?');
     throw kino.error('not_found', 'Az-Animex: TeraBox no entregó el archivo', {
       userMessage: 'TeraBox no entregó el archivo (quizás la sesión caducó). Vuelve a «Vincular TeraBox» en los ajustes del plugin y reintenta.'
     });
   }
-  log('az terabox: dlink listo' + (nombre ? ' («' + nombre + '»)' : ''));
-  return { url: dlink, label: 'TeraBox', headers: { 'Cookie': galleta, 'User-Agent': UA, 'Referer': base + '/' } };
+  log('az terabox: dlink listo' + (a.nombre ? ' («' + a.nombre + '»)' : '') + (i > 0 ? ' [archivo ' + (i + 1) + ']' : ''));
+  return { url: a.dlink, label: 'TeraBox', headers: { 'Cookie': ses.galleta, 'User-Agent': UA, 'Referer': ses.base + '/' } };
 }
 
 /* FireLoad: el reCaptcha invisible de la página del archivo se
@@ -5753,15 +5817,26 @@ function azFldTitulo(nombre) {
 async function azFldCarpeta(urlCarpeta) {
   const url = /^https?:\/\//i.test(String(urlCarpeta || '')) ? String(urlCarpeta)
     : 'https://www.fireload.com/folder/' + urlCarpeta + '/';
-  const mMismo = /fireload\.com\/(?:folder|f)\/([a-f0-9]{32})/i.exec(url);
-  if (!mMismo) return [];
-  /* La visita a la carpeta calienta la galleta del frasco; su
-   * respuesta no se lee (la del POST sí). */
-  await traer(url, { headers: { Referer: 'https://www.fireload.com/' }, timeoutMs: 15000 });
+  /* v0.6.37 «El padrón»: la carpeta puede venir con ID numérico —
+   * FireLoad responde 302 hacia la carpeta de hash32 (sonda v72);
+   * kino.fetch sigue el salto y el url_hash de verdad viaja en un
+   * input oculto de la página final. La visita además siembra la
+   * galleta filehosting en el frasco. */
+  const pag = await traer(url, { headers: { Referer: 'https://www.fireload.com/' }, timeoutMs: 15000 });
+  let hash32 = '';
+  if (pag.ok) {
+    const mH = /id=['"]url_hash['"][^>]*value=['"]([a-f0-9]{16,64})['"]/i.exec(String(pag.text || ''));
+    if (mH) hash32 = mH[1];
+  }
+  if (!hash32) {
+    const mUrl = /fireload\.com\/(?:folder|f)\/([a-f0-9]{32})/i.exec(url);
+    if (mUrl) hash32 = mUrl[1];
+  }
+  if (!hash32) return [];
   const r = await traer('https://www.fireload.com/ajax/_view_folder_v2_file_listing.ajax.php', {
     metodo: 'POST',
     form: {
-      url_hash: mMismo[1],
+      url_hash: hash32,
       nodeId: '-1',
       filterText: '',
       filterUploadedDateRange: '',
@@ -6026,7 +6101,7 @@ registrarFuente({
       });
     }
     /* v0.6.33 «La aduana»: TeraBox con sesión, FireLoad con captcha. */
-    if (ep.tbx) return await azTbxDlink(ep.tbx);
+    if (ep.tbx) return await azTbxDlink(ep.tbx, ep.tbxi);
     if (ep.fld) return await azFldResolver(slug, num, ep.fld);
     /* v0.6.28 «El archivista»: carpeta MediaFire — la página del
      * archivo trae el enlace directo al .mp4 en crudo (v50), sin
