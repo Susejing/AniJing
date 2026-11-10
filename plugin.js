@@ -447,6 +447,31 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.25 «El tesoro de las nubes» — «integra az-animex.com y
+// dw-anime.net… ver la manera de reproducir los vídeos así sea por
+// la nube o algún truco». Las sondas v40–v47 midieron los dos:
+// dw-anime quedó DESCARTADO — es puro sitio de descargas y sus
+// fichas (paste → wp-safelink → MediaFire/Mega) terminan SIEMPRE en
+// .RAR comprimidos: la cadena se resuelve pero el archivo final no
+// es video reproducible. Az-Animex sí entra completa: es un
+// WordPress cuyos episodios son .mp4 sueltos subidos a mirrored.to,
+// y mirrored los replica a nubes de STREAMING que este plugin ya
+// sabe abrir (Voe 156, StreamTape 149, StreamWish 168, LuluStream
+// 177, Byse 165…). La cadena verificada: ficha → multilinks/<id> →
+// /files/<FID>/…mp4_links (uno por episodio) → enlace ?hash=…&dl=0
+// → tabla getlink/<FID>/<hostid>/?hid=…&tid=… → getlink responde 200
+// con el href DIRECTO al embed de la nube → extractor de siempre.
+// Gotchas que dejaron las sondas: el multilink y la tabla del
+// ?hash= se sirven con JavaScript (el HTML crudo no trae los
+// enlaces) — esos pasos caen al espejo de lectura r.jina.ai, que
+// renderiza el JS y devuelve la página en texto; el directorio y el
+// home de az son también JS — las filas viven de los géneros
+// (/genero/<slug>/, WordPress puro que pagina /page/N/ — 66 páginas
+// en acción) y de la búsqueda ?s=. El póster de las cards viaja en
+// el <a> de la figura (img de /uploads/ con alt), el de la ficha en
+// og:image. Y hosts nuevos en el manifest (az-animex, mirrored.to,
+// r.jina.ai): Kino pedirá re-aprobación al actualizar — normal.
+//
 // v0.6.24 «El escaparate lleno» — «la fuente no muestra todo lo que
 // tiene». Las sondas v39/v39b/v39c recorrieron cada sitio buscando
 // páginas vivas y cómo paginan, y esta versión cuelga lo encontrado:
@@ -499,7 +524,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.24';
+const VERSION = '0.6.25';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4828,6 +4853,331 @@ registrarFuente({
   }
 });
 
+/* ---------- fuente: Az-Animex (www.az-animex.com, descargas vía mirrored.to) ---------- */
+
+const BASE_AZ = 'https://www.az-animex.com';
+/* Espejo de lectura: renderiza el JavaScript de mirrored.to (el
+ * multilink y la tabla del ?hash= no existen en el HTML crudo) y
+ * devuelve la página en texto plano. */
+const AZ_JINA = 'https://r.jina.ai/';
+/* Los hostid de mirrored.to con su nube (sonda v47: el ?hash= lista
+ * 8 nubes, todas «streamable» menos Buzzheavier). El orden es el
+ * orden de preferencia del resolve. */
+const AZ_HOST_NOMBRE = {
+  '156': 'Voe', '149': 'StreamTape', '168': 'StreamWish', '177': 'LuluStream',
+  '165': 'Byse', '191': 'VikingFile', '137': 'GoFile', '172': 'Buzzheavier'
+};
+const AZ_HOST_PREF = ['156', '149', '168', '177', '165', '191', '137', '172'];
+/* El multilink se consulta en episodios() y otra vez en resolver():
+ * cache corto (10 minutos), como IVA_EPS. */
+const AZ_EPS = {};
+
+function azTarjetas(html) {
+  const texto = String(html || '');
+  const items = [];
+  const vistos = new Set();
+  /* Fase a: las cards del query loop (géneros) — el <a> de la figura
+   * trae el póster (img de /wp-content/uploads/) y el título en el
+   * alt (sonda v46: «<figure…><a href=…><img… src=…/106565l.jpg…
+   * alt="Gleipnir"»). */
+  const reA = /<a href="(https:\/\/www\.az-animex\.com\/([a-z0-9-]+)\/?)"[^>]*>\s*<img\b[^>]*?\bsrc="([^"]+)"[^>]*?\balt="([^"]{0,200})"/gi;
+  let m;
+  while ((m = reA.exec(texto)) && items.length < 40) {
+    const slug = m[2];
+    if (!slug || vistos.has(slug) || !/\/uploads\//i.test(m[3])) continue;
+    vistos.add(slug);
+    items.push({
+      id: 'az-' + slug,
+      ref: 'az:' + slug,
+      title: (decHtml(m[4]).trim() || slugATitulo(slug)).slice(0, 200),
+      poster: m[3],
+      kind: 'series'
+    });
+  }
+  if (items.length) return items;
+  /* Fase b: listados donde el ancla solo lleva el título (la búsqueda
+   * renderiza el h2 entradas-titulo): el póster más cercano hacia
+   * atrás, como en EstrenosAnime. */
+  const reB = /entradas-titulo[^>]*>\s*<a href="(https:\/\/www\.az-animex\.com\/([a-z0-9-]+)\/?)"[^>]*>([^<]{1,200})<\/a>/gi;
+  while ((m = reB.exec(texto)) && items.length < 40) {
+    const slug = m[2];
+    if (!slug || vistos.has(slug)) continue;
+    vistos.add(slug);
+    const poster = posterAntesDe(texto, m.index);
+    items.push({
+      id: 'az-' + slug,
+      ref: 'az:' + slug,
+      title: (decHtml(m[3]).trim() || slugATitulo(slug)).slice(0, 200),
+      poster: poster ? absolutizar(poster, BASE_AZ) : '',
+      kind: 'series'
+    });
+  }
+  return items;
+}
+
+/* El espejo de lectura con un reinterno: el gratis a veces se queda
+ * sin aliento (la sonda v44 lo vio devolver 0 bytes). */
+async function azJina(url) {
+  for (let i = 0; i < 2; i++) {
+    const r = await traer(AZ_JINA + url, { timeoutMs: 24000 });
+    if (r.ok && r.text && r.text.length > 200) return r.text;
+  }
+  return '';
+}
+
+/* Los episodios de una colección: cada files/<FID>/<nombre>.mp4_links
+ * es un episodio. El nombre trae el número («…_-_01_[BD]…»). */
+function azEpsDeTexto(texto) {
+  const lista = [];
+  const vistos = new Set();
+  const re = /files\/([A-F0-9]{8})\/(\S{1,300}?\.mp4)_links/g;
+  let m;
+  while ((m = re.exec(String(texto || '')))) {
+    if (vistos.has(m[1])) continue;
+    vistos.add(m[1]);
+    const nm = /_-_(\d{1,4})(?=[_.\[])/.exec(m[2]);
+    lista.push({ fid: m[1], nombre: m[2], num: nm ? parseInt(nm[1], 10) : 0 });
+  }
+  lista.sort(function (a, b) { return a.num - b.num; });
+  for (let i = 0; i < lista.length; i++) if (!lista[i].num) lista[i].num = i + 1;
+  return lista;
+}
+
+/* La cosecha completa de una serie: ficha → multilink → episodios.
+ * Devuelve { lista, serie } con la serie vestida (título, póster y
+ * sinopsis leídos de la ficha: lección de la 0.6.22, episodes() es
+ * quien viste la ficha en Kino). */
+async function azEpsDe(slug) {
+  const cache = AZ_EPS[slug];
+  if (cache && Date.now() - cache.t < 600000) return cache;
+  const r = await traer(BASE_AZ + '/' + slug + '/', { headers: { Referer: BASE_AZ + '/' }, timeoutMs: 12000 });
+  if (!r.ok || !r.text) {
+    throw kino.error('not_found', 'Az-Animex no entregó la ficha', {
+      userMessage: 'No se pudo abrir esta ficha en Az-Animex.'
+    });
+  }
+  const serie = { title: slugATitulo(slug) };
+  const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
+  if (h) serie.title = limpio(h[1]).replace(/^\[/, '').replace(/\]\s*$/, '').trim() || serie.title;
+  const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(r.text);
+  if (og) serie.poster = og[1].indexOf('//') === 0 ? 'https:' + og[1] : og[1];
+  const sin = /post-excerpt__excerpt">\s*<p>([\s\S]{30,2000}?)<\/p>/i.exec(r.text) || /<p[^>]*>([\s\S]{80,1500}?)<\/p>/i.exec(r.text);
+  if (sin) serie.overview = limpio(sin[1]).slice(0, 400);
+  const ml = /mirrored\.to\/multilinks\/([a-z0-9]+)/i.exec(r.text);
+  if (!ml) {
+    throw kino.error('not_found', 'Az-Animex: ficha sin descargas', {
+      userMessage: 'Esta ficha de Az-Animex todavía no tiene descargas publicadas.'
+    });
+  }
+  const multilink = 'https://www.mirrored.to/multilinks/' + ml[1];
+  let lista = azEpsDeTexto(r.text);
+  if (!lista.length) {
+    const crudo = await traer(multilink, { timeoutMs: 12000 });
+    if (crudo.ok) lista = azEpsDeTexto(crudo.text);
+  }
+  if (!lista.length) lista = azEpsDeTexto(await azJina(multilink));
+  if (!lista.length) {
+    throw kino.error('not_found', 'Az-Animex: 0 episodios', {
+      userMessage: 'No se pudieron leer los episodios de esta serie en Az-Animex.'
+    });
+  }
+  const datos = { t: Date.now(), lista: lista, serie: serie };
+  AZ_EPS[slug] = datos;
+  return datos;
+}
+
+/* El enlace ?hash=…&dl=0 vive en la página del _links (v47: crudo y
+ * todo, no hace falta espejo). */
+function azHashDe(texto) {
+  const m = /https:\/\/www\.mirrored\.to\/files\/[A-F0-9]{8}\/?\?hash=[a-f0-9]{16,40}&dl=\d/.exec(String(texto || ''));
+  return m ? m[0] : '';
+}
+
+/* La tabla de nubes: getlink/<FID>/<hostid>/?hid=…&tid=… — en el
+ * HTML crudo la tabla es JavaScript, así que aquí casi siempre
+ * contesta el espejo. */
+function azGetlinksDe(texto) {
+  const out = {};
+  const re = /getlink\/([A-F0-9]{8})\/(\d+)\/\?hid=([^&\s"'<>)]+)&tid=([a-f0-9]{16,40})/g;
+  let m;
+  while ((m = re.exec(String(texto || '')))) {
+    if (!out[m[2]]) {
+      out[m[2]] = 'https://www.mirrored.to/getlink/' + m[1] + '/' + m[2] + '/?hid=' + m[3] + '&tid=' + m[4];
+    }
+  }
+  return out;
+}
+
+/* El getlink responde 200 con el href DIRECTO al embed de la nube
+ * (v47: «Your VoeSx Link» con href="https://voe.sx/gxht97leny2i"). */
+function azEmbedEn(html) {
+  const propios = /mirrored\.to|x\.com|twitter|facebook|google|cloudflare/i;
+  const re = /href="(https?:\/\/[^"]{6,300})"/gi;
+  let m;
+  while ((m = re.exec(String(html || '')))) {
+    const u = desescapar(m[1]);
+    if (propios.test(u)) continue;
+    if (detectarTipo('', u) !== 'generic') return u;
+  }
+  return '';
+}
+
+registrarFuente({
+  id: 'az',
+  etiqueta: 'Az-Animex',
+
+  async buscar(q) {
+    const texto = String(q || '').trim().slice(0, 100);
+    if (texto.length < 2) return [];
+    try {
+      const r = await traer(BASE_AZ + '/?s=' + encodeURIComponent(texto), { headers: { Referer: BASE_AZ + '/' }, timeoutMs: 12000 });
+      if (!r.ok) return [];
+      const items = azTarjetas(r.text).slice(0, 25);
+      for (const it of items) it.badges = ['Az-Animex'];
+      return items;
+    } catch (e) {
+      log('az buscar', (e && e.message) || String(e));
+      return [];
+    }
+  },
+
+  async portada() {
+    /* El directorio-anime/ y el home de az son JavaScript puro (sonda
+     * v46: cero entradas en el HTML crudo) — las filas viven de los
+     * géneros, WordPress de verdad que pagina /page/N/ (66 páginas
+     * en acción, v43). */
+    const defs = [
+      { id: 'az-genero-accion', titulo: 'Acción · Az-Animex', ref: 'az-genero-accion', camino: '/genero/accion' },
+      { id: 'az-genero-comedia', titulo: 'Comedia · Az-Animex', ref: 'az-genero-comedia', camino: '/genero/comedia' },
+      { id: 'az-genero-romance', titulo: 'Romance · Az-Animex', ref: 'az-genero-romance', camino: '/genero/romance' },
+      { id: 'az-genero-drama', titulo: 'Drama · Az-Animex', ref: 'az-genero-drama', camino: '/genero/drama' },
+      { id: 'az-genero-shounen', titulo: 'Shounen · Az-Animex', ref: 'az-genero-shounen', camino: '/genero/shounen' },
+      { id: 'az-genero-seinen', titulo: 'Seinen · Az-Animex', ref: 'az-genero-seinen', camino: '/genero/seinen' },
+      { id: 'az-genero-fantasia', titulo: 'Fantasía · Az-Animex', ref: 'az-genero-fantasia', camino: '/genero/fantasia' }
+    ];
+    const rtas = await Promise.all(defs.map(async (def) => {
+      try {
+        const r = await traer(BASE_AZ + def.camino + '/', { headers: { Referer: BASE_AZ + '/' }, timeoutMs: 12000 });
+        if (!r.ok) return null;
+        const items = azTarjetas(r.text).slice(0, 20);
+        return items.length ? { id: def.id, title: def.titulo, ref: def.ref, items: items } : null;
+      } catch (e) {
+        log('az fila «' + def.titulo + '» falló', (e && e.message) || String(e));
+        return null;
+      }
+    }));
+    const filas = [];
+    for (const fila of rtas) if (fila) filas.push(fila);
+    return filas;
+  },
+
+  async hoja(ref, cursor) {
+    const m = /^az-genero-([a-z-]+)$/.exec(ref);
+    if (!m) return null;
+    const camino = '/genero/' + m[1] + '/';
+    const pag = parseInt(cursor, 10);
+    const num = Number.isFinite(pag) && pag > 1 ? pag : 1;
+    const url = num > 1 ? BASE_AZ + camino + 'page/' + num + '/' : BASE_AZ + camino;
+    const r = await traer(url, { headers: { Referer: BASE_AZ + '/' }, timeoutMs: 12000 });
+    if (!r.ok) {
+      /* fin de riel callado: pasado el último /page/N/ el género 404ea. */
+      if (num > 1) return { items: [], next: null };
+      throw kino.error('unavailable', 'Az-Animex no respondió (status ' + r.status + ')', {
+        userMessage: 'Az-Animex no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    const items = azTarjetas(r.text).slice(0, 60);
+    let next = null;
+    if (items.length >= 12) next = String(num + 1);
+    return { items: items, next: next };
+  },
+
+  async detalle(slug) {
+    const r = await traer(BASE_AZ + '/' + slug + '/', { headers: { Referer: BASE_AZ + '/' }, timeoutMs: 12000 });
+    if (!r.ok || !r.text) return null;
+    const serie = { title: slugATitulo(slug) };
+    const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
+    if (h) serie.title = limpio(h[1]).replace(/^\[/, '').replace(/\]\s*$/, '').trim() || serie.title;
+    const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(r.text);
+    if (og) serie.poster = og[1].indexOf('//') === 0 ? 'https:' + og[1] : og[1];
+    const sin = /post-excerpt__excerpt">\s*<p>([\s\S]{30,2000}?)<\/p>/i.exec(r.text) || /<p[^>]*>([\s\S]{80,1500}?)<\/p>/i.exec(r.text);
+    if (sin) serie.overview = limpio(sin[1]).slice(0, 400);
+    return serie;
+  },
+
+  async episodios(slug) {
+    const datos = await azEpsDe(slug);
+    const lista = [];
+    for (const e of datos.lista) {
+      lista.push({ season: 1, number: e.num, ref: 'az:' + slug + ':' + e.num, title: 'Episodio ' + e.num });
+    }
+    return { series: datos.serie, episodes: lista };
+  },
+
+  async resolver(slug, n, idx) {
+    const num = n || 1;
+    const datos = await azEpsDe(slug);
+    let ep = null;
+    for (const e of datos.lista) if (e.num === num) ep = e;
+    if (!ep) {
+      throw kino.error('not_found', 'Az-Animex: episodio ' + num + ' no existe', {
+        userMessage: 'Ese episodio no está publicado en Az-Animex.'
+      });
+    }
+    /* 1. la página del episodio suelta el enlace ?hash=… (crudo, v47). */
+    const flUrl = 'https://www.mirrored.to/files/' + ep.fid + '/' + ep.nombre + '_links';
+    let hashUrl = '';
+    const fl = await traer(flUrl, { timeoutMs: 15000 });
+    if (fl.ok) hashUrl = azHashDe(fl.text);
+    if (!hashUrl) hashUrl = azHashDe(await azJina(flUrl));
+    if (!hashUrl) {
+      throw kino.error('not_found', 'Az-Animex: enlaces agotados', {
+        userMessage: 'Los enlaces de este episodio caducaron en las nubes. Vuelve a abrirlo en un rato.'
+      });
+    }
+    /* 2. la tabla de nubes — JavaScript en el crudo, el espejo la ve. */
+    let getlinks = {};
+    const hp = await traer(hashUrl, { timeoutMs: 15000 });
+    if (hp.ok) getlinks = azGetlinksDe(hp.text);
+    if (!Object.keys(getlinks).length) getlinks = azGetlinksDe(await azJina(hashUrl));
+    if (!Object.keys(getlinks).length) {
+      throw kino.error('not_found', 'Az-Animex: sin nubes', {
+        userMessage: 'Este episodio no tiene nubes disponibles ahora mismo.'
+      });
+    }
+    /* 3. cada getlink esconde el href al embed de su nube; se abren
+     * en orden de preferencia hasta juntar un buen puñado. */
+    const servers = [];
+    let capturaUrl = '';
+    for (const id of AZ_HOST_PREF) {
+      const gl = getlinks[id];
+      if (!gl) continue;
+      if (!capturaUrl) capturaUrl = gl;
+      if (servers.length >= 4) break;
+      const r = await traer(gl, { timeoutMs: 15000 });
+      if (!r.ok) continue;
+      const embed = azEmbedEn(r.text);
+      if (!embed) continue;
+      const tipo = detectarTipo(AZ_HOST_NOMBRE[id] || '', embed);
+      if (!tipo || tipo === 'generic') continue;
+      servers.push({ nombre: AZ_HOST_NOMBRE[id] || ('Nube ' + id), url: embed, tipo: tipo });
+    }
+    if (!servers.length && capturaUrl && puedeCapturar()) {
+      /* ni un embed legible: el navegador oculto renderiza el
+       * getlink (countdown incluido) y pesca el video. */
+      servers.push({ nombre: 'Az-Animex', url: capturaUrl, tipo: 'multi' });
+    }
+    if (!servers.length) {
+      throw kino.error('not_found', 'Az-Animex: nubes ilegibles', {
+        userMessage: 'No se pudieron leer las nubes de este episodio. Inténtalo en un rato.'
+      });
+    }
+    return await probarConCaptura(capturaUrl || servers[0].url, servers, idx, function (i) {
+      return 'az:' + slug + ':' + num + ':' + i;
+    }, 'Az-Animex', BASE_AZ);
+  }
+});
+
 /* ---------- exportaciones de Kino (el abanico del agregador) ---------- */
 
 function partirRef(ref) {
@@ -4955,7 +5305,8 @@ const FUENTES_PANTALLA = [
   { id: 'eas', nombre: 'EstrenosAnime' },
   { id: 'jara', nombre: 'AnimeJara' },
   { id: 'van', nombre: 'VerAnime' },
-  { id: 'iva', nombre: 'IvAnime' }
+  { id: 'iva', nombre: 'IvAnime' },
+  { id: 'az', nombre: 'Az-Animex' }
 ];
 
 function fuenteValida(id) {
@@ -5044,7 +5395,9 @@ const NUCLEO_TODAS = {
   eas: ['eas-eps', 'eas-sub', 'eas-lat', 'eas-popular'],
   jara: ['jara-emision', 'jara-catalogo'],
   van: ['van-anime', 'van-peliculas'],
-  iva: ['iva-emision', 'iva-directorio']
+  iva: ['iva-emision', 'iva-directorio'],
+  /* v0.6.25: Az-Animex entra con el par de géneros esencial. */
+  az: ['az-genero-accion', 'az-genero-comedia']
 };
 
 async function cargarPantalla(fuente) {

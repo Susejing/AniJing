@@ -4,13 +4,13 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.24 «El escaparate lleno»)
+## Qué hace (v0.6.25 «El tesoro de las nubes»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
 **Orden por secciones**: en «Todas», cada fuente ocupa su propia sección con un encabezado grande y sus rieles debajo — nada de filas revueltas: el scroll se lee por partes. Tocar el nombre de una fuente la muestra sola. Cada fuente aporta su núcleo a «Todas»; el resto de sus filas vive en su sección propia. En la 0.6.5 las secciones se llenaron: EstrenosAnime estrenó Películas y Actualizados, AnimeOnline trae En emisión, Audio Latino y Películas, IvAnime suma Directorio y Últimos agregados y AnimeYT aporta sus películas — y como el estado de la pantalla tiene un tope, cuando hay muchas filas cada riel enseña 8 tarjetas en vez de 12 para que nada se desborde.
 
-**Nueve fuentes**:
+**Diez fuentes**:
 
 - **AnimeAV1** — catálogo con carátulas, fichas con sinopsis, géneros, año, nota y el id de MyAnimeList; en «Todas» aporta su núcleo (últimos episodios, últimos agregados, populares, mejor puntuados).
 - **MonosChinos** — en emisión, animes completos y los géneros Acción y Comedia, con su «Ver más» paginado (`?p=N`); sus películas y especiales de siempre.
@@ -21,6 +21,7 @@ Su nombre une «anime» con la terminación «jing» de su autor.
 - **AnimeJara** — la veterana (animejara.com, puerta henaojara2.com): en emisión, catálogo y los géneros Acción, Romance, Comedia y Drama (paginados en `/genero/<slug>/page/N/`), con pósters propios; las fichas traen sus temporadas en pestañas y los episodios se sintetizan como `/episode/<slug>-1x2/`. Su player es un multiserver propio (streamhj.top) que lista sus hosters (Filemoon, Uqload, Vidhide, Voe, LuluStream, StreamTape, MP4Upload) por idioma: japonés, latino y castellano.
 - **VerAnime** — un Dooplay de manual (veranime.ninja): pósters de tmdb, fichas con temporadas y episodios `/ver/<slug>-episodio-N/`; su player sale del POST `admin-ajax.php` (action `doo_player_ajax` — el endpoint v2 de la casa responde 200 con el cuerpo vacío) y su multiserver (darkanimes.com, familia multiserver-pro) lista sus hosters cifrados: cada botón trae su URL en base64 XOR con la clave `pk` que su propia API entrega en claro (ZoPlayer, StreamWish, Uqload, SaveFiles…, con su idioma: latino, castellano o subtitulado). Su Inicio trae quince rieles: «Anime», Películas, más trece géneros verificados por sonda (Acción, Aventura, Fantasía, Comedia, Drama, Romance, Shounen, Seinen, Isekai, Mecha, Misterio, Psicológico y Sobrenatural, con «Página N de M» y su «Ver más» paginando en `/genero/<slug>/page/N/` y `/pelicula/page/N/`). Las películas abren también: si la página de episodio no existe, el resolver cae a su ficha.
 - **IvAnime** — en emisión, directorio (paginado con `?p=N` — el catálogo completo, ya sin recorte), últimos agregados y los géneros Acción, Romance y Comedia; vive en el espejo .buzz (el .com es descargas), con Voe, MP4Upload, Dood, MixDrop, Lulu y más cubiertos. Sus capítulos viven en `/ver/<epslug>-episodio-N` con un epslug que no es el de la serie; la ficha solo enseña el «Ver ahora» del primero, así que el total se cuenta con búsqueda binaria sobre su 404 de verdad. Sus pósters de verdad viajan en `data-src` (el `src` es un anime.png de relleno) y los de los héroes de la home se hallan por su nombre: la portada lleva el slug de la serie (`…/portada/<slug>-…jpg`).
+- **Az-Animex** — el tesoro de las nubes (az-animex.com): cada episodio es un `.mp4` suelto subido a mirrored.to, que lo replica a nubes de streaming que AniJing ya sabe abrir (Voe, StreamTape, StreamWish, LuluStream, Byse…). La cadena completa: ficha → multilinks → `files/<FID>/…mp4_links` (un enlace por episodio) → página `?hash=` → tabla de getlinks por nube → cada getlink esconde el href directo al embed → extractor de siempre. Los pasos que mirrored.to sirve con JavaScript (el multilink y la tabla del `?hash=`) se leen a través del espejo r.jina.ai, que renderiza el JS y devuelve la página en texto. Sus filas viven de los géneros (Acción, Comedia, Romance, Drama, Shounen, Seinen y Fantasía — WordPress puro que pagina `/page/N/` hasta 66 páginas) y de la búsqueda `?s=`, porque su directorio y su home son también JavaScript. dw-anime, el otro candidato, quedó descartado con honestidad: todo su catálogo son `.RAR` de MediaFire/Mega, no video reproducible.
 
 Todas las filas llevan su «Ver más».
 
@@ -31,6 +32,13 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.25 «El tesoro de las nubes»
+
+«Integra az-animex.com y dw-anime.net… ver la manera de reproducir los vídeos así sea por la nube o algún truco». Las sondas v40–v47 midieron los dos candidatos a fondo:
+
+- **Az-Animex entra entera**. Es un WordPress de descargas cuyo truco es que cada episodio es un `.mp4` suelto subido a mirrored.to, y mirrored lo replica a nubes de STREAMING que AniJing ya sabe abrir (Voe, StreamTape, StreamWish, LuluStream, Byse, GoFile, VikingFile, Buzzheavier). La cadena completa y verificada: ficha → botón `col1-mirror` (multilinks) → lista de `files/<FID>/…mp4_links`, un enlace por episodio → esa página trae el `?hash=…&dl=0` → esa página lista los `getlink/<FID>/<hostid>` por nube → cada getlink responde 200 con el href directo al embed de la nube → extractor de siempre. Gotchas aprendidos: el multilink y la tabla del `?hash=` se sirven con JavaScript (el HTML crudo no trae los enlaces), así que esos pasos caen al espejo de lectura r.jina.ai, que renderiza el JS y devuelve la página en texto; y el directorio y el home de az son también JS — las filas viven de los géneros (`/genero/<slug>/`, WordPress puro que pagina `/page/N/` — 66 páginas en Acción) y de la búsqueda `?s=`. Los hosts nuevos del manifest (az-animex, mirrored.to, r.jina.ai) hacen que Kino pida re-aprobación al actualizar — normal.
+- **dw-anime quedó descartado con honestidad**: es puro sitio de descargas y sus fichas (paste → wp-safelink → MediaFire/Mega) terminan SIEMPRE en `.RAR` comprimidos. La cadena de enlaces se resuelve completa, pero el archivo final no es video reproducible.
 
 ## v0.6.24 «El escaparate lleno»
 
