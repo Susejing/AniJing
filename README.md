@@ -4,7 +4,7 @@ AniJing — el anime con la firma de Susejing. Plugin de anime puro para [Kino](
 
 Su nombre une «anime» con la terminación «jing» de su autor.
 
-## Qué hace (v0.6.29 «El bibliotecario»)
+## Qué hace (v0.6.30 «El retratista»)
 
 **Pantalla propia de Inicio**: al abrir AniJing no verás la interfaz genérica, sino su propia portada estilo MangaTrack: una barrita única arriba (flechita para salir, lupa para buscar y el botón de fuentes), un anime destacado que rota por día con su fondo y botón directo a la serie, y los rieles de contenido con su «Ver más». El selector de fuentes cambia el contenido al toque y recuerda tu elección; mientras carga se ven esqueletos con la forma del contenido, y si una fuente no responde, un aviso honesto con su «Reintentar» (nunca una pantalla en blanco).
 
@@ -32,6 +32,12 @@ Todas las filas llevan su «Ver más».
 **Ajustes del plugin**: idioma preferido (sub/dob, solo AnimeAV1) y servidor preferido.
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
+
+## v0.6.30 «El retratista»
+
+El Directorio A-Z de la 0.6.29 listaba las 1831 fichas… pero con las tarjetas grises: el wp-json de Az-Animex no trae imágenes (la sonda lo comprobó de dos maneras — `media?parent=` devuelve vacío y el `_embed` se anula con `_fields`). La cura: cada tarjeta viaja con un póster de referencia propia (`az-poster-<slug>`) y el plugin resuelve la cadena ficha → `og:image` → bytes, con el mapa slug→imagen guardado en el almacenamiento de Kino y un grifo de caudal (14 pósters por ventana de 10 minutos) para no reventar el tope de 60 peticiones por pantalla — los pósters van llegando conforme recorres el directorio, y en la segunda visita ya están cacheados. En la fila de portada de «Todas» las tarjetas van sin póster (allí el presupuesto es compartido); en la sección propia de Az-Animex y en las páginas del directorio, con póster. Sin hosts nuevos: todo vive en www.az-animex.com, ya aprobado.
+
+El mismo turno atendió el otro reclamo: las fichas del directorio que «no cargan» (Bungaku Shoujo Memoire, Kyou no Oyatsu, Movie, Eiyuu Kaitai…) no están rotas — sus botones van a FireLoad con URL de archivo suelto (`/d<hash>/`, página de descarga premium, sonda v53), al Server Az premium de Az-Animex o a un `ovas.az-animex.com` que ya ni resuelve DNS. El detector de nubes ahora las reconoce todas y dan el aviso honesto («solo nubes no soportadas») en vez de un «ficha sin descargas» falso; y si una ficha de verdad no trae botones, el log confiesa cuántos encontró para que la próxima no sea un misterio.
 
 ## v0.6.29 «El bibliotecario»
 

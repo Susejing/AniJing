@@ -447,6 +447,28 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.30 «El retratista» — el teléfono validó la 0.6.29: el Directorio
+// A-Z lista las 1831 fichas, pero las tarjetas salen GRIS (el wp-json
+// no trae imágenes) y el usuario lo preguntó de una vez. La sonda v52
+// buscó la vía barata y no hay: media?parent= devuelve [] (las portadas
+// no viajan como adjuntos) y el _embed se muere con _fields (WP lo
+// vacía). Pero cada ficha declara su og:image — así que la tarjeta
+// viaja con un handle propio («az-poster-<slug>») y image() resuelve
+// la cadena ficha → og:image → bytes, con el mapa slug→og:image
+// guardado en kino.storage y un grifo de 14 pósters por ventana de
+// 10 minutos para no reventar el tope de 60 peticiones de Kino
+// (lección de la 0.6.25). En la fila de portada de «Todas» las
+// tarjetas van sin póster (allí el presupuesto es compartido); en
+// la sección propia de az y en las páginas del directorio, sí.
+// Y el mismo turno curó el otro reclamo: las fichas que «no cargan»
+// (Bungaku Shoujo Memoire/Oyatsu/Movie, Eiyuu Kaitai) no están
+// rotas — sus botones van a FireLoad con URL /d<hash>/ (página de
+// archivo, no carpeta: sonda v53), al Server Az premium o a un
+// ovas.az-animex.com que ya ni resuelve DNS. El detector de nubes
+// ahora las reconoce TODAS (fireload con cualquier ruta, ovas) y
+// dan el aviso honesto; y si una ficha de verdad no trae botones,
+// el log confiesa cuántos encontró.
+//
 // v0.6.29 «El bibliotecario» — el usuario echó de menos títulos: la
 // búsqueda de «grisaia no kajitsu» no lo encontró y en la web sí
 // está (sonda v51: el ?s= de WordPress SÍ lo lista y azTarjetas
@@ -594,7 +616,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.29';
+const VERSION = '0.6.30';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -5024,7 +5046,7 @@ function azTarjetas(html) {
  * promocionales como «[Oshi no Ko]» que se pelan igual que el
  * h1 de la ficha). Sin póster: la API no lo trae y la ficha
  * viste el suyo al abrirse. */
-async function azDirectorio(pag) {
+async function azDirectorio(pag, conPoster) {
   const num = Number.isFinite(pag) && pag > 0 ? pag : 1;
   const url = BASE_AZ + '/wp-json/wp/v2/posts?per_page=40&orderby=title&order=asc&page=' + num + '&_fields=slug,title';
   const r = await traer(url, { headers: { Referer: BASE_AZ + '/', Accept: 'application/json,*/*' }, timeoutMs: 12000 });
@@ -5039,16 +5061,91 @@ async function azDirectorio(pag) {
     if (!slug || vistos.has(slug)) continue;
     const tit = limpio((p.title && p.title.rendered) || '').replace(/^\[/, '').replace(/\]\s*$/, '').trim();
     vistos.add(slug);
-    items.push({
+    const it = {
       id: 'az-' + slug,
       ref: 'az:' + slug,
       title: (tit || slugATitulo(slug)).slice(0, 200),
       kind: 'series'
-    });
+    };
+    /* v0.6.30 «El retratista»: el wp-json no trae imágenes (v52:
+     * media?parent= [] y _embed vacío con _fields) — el póster
+     * viaja como handle y image() lo resuelve (ficha → og:image). */
+    if (conPoster === true) it.poster = { source: 'plugin', handle: 'az-poster-' + slug };
+    items.push(it);
   }
   /* X-WP-Total es 1831 (46 páginas de 40): mientras la página
    * venga llena, hay más biblioteca detrás. */
   return { items: items, next: items.length >= 40 ? String(num + 1) : null };
+}
+
+/* v0.6.30 «El retratista»: el póster de una tarjeta del Directorio
+ * A-Z. El handle es «az-poster-<slug>» y aquí se resuelve la cadena
+ * ficha → og:image → bytes. El mapa slug→og:image se guarda en
+ * kino.storage (la segunda visita cuesta una sola petición) y un
+ * grifo limita el caudal — 14 pósters por ventana de 10 minutos —
+ * para no reventar el tope de 60 peticiones de Kino (la 0.6.25
+ * murió de eso). Si el grifo se llena, Kino pone el handle cinco
+ * minutos en cuarentena y lo reintenta: los pósters van llegando
+ * conforme se recorre el directorio, sin matar la pantalla. */
+const AZ_POSTER_VENTANA_MS = 600000;
+const AZ_POSTER_TOPE = 14;
+let azPosterMarcas = [];
+async function azPosterDe(slug) {
+  const ahora = Date.now();
+  azPosterMarcas = azPosterMarcas.filter(function (t) { return ahora - t < AZ_POSTER_VENTANA_MS; });
+  if (azPosterMarcas.length >= AZ_POSTER_TOPE) {
+    throw kino.error('unavailable', 'az póster «' + slug + '»: grifo de peticiones lleno (Kino reintenta en unos minutos)');
+  }
+  azPosterMarcas.push(ahora);
+  let og = '';
+  try { og = String(kino.storage.get('ajAzPoster:' + slug) || ''); } catch (eS) { og = ''; }
+  if (og.indexOf('http') !== 0) {
+    const r = await traer(BASE_AZ + '/' + slug + '/', { headers: { Referer: BASE_AZ + '/' }, timeoutMs: 12000 });
+    if (!r.ok || !r.text) {
+      log('az póster «' + slug + '»: la ficha no llegó (status ' + (r && r.status) + ')');
+      throw kino.error('unavailable', 'az póster «' + slug + '»: la ficha no llegó');
+    }
+    const m = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(r.text) || /content=["']([^"']+)["'][^>]*property=["']og:image["']/i.exec(r.text);
+    if (!m) {
+      log('az póster «' + slug + '»: la ficha no declara og:image');
+      throw kino.error('unavailable', 'az póster «' + slug + '»: la ficha no declara og:image');
+    }
+    og = m[1].indexOf('//') === 0 ? 'https:' + m[1] : m[1];
+    try { kino.storage.set('ajAzPoster:' + slug, og); } catch (eS2) {}
+  }
+  const nombre = og.split('/').pop() || slug;
+  let r = null;
+  try {
+    r = await kino.fetch(og, {
+      headers: { Referer: BASE_AZ + '/', 'User-Agent': UA },
+      timeoutMs: 9000,
+      maxBytes: 262145
+    });
+  } catch (eF) {
+    log('az póster «' + slug + '»: la imagen no llegó (' + ((eF && eF.message) || String(eF)) + ')');
+    throw kino.error('unavailable', 'az póster «' + slug + '»: la imagen no llegó');
+  }
+  if (!r || r.status !== 200 || r.truncated === true) {
+    log('az póster «' + slug + '»: status ' + (r && r.status) + (r && r.truncated ? ' (pesa más del tope de Kino, 256 KB)' : ''));
+    throw kino.error('unavailable', 'az póster «' + slug + '»: la imagen no llegó (status ' + (r && r.status) + ')');
+  }
+  const ct = ((r.headers && (r.headers['content-type'] || r.headers['Content-Type'])) || '');
+  if (/text\/html/i.test(ct)) {
+    log('az póster «' + slug + '»: llegó HTML en vez de imagen');
+    throw kino.error('unavailable', 'az póster «' + slug + '»: llegó HTML, no imagen');
+  }
+  let bytes = '';
+  try { bytes = r.base64(); } catch (eB) { bytes = ''; }
+  if (!bytes) {
+    log('az póster «' + slug + '»: llegó 200 pero sin bytes');
+    throw kino.error('unavailable', 'az póster «' + slug + '»: sin bytes');
+  }
+  let mime = 'image/jpeg';
+  if (/webp/i.test(ct)) mime = 'image/webp';
+  else if (/png/i.test(ct)) mime = 'image/png';
+  const kb = Math.round((bytes.length * 3 / 4) / 102.4) / 10;
+  log('az póster servido «' + slug + '» (' + nombre + '): ' + kb + ' KB, ' + mime);
+  return { bytes: bytes, mime: mime };
 }
 
 /* v0.6.29: el kind de verdad vive en la clase del <li> que
@@ -5216,14 +5313,22 @@ async function azEpsDe(slug) {
     /* v0.6.28: el inventario de la sonda v49 — si la ficha solo
      * ofrece mensajeros que AniJing no sabe abrir, se dice la
      * verdad con sus nombres (TeraBox, Server Az, Filemoon suelto,
-     * MultiUp, FireLoad), no un «sin descargas» falso. */
+     * MultiUp, FireLoad), no un «sin descargas» falso.
+     * v0.6.30 (sonda v53): FireLoad también enlaza archivos sueltos
+     * con /d<hash>/ (página de descarga premium, no carpeta) y hay
+     * fichas con ovas.az-animex.com (que ya ni resuelve DNS) —
+     * ambas cuentan como nube no soportada. */
     if (/terabox\.com\//i.test(r.text) || /dire\.az-animex\.com\//i.test(r.text) ||
-        /filemoon\.to\/f\//i.test(r.text) || /multiup\.io\//i.test(r.text) ||
-        /fireload\.com\/folder\//i.test(r.text)) {
+        /ovas\.az-animex\.com\//i.test(r.text) || /filemoon\.to\/f\//i.test(r.text) || /multiup\.io\//i.test(r.text) ||
+        /fireload\.com\//i.test(r.text)) {
       throw kino.error('not_found', 'Az-Animex: solo nubes no soportadas', {
         userMessage: 'Esta ficha solo publica descargas en servicios que AniJing todavía no sabe abrir (TeraBox, el Server Az premium de Az-Animex, Filemoon suelto, MultiUp o FireLoad).'
       });
     }
+    /* v0.6.30: si de verdad no hay botones, el log confiesa el
+     * hallazgo — que la próxima ficha gris no sea un misterio. */
+    const nBot = (String(r.text).match(/col1-boton/g) || []).length;
+    log('az ficha «' + slug + '» sin descargas: ' + nBot + ' botones y ninguno con mensajero conocido');
     throw kino.error('not_found', 'Az-Animex: ficha sin descargas', {
       userMessage: 'Esta ficha de Az-Animex todavía no tiene descargas publicadas.'
     });
@@ -5334,7 +5439,10 @@ registrarFuente({
          * página de género — primera página (A y B), el resto
          * en el «Ver más» con su cursor. */
         if (def.id === 'az-directorio') {
-          const d = await azDirectorio(1);
+          /* v0.6.30: en «Todas» (solo=true) la fila va SIN pósters —
+           * allí el presupuesto de 60 es compartido; en la sección
+           * propia de az, con póster (el grifo limita el caudal). */
+          const d = await azDirectorio(1, solo !== true);
           return d.items.length ? { id: def.id, title: def.titulo, ref: def.ref, items: d.items.slice(0, 20) } : null;
         }
         const r = await traer(BASE_AZ + def.camino + '/', { headers: { Referer: BASE_AZ + '/' }, timeoutMs: 12000 });
@@ -5357,7 +5465,7 @@ registrarFuente({
     if (ref === 'az-directorio') {
       const pag = parseInt(cursor, 10);
       const num = Number.isFinite(pag) && pag > 1 ? pag : 1;
-      const d = await azDirectorio(num);
+      const d = await azDirectorio(num, true);
       return { items: d.items, next: d.next };
     }
     const m = /^az-genero-([a-z-]+)$/.exec(ref);
@@ -6047,6 +6155,13 @@ async function image(arg) {
    * Kino muestra el placeholder y pone el handle cinco minutos en
    * cuarentena, y la ficha y los capítulos siguen intactos. */
   const handle = arg && arg.handle ? String(arg.handle) : '';
+  /* v0.6.30 «El retratista»: los pósters del Directorio A-Z viajan
+   * con handle propio («az-poster-<slug>») — el wp-json no trae
+   * imágenes, así que aquí se abre la ficha y se sirve su og:image
+   * (con caché en kino.storage y grifo de caudal). */
+  if (handle.indexOf('az-poster-') === 0) {
+    return await azPosterDe(handle.slice('az-poster-'.length));
+  }
   if (handle.indexOf('https://ivanime.buzz/') !== 0) {
     throw kino.error('not_found', 'imagen que no es de IvAnime');
   }
