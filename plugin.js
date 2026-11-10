@@ -447,6 +447,39 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.45 «El sondeo del almacén» — la 0.6.44 llegó al teléfono (0.6.44
+// en pantalla) y AUN ASÍ la vista de BeatZ siguió igual: algunas
+// portadas cargan, otras quedan grises y el catálogo se corta. Se
+// acabó el adivinar: botón nuevo «Sondear BeatZ» en los ajustes que
+// recorre el almacén paso a paso (raíz, las 4 páginas del padrón,
+// conteo por rango de letras y 3 pósters de muestra) y escribe TODO en
+// el log — el mismo camino con el que se curó Az-Animex: sondear,
+// leer el log del teléfono y arreglar con datos, no con teorías.
+//
+// v0.6.44 «Las letras en su casa» — la captura del teléfono (v0.6.43,
+// BeatZ como fuente única) destapó la metida de pata: las secciones de
+// letras se añadían con «if (solo !== true)», o sea, SOLO en «Todas» y
+// en el inicio — justo la pantalla que el usuario casi nunca ve. En la
+// vista de fuente única (la de la captura) seguía el «Catálogo BD» solo
+// de siempre, y por eso parecía que no había cambiado nada. Ahora las
+// letras aparecen SIEMPRE, también en solo. VerAnime sigue igual: es un
+// muro de Cloudflare, no del plugin.
+//
+// v0.6.43 «El alto en el muro» — la segunda sonda del teléfono sentenció
+// las dos cosas. (1) VerAnime: kino.browser.page respondió «blocked: the
+// page stayed on the site's check» — el navegador oculto TAMBIÉN es
+// detectado por Cloudflare, y Kino nunca resuelve retos por su cuenta.
+// El muro no se puede pasar desde el plugin: se dice honesto y se deja
+// de quemar — al detectar el muro, la fuente entra en descanso de 10
+// minutos (VAN_DESCANSO) y sus llamadas responden al instante con el
+// vacío, sin las 15 peticiones por portada de antes. La ventanilla y la
+// galleta quedan (por si un día Cloudflare afloja). (2) BeatZ: la raíz
+// del almacén solo tiene la carpeta «Anime» — no hay secciones que
+// espejar, así que se inventaron las honestas: filas por rangos de
+// letras (0-9·A-F, G-L, M-R, S-Z) servidas del padrón cacheado de
+// btzSeries, cero peticiones extra, cada una con su «Ver más» que
+// pagina dentro del rango (ref «btz-letra:<id>», cursor = offset).
+//
 // v0.6.42 «La página escondida» — el log del teléfono mandó dos cosas.
 // (1) VerAnime seguía 403 CON la galleta guardada: Cloudflare ata la
 //     cf_clearance al navegador que la pasó, y kino.fetch no lo es. La
@@ -826,7 +859,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.42';
+const VERSION = '0.6.45';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4427,7 +4460,17 @@ function vanCabeceras(extra) {
  * honesto. */
 const VAN_CF_RE = /just a moment|cf-chl|attention required|checking your browser/i;
 let PAGES_OFF = false;
+/* v0.6.43 «El alto en el muro»: la sonda del teléfono sentenció —
+ * kino.browser.page responde «blocked: the page stayed on the site's
+ * check»: el navegador oculto también es detectado por Cloudflare y
+ * Kino nunca resuelve retos por su cuenta. VerAnime es un muro que el
+ * plugin no puede pasar. En vez de quemar 15 peticiones por portada,
+ * el muro detectado impone un descanso de 10 minutos: las llamadas de
+ * la fuente responden al instante con su vacío honesto. */
+let VAN_DESCANSO = 0;
+function vanEnDescanso() { return Date.now() < VAN_DESCANSO; }
 async function vanPagina(url, ms) {
+  if (vanEnDescanso()) return null;
   let r = null;
   try { r = await traer(url, { headers: vanCabeceras(), timeoutMs: ms, cuerpoSiempre: true }); } catch (e) { r = null; }
   const muro = !r || !r.ok || (r.text && VAN_CF_RE.test(r.text.slice(0, 3000)));
@@ -4442,8 +4485,18 @@ async function vanPagina(url, ms) {
     } catch (e2) {
       const code = String((e2 && e2.code) || '');
       if (code === 'not_allowed' || code === 'browser_unavailable') PAGES_OFF = true;
-      log('van página escondida falló', (e2 && e2.message) || String(e2));
+      /* «blocked»: el reto no cede ni con el navegador oculto — no
+       * insistir más en esta sesión y dictar el descanso. */
+      if (code === 'blocked') { PAGES_OFF = true; VAN_DESCANSO = Date.now() + 600000; log('van: el muro no cede (navegador oculto bloqueado); descanso de 10 minutos'); }
+      else log('van página escondida falló', (e2 && e2.message) || String(e2));
     }
+  }
+  /* El descanso solo lo dicta un muro REAL: 403 de Cloudflare o el
+   * «blocked» del navegador oculto — un fallo de red o un 404 cualquiera
+   * no es el muro. */
+  if (muro && !vanEnDescanso() && r && r.status === 403) {
+    VAN_DESCANSO = Date.now() + 600000;
+    log('van: muro de Cloudflare (403); descanso de 10 minutos');
   }
   return r;
 }
@@ -4655,6 +4708,7 @@ registrarFuente({
   async buscar(q) {
     const texto = String(q || '').trim().slice(0, 100);
     if (texto.length < 2) return [];
+    if (vanEnDescanso()) { log('van buscar: en descanso por el muro'); return []; }
     try {
       const r = await vanPagina(BASE_VAN + '/?s=' + encodeURIComponent(texto), 10000);
       if (!r.ok) return [];
@@ -4668,6 +4722,9 @@ registrarFuente({
   },
 
   async portada(solo) {
+    /* v0.6.43: si el muro de Cloudflare mandó a descanso, responder al
+     * instante con el vacío honesto — sin 15 peticiones quemadas. */
+    if (vanEnDescanso()) { log('van portada: en descanso por el muro'); return []; }
     /* v0.6.13 «El escaparate»: el Inicio de VerAnime crece — el riel
      * «Anime» de siempre más un riel por género, verificados por sonda
      * uno a uno (accion 36 páginas, comedia 39, fantasia 40, aventura
@@ -4763,6 +4820,11 @@ registrarFuente({
     else if (ref === 'van-anime') base = '/genero/ver-anime';
     else if (ref.indexOf('van-genero-') === 0) base = '/genero/' + ref.slice('van-genero-'.length);
     if (!base) return null;
+    if (vanEnDescanso()) {
+      throw kino.error('unavailable', 'VerAnime tras Cloudflare (descanso)', {
+        userMessage: 'VerAnime está tras un muro de Cloudflare que el plugin no puede pasar. Vuelve a intentarlo en unos minutos.'
+      });
+    }
     const pagina = parseInt(cursor, 10);
     const num = Number.isFinite(pagina) && pagina > 1 ? pagina : 1;
     const camino = num > 1 ? base + '/page/' + num + '/' : base + '/';
@@ -6345,6 +6407,21 @@ function btzRutaDe(nombre) {
   return BTZ_RAIZ + '/' + String(nombre || '').trim();
 }
 
+/* v0.6.43: los rangos de letras de las secciones de BeatZ. */
+const BTZ_RANGOS = [
+  { id: '09af', titulo: '0-9 · A-F' },
+  { id: 'gl', titulo: 'G-L' },
+  { id: 'mr', titulo: 'M-R' },
+  { id: 'sz', titulo: 'S-Z' }
+];
+function btzEnRango(nombre, id) {
+  const c = String(nombre || '').toLowerCase().replace(/[^a-z0-9]/g, '').charAt(0);
+  if (id === '09af') return /[0-9a-f]/.test(c) || !c;
+  if (id === 'gl') return /[g-l]/.test(c);
+  if (id === 'mr') return /[m-r]/.test(c);
+  return /[s-z]/.test(c) || (!/[0-9a-r]/.test(c) && !!c);
+}
+
 async function btzListar(ruta, pagina) {
   const r = await traer(BTZ_API + '/api/fs/list', {
     json: { path: '/' + ruta, page: pagina || 1, per_page: 200, refresh: false },
@@ -6385,13 +6462,13 @@ async function btzSeries() {
   return out;
 }
 
+/* v0.6.40 «El retratista»: el listado del OpenList no trae thumbs, pero
+ * el sitio guarda las portadas con patrón fijo /img/img-anime/<slug>/
+ * <slug>-port.jpg (sonda v97: 4 de 5 slugs responden 200 image/jpeg; el
+ * que no, cae al placeholder de Kino sin romper nada). Mismo slug que
+ * btzFicha adivina para las fichas. v0.6.42: base opcional para las
+ * secciones fuera de la carpeta Anime. */
 function btzItemDe(nombre, base) {
-  /* v0.6.40 «El retratista»: el listado del OpenList no trae thumbs, pero
-   * el sitio guarda las portadas con patrón fijo /img/img-anime/<slug>/
-   * <slug>-port.jpg (sonda v97: 4 de 5 slugs responden 200 image/jpeg; el
-   * que no, cae al placeholder de Kino sin romper nada). Mismo slug que
-   * btzFicha adivina para las fichas. v0.6.42: base opcional para las
-   * secciones fuera de la carpeta Anime. */
   const slug = String(nombre).toLowerCase().replace(/[.']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   return {
     id: 'btz-' + String(nombre).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
@@ -6458,10 +6535,10 @@ registrarFuente({
     const items = data.filter((x) => x && x.is_dir).map((x) => btzItemDe(String(x.name || '').trim())).filter((x) => x.title).slice(0, 24);
     if (!items.length) return [];
     const filas = [{ id: defs[0].id, title: defs[0].titulo, ref: defs[0].ref, items: items }];
-    /* v0.6.42 «La página escondida»: secciones — los hermanos de la
-     * carpeta Anime en la raíz del almacén (Películas, OVA…), uno por
-     * uno, con su propio paginado en el hoja. Si solo vive Anime, no se
-     * inventa nada. */
+    /* v0.6.42: los hermanos de la carpeta Anime en la raíz del almacén
+     * (Películas, OVA…), si los hay. La sonda del teléfono (log v0.6.42)
+     * mostró que la raíz solo tiene «Anime» — por eso la 0.6.43 añade
+     * las secciones de letras de abajo. */
     try {
       const raiz = await btzListar('BeatZ-Anime', 1);
       const otros = raiz.filter((x) => x && x.is_dir && String(x.name || '').trim() !== 'Anime').slice(0, 4);
@@ -6483,13 +6560,47 @@ registrarFuente({
     } catch (e) {
       log('btz secciones', (e && e.message) || String(e));
     }
+    /* v0.6.43: secciones por letras, servidas del padrón cacheado —
+     * cero peticiones extra y cada fila con su «Ver más» que pagina
+     * dentro de su rango. */
+    /* v0.6.44: las letras aparecen SIEMPRE — la captura del teléfono
+     * mostró que con «solo !== true» no se veían en la vista de fuente
+     * única, que es la que de verdad usa la gente. */
+    try {
+      const series = await btzSeries();
+      for (const rango of BTZ_RANGOS) {
+        const enRango = series.filter((n) => btzEnRango(n, rango.id));
+        if (!enRango.length) continue;
+        filas.push({
+          id: 'btz-letra-' + rango.id,
+          title: rango.titulo + ' · BeatZ-Anime',
+          ref: 'btz-letra:' + rango.id,
+          items: enRango.slice(0, 24).map((n) => btzItemDe(n))
+        });
+      }
+    } catch (e2) {
+      log('btz letras', (e2 && e2.message) || String(e2));
+    }
     return filas;
   },
 
   async hoja(ref, cursor) {
-    const esRaiz = String(ref || '').indexOf('btz-raiz:') === 0;
+    const s = String(ref || '');
+    if (s.indexOf('btz-letra:') === 0) {
+      /* v0.6.43: paginado dentro del rango de letras, desde el padrón
+       * cacheado (sin peticiones al almacén). */
+      const id = s.slice('btz-letra:'.length);
+      const rango = BTZ_RANGOS.filter((r) => r.id === id)[0];
+      if (!rango) return null;
+      const series = await btzSeries();
+      const enRango = series.filter((n) => btzEnRango(n, id));
+      const off = Math.max(0, parseInt(String(cursor || '0'), 10) || 0);
+      const items = enRango.slice(off, off + 60).map((n) => btzItemDe(n));
+      return { items: items, next: off + 60 < enRango.length ? String(off + 60) : null };
+    }
+    const esRaiz = s.indexOf('btz-raiz:') === 0;
     if (ref !== 'btz-catalogo' && !esRaiz) return null;
-    const ruta = esRaiz ? String(ref).slice('btz-raiz:'.length) : BTZ_RAIZ;
+    const ruta = esRaiz ? s.slice('btz-raiz:'.length) : BTZ_RAIZ;
     const pag = parseInt(String(cursor || '1'), 10) || 1;
     const data = await btzListar(ruta, pag);
     const items = data.filter((x) => x && x.is_dir).map((x) => btzItemDe(String(x.name || '').trim(), ruta)).filter((x) => x.title).slice(0, 60);
@@ -7271,6 +7382,54 @@ async function image(arg) {
  * y solo tras el toque de la persona; el plugin nunca ve lo que se
  * teclea adentro. */
 async function action(key) {
+  if (key === 'btzSonda') {
+    /* v0.6.45 «El sondeo del almacén»: diagnóstico de BeatZ desde el
+     * teléfono de verdad — raíz, padrón página por página, letras y
+     * pósters de muestra. Todo al log; el mensaje es solo el resumen. */
+    const partes = [];
+    try {
+      const raiz = await btzListar('BeatZ-Anime', 1);
+      const nombresRaiz = raiz.map((x) => (x && x.is_dir ? '[D] ' : '[f] ') + String((x && x.name) || '')).slice(0, 12);
+      log('sonda btz raiz: ' + raiz.length + ' entradas -> ' + nombresRaiz.join(' | '));
+      partes.push('raíz ' + raiz.length);
+    } catch (eR) {
+      log('sonda btz raiz FALLO: ' + ((eR && eR.message) || String(eR)));
+      partes.push('raíz FALLO');
+    }
+    try {
+      const pags = [];
+      let total = 0;
+      for (let p = 1; p <= 4; p++) {
+        const d = await btzListar(BTZ_RAIZ, p);
+        pags.push(d.length);
+        for (const x of d) { const n = x && x.is_dir ? String(x.name || '').trim() : ''; if (n) total++; }
+        if (d.length < 200) break;
+      }
+      log('sonda btz padrón: páginas ' + pags.join(',') + ' -> ' + total + ' series');
+      partes.push('series ' + total + ' (págs ' + pags.join(',') + ')');
+      const series = await btzSeries();
+      const conteo = BTZ_RANGOS.map((r) => r.id + '=' + series.filter((n) => btzEnRango(n, r.id)).length);
+      log('sonda btz letras: ' + conteo.join(' '));
+      partes.push('letras ' + conteo.join('/'));
+      let bien = 0;
+      const muestras = series.slice(0, 3);
+      for (const m of muestras) {
+        const it = btzItemDe(m);
+        try {
+          const rp = await traer(it.poster, { timeoutMs: 10000 });
+          log('sonda btz póster «' + m + '»: ' + rp.status + ' ' + (rp.ok ? 'OK' : 'FALLO') + ' ' + it.poster);
+          if (rp.ok) bien++;
+        } catch (eP) {
+          log('sonda btz póster «' + m + '»: EXCEPCIÓN ' + ((eP && eP.message) || String(eP)));
+        }
+      }
+      partes.push('pósters ' + bien + '/' + muestras.length);
+    } catch (eS) {
+      log('sonda btz padrón FALLO: ' + ((eS && eS.message) || String(eS)));
+      partes.push('padrón FALLO');
+    }
+    return { message: 'Sondeo de BeatZ: ' + partes.join(' · ') + '. Mándame el log del teléfono y con eso arreglo la fuente.' };
+  }
   if (key !== 'teraboxLogin' && key !== 'fireloadPrep' && key !== 'veranimeCf') return null;
   if (!kino.visualBrowser || !kino.visualBrowser.available) {
     return { message: 'Este aparato no puede abrir la ventanita (solo en el teléfono o la tablet).' };
