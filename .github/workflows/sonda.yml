@@ -8,48 +8,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: dire
+      - name: alist api
         run: |
           mkdir -p sonda-out
-          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
-          curl -sL --max-time 30 -A "$UA" "https://dire.az-animex.com/" -o sonda-out/dire-raiz.html || true
-          curl -sL --max-time 30 -A "$UA" "https://dire.az-animex.com/Anime/" -o sonda-out/dire-anime.html || true
-          curl -sL --max-time 30 -A "$UA" "https://dire.az-animex.com/Anime/Monogatari%20Series%20-%20Second%20Season%20BD" -o sonda-out/dire-mono.html || true
-          curl -sL --max-time 30 -A "$UA" -H "Accept: application/json" "https://dire.az-animex.com/Anime/Monogatari%20Series%20-%20Second%20Season%20BD?json=1" -o sonda-out/dire-mono-json.txt || true
-          : > sonda-out/dire-greps.txt
-          for f in dire-raiz dire-anime dire-mono; do
-            echo "== $f (tamanio $(wc -c < sonda-out/$f.html))" >> sonda-out/dire-greps.txt
-            head -c 600 sonda-out/$f.html >> sonda-out/dire-greps.txt || true
-            echo "" >> sonda-out/dire-greps.txt
-            echo "-- js/css:" >> sonda-out/dire-greps.txt
-            grep -oE '(src|href)="[^"]*\.(js|css)[^"]*"' sonda-out/$f.html | sort -u | head -10 >> sonda-out/dire-greps.txt || echo "(nada)" >> sonda-out/dire-greps.txt
-          done
-          echo "== mono json:" >> sonda-out/dire-greps.txt
-          head -c 600 sonda-out/dire-mono-json.txt >> sonda-out/dire-greps.txt || true
-      - name: bundle js
-        run: |
-          : > sonda-out/dire-js.txt
-          JS=$(grep -oE 'src="[^"]*.js[^"]*"' sonda-out/dire-raiz.html | head -3 | sed 's/src="//;s/"$//' || true)
-          if [ -z "$JS" ]; then JS=$(grep -oE 'src="[^"]*.js[^"]*"' sonda-out/dire-mono.html | head -3 | sed 's/src="//;s/"$//' || true); fi
-          echo "BUNDLES: $JS" >> sonda-out/dire-js.txt
-          for j in $JS; do
-            case "$j" in
-              /*) u="https://dire.az-animex.com$j" ;;
-              http*) u="$j" ;;
-              *) u="https://dire.az-animex.com/$j" ;;
-            esac
-            echo "== $u (tamanio $(curl -sL --max-time 40 -A "Mozilla/5.0" "$u" -o /tmp/b.js && wc -c < /tmp/b.js))" >> sonda-out/dire-js.txt || true
-            grep -oE '.{0,50}(api|/Anime|\.mp4|fetch\(|axios).{0,50}' /tmp/b.js 2>/dev/null | head -25 >> sonda-out/dire-js.txt || echo "(sin matches)" >> sonda-out/dire-js.txt
-          done
-      - name: fichas sin marcador
-        run: |
-          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
-          : > sonda-out/fichas-raras.txt
-          for s in kimi-wa-houkago-insomnia vinland-saga-season-2 cossette-no-shouzou bakemonogatari; do
-            echo "== $s" >> sonda-out/fichas-raras.txt
-            curl -sL --max-time 25 -A "$UA" "https://www.az-animex.com/$s/" -o /tmp/f.html || true
-            grep -oE 'href="https://[^"]*"' /tmp/f.html | grep -vE 'az-animex.com|wp-|schema.org|w3.org|fonts' | sort -u | head -12 >> sonda-out/fichas-raras.txt || echo "(nada externo)" >> sonda-out/fichas-raras.txt
-          done
+          : > sonda-out/alist.txt
+          B="https://dire.az-animex.com"
+          echo "== settings publicos" >> sonda-out/alist.txt
+          curl -sL --max-time 30 "$B/api/public/settings" | head -c 800 >> sonda-out/alist.txt || true
+          echo "" >> sonda-out/alist.txt
+          echo "== fs/list /Anime" >> sonda-out/alist.txt
+          curl -sL --max-time 30 -X POST "$B/api/fs/list" -H "Content-Type: application/json" -d '{"path":"/Anime","page":1,"per_page":50}' -o /tmp/anime.json || true
+          head -c 700 /tmp/anime.json >> sonda-out/alist.txt || true
+          echo "" >> sonda-out/alist.txt
+          echo "== fs/list Monogatari" >> sonda-out/alist.txt
+          curl -sL --max-time 30 -X POST "$B/api/fs/list" -H "Content-Type: application/json" -d '{"path":"/Anime/Monogatari Series - Second Season BD","page":1,"per_page":50}' -o /tmp/mono.json || true
+          head -c 2500 /tmp/mono.json >> sonda-out/alist.txt || true
+          echo "" >> sonda-out/alist.txt
+          F=$(cat /tmp/mono.json | jq -r '.data.content[0].name' 2>/dev/null || true)
+          echo "== primer archivo: $F" >> sonda-out/alist.txt
+          if [ -n "$F" ] && [ "$F" != "null" ]; then
+            P="/Anime/Monogatari Series - Second Season BD/$F"
+            echo "== fs/get de \"$P\"" >> sonda-out/alist.txt
+            jq -n --arg p "$P" '{path:$path}' > /tmp/req.json
+            curl -sL --max-time 30 -X POST "$B/api/fs/get" -H "Content-Type: application/json" -d @/tmp/req.json | head -c 1200 >> sonda-out/alist.txt || true
+            echo "" >> sonda-out/alist.txt
+          fi
+          echo "== cossette (solo serveraz+multiup)" >> sonda-out/alist.txt
+          curl -sL --max-time 30 -X POST "$B/api/fs/list" -H "Content-Type: application/json" -d '{"path":"/Anime/Cossette no Shouzou BD","page":1,"per_page":50}' | head -c 600 >> sonda-out/alist.txt || true
       - name: commit
         run: |
           git config user.name "github-actions[bot]"
