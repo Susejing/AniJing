@@ -1,0 +1,63 @@
+name: sonda
+on: push
+permissions:
+  contents: write
+jobs:
+  sonda:
+    if: ${{ !startsWith(github.event.head_commit.message, '[sonda]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: sondear
+        run: |
+          mkdir -p sonda-out
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+          PASTE="https://paste.segurosdevida.site/linck/?go=aHR0cHM6Ly9jYW1hLnNlZ3Vyb3NkZXZpZGEuc2l0ZS8_Z289YWJjZGVmZ2hpamtsbW5vcGtyc3R1dnd4eXoxMjM0NTY3ODkwd0FwYnNDYWRmRWVGbGdpSG5pa1FqVnlUVlpPV2t0c2IzZG1XRUpFUW5acVVWWlphV1EwWW5KU01HSk1SelkxYWxocGFHSnBSbGwyV0ZSRmRrVTBOMWhhYldKSlprSXlSVXQ2Wm1obVdRPT0-"
+          CAMA="https://cama.segurosdevida.site/?go=abcdefghijklmnopkrstuvwxyz1234567890wApbsCadfEeFlgiHnikQjVyTVZOWktsb3dmWEJEQnZqUVZZaWQ0YnJSMGJMRzY1alhpaGJpRll2WFRFdkU0N1habWJJZkIyRUt6ZmhmWQ=="
+          sonda() {
+            n="$1"; u="$2"; max="$3"; [ -z "$max" ] && max=60000
+            code=$(curl -sL -A "$UA" -H "Accept-Language: es-ES,es;q=0.9" -m 35 -o "sonda-out/$n.txt" -w "%{http_code}|%{url_effective}" "$u" 2>/dev/null) || code="000|"
+            if [ -f "sonda-out/$n.txt" ]; then sz=$(wc -c < "sonda-out/$n.txt"); head -c "$max" "sonda-out/$n.txt" > "sonda-out/.tmp" && mv "sonda-out/.tmp" "sonda-out/$n.txt"; else sz=0; fi
+            echo "$n | $code | $sz" >> sonda-out/codigos.txt
+            grep -inE 'mediafire|mega\.|drive\.google|mp4upload|streamwish|filemoon|voe|tab|accordion|episodio|capitulo|capítulo|download|\.mp4|\.mkv|window\.location|iframe|admin-ajax' "sonda-out/$n.txt" 2>/dev/null | head -80 > "sonda-out/$n-keys.txt" || true
+          }
+          sonda az-home https://www.az-animex.com/
+          sonda az-ficha-memoire https://www.az-animex.com/bungaku-shoujo-memoire/ 100000
+          sonda az-ficha-oshinoko https://www.az-animex.com/oshi-no-ko/ 100000
+          sonda az-directorio https://www.az-animex.com/directorio-anime/
+          sonda az-directorio-p2 https://www.az-animex.com/directorio-anime/page/2/
+          sonda az-buscar-naruto "https://www.az-animex.com/?s=naruto"
+          sonda az-tops https://www.az-animex.com/tops/
+          sonda az-sitemap https://www.az-animex.com/wp-sitemap.xml 40000
+          sonda dwa-home https://dw-anime.net/
+          sonda dwa-emision https://dw-anime.net/en-emision/
+          sonda dwa-generos https://dw-anime.net/generos/
+          sonda dwa-latino https://dw-anime.net/tag/audio-latino/
+          sonda dwa-latino-p2 https://dw-anime.net/tag/audio-latino/page/2/
+          sonda dwa-cat-shounen https://dw-anime.net/category/shounen/
+          sonda dwa-ficha-yomi https://dw-anime.net/yomi-no-tsugai-sub-latino-castellano/ 110000
+          sonda dwa-buscar-naruto "https://dw-anime.net/?s=naruto"
+          sonda dwa-sitemap https://dw-anime.net/wp-sitemap.xml 40000
+          sonda red-paste "$PASTE" 60000
+          sonda red-cama "$CAMA" 60000
+          EF=$(grep "^red-paste " sonda-out/codigos.txt | head -1 | cut -d"|" -f3 | tr -d " ")
+          echo "url efectiva: $EF" >> sonda-out/codigos.txt
+          DEST=$(grep -oE 'https://[A-Za-z0-9./_?=&-]*(mediafire|mega|drive)[A-Za-z0-9./_?=&-]*' sonda-out/red-paste.txt 2>/dev/null | head -1)
+          if echo "$EF" | grep -qiE "mediafire|mega|drive"; then sonda mf-final "$EF" 100000; fi
+          if [ -n "$DEST" ]; then sonda mf-dest "$DEST" 100000; fi
+          echo FIN >> sonda-out/codigos.txt
+      - name: bitacora
+        if: failure()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "[sonda] log de fallo v40" --allow-empty
+          git push
+      - name: resultados
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sonda-out
+          git commit -m "[sonda] resultados v40" --allow-empty
+          git push
