@@ -10,54 +10,127 @@ jobs:
       - uses: actions/checkout@v4
       - name: sondear
         run: |
-          mkdir -p sonda-out
+          UA="Mozilla/5.05 (X)"
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
-          PASTE="https://paste.segurosdevida.site/linck/?go=aHR0cHM6Ly9jYW1hLnNlZ3Vyb3NkZXZpZGEuc2l0ZS8_Z289YWJjZGVmZ2hpamtsbW5vcGtyc3R1dnd4eXoxMjM0NTY3ODkwd0FwYnNDYWRmRWVGbGdpSG5pa1FqVnlUVlpPV2t0c2IzZG1XRUpFUW5acVVWWlphV1EwWW5KU01HSk1SelkxYWxocGFHSnBSbGwyV0ZSRmRrVTBOMWhhYldKSlprSXlSVXQ2Wm1obVdRPT0-"
-          CAMA="https://cama.segurosdevida.site/?go=abcdefghijklmnopkrstuvwxyz1234567890wApbsCadfEeFlgiHnikQjVyTVZOWktsb3dmWEJEQnZqUVZZaWQ0YnJSMGJMRzY1alhpaGJpRll2WFRFdkU0N1habWJJZkIyRUt6ZmhmWQ=="
-          sonda() {
-            n="$1"; u="$2"; max="$3"; [ -z "$max" ] && max=60000
-            code=$(curl -sL -A "$UA" -H "Accept-Language: es-ES,es;q=0.9" -m 35 -o "sonda-out/$n.txt" -w "%{http_code}|%{url_effective}" "$u" 2>/dev/null) || code="000|"
-            if [ -f "sonda-out/$n.txt" ]; then sz=$(wc -c < "sonda-out/$n.txt"); head -c "$max" "sonda-out/$n.txt" > "sonda-out/.tmp" && mv "sonda-out/.tmp" "sonda-out/$n.txt"; else sz=0; fi
-            echo "$n | $code | $sz" >> sonda-out/codigos.txt
-            grep -inE 'mediafire|mega\.|drive\.google|mp4upload|streamwish|filemoon|voe|tab|accordion|episodio|capitulo|capítulo|download|\.mp4|\.mkv|window\.location|iframe|admin-ajax' "sonda-out/$n.txt" 2>/dev/null | head -80 > "sonda-out/$n-keys.txt" || true
+          R="sonda-out/v41-resumen.txt"
+          b64url_d() {
+            s=$(printf "%s" "$1" | tr "_-" "/+")
+            m=$((${#s} % 4))
+            if [ "$m" = "2" ]; then s="$s=="; elif [ "$m" = "3" ]; then s="$s="; fi
+            printf "%s" "$s" | base64 -d 2>/dev/null
           }
-          sonda az-home https://www.az-animex.com/
-          sonda az-ficha-memoire https://www.az-animex.com/bungaku-shoujo-memoire/ 100000
-          sonda az-ficha-oshinoko https://www.az-animex.com/oshi-no-ko/ 100000
-          sonda az-directorio https://www.az-animex.com/directorio-anime/
-          sonda az-directorio-p2 https://www.az-animex.com/directorio-anime/page/2/
-          sonda az-buscar-naruto "https://www.az-animex.com/?s=naruto"
-          sonda az-tops https://www.az-animex.com/tops/
-          sonda az-sitemap https://www.az-animex.com/wp-sitemap.xml 40000
-          sonda dwa-home https://dw-anime.net/
-          sonda dwa-emision https://dw-anime.net/en-emision/
-          sonda dwa-generos https://dw-anime.net/generos/
-          sonda dwa-latino https://dw-anime.net/tag/audio-latino/
-          sonda dwa-latino-p2 https://dw-anime.net/tag/audio-latino/page/2/
-          sonda dwa-cat-shounen https://dw-anime.net/category/shounen/
-          sonda dwa-ficha-yomi https://dw-anime.net/yomi-no-tsugai-sub-latino-castellano/ 110000
-          sonda dwa-buscar-naruto "https://dw-anime.net/?s=naruto"
-          sonda dwa-sitemap https://dw-anime.net/wp-sitemap.xml 40000
-          sonda red-paste "$PASTE" 60000
-          sonda red-cama "$CAMA" 60000
-          EF=$(grep "^red-paste " sonda-out/codigos.txt | head -1 | cut -d"|" -f3 | tr -d " ")
-          echo "url efectiva: $EF" >> sonda-out/codigos.txt
-          DEST=$(grep -oE 'https://[A-Za-z0-9./_?=&-]*(mediafire|mega|drive)[A-Za-z0-9./_?=&-]*' sonda-out/red-paste.txt 2>/dev/null | head -1)
-          if echo "$EF" | grep -qiE "mediafire|mega|drive"; then sonda mf-final "$EF" 100000; fi
-          if [ -n "$DEST" ]; then sonda mf-dest "$DEST" 100000; fi
-          echo FIN >> sonda-out/codigos.txt
+          bajar() { curl -sL -A "$UA" -m 40 "$1" -o "$2" 2>/dev/null; echo "$2 $(wc -c < "$2" 2>/dev/null || echo 0) bytes"; }
+          echo "SONDA V41" > $R
+          #### AZ-ANIMEX ####
+          echo "=== AZ ficha oshi-no-ko completa ===" >> $R
+          bajar "https://www.az-animex.com/oshi-no-ko/" azf.html >> $R
+          echo "--- links externos:" >> $R
+          grep -oE "https?://[^\x22<> ]+" azf.html | grep -viE "az-animex.com|wp-content|wp-includes|gravatar|googleapis|gstatic|fonts|w3.org|facebook|twitter|discord|schema|wp.com|bootstrapcdn|jquery|jsdelivr|youtube|fontawesome" | sort -u | head -30 >> $R
+          echo "--- contexto primer link nube (300 antes):" >> $R
+          grep -oE ".{0,300}(mega.nz|mega.io|mediafire|drive.google)[^\x22<> ]{0,80}" azf.html | head -3 >> $R
+          echo "--- clases mas usadas:" >> $R
+          grep -oE "class=\x22[^\x22]*\x22" azf.html | sort | uniq -c | sort -rn | head -25 >> $R
+          echo "--- contexto atb-tab:" >> $R
+          grep -oE ".{0,120}atb-tab.{0,120}" azf.html | head -8 >> $R
+          echo "=== AZ directorio ===" >> $R
+          bajar "https://www.az-animex.com/directorio-anime/" azd.html >> $R
+          echo "--- articles:" >> $R
+          grep -oE "<article[^>]*>" azd.html | head -3 >> $R
+          grep -oE "href=\x22https://www.az-animex.com/[a-z0-9-]+/\x22" azd.html | sort -u | head -10 >> $R
+          echo "=== AZ home cards ===" >> $R
+          bajar "https://www.az-animex.com/" azh.html >> $R
+          grep -oE "<article[^>]*>" azh.html | head -3 >> $R
+          grep -oE "href=\x22https://www.az-animex.com/[a-z0-9-]+/\x22" azh.html | sort -u | head -12 >> $R
+          echo "=== AZ buscar naruto ===" >> $R
+          bajar "https://www.az-animex.com/?s=naruto" azb.html >> $R
+          echo "articles: $(grep -cE "<article" azb.html || echo 0)" >> $R
+          grep -oE "<h[12][^>]*>[^<]{0,80}" azb.html | head -6 >> $R
+          echo "=== AZ generos ===" >> $R
+          curl -sL -A "$UA" -m 30 "https://www.az-animex.com/wp-sitemap-taxonomies-genero-1.xml" -o azg.xml -w "sitemap-generos %{http_code}\n" >> $R
+          grep -oE "https://www.az-animex.com/genero/[a-z0-9-]+/" azg.xml | head -20 >> $R
+          curl -sL -A "$UA" -m 30 "https://www.az-animex.com/genero/accion/" -o azga.html -w "genero/accion %{http_code}\n" >> $R
+          grep -cE "<article" azga.html >> $R || true
+          grep -oE "href=\x22https://www.az-animex.com/[a-z0-9-]+/\x22" azga.html | sort -u | head -8 >> $R
+          echo "=== AZ cadena de descarga ===" >> $R
+          AZP=$(grep -oE "https://paste.segurosdevida.site/linck/[?]go=[A-Za-z0-9_=-]+" azf.html | head -1)
+          AZD=$(grep -oE "https?://[^\x22<> ]*(mediafire|mega.nz|mega.io|drive.google)[^\x22<> ]*" azf.html | grep -viE "schema|description|twitter|og:" | head -1)
+          echo "paste: $AZP" >> $R
+          echo "directo: $AZD" >> $R
+          AZT=""
+          if [ -n "$AZP" ]; then
+            CAMA=$(b64url_d "${AZP#*go=}")
+            echo "cama: $CAMA" >> $R
+            CH=$(curl -sL -A "$UA" -m 30 "$CAMA" 2>/dev/null)
+            SL=$(printf "%s" "$CH" | grep -oE "safelink_redirect=[A-Za-z0-9]+" | head -1)
+            SJ=$(b64url_d "${SL#safelink_redirect=}" | tr -d "{}")
+            echo "json: $SJ" >> $R
+            AZT=$(printf "%s" "$SJ" | grep -oE "https://[a-zA-Z0-9./_-]+" | grep -iE "mediafire|mega|drive" | head -1)
+          elif [ -n "$AZD" ]; then
+            AZT="$AZD"
+          fi
+          echo "nube destino: $AZT" >> $R
+          if [ -n "$AZT" ]; then
+            NF=$(curl -sL -A "$UA" -m 30 "$AZT" 2>/dev/null)
+            echo "titulo-nube: $(printf "%s" "$NF" | grep -oE "<title>[^<]*" | head -1)" >> $R
+            echo "descarga-directa: $(printf "%s" "$NF" | grep -oE "https://download[0-9]+[^\x22<> ]+" | head -1)" >> $R
+          fi
+          #### DW-ANIME ####
+          echo "=== DW ficha yomi completa ===" >> $R
+          bajar "https://dw-anime.net/yomi-no-tsugai-sub-latino-castellano/" dwf.html >> $R
+          echo "--- titulos de seccion/version:" >> $R
+          grep -oE "<h[234][^>]*>[^<]{0,80}" dwf.html | head -12 >> $R
+          echo "--- estructura tabla:" >> $R
+          grep -oE "<td[^>]*>[^<]{0,60}" dwf.html | head -12 >> $R
+          grep -oE "class=\x22srv[^\x22]*\x22" dwf.html | sort | uniq -c >> $R
+          echo "=== DW cadena de descarga (8 links) ===" >> $R
+          i=0
+          for GOURL in $(grep -oE "https://paste.segurosdevida.site/linck/[?]go=[A-Za-z0-9_=-]+" dwf.html | head -8); do
+            i=$((i+1))
+            CAMA=$(b64url_d "${GOURL#*go=}")
+            CH=$(curl -sL -A "$UA" -m 30 "$CAMA" 2>/dev/null)
+            SL=$(printf "%s" "$CH" | grep -oE "safelink_redirect=[A-Za-z0-9]+" | head -1)
+            SJ=$(b64url_d "${SL#safelink_redirect=}" | tr -d "{}")
+            NUBE=$(printf "%s" "$SJ" | grep -oE "https://[a-zA-Z0-9./_-]+" | grep -iE "mediafire|mega|drive" | head -1)
+            TIT="?"
+            DL="-"
+            if [ -n "$NUBE" ]; then
+              NF=$(curl -sL -A "$UA" -m 30 "$NUBE" 2>/dev/null)
+              printf "%s" "$NF" | head -c 30000 > "sonda-out/v41-nube-$i.html"
+              TIT=$(printf "%s" "$NF" | grep -oE "<title>[^<]*" | head -1 | sed "s/<title>//")
+              DL=$(printf "%s" "$NF" | grep -oE "https://download[0-9]+[^\x22<> ]+" | head -1)
+            fi
+            echo "link$i | json: $SJ | nube: $NUBE | titulo: $TIT | dl: $DL" >> $R
+          done
+          echo "=== DW home cards ===" >> $R
+          bajar "https://dw-anime.net/" dwh.html >> $R
+          grep -oE "<article[^>]*>" dwh.html | head -3 >> $R
+          grep -oE "href=\x22https://dw-anime.net/[a-z0-9-]+/\x22" dwh.html | grep -vE "en-emision|generos|como-|vip" | sort -u | head -10 >> $R
+          echo "=== DW emision estructura ===" >> $R
+          bajar "https://dw-anime.net/en-emision/" dwe.html >> $R
+          grep -oE "class=\x22[^\x22]*(calend|day|dia|hoy|emis)[^\x22]*\x22" dwe.html | sort | uniq -c | sort -rn | head -10 >> $R
+          grep -oE "href=\x22https://dw-anime.net/[a-z0-9-]+/\x22" dwe.html | grep -vE "en-emision|generos|como-|vip|tag/|category" | sort -u | head -12 >> $R
+          echo "=== DW buscar naruto ===" >> $R
+          bajar "https://dw-anime.net/?s=naruto" dwb.html >> $R
+          echo "articles: $(grep -cE "<article" dwb.html || echo 0)" >> $R
+          grep -oE "<h[12][^>]*>[^<]{0,80}" dwb.html | head -6 >> $R
+          echo "=== DW cats y tags sitemap ===" >> $R
+          curl -sL -A "$UA" -m 30 "https://dw-anime.net/category-sitemap.xml" -o dwc.xml -w "cats %{http_code}\n" >> $R
+          grep -oE "https://dw-anime.net/category/[a-z0-9-]+/" dwc.xml | head -15 >> $R
+          curl -sL -A "$UA" -m 30 "https://dw-anime.net/post_tag-sitemap.xml" -o dwt.xml -w "tags %{http_code}\n" >> $R
+          grep -oE "https://dw-anime.net/tag/[a-z0-9-]+/" dwt.xml | head -25 >> $R
+          echo FIN >> $R
       - name: bitacora
         if: failure()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "[sonda] log de fallo v40" --allow-empty
+          git commit -m "[sonda] log de fallo v41" --allow-empty
           git push
       - name: resultados
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add sonda-out
-          git commit -m "[sonda] resultados v40" --allow-empty
+          git commit -m "[sonda] resultados v41" --allow-empty
           git push
