@@ -447,12 +447,32 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
-// v0.6.41 «La galleta en su caja» — el teléfono rechazó la 0.6.40: la
-// ventanilla de VerAnime guardaba la galleta en el ajuste «veranimeCf»,
-// que es el BOTÓN (type action), no el campo password «veranimeCfCookie»
-// del manifiesto — Kino valida el destino y devolvía «error en su
-// kino-plugin.json». La galleta ahora viaja a su caja correcta.
-
+// v0.6.42 «La página escondida» — el log del teléfono mandó dos cosas.
+// (1) VerAnime seguía 403 CON la galleta guardada: Cloudflare ata la
+//     cf_clearance al navegador que la pasó, y kino.fetch no lo es. La
+//     cura de fábrica de Kino para exactamente este caso: el manifiesto
+//     pasa de «browser»: true a «browser»: «pages» (apiVersion 6, Kino
+//     pide re-aprobación una vez) y vanPagina() respalda cada lectura
+//     de la fuente con kino.browser.page — el navegador oculto abre la
+//     página, pasa la revisión él solo y devuelve el HTML (barato
+//     primero, navegador después). En la portada solo el riel núcleo
+//     «Anime» la usa (una página a la vez en toda la app: 15 capturas
+//     en cadena reventarían la carga); búsqueda, hojas y fichas siempre.
+//     De paso, el log de filas ya no dice «undefined» para Películas.
+// (2) BeatZ ganó secciones: la portada mira la raíz del almacén y hace
+//     una fila por cada hermano de la carpeta Anime (Películas, OVA…),
+//     cada una con su propio paginado (ref «btz-raiz:<ruta>»); si solo
+//     vive Anime, no se inventa nada. btzItemDe acepta la base para los
+//     ref de las otras carpetas. Los pósters que quedan en blanco son
+//     las secuelas cuyo nombre de carpeta del almacén no coincide con
+//     el patrón de la web (3-gatsu-no-lion-2 vs «2nd Season») — sin
+//     lista pública slug↔póster, se quedan con el placeholder.
+//
+// v0.6.41 — arreglo del manifiesto: el hint de la ventanilla de
+// VerAnime salía en 83 caracteres y el tope de Kino es 80 (el teléfono
+// mostró «error en su kino-plugin.json» y no actualizaba); acortado a
+// 77. Lección: los topes del manifiesto son duros.
+//
 // v0.6.40 «El retratista» — tres achaques del teléfono, dos curados.
 // (1) BeatZ sin pósters: el listado del OpenList no trae thumbs, pero el
 //     sitio guarda las portadas con patrón fijo /img/img-anime/<slug>/
@@ -806,7 +826,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.41';
+const VERSION = '0.6.42';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4390,10 +4410,42 @@ const BASE_VAN = 'https://veranime.ninja';
  * bitácora honesta (portada vacía, mensaje en el teléfono). */
 function vanCabeceras(extra) {
   const h = { Referer: BASE_VAN + '/' };
-  const galleta = String(configDe('veranimeCf') || '').trim();
+  const galleta = String(configDe('veranimeCfCookie') || '').trim();
   if (galleta) h.Cookie = galleta;
   if (extra) for (const k in extra) h[k] = extra[k];
   return h;
+}
+
+/* v0.6.42 «La página escondida»: la galleta cf_clearance no basta —
+ * Cloudflare la ata al navegador que la pasó, y kino.fetch no lo es
+ * (log del teléfono: 403 con galleta guardada). Respaldo de fábrica de
+ * Kino para exactamente este caso: kino.browser.page (manifiesto
+ * «browser»: «pages») abre la página en el navegador oculto, pasa la
+ * revisión él solo y devuelve el HTML. Barato primero, navegador
+ * después; una página a la vez en toda la app, así que en la portada
+ * solo el riel núcleo la usa y las demás filas quedan con su aviso
+ * honesto. */
+const VAN_CF_RE = /just a moment|cf-chl|attention required|checking your browser/i;
+let PAGES_OFF = false;
+async function vanPagina(url, ms) {
+  let r = null;
+  try { r = await traer(url, { headers: vanCabeceras(), timeoutMs: ms, cuerpoSiempre: true }); } catch (e) { r = null; }
+  const muro = !r || !r.ok || (r.text && VAN_CF_RE.test(r.text.slice(0, 3000)));
+  if (muro && !PAGES_OFF && kino.browser && typeof kino.browser.page === 'function') {
+    try {
+      const pagina = await kino.browser.page(url, { timeoutMs: Math.max(8000, Math.min(14000, ms + 3000)) });
+      const html = pagina && pagina.html;
+      if (html && html.length > 500) {
+        log('van página escondida: ' + url.slice(-40) + ' (' + html.length + ' letras)');
+        return { ok: true, status: 200, text: html };
+      }
+    } catch (e2) {
+      const code = String((e2 && e2.code) || '');
+      if (code === 'not_allowed' || code === 'browser_unavailable') PAGES_OFF = true;
+      log('van página escondida falló', (e2 && e2.message) || String(e2));
+    }
+  }
+  return r;
 }
 
 function vanTarjetas(html) {
@@ -4445,11 +4497,11 @@ function vanTarjetas(html) {
 }
 
 async function vanFicha(slug) {
-  const a = await traer(BASE_VAN + '/anime/' + slug + '/', { headers: vanCabeceras(), timeoutMs: 10000 });
+  const a = await vanPagina(BASE_VAN + '/anime/' + slug + '/', 10000);
   if (a.ok && a.text) return a;
-  const o = await traer(BASE_VAN + '/online/' + slug + '/', { headers: vanCabeceras(), timeoutMs: 10000 });
+  const o = await vanPagina(BASE_VAN + '/online/' + slug + '/', 10000);
   if (o.ok && o.text) return o;
-  const p = await traer(BASE_VAN + '/pelicula/' + slug + '/', { headers: vanCabeceras(), timeoutMs: 10000 });
+  const p = await vanPagina(BASE_VAN + '/pelicula/' + slug + '/', 10000);
   return p;
 }
 
@@ -4604,7 +4656,7 @@ registrarFuente({
     const texto = String(q || '').trim().slice(0, 100);
     if (texto.length < 2) return [];
     try {
-      const r = await traer(BASE_VAN + '/?s=' + encodeURIComponent(texto), { headers: vanCabeceras(), timeoutMs: 10000 });
+      const r = await vanPagina(BASE_VAN + '/?s=' + encodeURIComponent(texto), 10000);
       if (!r.ok) return [];
       const items = vanTarjetas(r.text).slice(0, 25);
       for (const it of items) it.badges = ['VerAnime'];
@@ -4656,7 +4708,14 @@ registrarFuente({
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
         const destino = def.camino || ('/genero/' + def.genero + '/');
-        const r = await traer(BASE_VAN + destino, { headers: vanCabeceras(), timeoutMs: 11000, cuerpoSiempre: true });
+        /* v0.6.42: solo el riel núcleo («Anime») usa el respaldo del
+         * navegador oculto — kino.browser.page hace una página a la vez
+         * en toda la app y 15 capturas en cadena reventarían la
+         * portada; el resto de filas vive de la galleta y, si el muro
+         * no cede, del aviso honesto. */
+        const r = def.ref === 'van-anime'
+          ? await vanPagina(BASE_VAN + destino, 11000)
+          : await traer(BASE_VAN + destino, { headers: vanCabeceras(), timeoutMs: 11000, cuerpoSiempre: true });
         let items = r && r.ok ? vanTarjetas(r.text).slice(0, 20) : [];
         /* v0.6.10 conservada: SOLO el riel «Anime» conserva su respaldo
          * en la home del sitio — es el género maestro; los demás viven
@@ -4667,6 +4726,8 @@ registrarFuente({
             if (h.ok) items = vanTarjetas(h.text).slice(0, 20);
             if (!items.length && h.text) {
               log('van home: status ' + h.status + ', ' + h.text.length + ' letras, 0 tarjetas');
+              const hp = await vanPagina(BASE_VAN + '/', 10000);
+              if (hp && hp.ok && hp.text) items = vanTarjetas(hp.text).slice(0, 20);
             }
           } catch (e2) {
             log('van home falló', (e2 && e2.message) || String(e2));
@@ -4674,10 +4735,10 @@ registrarFuente({
         }
         if (!items.length) {
           if (r && r.text) {
-            log('van fila «' + def.genero + '»: status ' + r.status + ', ' + r.text.length + ' letras, 0 tarjetas' +
+            log('van fila «' + def.titulo + '»: status ' + r.status + ', ' + r.text.length + ' letras, 0 tarjetas' +
               (/cloudflare|just a moment|cf-chl/i.test(r.text) ? ' (huele a reto de Cloudflare)' : ''));
           } else {
-            log('van fila «' + def.genero + '» no respondió (status ' + (r ? r.status : 'null') + ')');
+            log('van fila «' + def.titulo + '» no respondió (status ' + (r ? r.status : 'null') + ')');
           }
         }
         return items.length ? { id: def.id, title: def.titulo, ref: def.ref, items: items } : null;
@@ -4705,7 +4766,7 @@ registrarFuente({
     const pagina = parseInt(cursor, 10);
     const num = Number.isFinite(pagina) && pagina > 1 ? pagina : 1;
     const camino = num > 1 ? base + '/page/' + num + '/' : base + '/';
-    const r = await traer(BASE_VAN + camino, { headers: vanCabeceras(), timeoutMs: 12000 });
+    const r = await vanPagina(BASE_VAN + camino, 12000);
     if (!r.ok) {
       throw kino.error('unavailable', 'VerAnime no respondió (status ' + r.status + ')', {
         userMessage: 'VerAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
@@ -6324,16 +6385,17 @@ async function btzSeries() {
   return out;
 }
 
-function btzItemDe(nombre) {
+function btzItemDe(nombre, base) {
   /* v0.6.40 «El retratista»: el listado del OpenList no trae thumbs, pero
    * el sitio guarda las portadas con patrón fijo /img/img-anime/<slug>/
    * <slug>-port.jpg (sonda v97: 4 de 5 slugs responden 200 image/jpeg; el
    * que no, cae al placeholder de Kino sin romper nada). Mismo slug que
-   * btzFicha adivina para las fichas. */
+   * btzFicha adivina para las fichas. v0.6.42: base opcional para las
+   * secciones fuera de la carpeta Anime. */
   const slug = String(nombre).toLowerCase().replace(/[.']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   return {
     id: 'btz-' + String(nombre).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-    ref: 'btz:' + btzRutaDe(nombre),
+    ref: 'btz:' + (base || BTZ_RAIZ) + '/' + String(nombre || '').trim(),
     title: String(nombre),
     kind: 'series',
     poster: BASE_BTZ + '/img/img-anime/' + slug + '/' + slug + '-port.jpg',
@@ -6395,14 +6457,42 @@ registrarFuente({
     const data = await btzListar(BTZ_RAIZ, 1);
     const items = data.filter((x) => x && x.is_dir).map((x) => btzItemDe(String(x.name || '').trim())).filter((x) => x.title).slice(0, 24);
     if (!items.length) return [];
-    return [{ id: defs[0].id, title: defs[0].titulo, ref: defs[0].ref, items: items }];
+    const filas = [{ id: defs[0].id, title: defs[0].titulo, ref: defs[0].ref, items: items }];
+    /* v0.6.42 «La página escondida»: secciones — los hermanos de la
+     * carpeta Anime en la raíz del almacén (Películas, OVA…), uno por
+     * uno, con su propio paginado en el hoja. Si solo vive Anime, no se
+     * inventa nada. */
+    try {
+      const raiz = await btzListar('BeatZ-Anime', 1);
+      const otros = raiz.filter((x) => x && x.is_dir && String(x.name || '').trim() !== 'Anime').slice(0, 4);
+      for (const o of otros) {
+        const nombre = String(o.name || '').trim();
+        if (!nombre) continue;
+        const ruta = 'BeatZ-Anime/' + nombre;
+        const d2 = await btzListar(ruta, 1);
+        const its = d2.filter((x) => x && x.is_dir).map((x) => btzItemDe(String(x.name || '').trim(), ruta)).filter((x) => x.title).slice(0, 24);
+        if (its.length) {
+          filas.push({
+            id: 'btz-sec-' + nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+            title: nombre + ' · BeatZ-Anime',
+            ref: 'btz-raiz:' + ruta,
+            items: its
+          });
+        }
+      }
+    } catch (e) {
+      log('btz secciones', (e && e.message) || String(e));
+    }
+    return filas;
   },
 
   async hoja(ref, cursor) {
-    if (ref !== 'btz-catalogo') return null;
+    const esRaiz = String(ref || '').indexOf('btz-raiz:') === 0;
+    if (ref !== 'btz-catalogo' && !esRaiz) return null;
+    const ruta = esRaiz ? String(ref).slice('btz-raiz:'.length) : BTZ_RAIZ;
     const pag = parseInt(String(cursor || '1'), 10) || 1;
-    const data = await btzListar(BTZ_RAIZ, pag);
-    const items = data.filter((x) => x && x.is_dir).map((x) => btzItemDe(String(x.name || '').trim())).filter((x) => x.title).slice(0, 60);
+    const data = await btzListar(ruta, pag);
+    const items = data.filter((x) => x && x.is_dir).map((x) => btzItemDe(String(x.name || '').trim(), ruta)).filter((x) => x.title).slice(0, 60);
     return { items: items, next: data.length >= 200 ? String(pag + 1) : null };
   },
 
