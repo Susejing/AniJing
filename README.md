@@ -34,6 +34,10 @@ Todas las filas llevan su «Ver más».
 
 Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloquea hasta a los lectores externos y LocuraAnime es un sitio de descargas, así que ninguna entró. AnimeOnline se retiró en la 0.6.9: mudó el sitio dos veces en dos semanas y ni catálogo ni episodios volvieron a abrir de verdad — de nada sirve una fuente que no funciona. Si un episodio no trae ningún servidor reproducible, se muestra un aviso claro en lugar de un error seco.
 
+## v0.6.41 «La galleta en su caja»
+
+El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Destino corregido; nada más cambia.
+
 ## v0.6.40 «El retratista»
 
 Tres achaques del teléfono, dos curados y uno desmontado. **BeatZ-Anime sin pósters**: el listado del OpenList no trae miniaturas, pero el sitio guarda las portadas con patrón fijo `/img/img-anime/<slug>/<slug>-port.jpg` (sonda v97: 4 de 5 slugs responden 200 image/jpeg) — el catálogo, la búsqueda y las hojas de BeatZ ahora van vestidos, sin una petición extra (el slug que no encaja cae al placeholder de Kino). **VerAnime muerto**: el sitio se puso tras Cloudflare («Just a moment», 403 en todo, incluido el espejo r.jina.ai; sus espejos vanime.ninja y veranime.tv están caídos, sonda v96) — ajustes nuevos: «**Pasar la revisión de VerAnime**» abre la ventanita del navegador, al pasar la revisión se guarda la galleta `cf_clearance` sellada y todas las peticiones de la fuente la llevan como Cookie; si el muro exige el navegador que la pasó, la fuente queda callada con su aviso honesto. **EstrenosAnime «muestra poco»**: no era avería — el Directorio completo llegó en la 0.6.39 y los recortes por riel son el tope de la pantalla de Kino, con su «Ver más» de siempre.

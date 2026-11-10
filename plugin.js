@@ -447,6 +447,12 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.41 «La galleta en su caja» — el teléfono rechazó la 0.6.40: la
+// ventanilla de VerAnime guardaba la galleta en el ajuste «veranimeCf»,
+// que es el BOTÓN (type action), no el campo password «veranimeCfCookie»
+// del manifiesto — Kino valida el destino y devolvía «error en su
+// kino-plugin.json». La galleta ahora viaja a su caja correcta.
+
 // v0.6.40 «El retratista» — tres achaques del teléfono, dos curados.
 // (1) BeatZ sin pósters: el listado del OpenList no trae thumbs, pero el
 //     sitio guarda las portadas con patrón fijo /img/img-anime/<slug>/
@@ -800,7 +806,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.40';
+const VERSION = '0.6.41';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -7189,7 +7195,7 @@ async function action(key) {
       url: 'https://veranime.ninja/',
       title: 'Pasa la revisión de VerAnime',
       doneWhen: { cookies: ['cf_clearance'] },
-      collect: { cookies: ['cf_clearance'], storeAs: { setting: 'veranimeCf', format: 'header' } },
+      collect: { cookies: ['cf_clearance'], storeAs: { setting: 'veranimeCfCookie', format: 'header' } },
       userAgent: 'browser',
       timeoutMs: 600000
     });
