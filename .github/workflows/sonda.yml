@@ -1,5 +1,7 @@
 name: sonda
 on: [push]
+permissions:
+  contents: write
 jobs:
   sonda:
     if: ${{ !startsWith(github.event.head_commit.message, '[sonda]') }}
