@@ -10,29 +10,34 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: sondas v86
+      - name: sondas v87
         run: |
           mkdir -p sonda-out
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
           {
-            echo "===== UF: subforos de Fansubs (fid=52) ====="
-            curl -sL --max-time 25 -A "$UA" "https://foro.unionfansub.com/forumdisplay.php?fid=52" -o /tmp/uf52.html || true
-            grep -oE 'forumdisplay\.php\?fid=[0-9]+' /tmp/uf52.html | sort -u | head -20 || true
-            grep -oE '<title>[^<]*</title>' /tmp/uf52.html | head -1 || true
-            echo "===== UF: títulos de fids 40-60 ====="
-            for F in $(seq 40 60); do
-              T=$(curl -sL --max-time 12 -A "$UA" "https://foro.unionfansub.com/forumdisplay.php?fid=$F" | grep -oE '<title>[^<]*</title>' | head -1)
-              echo "fid $F: $T"
-            done
-            echo "===== UF: archivo (archive) ====="
-            curl -sL --max-time 20 -A "$UA" "https://foro.unionfansub.com/archive/index.php" -o /tmp/ufa.html || true
-            grep -oE '<title>[^<]*</title>' /tmp/ufa.html | head -1 || true
-            grep -oE 'href="[^"]*archive[^"]*"' /tmp/ufa.html | head -10 || true
-          } > sonda-out/v86-uf-foros.txt 2>&1 || true
+            echo "===== UF: TODOS los foros de la portada ====="
+            curl -sL --max-time 25 -A "$UA" "https://foro.unionfansub.com/" -o /tmp/uf.html || true
+            grep -oE 'forumdisplay\.php\?fid=[0-9]+' /tmp/uf.html | sort -un | tr '\n' ' ' || true
+            echo ""
+            echo "--- nombres junto a fids (ventana) ---"
+            grep -oE 'forumdisplay\.php\?fid=[0-9]+"[^>]*>[^<]{2,60}' /tmp/uf.html | sed 's/forumdisplay.php?fid=//' | sort -u | head -40 || true
+            echo "===== UF: sitio principal ====="
+            curl -sL --max-time 25 -A "$UA" "https://www.unionfansub.com/" -o /tmp/ufw.html -w 'status %{http_code} bytes %{size_download}\n' || true
+            grep -o '<title>[^<]*</title>' /tmp/ufw.html | head -1 || true
+            grep -oE 'href="[^"]*"' /tmp/ufw.html | sort -u | head -25 || true
+            echo "===== UF: un tema de Descusión Anime (estructura + nubes) ====="
+            TID=$(grep -oE 'showthread\.php\?tid=[0-9]+' /tmp/uf.html | head -1 | grep -oE '[0-9]+')
+            echo "tid=$TID"
+            if [ -n "$TID" ]; then
+              curl -sL --max-time 25 -A "$UA" "https://foro.unionfansub.com/showthread.php?tid=$TID" -o /tmp/uft.html || true
+              grep -oiE 'https?://[^"'"'"' <>]*(mega\.nz|drive\.google|pixeldrain|fireload|terabox|mediafire|1fichier|gofile|krakenfiles|zippy|streamtape|voe\.|filemoon|streamwish|dood|mp4upload|uqload|mixdrop)[^"'"'"' <>]*' /tmp/uft.html | sort -u | head -12 || true
+              grep -o 'Debes responder\|registrado\|Iniciar sesión\|hide' /tmp/uft.html | sort | uniq -c | head -5 || true
+            fi
+          } > sonda-out/v87-uf-mapa.txt 2>&1 || true
       - name: commit
         run: |
           git config user.name "sonda"
           git config user.email "sonda@users.noreply.github.com"
           git add sonda-out || true
-          git commit -m "sonda v86: foros de unión fansub" || true
+          git commit -m "sonda v87: mapa de unión fansub" || true
           git push || true
