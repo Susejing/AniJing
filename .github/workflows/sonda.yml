@@ -1,0 +1,42 @@
+name: sonda
+on:
+  push:
+    branches: [main]
+jobs:
+  sonda:
+    if: contains(github.event.head_commit.message, '[sonda]')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: sondas v73
+        run: |
+          mkdir -p sonda-out
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+          {
+            echo "===== BEATZ lista-animes: hrefs de fichas ====="
+            curl -sL --max-time 25 -A "$UA" "https://www.beatz-anime.net/lista-animes/index.php" -o /tmp/bl.html || true
+            echo "bytes: $(wc -c < /tmp/bl.html)"
+            grep -o 'href="[^"]*"' /tmp/bl.html | grep -v -E "css|js|png|jpg|ico|twitter|ko-fi|#" | sort -u | head -25 || true
+            echo "===== BEATZ: primera ficha (si el patrón es visible) ====="
+            F=$(grep -o 'href="[^"]*"' /tmp/bl.html | grep -i -E "anime|ficha|pagina" | grep -v lista | head -1 | sed 's/href="//;s/"//' || true)
+            echo "ficha: $F"
+            case "$F" in http*) FU="$F";; /*) FU="https://www.beatz-anime.net$F";; *) FU="https://www.beatz-anime.net/lista-animes/$F";; esac
+            curl -sL --max-time 25 -A "$UA" "$FU" -o /tmp/bf.html || true
+            echo "bytes ficha: $(wc -c < /tmp/bf.html)"
+            echo "--- hosts en la ficha ---"
+            grep -o 'href="[^"]*"' /tmp/bf.html | grep -i -E "mega|drive|1fichier|fireload|terabox|mediafire|pixeldrain|krakenfiles|gofile|mirror" | sort -u | head -30 || true
+            grep -o 'https://mega\.nz/[^"'"'"' <]*' /tmp/bf.html | head -5 || true
+            echo "===== UNION FANSUB: foro ====="
+            curl -sL --max-time 25 -A "$UA" "https://foro.unionfansub.com/index.php" -o /tmp/uf.html || true
+            echo "bytes: $(wc -c < /tmp/uf.html)"
+            grep -o 'href="[^"]*"' /tmp/uf.html | sort -u | head -20 || true
+          } > sonda-out/v73-beatz-uf.txt 2>&1 || true
+      - name: commit
+        run: |
+          git config user.name "sonda"
+          git config user.email "sonda@users.noreply.github.com"
+          git add sonda-out || true
+          git commit -m "sonda v73: beatz y union fansub" || true
+          git push || true
