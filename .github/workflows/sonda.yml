@@ -1,0 +1,84 @@
+name: sonda
+on: [push]
+jobs:
+  sonda:
+    if: ${{ !startsWith(github.event.head_commit.message, '[sonda]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: sondear
+        run: |
+          cat > /tmp/sondea.sh <<'SONDA_EOF'
+          #!/bin/bash
+          set -u
+          OUT="sonda-v39-resultado.txt"
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+          > "$OUT"
+          probe() {
+            local sitio="$1" url="$2" r code size
+            r=$(curl -sL --max-time 25 -A "$UA" -H "Referer: $sitio/" -o /tmp/p.html -w "%{http_code} %{size_download}" "$url" 2>/dev/null || echo "ERR 0")
+            code=$(echo "$r" | awk '{print $1}')
+            size=$(echo "$r" | awk '{print $2}')
+            local nhrefs nanime primero
+            nhrefs=$(grep -oE 'href="[^"]*"' /tmp/p.html 2>/dev/null | wc -l)
+            nanime=$(grep -oE 'href="[^"]*(anime|tv|series|ver)[^"]*"' /tmp/p.html 2>/dev/null | wc -l)
+            primero=$(grep -oE 'href="[^"]*(/anime/|/animes|/tv/|/ver/)[^"]*"' /tmp/p.html 2>/dev/null | head -1 | cut -c1-140)
+            echo "$url -> $code ${size}B hrefs:$nhrefs anime:$nanime | 1ro: $primero" >> "$OUT"
+          }
+          nav() {
+            local sitio="$1" host
+            host=$(echo "$sitio" | sed 's|https\?://||')
+            curl -sL --max-time 25 -A "$UA" -H "Referer: $sitio/" -o /tmp/n.html "$sitio/" 2>/dev/null || true
+            echo "" >> "$OUT"
+            echo "### NAV $sitio" >> "$OUT"
+            grep -oE 'href="[^"]+"' /tmp/n.html 2>/dev/null | sed 's/href="//;s/"$//' \
+              | grep -vE '\.(css|js|png|jpe?g|webp|svg|ico|woff2?|gif)' \
+              | grep -E "(^/|//$host)" | sort -u | head -130 >> "$OUT"
+          }
+          # AnimeJara
+          nav https://animejara.com
+          for u in /emision /catalogo /catalogo?page=2 /catalogo?page=3 /peliculas /generos /genero/accion /year/2026 /top /directorio /movies; do
+            probe https://animejara.com "https://animejara.com$u"
+          done
+          # MonosChinos
+          nav https://monoschinos.st
+          for u in /emision /emision?p=2 /animes /animes?p=2 /animes?p=3 /peliculas /generos /genero/accion /year/2026 /top; do
+            probe https://monoschinos.st "https://monoschinos.st$u"
+          done
+          # LataAnime
+          nav https://latanime.org
+          for u in / /directorio /peliculas /generos /genero/accion /top /year/2026 "/buscar?q=latino" "/buscar?q=latino&page=2" "/buscar?q=latino&pag=2" /emision; do
+            probe https://latanime.org "https://latanime.org$u"
+          done
+          # OtakusTV
+          nav https://www.otakustv.net
+          for u in /animes?pag=1 /animes?pag=2 /animes?pag=3 /animes-en-emision /peliculas /generos /genero/accion /top "/animes?tipo=pelicula" /ovas; do
+            probe https://www.otakustv.net "https://www.otakustv.net$u"
+          done
+          # AnimeYT
+          nav https://animeyt.cc
+          for u in /tv/ /tv/page/2/ /tv/page/3/ "/tv/?tipo=pelicula" /peliculas /generos /genero/accion /top "/tv/?tipo=ova" /ovas; do
+            probe https://animeyt.cc "https://animeyt.cc$u"
+          done
+          # IvAnime
+          nav https://ivanime.buzz
+          for u in /emision /emision?page=2 /animes /animes?page=2 /animes?page=3 /peliculas /generos /genero/accion /top /year/2026 /directorio; do
+            probe https://ivanime.buzz "https://ivanime.buzz$u"
+          done
+          # VerAnime
+          nav https://veranime.ninja
+          for u in /genero/accion /peliculas /pelicula /top /directorio /animes /generos /year/2026; do
+            probe https://veranime.ninja "https://veranime.ninja$u"
+          done
+          # EstrenosAnime
+          nav https://estrenosanime.net
+          for u in /genero/accion /generos /year/2026 /top /tipo/OVA /tipo/Especial /tipo/Pelicula /popular; do
+            probe https://estrenosanime.net "https://estrenosanime.net$u"
+          done
+          SONDA_EOF
+          bash /tmp/sondea.sh
+          git config user.name "sonda-bot"
+          git config user.email "actions@github.com"
+          git add sonda-v39-resultado.txt
+          git commit -m "[sonda] resultados v39"
+          git push
