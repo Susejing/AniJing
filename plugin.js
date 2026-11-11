@@ -447,6 +447,12 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.58 «El perezoso visible» — el catálogo de AnimeJara sigue corto
+// en el teléfono (8 tarjetas de ~18): las que faltan cargan su póster
+// perezoso (data-lazy-src / data-src) y el parser solo leía src. Ahora
+// lee los tres, y la hoja del catálogo escribe en el log cuántas
+// tarjetas parseó por página — el teléfono manda el diagnóstico.
+
 // v0.6.57 «El mapa del almacén» — el log 23:31 sentenció: jina + espejo
 // siguen tras el muro (14 fichas flacas), pero el almacén OpenList
 // responde 200 SIEMPRE y su padrón tiene las 258 series por letras.
@@ -975,7 +981,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.57';
+const VERSION = '0.6.58';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4296,7 +4302,12 @@ function jaraTarjetas(html) {
     let im;
     while ((im = imgRe.exec(ventana))) {
       const attrs = im[1];
-      const src = /src\s*=\s*["']([^"']+)["']/i.exec(attrs);
+      /* v0.6.58: el catálogo corto del teléfono (8 tarjetas de ~18) —
+       * las tarjetas que faltaban cargan su póster perezoso: el src
+       * llega después, en data-lazy-src o data-src. Se leen los tres. */
+      const src = /src\s*=\s*["']([^"']+)["']/i.exec(attrs)
+        || /data-lazy-src\s*=\s*["']([^"']+)["']/i.exec(attrs)
+        || /data-src\s*=\s*["']([^"']+)["']/i.exec(attrs);
       if (!src) continue;
       if (/hj\.animejara\.com/i.test(src[1])) {
         poster = src[1];
@@ -4428,6 +4439,12 @@ registrarFuente({
       });
     }
     const items = jaraTarjetas(r.text).slice(0, 60);
+    /* v0.6.58: el teléfono juzga con el log — cuántas tarjetas parseó
+     * cada página del catálogo y cuántas anclas trajo el HTML. */
+    if (ref === 'jara-catalogo') {
+      const anclas = (r.text.match(/\/anime\/[a-z0-9-]+/gi) || []).length;
+      log('jara catálogo: ' + items.length + ' tarjetas de ' + anclas + ' anclas (página ' + num + ')');
+    }
     let next = null;
     if ((ref === 'jara-catalogo' || esGenero) && items.length >= 6) next = String(num + 1); /* v0.6.56: umbral 12→6, una página corta ya no corta el riel */
     return { items: items, next: next };

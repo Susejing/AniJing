@@ -38,6 +38,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.58 «El perezoso visible»
+
+El catálogo de AnimeJara perdía tarjetas cuyo póster carga perezoso (`data-lazy-src`/`data-src`): el parser solo leía `src`. Ahora lee los tres atributos, y cada página del catálogo escribe en el log cuántas tarjetas parseó y cuántas anclas trajo el HTML — el diagnóstico vive en el teléfono.
+
 ## v0.6.57 «El mapa del almacén»
 
 El mapa de fichas de BeatZ ya no depende de la web (tras el muro de Cloudflare): si la cosecha web sale flaca, el padrón del almacén OpenList — que responde siempre, con sus ~258 series — completa el mapa. El Catálogo BD y el rescate de pósters de secuelas nacen completos aunque Cloudflare no abra; los pares cosechados de la web conservan prioridad porque su slug es el verdadero.
