@@ -447,6 +447,15 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.53 «El mapa flaco» — el log 20:52 dio la mejor noticia del
+// día: la sonda con slug sirvió pósters de verdad («3-gatsu no
+// Lion»: OK 88 KB, «5-toubun»: OK 80.4 KB, cadena del pintor). La
+// 2nd Season sin rescate tiene causa clara: el mapa quedó con 14
+// fichas (solo el inicio pasó el muro) y se guardaba 24 h — un mal
+// rato de Cloudflare nos congelaba el mapa flaco hasta mañana.
+// Ahora: mapa ≥ 40 fichas = caché 24 h + disco; mapa flaco = solo
+// memoria 30 min y se vuelve a intentar.
+//
 // v0.6.52 «La sonda con slug» — los diagnósticos de la 0.6.50
 // hablaron y sentenciaron: la sonda le pasaba a btzPosterDe el
 // NOMBRE de la carpeta («3-gatsu no Lion», con espacios) y todo
@@ -937,7 +946,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.52';
+const VERSION = '0.6.53';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -6608,10 +6617,16 @@ function btzItemDe(nombre, base) {
 var BTZ_MAPA = { t: 0, pares: [] };
 
 async function btzMapaWeb() {
-  if (BTZ_MAPA.pares.length && Date.now() - BTZ_MAPA.t < 24 * 60 * 60 * 1000) return BTZ_MAPA.pares;
+  /* v0.6.53: un mapa FLACO (el muro dejó pasar solo el inicio, 14
+   * fichas) no se guarda a disco y su caché en memoria es corta —
+   * si no, un mal rato de Cloudflare nos dejaba 14 fichas por 24 h
+   * (log 20:52: la 2nd Season sin rescate por mapa flaco). */
+  const COMPLETO = 40;
+  const ttlMem = BTZ_MAPA.ttl || 24 * 60 * 60 * 1000;
+  if (BTZ_MAPA.pares.length && Date.now() - BTZ_MAPA.t < ttlMem) return BTZ_MAPA.pares;
   let guardado = null;
   try { guardado = JSON.parse(String(kino.storage.get('btzMapaWeb') || 'null')); } catch (eG) { guardado = null; }
-  if (guardado && guardado.pares && guardado.pares.length && Date.now() - (guardado.t || 0) < 24 * 60 * 60 * 1000) {
+  if (guardado && guardado.pares && guardado.pares.length >= COMPLETO && Date.now() - (guardado.t || 0) < 24 * 60 * 60 * 1000) {
     BTZ_MAPA.t = guardado.t || 0;
     BTZ_MAPA.pares = guardado.pares;
     return BTZ_MAPA.pares;
@@ -6677,10 +6692,14 @@ async function btzMapaWeb() {
     if (!nuevas) break;
   }
   if (pares.length) {
+    const completo = pares.length >= COMPLETO;
+    BTZ_MAPA.ttl = completo ? 24 * 60 * 60 * 1000 : 30 * 60 * 1000;
     BTZ_MAPA.t = Date.now();
     BTZ_MAPA.pares = pares;
-    try { kino.storage.set('btzMapaWeb', JSON.stringify({ t: BTZ_MAPA.t, pares: pares })); } catch (eS) {}
-    log('btz mapa web: ' + pares.length + ' fichas cosechadas');
+    if (completo) {
+      try { kino.storage.set('btzMapaWeb', JSON.stringify({ t: BTZ_MAPA.t, pares: pares })); } catch (eS) {}
+    }
+    log('btz mapa web: ' + pares.length + ' fichas cosechadas' + (completo ? '' : ' (flaco — se vuelve a intentar en 30 min)'));
   }
   return pares;
 }

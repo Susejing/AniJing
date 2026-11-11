@@ -38,6 +38,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.53 «El mapa flaco»
+
+La mejor noticia del día en el log de las 20:52: la sonda (ya con slug) **sirvió pósters de verdad** — «3-gatsu no Lion»: OK 88 KB, «5-toubun»: OK 80.4 KB, cadena del pintor completa. La 2nd Season sin rescate tenía causa clara: el mapa quedó con 14 fichas (solo el inicio del sitio pasó el muro de Cloudflare) y se guardaba 24 horas — un mal rato del muro nos congelaba un mapa flaco hasta el día siguiente. Ahora un mapa completo (≥ 40 fichas) se guarda 24 h como siempre, pero uno flaco vive solo 30 minutos en memoria y se vuelve a intentar en cuanto el muro afloje.
+
 ## v0.6.52 «La sonda con slug»
 
 Los diagnósticos que la 0.6.50 añadió al pintor hablaron y absolvieron al pintor: la **sonda** le pasaba el nombre de la carpeta crudo («3-gatsu no Lion», con espacios) donde iba el slug («3-gatsu-no-lion»), así que sus fichas daban 404 siempre — la pantalla real usa el slug del handle y por eso sus portadas sí cargan. La conversión nombre→slug vive ahora en una sola función (`btzSlugDe`) que comparten la pantalla y la sonda.
