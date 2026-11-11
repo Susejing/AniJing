@@ -38,6 +38,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.49 «La lista completa»
+
+El sondeo del teléfono (0.6.48 en pantalla, el pintor sí llegó) dejó dos sentencias: el mapa de la web cosechó **0 fichas** — el inicio y sus páginas están tras el muro intermitente de Cloudflare — y la sonda revientaba con «invalid URL» porque le pasaba el handle del póster donde iba una URL. Arreglos: el mapa ahora cosecha de **`/lista-animes/`**, la página del propio sitio que enlista las ~240 fichas con su slug verdadero de una sola vez (con respaldo por lector externo si el muro corta el paso), y la sonda prueba la **cadena real del pintor** y reporta los KB de cada póster.
+
 ## v0.6.48 «El pintor de BeatZ»
 
 El truco completo de IvAnime y MangaTrack, ahora para BeatZ: los pósters vuelven a servirse desde el plugin con una cadena de tres pasos — el patrón del almacén, la ficha web con su og:image, y **el mapa de la web**: se cosechan del inicio (y sus páginas) los pares título→slug de todas las fichas BD, se casan con el nombre de la carpeta por parecido y se pide el og:image de la ficha *verdadera* — la que el patrón no adivina (las secuelas type «2nd Season» que vivían grises). Con caché de 24 horas y cuarentena para quienes no tengan imagen en ninguna parte.

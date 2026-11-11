@@ -447,6 +447,17 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.49 «La lista completa» — el sondeo de las 20:19 (0.6.48 en el
+// teléfono, el pintor SÍ llegó) sentenció: el mapa cosechó 0 fichas
+// porque el inicio y sus /page/N/ están tras el muro intermitente de
+// Cloudflare, y la sonda revienta con «invalid URL: [object Object]»
+// porque le pasa a traer() el handle del póster, no una URL. Dos
+// arreglos: (1) el mapa cosecha ahora de /lista-animes/ — UNA página
+// con las ~240 fichas y sus slugs verdaderos (3-gatsu-no-lion-2,
+// 5-toubun-no-hanayome-2nd-season…), con el título en el alt de la
+// imagen; si el muro corta, respaldo por lector externo (r.jina.ai);
+// (2) la sonda prueba la cadena real btzPosterDe y escribe KB.
+//
 // v0.6.48 «El pintor de BeatZ» — el usuario pidió el truco de IvAnime
 // y MangaTrack, y el sondeo de las 20:06 le dio la razón: kino.fetch
 // SÍ llega a la web (200 OK con el patrón; el status-0 de las 16:58
@@ -895,7 +906,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.48';
+const VERSION = '0.6.49';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -6518,8 +6529,10 @@ function btzItemDe(nombre, base) {
   };
 }
 
-/* v0.6.48 «El pintor de BeatZ»: el mapa de la web — pares título→slug
- * de todas las fichas /bd/, cosechados del inicio y sus páginas. Es lo
+/* v0.6.48/49 «El pintor de BeatZ»: el mapa de la web — pares título→slug
+ * de todas las fichas /bd/. Desde la 0.6.49 se cosecha de /lista-animes/
+ * (una página con las ~240 fichas); el inicio y sus páginas quedan de
+ * respaldo, con lector externo si el muro de Cloudflare corta. Es lo
  * que permite rescatar el póster de las secuelas, cuyo slug verdadero
  * el patrón no adivina. Caché 24 h en memoria y en kino.storage. */
 var BTZ_MAPA = { t: 0, pares: [] };
@@ -6535,30 +6548,62 @@ async function btzMapaWeb() {
   }
   const pares = [];
   const vistos = {};
-  for (let p = 1; p <= 12; p++) {
-    const r = await traer(p === 1 ? BASE_BTZ + '/' : BASE_BTZ + '/page/' + p + '/', { timeoutMs: 12000 });
-    if (!r.ok || !r.text) break;
+  /* Cosecha HTML: cada <a href="…/bd/slug.html"> con su título en el
+   * atributo alt/title de la imagen interior (así arma la lista de
+   * animes) o, en su defecto, en el texto del enlace. */
+  function cosechar(text) {
     let nuevas = 0;
-    const re1 = /<a[^>]+href="[^"]*\/bd\/([a-z0-9-]+)\.html"[^>]*>([^<]{2,140})<\/a>/gi;
-    let m1;
-    while ((m1 = re1.exec(r.text))) {
-      const slug = m1[1];
-      const titulo = decHtml(m1[2]).trim();
-      if (!titulo || vistos[slug]) continue;
-      vistos[slug] = titulo;
-      pares.push({ slug: slug, titulo: titulo });
-      nuevas++;
+    const reA = /<a[^>]+href="[^"]*\/bd\/([a-z0-9-]+)\.html"[^>]*>([\s\S]{0,600}?)<\/a>/gi;
+    let mA;
+    while ((mA = reA.exec(text))) {
+      const slug = mA[1];
+      if (vistos[slug]) continue;
+      let titulo = '';
+      const mAlt = /alt="([^"]{2,140})"/.exec(mA[2]) || /title="([^"]{2,140})"/.exec(mA[2]);
+      if (mAlt) titulo = decHtml(mAlt[1]).trim();
+      if (!titulo) titulo = decHtml(String(mA[2]).replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
+      if (titulo && titulo.length >= 2) {
+        vistos[slug] = titulo;
+        pares.push({ slug: slug, titulo: titulo });
+        nuevas++;
+      }
     }
-    const re2 = /href="[^"]*\/bd\/([a-z0-9-]+)\.html"[^>]*>[\s\S]{0,300}?<h[1-4][^>]*>([\s\S]{2,140}?)<\/h[1-4]>/gi;
-    let m2;
-    while ((m2 = re2.exec(r.text))) {
-      const slug = m2[1];
-      const titulo = decHtml(String(m2[2]).replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
-      if (!titulo || vistos[slug]) continue;
-      vistos[slug] = titulo;
-      pares.push({ slug: slug, titulo: titulo });
-      nuevas++;
+    return nuevas;
+  }
+  /* Cosecha Markdown (respaldo por lector externo cuando el muro de
+   * Cloudflare le cierra la puerta a kino.fetch: el título viaja justo
+   * antes del «](…/bd/slug.html)»). */
+  function cosecharMd(text) {
+    let nuevas = 0;
+    const reM = /[^)\[\]\n]{2,140}\]\(https?:\/\/[^)]*\/bd\/([a-z0-9-]+)\.html\)/gi;
+    let mM;
+    while ((mM = reM.exec(text))) {
+      const slug = mM[1];
+      if (vistos[slug]) continue;
+      const titulo = decHtml(mM[0].slice(0, mM[0].indexOf(']('))).replace(/\s+/g, ' ').replace(/^[:#\s!0-9]*/, '').trim();
+      if (titulo && titulo.length >= 2) {
+        vistos[slug] = titulo;
+        pares.push({ slug: slug, titulo: titulo });
+        nuevas++;
+      }
     }
+    return nuevas;
+  }
+  async function pedirYcosechar(url) {
+    let r = await traer(url, { timeoutMs: 12000 });
+    if (r.ok && r.text && r.text.indexOf('/bd/') >= 0) return cosechar(r.text);
+    let rj = null;
+    try { rj = await traer('https://r.jina.ai/' + url, { timeoutMs: 15000 }); } catch (eJ) { rj = null; }
+    if (rj && rj.ok && rj.text && rj.text.indexOf('/bd/') >= 0) return cosecharMd(rj.text);
+    return 0;
+  }
+  /* La LISTA de animes primero: una sola página con las ~240 fichas
+   * (descubierto el 10-nov: el inicio y sus /page/N/ quedaron detrás
+   * del muro y el mapa cosechó 0). El inicio queda de respaldo. */
+  let nuevas = await pedirYcosechar(BASE_BTZ + '/lista-animes/');
+  if (!nuevas) nuevas = await pedirYcosechar(BASE_BTZ + '/');
+  for (let p = 2; pares.length < 40 && p <= 12; p++) {
+    nuevas = await pedirYcosechar(BASE_BTZ + '/page/' + p + '/');
     if (!nuevas) break;
   }
   if (pares.length) {
@@ -7584,17 +7629,17 @@ async function action(key) {
       let bien = 0;
       const muestras = series.slice(0, 3);
       for (const m of muestras) {
-        const it = btzItemDe(m);
+        /* v0.6.49: se prueba la cadena REAL del pintor (btzPosterDe),
+         * no it.poster — que desde la 0.6.48 es un handle, no una URL
+         * (por eso el sondeo de las 20:19 dijo «invalid URL: [object
+         * Object]»). */
         try {
-          const rp = await traer(it.poster, { timeoutMs: 10000 });
-          if (rp.error) {
-            log('sonda btz póster «' + m + '»: EXCEPCIÓN ' + ((rp.error && rp.error.message) || String(rp.error)) + ' ' + it.poster);
-          } else {
-            log('sonda btz póster «' + m + '»: ' + rp.status + ' ' + (rp.ok ? 'OK' : 'FALLO') + ' ' + it.poster);
-          }
-          if (rp.ok) bien++;
+          const rimg = await btzPosterDe(m);
+          const kb = rimg && rimg.bytes ? Math.round(rimg.bytes.length * 3 / 4 / 102.4) / 10 : 0;
+          log('sonda btz póster «' + m + '»: OK ' + kb + ' KB (cadena del pintor)');
+          bien++;
         } catch (eP) {
-          log('sonda btz póster «' + m + '»: EXCEPCIÓN ' + ((eP && eP.message) || String(eP)));
+          log('sonda btz póster «' + m + '»: ' + ((eP && eP.message) || String(eP)));
         }
       }
       partes.push('pósters ' + bien + '/' + muestras.length);
