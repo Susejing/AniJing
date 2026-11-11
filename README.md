@@ -40,7 +40,11 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
-## v0.6.64 «El segundo intento**
+## v0.6.65 «Los papeles en regla»
+
+El teléfono señaló el papel faltante: Kino rechazó el acortador de CrisAnime con «AniJing necesita kiyax.crisanimex.com, que no está aprobado». El manifiesto ahora declara `*.crisanimex.com` (kiyax, raygo, oscux, fire), `clksz.com` y `ouo.io` — Kino pedirá re-aprobación una vez al actualizar. La verdad no cambia: los acortadores rematan en muros de JavaScript, así que CrisAnime y Vitt siguen catálogo y capítulos sí, reproducción no.
+
+## v0.6.64 «El segundo intento»
 
 Anime-JL ya carga, lista episodios del script y **reproduce** — pero al bajar por su catálogo el sitio tropezó dos veces seguidas (status 500 y status 0) y el scroll se cortó con error. La hoja del catálogo ahora insiste una vez tras 1.5 s antes de rendir: un tropiezo pasajero no corta la vuelta.
 
