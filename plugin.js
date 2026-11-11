@@ -447,6 +447,18 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.62 «El corta-corriente» — el segundo teléfono mandó tres lecciones.
+// (1) IvAnime respondió status 0 en TODAS sus filas y sus esperas de 13 s
+// tumbaron el screenEvent de Kino (tope de 20 s) con la pantalla roja
+// «Tardó demasiado»: corta-corriente de 5 minutos (una fila caída apaga
+// el resto) y esperas de 13/12 s a 8 s en portada, hoja y búsqueda.
+// (2) Anime-JL: 12 menciones de episodio y 0 anclas con la regex con
+// comillas — ahora el href pelado (sin comillas) también vale, y el
+// diagnóstico apunta a la PRIMERA mención de episodio (250 atrás, 350
+// adelante) en vez del encabezado, que no decía nada. (3) CrisAnime y
+// Vitt: los mensajes de resolve nombran al culpable real — el acortador
+// de publicidad (ouo.io en Vitt) que no abre sin JavaScript.
+
 // v0.6.61 «El molde beatz-dw» — el primer teléfono de la 0.6.60 mandó
 // tres cosas. (1) «defs is read-only»: Hermes no deja reasignar un
 // const — las portadas de CrisAnime y Vitt caían; «let» y a correr.
@@ -1012,7 +1024,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.61';
+const VERSION = '0.6.62';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4759,7 +4771,10 @@ registrarFuente({
     const texto = String(r.text || '');
     const vistos = new Set();
     const lista = [];
-    const re = /href\s*=\s*["']([^"']*\/anime\/[^"']*\/episodio-(\d+)[^"']*)["']/gi;
+    /* v0.6.62: el teléfono mostró 12 menciones de episodio y 0 anclas con
+     * la regex con comillas — los href de Anime-JL pueden ir sin comillas.
+     * Ahora se acepta href pelado (con o sin comillas). */
+    const re = /href\s*=\s*["']?([^"'\s>]*\/anime\/[^"'\s>]*\/episodio-(\d+)[^"'\s>]*)["']?/gi;
     let m;
     while ((m = re.exec(texto)) && lista.length < 400) {
       let camino = decHtml(m[1]);
@@ -4775,8 +4790,12 @@ registrarFuente({
     }
     log('jl ficha «' + slug + '»: ' + lista.length + ' episodios de ' + (texto.match(/episodio-\d+/gi) || []).length + ' menciones (' + texto.length + ' letras)');
     if (!lista.length) {
-      const iL = texto.indexOf('Lista de episodios');
-      log('jl diagnóstico: ' + (iL >= 0 ? texto.slice(iL, iL + 300).replace(/\s+/g, ' ') : 'sin «Lista de episodios» en el HTML'));
+      /* v0.6.62: la muestra ahora apunta a la PRIMERA mención de
+       * episodio-N (no al encabezado «Lista de episodios», que no dice
+       * nada de cómo vive el enlace). 250 letras atrás y 350 adelante. */
+      const mM = /episodio-\d+/i.exec(texto);
+      const iM = mM ? mM.index : -1;
+      log('jl diagnóstico: ' + (iM >= 0 ? texto.slice(Math.max(0, iM - 250), iM + 350).replace(/\s+/g, ' ') : 'sin menciones de episodio en el HTML'));
     }
     if (!lista.length) {
       throw kino.error('not_found', 'Anime-JL: 0 capítulos', {
@@ -5048,7 +5067,7 @@ registrarFuente({
     const servers = await servidoresDeDescarga(urls, BASE_CRIS);
     if (!servers.length) {
       throw kino.error('unavailable', 'CrisAnime: sin servidores abribles', {
-        userMessage: 'Este capítulo solo tiene Mega (cifrado) o enlaces caídos. Prueba otro capítulo o servidor.'
+        userMessage: 'CrisAnime reparte este capítulo por enlaces en Mega (cifrado) o tras un acortador de publicidad que AniJing no cruza. Prueba otro capítulo o fuente.'
       });
     }
     return await probarServidores(servers, idx, function (i) {
@@ -5219,7 +5238,7 @@ registrarFuente({
     const servers = await servidoresDeDescarga(urls, BASE_VITT);
     if (!servers.length) {
       throw kino.error('unavailable', 'Vitt no Fansub: sin servidores abribles', {
-        userMessage: 'Este capítulo solo tiene Mega (cifrado) o enlaces caídos. Prueba otro capítulo o servidor.'
+        userMessage: 'Vitt reparte este capítulo por un acortador de publicidad (ouo.io) que no abre sin JavaScript. AniJing no lo cruza: catálogo sí, reproducción no.'
       });
     }
     return await probarServidores(servers, idx, function (i) {
@@ -5231,6 +5250,15 @@ registrarFuente({
 /* ---------- fuente: IvAnime (ivanime.buzz, espejo de ivanime.top) ---------- */
 
 const BASE_IVA = 'https://ivanime.buzz';
+/* v0.6.62 «El corta-corriente»: IvAnime respondió status 0 en TODAS sus
+ * filas y sus esperas de 13 s tumbaron el screenEvent de Kino (tope de
+ * 20 s) con la pantalla roja «Tardó demasiado». Si el sitio no responde,
+ * se marca la caída y durante 5 minutos las demás peticiones se saltan
+ * sin esperar: la pantalla se arma con lo que haya y Kino no se pasa
+ * del tope. */
+let IVA_CAIDA = 0;
+function ivaViva() { return Date.now() >= IVA_CAIDA; }
+function ivaCayo() { IVA_CAIDA = Date.now() + 5 * 60 * 1000; }
 /* v0.6.12: el epslug de los capítulos de IvAnime NO es el slug de la
  * serie (la ficha de «…-sub-espanol» enlaza /ver/… SIN el sufijo): el
  * prefijo real se aprende en episodios() y se guarda aquí para que
@@ -5386,6 +5414,11 @@ registrarFuente({
   async buscar(q) {
     const texto = String(q || '').trim().slice(0, 100);
     if (texto.length < 2) return [];
+    /* v0.6.62: corta-corriente en la búsqueda también. */
+    if (!ivaViva()) {
+      log('iva corta-corriente: búsqueda saltada (caída reciente)');
+      return [];
+    }
     try {
       /* Se prueba el ?s= de siempre; si el sitio lo ignora, se filtra el
        * Inicio por título como plan B honesto. */
@@ -5447,12 +5480,15 @@ registrarFuente({
     }
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
-        /* v0.6.13: las páginas de IvAnime son pesadas (la home pasa de
-         * 100 KB) y en el teléfono 9 s se quedaban cortos: la espera
-         * crece, el cuerpo se lee aunque el estado mienta y cada fila
-         * vacía deja bitácora con estado y tamaño — el log dirá qué
-         * pasó (reto, vacío o red). */
-        const r = await traer(BASE_IVA + def.camino, { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 13000, cuerpoSiempre: true });
+        /* v0.6.62: corta-corriente — si IvAnime está caída, las filas se
+         * saltan sin esperar y el timeout baja de 13 s a 8 s para no
+         * pisar el tope de 20 s del screenEvent de Kino. */
+        if (!ivaViva()) {
+          log('iva corta-corriente: fila «' + def.camino + '» saltada (caída reciente)');
+          return null;
+        }
+        const r = await traer(BASE_IVA + def.camino, { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 8000, cuerpoSiempre: true });
+        if (r.status === 0) ivaCayo();
         const items = ivaTarjetas(r.text).slice(0, 20);
         if (!items.length && r.text) {
           log('iva fila «' + def.camino + '»: status ' + r.status + ', ' + r.text.length + ' letras, 0 tarjetas' +
@@ -5492,7 +5528,13 @@ registrarFuente({
     const paginado = ref === 'iva-directorio' || ref.indexOf('iva-genero-') === 0;
     const pag = parseInt(String(cursor || '1'), 10) || 1;
     const num = paginado && pag > 1 ? pag : 1;
-    const r = await traer(BASE_IVA + camino + (paginado && num > 1 ? '?p=' + num : ''), { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 12000 });
+    /* v0.6.62: corta-corriente también en la hoja (espera 12 s → 8 s). */
+    if (!ivaViva()) {
+      log('iva corta-corriente: hoja «' + ref + '» saltada (caída reciente)');
+      return { items: [], next: null };
+    }
+    const r = await traer(BASE_IVA + camino + (paginado && num > 1 ? '?p=' + num : ''), { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 8000 });
+    if (r.status === 0) ivaCayo();
     if (!r.ok) {
       if (paginado && num > 1) return { items: [], next: null };
       throw kino.error('unavailable', 'IvAnime no respondió (status ' + r.status + ')', {
