@@ -40,6 +40,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.63 «La lista escondida»
+
+El diagnóstico de la 0.6.62 cantó claro: **la ficha de Anime-JL no trae anclas** — sus episodios viven en un `var episodes = [[12,"episodio-12",…],…]` dentro de un `<script>` que `renderEpisodes()` pinta con JavaScript. AniJing ahora lee esa variable y arma el camino con `var anime_info`. **CrisAnime** escondía otra sorpresa: sus botones de descarga van por subdominios-acortador propios (`kiyax`/`raygo`/`oscux`.crisanimex.com) que terminan en `clksz.com`, un muro de anuncios con anti-adblock — el filtro los acepta, el seguidor los intenta y, si el muro no cede, el mensaje lo nombra: catálogo y capítulos sí, reproducción no.
+
 ## v0.6.62 «El corta-corriente»
 
 El segundo teléfono enseñó tres cosas. **IvAnime estaba caída** (status 0 en todas sus filas) y sus esperas de 13 s tumbaron el screenEvent de Kino con la pantalla roja «Tardó demasiado»: corta-corriente de 5 minutos — una fila caída apaga el resto — y esperas de 8 s en portada, hoja y búsqueda. **Anime-JL** tenía 12 menciones de episodio y 0 anclas: el `href` puede ir sin comillas y ahora también vale; el diagnóstico del log apunta a la primera mención de episodio, no al encabezado. **CrisAnime y Vitt** ya dicen la verdad completa en resolve: sus capítulos van tras un acortador de publicidad (`ouo.io` en Vitt) que no abre sin JavaScript — catálogo sí, reproducción no.
