@@ -40,6 +40,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.66 «El relevo fansub»
+
+**CrisAnime y Vitt no Fansub salen.** Sus descargas viven tras acortadores con muro de JavaScript (`clksz.com`, `ouo.io`) y no se cruzan sin navegador — catálogo sin reproducción no sirve. Entra **AySDO** (aysdo.xyz), la recolectora del molde de Az-Animex y Dw-anime: **versiones BD de fansubs con estilos** (karaokes y colores de verdad), HD ligero 720p y Full HD 1080p, con pestañas «Descargas» y «Ver Online» en cada post. Blogspot de fábrica: el feed JSON siempre responde (búsqueda y paginación) y los episodios online se cosechan del post, con diagnóstico en el log por si el molde cambia. Doce fuentes, todas con reproducción real o descarga directa abrible.
+
 ## v0.6.65 «Los papeles en regla»
 
 El teléfono señaló el papel faltante: Kino rechazó el acortador de CrisAnime con «AniJing necesita kiyax.crisanimex.com, que no está aprobado». El manifiesto ahora declara `*.crisanimex.com` (kiyax, raygo, oscux, fire), `clksz.com` y `ouo.io` — Kino pedirá re-aprobación una vez al actualizar. La verdad no cambia: los acortadores rematan en muros de JavaScript, así que CrisAnime y Vitt siguen catálogo y capítulos sí, reproducción no.
@@ -277,9 +281,3 @@ La 0.6.9 llegó al teléfono con el catálogo de AnimeJara cargando pero **cualq
 **AnimeOnline fuera, dos veteranas dentro.** El usuario lo pidió con razón: «de nada sirve tenerla si no funciona» — mudó su sitio dos veces (ww3, ww4), su Cloudflare cerró la puerta al catálogo y a los episodios, y las portadas grises nunca se curaron. En su lugar:
 
 - **AnimeJara** (animejara.com, puerta henaojara2.com): tarjetas con póster propio (`hj.animejara.com`), fichas `/anime/<slug>` con pestañas de temporada; los episodios se **sintetizan** desde las pestañas (`data-season` + «N episodios») como `/episode/<slug>-1x2/`. Su player es un multiserver propio (`streamhj.top`) que lista Filemoon, Uqload, Vidhide (filelions), Voe, LuluStream, StreamTape y MP4Upload en `playVideo('URL')`, con su array `enlaces` por idioma (japonés, latino, castellano) — cada lote de servidores lleva su idioma al lado.
-- **VerAnime** (veranime.ninja): un Dooplay de manual — tarjetas `/anime/<slug>/` con pósters de tmdb, fichas con temporadas y episodios `/ver/<slug>-episodio-N/`; su player se sirve por el endpoint `wp-json/dooplayer/v2/<post>/<tipo>/<nume>` y su multiserver (`darkanimes.com`) lista sus hosters en `onclick('URL')` como el saidochesto de siempre. Sus atributos van con comillas simples — por eso los primeros rascados no los veían. Las películas abren: si la página de episodio no existe, el resolver cae a la ficha con el player a cuestas.
-
-Con ellas, la ventanita de «Pasar la revisión» de Cloudflare se retira: ninguna fuente viva la pide hoy. Los episodios sintetizados de AnimeJara son la única apuesta a ciegas: si un capítulo no existe, el aviso honesto lo dice.
-
-## v0.6.8 «La mudanza»
-
