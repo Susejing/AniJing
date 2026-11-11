@@ -447,6 +447,19 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.66 «El relevo fansub» — la casa manda y obedece: CrisAnime y
+// Vitt no Fansub SALen. Sus descargas viven tras acortadores con muro
+// de JavaScript (clksz.com, ouo.io) y no se cruzan sin navegador —
+// catálogo sin reproducción no sirve. Entra AySDO (aysdo.xyz), la
+// recolectora del molde de Az-Animex y Dw-anime: versiones BD de
+// fansubs con estilos (karaokes y colores de verdad), HD ligero 720p
+// y Full HD 1080p, con pestañas «Descargas» y «Ver Online». Blogspot
+// de fábrica: el feed JSON siempre responde (búsqueda ?q= y paginación
+// start-index) y los episodios online se cosechan del post (anclas e
+// iframes con «Episodio N» al lado), con diagnóstico generoso en el
+// log por si el molde cambia. Doce fuentes, todas con reproducción
+// real o descarga directa abrible.
+
 // v0.6.65 «Los papeles en regla» — el teléfono señaló el papel faltante:
 // Kino rechazó el acortador de CrisAnime con «AniJing necesita
 // kiyax.crisanimex.com, que no está aprobado» — el manifiesto solo
@@ -1052,7 +1065,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.65';
+const VERSION = '0.6.66';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4881,278 +4894,27 @@ registrarFuente({
   }
 });
 
-/* ---------- fuente: CrisAnime (crisanimex.com, descargas Mega/MediaFire/Fireload) ---------- */
+/* ---------- fuente: AySDO (www.aysdo.xyz, recolectora de versiones fansub BD) ---------- */
 
-/* v0.6.60: CrisAnime es un blog de descargas: un post por serie con su
- * sinopsis, su ficha técnica y los enlaces de cada capítulo (Mega,
- * MediaFire, Fireload, Mp4upload). Los capítulos son los anclas de
- * descarga del post: se agrupan por número y el resolve abre cada
- * servidor. Mega va cifrado y queda fuera (honesto); MediaFire se
- * resuelve con su página de descarga y Mp4upload con su extractor. */
-const BASE_CRIS = 'https://crisanimex.com';
-
-function crisTarjetas(html) {
-  /* Posts de portada: anclas al slug del post (una sola pieza) con
-   * imagen dentro. Se dejan fuera las rutas del sistema del blog. */
-  const re = /<a\b[^>]*href\s*=\s*["']https?:\/\/crisanimex\.com\/([^"'\/?#]+)\/["'][^>]*>([\s\S]{0,3200}?)<\/a>/gi;
-  const fuera = /^(?:category|tag|page|author|wp-|feed|contacto|dmca|privacidad)/i;
-  const items = [];
-  const indice = {};
-  let m;
-  while ((m = re.exec(String(html || ''))) && items.length < 40) {
-    const slug = m[1];
-    if (fuera.test(slug) || indice[slug]) continue;
-    const ventana = m[2];
-    let poster = posterEnVentana(ventana);
-    if (!poster) poster = posterAntesDe(String(html || ''), m.index);
-    let titulo = '';
-    const h = /<h[1-6][^>]*>([\s\S]{1,200}?)<\/h[1-6]>/i.exec(ventana);
-    if (h) titulo = limpio(h[1]);
-    const tt = /title\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
-    if (!titulo && tt) titulo = decHtml(tt[1]);
-    if (!titulo || titulo.length < 2) titulo = slugATitulo(slug);
-    const item = {
-      id: 'cris-' + slug,
-      ref: 'cris:' + slug,
-      title: titulo.slice(0, 200),
-      kind: 'series'
-    };
-    if (poster) item.poster = absolutizar(poster, BASE_CRIS);
-    indice[slug] = item;
-    items.push(item);
-  }
-  return items;
-}
-
-/* Cosecha los capítulos de un post (CrisAnime y Vitt usan el mismo
- * molde «beatz-dw»): marcas «Capítulo N» o «Episodio N» y, después de
- * cada una, los enlaces de descarga hasta la marca siguiente. v0.6.61:
- * los enlaces NO van directos — pasan por acortadores con muro de
- * anuncios (fire.crisanimex.com → publicidad, ouo.io). Se cosechan
- * igual: el resolve dirá con honestidad si el muro no cede. */
-function enlacesDeCapitulos(html) {
-  const texto = String(html || '');
-  const DL = /(mediafire\.com|mega\.nz|fireload\.com|mp4upload\.com|fire\.crisanimex\.com|ouo\.io|[a-z0-9-]+\.crisanimex\.com)/i;
-  const marcas = [];
-  const reM = /(?:Cap[íi]tulo|Episodio)\s*(\d{1,4})/gi;
-  let m;
-  while ((m = reM.exec(texto))) {
-    const num = parseInt(m[1], 10);
-    if (num >= 1 && num <= 9999) marcas.push({ num: num, idx: m.index });
-  }
-  const porNumero = {};
-  for (let i = 0; i < marcas.length; i++) {
-    if (porNumero[marcas[i].num]) continue;
-    const desde = marcas[i].idx;
-    const hasta = i + 1 < marcas.length ? marcas[i + 1].idx : texto.length;
-    const trozo = texto.slice(desde, hasta);
-    const urls = [];
-    const reL = /href\s*=\s*["']([^"']+)["']/gi;
-    let l;
-    while ((l = reL.exec(trozo))) {
-      const u = decHtml(l[1]).trim();
-      if (/^https?:\/\//i.test(u) && DL.test(u) && urls.indexOf(u) < 0) urls.push(u);
-    }
-    if (urls.length) porNumero[marcas[i].num] = urls;
-  }
-  const orden = Object.keys(porNumero).map(function (x) { return parseInt(x, 10); }).sort(function (a, b) { return a - b; });
-  return { porNumero: porNumero, orden: orden, total: marcas.length };
-}
-
-/* MediaFire: su página de descarga trae el enlace directo a
- * download….mediafire.com. Sin JavaScript, sin captcha. */
-async function mediafireDirecto(url) {
-  try {
-    const r = await traer(url, { timeoutMs: 12000, cuerpoSiempre: true });
-    if (!r.ok || !r.text) return null;
-    const m = /href\s*=\s*["'](https?:\/\/download[^"']*\.mediafire\.com\/[^"']+)["']/i.exec(r.text);
-    return m ? m[1] : null;
-  } catch (e) {
-    log('mediafire falló', (e && e.message) || String(e));
-    return null;
-  }
-}
-
-/* De la lista de enlaces de un capítulo salen los servidores que el
- * plugin SÍ puede abrir, en orden de preferencia. v0.6.61: los
- * acortadores (fire.crisanimex.com, ouo.io) se siguen una vez — si la
- * cadena aterriza en MediaFire, hay video; si aterriza en publicidad,
- * se descarta con bitácora. Mega queda fuera: cifrado. */
-async function servidoresDeDescarga(urls, refBase) {
-  const ref = String(refBase || '');
-  const servers = [];
-  for (const u of (urls || [])) {
-    if (/mediafire\.com/i.test(u)) {
-      const d = await mediafireDirecto(u);
-      if (d) servers.push({
-        nombre: 'MediaFire', url: d, tipo: 'directo',
-        directo: { url: d, mime: mimeDe(d), headers: { Referer: 'https://www.mediafire.com/', 'User-Agent': UA } }
-      });
-    } else if (/mp4upload\.com/i.test(u)) {
-      servers.push({ nombre: 'Mp4Upload', url: u, tipo: 'mp4upload' });
-    } else if (/^https?:\/\/[^\/]*fireload\.com/i.test(u)) {
-      servers.push({
-        nombre: 'FireLoad', url: u, tipo: 'directo',
-        directo: { url: u, mime: mimeDe(u), headers: { Referer: 'https://www.fireload.com/', 'User-Agent': UA } }
-      });
-    } else if (/ouo\.io|[a-z0-9-]+\.crisanimex\.com/i.test(u) && !/^(?:www\.)?crisanimex\.com/i.test(u)) {
-      /* el acortador: se sigue la cadena de saltos y se mira dónde
-       * cayó — MediaFire servible, Mp4Upload servible, publicidad no.
-       * v0.6.63: CrisAnime usa subdominios-acortador propios
-       * (kiyax/raygo/oscux.crisanimex.com), no solo fire. */
-      try {
-        const r = await traer(u, { timeoutMs: 12000, cuerpoSiempre: true });
-        const finalU = String((r && r.url) || '');
-        if (/mediafire\.com\/file/i.test(finalU)) {
-          const d = await mediafireDirecto(finalU);
-          if (d) servers.push({
-            nombre: 'MediaFire', url: d, tipo: 'directo',
-            directo: { url: d, mime: mimeDe(d), headers: { Referer: 'https://www.mediafire.com/', 'User-Agent': UA } }
-          });
-        } else if (/mp4upload\.com/i.test(finalU)) {
-          servers.push({ nombre: 'Mp4Upload', url: finalU, tipo: 'mp4upload' });
-        } else {
-          log('acortador sin video: ' + u.slice(0, 60) + ' → ' + (finalU || 'sin respuesta').slice(0, 60));
-        }
-      } catch (eA) {
-        log('acortador falló', (eA && eA.message) || String(eA));
-      }
-    }
-  }
-  return servers;
-}
-
-registrarFuente({
-  id: 'cris',
-  etiqueta: 'CrisAnime',
-
-  async buscar(q) {
-    const texto = String(q || '').trim().slice(0, 100);
-    if (texto.length < 2) return [];
-    try {
-      const r = await traer(BASE_CRIS + '/?s=' + encodeURIComponent(texto), { timeoutMs: 12000, cuerpoSiempre: true });
-      if (!r.ok) return [];
-      const items = crisTarjetas(r.text).slice(0, 25);
-      for (const it of items) it.badges = ['CrisAnime'];
-      return items;
-    } catch (e) {
-      log('cris buscar', (e && e.message) || String(e));
-      return [];
-    }
-  },
-
-  async portada(solo) {
-    /* v0.6.61: «let» obligatorio — Hermes no deja reasignar un const
-     * («defs is read-only» en el log del teléfono). */
-    let defs = [{ id: 'cris-novedades', titulo: 'Novedades · CrisAnime', camino: '/' }];
-    if (solo === true) {
-      const nucleo = NUCLEO_TODAS.cris;
-      if (nucleo) defs = defs.filter(function (d) { return nucleo.indexOf(d.id) >= 0; });
-    }
-    const rtas = await Promise.all(defs.map(async (def) => {
-      try {
-        const r = await traer(BASE_CRIS + def.camino, { timeoutMs: 12000, cuerpoSiempre: true });
-        const items = r && r.ok ? crisTarjetas(r.text).slice(0, 20) : [];
-        if (!items.length && r && r.text) {
-          log('cris fila «' + def.titulo + '»: status ' + r.status + ', ' + r.text.length + ' letras, 0 tarjetas');
-        }
-        return items.length ? { id: def.id, title: def.titulo, ref: def.id, items: items } : null;
-      } catch (e) {
-        log('cris fila «' + def.titulo + '» falló', (e && e.message) || String(e));
-        return null;
-      }
-    }));
-    const filas = [];
-    for (const fila of rtas) if (fila) filas.push(fila);
-    return filas;
-  },
-
-  async hoja(ref, cursor) {
-    if (ref !== 'cris-novedades') return null;
-    const pagina = parseInt(cursor, 10);
-    const num = Number.isFinite(pagina) && pagina > 1 ? pagina : 1;
-    const r = await traer(BASE_CRIS + (num > 1 ? '/page/' + num + '/' : '/'), { timeoutMs: 12000, cuerpoSiempre: true });
-    if (!r.ok) {
-      throw kino.error('unavailable', 'CrisAnime no respondió (status ' + r.status + ')', {
-        userMessage: 'CrisAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
-      });
-    }
-    const items = crisTarjetas(r.text).slice(0, 60);
-    return { items: items, next: items.length >= 10 ? String(num + 1) : null };
-  },
-
-  async detalle(slug) {
-    const r = await traer(BASE_CRIS + '/' + slug + '/', { timeoutMs: 12000, cuerpoSiempre: true });
-    if (!r.ok || !r.text) return null;
-    const serie = { title: slugATitulo(slug) };
-    const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
-    if (h) serie.title = limpio(h[1]) || serie.title;
-    const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(r.text);
-    if (og) serie.poster = og[1].indexOf('//') === 0 ? 'https:' + og[1] : og[1];
-    const sinM = /(?:sinopsis|s[íi]nopsis)[\s\S]{0,200}?<p[^>]*>([\s\S]{30,600}?)<\/p>/i.exec(r.text);
-    if (sinM) serie.overview = limpio(sinM[1]).slice(0, 400);
-    return serie;
-  },
-
-  async episodios(slug) {
-    const r = await traer(BASE_CRIS + '/' + slug + '/', { timeoutMs: 12000, cuerpoSiempre: true });
-    if (!r.ok || !r.text) {
-      throw kino.error('unavailable', 'CrisAnime no entregó la serie', {
-        userMessage: 'CrisAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
-      });
-    }
-    const cosecha = enlacesDeCapitulos(r.text);
-    log('cris post «' + slug + '»: ' + cosecha.orden.length + ' capítulos de ' + cosecha.total + ' marcas (' + (r.text || '').length + ' letras)');
-    if (!cosecha.orden.length) {
-      const iC = (r.text || '').search(/cap[íi]tulo|episodio/i);
-      log('cris diagnóstico: ' + (iC >= 0 ? (r.text || '').slice(iC, iC + 300).replace(/\s+/g, ' ') : 'sin marcas de capítulo en el HTML'));
-      throw kino.error('not_found', 'CrisAnime: 0 capítulos', {
-        userMessage: 'No se pudieron leer los capítulos de esta serie en CrisAnime.'
-      });
-    }
-    const lista = cosecha.orden.map(function (num) {
-      return { season: 1, number: num, ref: 'cris:' + slug + ':' + num, title: 'Capítulo ' + num };
-    });
-    return { series: { title: slugATitulo(slug) }, episodes: lista };
-  },
-
-  async resolver(slug, n, idx) {
-    const r = await traer(BASE_CRIS + '/' + slug + '/', { timeoutMs: 12000, cuerpoSiempre: true });
-    if (!r.ok || !r.text) {
-      throw kino.error('not_found', 'CrisAnime no entregó la serie', {
-        userMessage: 'No se pudo abrir este capítulo en CrisAnime.'
-      });
-    }
-    const cosecha = enlacesDeCapitulos(r.text);
-    const urls = cosecha.porNumero[n || cosecha.orden[0]] || [];
-    const servers = await servidoresDeDescarga(urls, BASE_CRIS);
-    if (!servers.length) {
-      throw kino.error('unavailable', 'CrisAnime: sin servidores abribles', {
-        userMessage: 'CrisAnime reparte este capítulo por acortadores de publicidad (kiyax/raygo/oscux → clksz.com) que no abren sin JavaScript. AniJing no los cruza: catálogo sí, reproducción no.'
-      });
-    }
-    return await probarServidores(servers, idx, function (i) {
-      return 'cris:' + slug + ':' + (n || 1) + ':' + i;
-    });
-  }
-});
-
-/* ---------- fuente: Vitt no Fansub (vitt125nofansub.blogspot.com, fansub latino con karaokes) ---------- */
-
-/* v0.6.60: Vitt no Fansub es un fansub latino de los de verdad:
- * subtítulos con karaokes, colores y textos propios. Su casa es un
- * blogspot, y blogspot da un regalo: el feed JSON
+/* v0.6.66 «El relevo fansub»: CrisAnime y Vitt no Fansub salen — sus
+ * descargas viven tras acortadores con muro de JavaScript (clksz.com,
+ * ouo.io) y no se cruzan sin navegador: catálogo sin reproducción no
+ * sirve. Entra AySDO (AnimeySeriesDO), una recolectora del molde de
+ * Az-Animex y Dw-anime: versiones BD de fansubs con estilos (Kashikoi
+ * y compañía), HD ligero 720p y Full HD 1080p, con pestañas
+ * «Descargas» y «Ver Online» en cada post. Su casa es un blogspot, y
+ * blogspot da el regalo de siempre: el feed JSON
  * /feeds/posts/default?alt=json funciona SIEMPRE (sin muro), con
- * búsqueda (?q=) y paginación (start-index). Cada post es un proyecto
- * con sus capítulos en enlaces de descarga (Mega/MediaFire/Fireload),
- * mismos hábitos que CrisAnime. */
-const BASE_VITT = 'https://vitt125nofansub.blogspot.com';
+ * búsqueda (?q=) y paginación (start-index). Los capítulos online se
+ * cosechan del HTML del post con diagnóstico generoso en el log — si
+ * el molde cambia, el log dirá dónde viven los enlaces. */
+const BASE_AYS = 'https://www.aysdo.xyz';
 
-function vittFeed(camino) {
-  return traer(BASE_VITT + camino, { timeoutMs: 12000, cuerpoSiempre: true });
+function aysFeed(camino) {
+  return traer(BASE_AYS + camino, { timeoutMs: 12000, cuerpoSiempre: true });
 }
 
-function vittEntradas(json) {
+function aysEntradas(json) {
   try {
     const feed = json && json.feed;
     if (!feed || !Array.isArray(feed.entry)) return [];
@@ -5163,14 +4925,14 @@ function vittEntradas(json) {
         for (const l of e.link) if (l.rel === 'alternate' && l.href) { url = String(l.href); break; }
       }
       if (!url) continue;
-      const mm = /vitt125nofansub\.blogspot\.com\/(\d{4})\/(\d{2})\/([a-z0-9.-]+)\.html/i.exec(url);
+      const mm = /aysdo\.xyz\/(\d{4})\/(\d{2})\/([a-z0-9.-]+)\.html/i.exec(url);
       if (!mm) continue;
       const slug = mm[1] + '/' + mm[2] + '/' + mm[3];
       const titulo = limpio((e.title && e.title.$t) || slugATitulo(mm[3]));
       if (!titulo || titulo.length < 2) continue;
       const item = {
-        id: 'vitt-' + slug.replace(/\//g, '-'),
-        ref: 'vitt:' + slug,
+        id: 'ays-' + slug.replace(/\//g, '-'),
+        ref: 'ays:' + slug,
         title: titulo.slice(0, 200),
         kind: 'series'
       };
@@ -5182,51 +4944,53 @@ function vittEntradas(json) {
     }
     return items;
   } catch (e) {
-    log('vitt feed ilegible', (e && e.message) || String(e));
+    log('ays feed ilegible', (e && e.message) || String(e));
     return [];
   }
 }
 
 registrarFuente({
-  id: 'vitt',
-  etiqueta: 'Vitt no Fansub',
+  id: 'ays',
+  etiqueta: 'AySDO',
 
   async buscar(q) {
     const texto = String(q || '').trim().slice(0, 100);
     if (texto.length < 2) return [];
     try {
-      const r = await vittFeed('/feeds/posts/default?alt=json&max-results=25&q=' + encodeURIComponent(texto));
+      const r = await aysFeed('/feeds/posts/default?alt=json&max-results=20&q=' + encodeURIComponent(texto));
       if (!r.ok) return [];
       let json = null;
       try { json = JSON.parse(r.text); } catch (eP) { json = null; }
-      const items = vittEntradas(json).slice(0, 25);
-      for (const it of items) it.badges = ['Vitt no Fansub'];
+      const items = aysEntradas(json).slice(0, 25);
+      for (const it of items) it.badges = ['AySDO'];
       return items;
     } catch (e) {
-      log('vitt buscar', (e && e.message) || String(e));
+      log('ays buscar', (e && e.message) || String(e));
       return [];
     }
   },
 
   async portada(solo) {
-    /* v0.6.61: «let» obligatorio — Hermes no deja reasignar un const
-     * («defs is read-only» en el log del teléfono). */
-    let defs = [{ id: 'vitt-proyectos', titulo: 'Proyectos · Vitt no Fansub', camino: '/feeds/posts/default?alt=json&max-results=20' }];
+    /* Una fila con las publicaciones recientes del feed (versiones BD
+     * de fansubs, estrenos y completas). En «Todas» solo el núcleo. */
+    let defs = [{ id: 'ays-recientes', titulo: 'Versiones · AySDO', camino: '/feeds/posts/default?alt=json&max-results=20' }];
     if (solo === true) {
-      const nucleo = NUCLEO_TODAS.vitt;
+      const nucleo = NUCLEO_TODAS.ays;
       if (nucleo) defs = defs.filter(function (d) { return nucleo.indexOf(d.id) >= 0; });
     }
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
-        const r = await vittFeed(def.camino);
-        if (!r.ok) return null;
+        const r = await aysFeed(def.camino);
+        if (!r.ok) {
+          log('ays fila «' + def.titulo + '»: status ' + r.status);
+          return null;
+        }
         let json = null;
         try { json = JSON.parse(r.text); } catch (eP) { json = null; }
-        const items = vittEntradas(json).slice(0, 20);
-        if (!items.length) log('vitt fila «' + def.titulo + '»: status ' + r.status + ', 0 entradas');
+        const items = aysEntradas(json).slice(0, 20);
         return items.length ? { id: def.id, title: def.titulo, ref: def.id, items: items } : null;
       } catch (e) {
-        log('vitt fila «' + def.titulo + '» falló', (e && e.message) || String(e));
+        log('ays fila «' + def.titulo + '» falló', (e && e.message) || String(e));
         return null;
       }
     }));
@@ -5236,24 +5000,24 @@ registrarFuente({
   },
 
   async hoja(ref, cursor) {
-    if (ref !== 'vitt-proyectos') return null;
+    if (ref !== 'ays-recientes') return null;
     const pagina = parseInt(cursor, 10);
     const num = Number.isFinite(pagina) && pagina > 1 ? pagina : 1;
     const inicio = (num - 1) * 20 + 1;
-    const r = await vittFeed('/feeds/posts/default?alt=json&max-results=20&start-index=' + inicio);
+    const r = await aysFeed('/feeds/posts/default?alt=json&max-results=20&start-index=' + inicio);
     if (!r.ok) {
-      throw kino.error('unavailable', 'Vitt no Fansub no respondió (status ' + r.status + ')', {
-        userMessage: 'Vitt no Fansub no respondió. Revisa tu conexión o inténtalo en un rato.'
+      throw kino.error('unavailable', 'AySDO no respondió (status ' + r.status + ')', {
+        userMessage: 'AySDO no respondió. Revisa tu conexión o inténtalo en un rato.'
       });
     }
     let json = null;
     try { json = JSON.parse(r.text); } catch (eP) { json = null; }
-    const items = vittEntradas(json).slice(0, 20);
+    const items = aysEntradas(json).slice(0, 20);
     return { items: items, next: items.length >= 20 ? String(num + 1) : null };
   },
 
   async detalle(slug) {
-    const r = await traer(BASE_VITT + '/' + slug + '.html', { timeoutMs: 12000, cuerpoSiempre: true });
+    const r = await traer(BASE_AYS + '/' + slug + '.html', { timeoutMs: 12000, cuerpoSiempre: true });
     if (!r.ok || !r.text) return null;
     const serie = { title: slugATitulo(slug.split('/').pop() || slug) };
     const h = /<h[1-6][^>]*>([\s\S]{1,300}?)<\/h[1-6]>/i.exec(r.text);
@@ -5266,44 +5030,82 @@ registrarFuente({
   },
 
   async episodios(slug) {
-    const r = await traer(BASE_VITT + '/' + slug + '.html', { timeoutMs: 12000, cuerpoSiempre: true });
+    const r = await traer(BASE_AYS + '/' + slug + '.html', { timeoutMs: 12000, cuerpoSiempre: true });
     if (!r.ok || !r.text) {
-      throw kino.error('unavailable', 'Vitt no Fansub no entregó la serie', {
-        userMessage: 'Vitt no Fansub no respondió. Revisa tu conexión o inténtalo en un rato.'
+      throw kino.error('unavailable', 'AySDO no entregó la serie', {
+        userMessage: 'AySDO no respondió. Revisa tu conexión o inténtalo en un rato.'
       });
     }
-    const cosecha = enlacesDeCapitulos(r.text);
-    log('vitt post «' + slug + '»: ' + cosecha.orden.length + ' capítulos de ' + cosecha.total + ' marcas (' + (r.text || '').length + ' letras)');
-    if (!cosecha.orden.length) {
-      const iC = (r.text || '').search(/cap[íi]tulo|episodio|beatz-dw/i);
-      log('vitt diagnóstico: ' + (iC >= 0 ? (r.text || '').slice(iC, iC + 300).replace(/\s+/g, ' ') : 'sin marcas de capítulo en el HTML'));
-      throw kino.error('not_found', 'Vitt no Fansub: 0 capítulos', {
-        userMessage: 'No se pudieron leer los capítulos de esta serie en Vitt no Fansub.'
+    /* El post trae pestañas «Descargas» y «Ver Online»; los episodios
+     * online se cosechan de anclas e iframes que mencionen episodio/
+     * capítulo con número. Diagnóstico generoso: el log mostrará el
+     * HTML alrededor de la pestaña y del primer iframe si no hay nada. */
+    const texto = String(r.text || '');
+    const vistos = new Set();
+    const lista = [];
+    const reA = /<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]{0,240}?)<\/a>/gi;
+    let m;
+    while ((m = reA.exec(texto)) && lista.length < 400) {
+      const href = decHtml(m[1]);
+      const t = limpio(m[2]);
+      const hm = /(?:episodio|cap[íi]tulo)\s*[- ]?(\d{1,4})/i.exec((t + ' ' + href));
+      if (!hm) continue;
+      const num = parseInt(hm[1], 10);
+      if (num < 1 || num > 9999 || vistos.has(num)) continue;
+      if (!/^(?:https?:\/\/|\/)/i.test(href)) continue;
+      if (/aysdo\.xyz\/(?:p|search|feeds)|facebook\.com|twitter|x\.com|t\.me|discord|wa\.me|kofi|ko-fi/i.test(href)) continue;
+      vistos.add(num);
+      lista.push({ season: 1, number: num, ref: 'ays:' + slug + ':' + num, title: 'Episodio ' + num });
+    }
+    /* Los players online: iframe con «Episodio N» al lado (el título
+     * va encima del reproductor). Se toma la marca MÁS CERCANA al
+     * iframe — la más lejana pertenece al episodio anterior. */
+    const reI = /<iframe\b[^>]*?(?:data-src|src)\s*=\s*["']([^"']+)["'][^>]*>/gi;
+    let im2;
+    while ((im2 = reI.exec(texto)) && lista.length < 400) {
+      const cerca = texto.slice(Math.max(0, im2.index - 400), im2.index);
+      const reH = /(?:episodio|cap[íi]tulo)\s*[- ]?(\d{1,4})/gi;
+      let hm = null, h2;
+      while ((h2 = reH.exec(cerca))) hm = h2;
+      if (!hm) continue;
+      const num = parseInt(hm[1], 10);
+      if (num < 1 || num > 9999 || vistos.has(num)) continue;
+      vistos.add(num);
+      lista.push({ season: 1, number: num, ref: 'ays:' + slug + ':' + num, title: 'Episodio ' + num });
+    }
+    log('ays post «' + slug + '»: ' + lista.length + ' episodios de anclas+iframes (' + texto.length + ' letras, ' + (texto.match(/<iframe/gi) || []).length + ' iframes)');
+    if (!lista.length) {
+      const iO = texto.search(/ver online|Ver Online/i);
+      const iF = texto.search(/<iframe/i);
+      const iD = iO >= 0 ? iO : iF;
+      log('ays diagnóstico: ' + (iD >= 0 ? texto.slice(Math.max(0, iD - 200), iD + 500).replace(/\s+/g, ' ') : 'sin pestaña «Ver Online» ni iframes en el HTML'));
+    }
+    if (!lista.length) {
+      throw kino.error('not_found', 'AySDO: 0 capítulos', {
+        userMessage: 'No se pudieron leer los capítulos de esta serie en AySDO.'
       });
     }
-    const lista = cosecha.orden.map(function (num) {
-      return { season: 1, number: num, ref: 'vitt:' + slug + ':' + num, title: 'Capítulo ' + num };
-    });
+    lista.sort(function (a, b) { return a.number - b.number; });
     return { series: { title: slugATitulo(slug.split('/').pop() || slug) }, episodes: lista };
   },
 
   async resolver(slug, n, idx) {
-    const r = await traer(BASE_VITT + '/' + slug + '.html', { timeoutMs: 12000, cuerpoSiempre: true });
+    const r = await traer(BASE_AYS + '/' + slug + '.html', { timeoutMs: 12000, cuerpoSiempre: true });
     if (!r.ok || !r.text) {
-      throw kino.error('not_found', 'Vitt no Fansub no entregó la serie', {
-        userMessage: 'No se pudo abrir este capítulo en Vitt no Fansub.'
+      throw kino.error('not_found', 'AySDO no entregó el episodio', {
+        userMessage: 'No se pudo abrir este episodio en AySDO.'
       });
     }
-    const cosecha = enlacesDeCapitulos(r.text);
-    const urls = cosecha.porNumero[n || cosecha.orden[0]] || [];
-    const servers = await servidoresDeDescarga(urls, BASE_VITT);
+    /* Los players online del post (iframes, data-player, anclas embed)
+     * los lee el cosechador genérico; cada extractor hace el resto. */
+    const servers = await servidoresDePagina(r.text, BASE_AYS);
     if (!servers.length) {
-      throw kino.error('unavailable', 'Vitt no Fansub: sin servidores abribles', {
-        userMessage: 'Vitt reparte este capítulo por un acortador de publicidad (ouo.io) que no abre sin JavaScript. AniJing no lo cruza: catálogo sí, reproducción no.'
+      throw kino.error('unavailable', 'AySDO: sin servidores abribles', {
+        userMessage: 'Este episodio de AySDO no trae reproductores que AniJing sepa abrir. Prueba otra fuente.'
       });
     }
     return await probarServidores(servers, idx, function (i) {
-      return 'vitt:' + slug + ':' + (n || 1) + ':' + i;
+      return 'ays:' + slug + ':' + (n || 1) + ':' + i;
     });
   }
 });
@@ -7443,8 +7245,7 @@ const FUENTES_PANTALLA = [
   { id: 'eas', nombre: 'EstrenosAnime' },
   { id: 'jara', nombre: 'AnimeJara' },
   { id: 'jl', nombre: 'Anime-JL' },
-  { id: 'cris', nombre: 'CrisAnime' },
-  { id: 'vitt', nombre: 'Vitt no Fansub' },
+  { id: 'ays', nombre: 'AySDO' },
   { id: 'iva', nombre: 'IvAnime' },
   { id: 'az', nombre: 'Az-Animex' },
   { id: 'btz', nombre: 'BeatZ-Anime' }
@@ -7535,11 +7336,11 @@ const NUCLEO_TODAS = {
   ayt: ['ayt-latest', 'ayt-peliculas'],
   eas: ['eas-eps', 'eas-sub', 'eas-lat', 'eas-popular'],
   jara: ['jara-emision', 'jara-catalogo'],
-  /* v0.6.60: VerAnime sale (muro CF eterno) y entran Anime-JL,
-   * CrisAnime y Vitt no Fansub con su núcleo. */
+  /* v0.6.60: VerAnime sale (muro CF eterno) y entra Anime-JL.
+   * v0.6.66: CrisAnime y Vitt salen (acortadores con muro de JS);
+   * entra AySDO, la recolectora de versiones fansub BD. */
   jl: ['jl-catalogo', 'jl-recientes'],
-  cris: ['cris-novedades'],
-  vitt: ['vitt-proyectos'],
+  ays: ['ays-recientes'],
   iva: ['iva-emision', 'iva-directorio'],
   /* v0.6.25: Az-Animex entra con el par de géneros esencial.
    * v0.6.29: y el Directorio A-Z — el catálogo entero a la vista. */
