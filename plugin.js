@@ -447,6 +447,12 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.55 «El riel gordo» — sondeo propio de las 10 fuentes: todas
+// vivas y con contenido (solo EstrenosAnime y VerAnime tras su muro CF
+// de siempre, BeatZ me bloquea a mí pero no al teléfono). El «faltan
+// animes» en las secciones era el tope de tarjetas por riel: ahora se
+// arma con 16/12/8/6/4 y el guard de 55 KB degrada solo si no cabe.
+
 // v0.6.54 «El lector paciente» — la 0.6.53 hace su trabajo (mapa flaco,
 // reintento 30 min, pósters del pintor OK en el log 20:57), pero el
 // respaldo por lector externo no rinde desde el teléfono: jina se queda
@@ -953,7 +959,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.54';
+const VERSION = '0.6.55';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -7256,11 +7262,12 @@ async function cargarPantalla(fuente) {
     }
   }
   const hero = fuente === 'todas' || fuente === 'av1' ? await heroDeAv1() : null;
-  /* v0.6.31: guarda de tamaño de verdad — se arma con 12/8/6/4
-   * tarjetas por riel y se queda con la PRIMERA versión que quepa
-   * bajo 55 KB (pasarse del tope de 64 KB deja el Inicio en blanco). */
+  /* v0.6.55: el tope sube — se arma con 16/12/8/6/4 tarjetas por riel
+   * y se queda con la PRIMERA versión que quepa bajo 55 KB (pasarse del
+   * tope de 64 KB deja el Inicio en blanco). Con muchas filas el
+   * presupuesto manda y degrada solo, igual que siempre. */
   let datos = null;
-  const anchos = filas.length > 18 ? [8, 6, 4] : [12, 8, 6, 4];
+  const anchos = [16, 12, 8, 6, 4];
   for (let ia = 0; ia < anchos.length; ia++) {
     const porRiel = anchos[ia];
     const fuera = [];

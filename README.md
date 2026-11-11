@@ -38,6 +38,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.55 «El riel gordo»
+
+Sondeo de las 10 fuentes: todas vivas y con contenido. El catálogo de las secciones cortaba en 8 tarjetas por riel cuando había muchas filas; ahora se arma con 16/12/8/6/4 y la guarda de tamaño degrada sola si el Inicio no cabe bajo su tope. Los animes que «faltaban» estaban tras el «Ver más» — ahora se ven más de entrada.
+
 ## v0.6.54 «El lector paciente»
 
 El respaldo de lectura del mapa BeatZ se fortalece: el lector externo (jina) pasa de 15 s a 25 s de espera y se añade un segundo espejo (codetabs). Cada respuesta se procesa con el cosechador HTML o el de markdown según su contenido. La 0.6.53 sigue haciendo su trabajo: mapa flaco detectado y reintento a los 30 minutos, pósters del pintor sirviendo.
