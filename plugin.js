@@ -447,6 +447,13 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.64 «El segundo intento» — el teléfono celebró: Anime-JL carga,
+// lista episodios del script y REPRODUCE (Voe + 8 alternativas). Pero
+// al bajar por su catálogo el sitio tropezó dos veces seguidas (status
+// 500 del sitio y status 0 de red) y el scroll se cortó con error. La
+// hoja del catálogo ahora insiste una vez tras 1.5 s: un tropiezo
+// pasajero no debe cortar la vuelta por el catálogo.
+
 // v0.6.63 «La lista escondida» — el diagnóstico de la 0.6.62 cantó: la
 // ficha de Anime-JL NO trae anclas de episodio; los episodios viven en
 // un script (var episodes = [[12,"episodio-12","…cover.jpg",""],…] y
@@ -1036,7 +1043,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.63';
+const VERSION = '0.6.64';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4741,7 +4748,17 @@ registrarFuente({
     if (!camino) return null;
     const pagina = parseInt(cursor, 10);
     const num = Number.isFinite(pagina) && pagina > 1 ? pagina : 1;
-    const r = await traer(BASE_JL + jlCaminoConPagina(camino, num), { timeoutMs: 12000, cuerpoSiempre: true });
+    /* v0.6.64 «El segundo intento»: el catálogo de Anime-JL tropieza a
+     * ratos (status 500 del sitio y status 0 de red en el teléfono, uno
+     * tras otro al bajar por el catálogo). Antes de rendir, un segundo
+     * intento tras una pausa corta: un 500 pasajero no debe cortar el
+     * scroll. */
+    let r = await traer(BASE_JL + jlCaminoConPagina(camino, num), { timeoutMs: 12000, cuerpoSiempre: true });
+    if (!r.ok) {
+      log('jl hoja «' + ref + '» página ' + num + ': status ' + r.status + ' — segundo intento');
+      await new Promise(function (ok) { setTimeout(ok, 1500); });
+      r = await traer(BASE_JL + jlCaminoConPagina(camino, num), { timeoutMs: 12000, cuerpoSiempre: true });
+    }
     if (!r.ok) {
       throw kino.error('unavailable', 'Anime-JL no respondió (status ' + r.status + ')', {
         userMessage: 'Anime-JL no respondió. Revisa tu conexión o inténtalo en un rato.'
