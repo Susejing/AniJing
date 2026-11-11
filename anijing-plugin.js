@@ -447,6 +447,18 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.50 «El retrato a su medida» — el sondeo 20:31 (0.6.49) mostró
+// el mapa vivo (14 fichas por el respaldo; la lista completa siguió
+// tras el muro) pero TODOS los pósters grises, incluso los que el
+// patrón acierta y que en la 0.6.47 se veían por URL directa. Causa:
+// mandar TODOS los pósters por image() los somete al tope de 256 KB
+// y al kino.fetch del plugin; el camino probado era Kino bajándolos
+// él solo. Ahora btzItemDe decide con el mapa EN CACHÉ: si el mapa
+// conoce el título bajo otro slug (secuela), handle del pintor; si
+// no, URL directa. El pintor, además, ya no falla en silencio: loguea
+// status/truncado/og:image en cada paso. Bug del cosechador Markdown
+// arreglado (recortaba el dígito inicial: «3-gatsu» → «-gatsu»).
+//
 // v0.6.49 «La lista completa» — el sondeo de las 20:19 (0.6.48 en el
 // teléfono, el pintor SÍ llegó) sentenció: el mapa cosechó 0 fichas
 // porque el inicio y sus /page/N/ están tras el muro intermitente de
@@ -906,7 +918,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.49';
+const VERSION = '0.6.50';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -6517,14 +6529,35 @@ async function btzSeries() {
  * secciones fuera de la carpeta Anime. */
 function btzItemDe(nombre, base) {
   const slug = String(nombre).toLowerCase().replace(/[.']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  /* v0.6.50 «El retrato a su medida»: el patrón directo vuelve a ser
+   * la regla (en la 0.6.47 se veía de lujo y Kino lo baja él solo, sin
+   * el tope de 256 KB del image()); SOLO cuando el mapa de la web —
+   * en caché, sin peticiones — conoce el título bajo OTRO slug (una
+   * secuela cuyo folder no coincide) el póster viaja con handle y lo
+   * sirve la cadena del pintor. */
+  const urlDirecta = BASE_BTZ + '/img/img-anime/' + slug + '/' + slug + '-port.jpg';
+  let poster = urlDirecta;
+  try {
+    let mapa = BTZ_MAPA.pares;
+    if (!mapa.length) {
+      const g = JSON.parse(String(kino.storage.get('btzMapaWeb') || 'null'));
+      mapa = (g && g.pares) || [];
+    }
+    const nombreNorm = String(nombre).toLowerCase().replace(/[^a-z0-9]+/g, '');
+    for (const par of mapa) {
+      const tn = String(par.titulo || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+      if (tn.length >= 4 && par.slug !== slug && (tn.indexOf(nombreNorm) >= 0 || (nombreNorm.length >= 4 && nombreNorm.indexOf(tn) >= 0))) {
+        poster = { source: 'plugin', handle: 'btz-poster-' + slug };
+        break;
+      }
+    }
+  } catch (eM) {}
   return {
     id: 'btz-' + String(nombre).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
     ref: 'btz:' + (base || BTZ_RAIZ) + '/' + String(nombre || '').trim(),
     title: String(nombre),
     kind: 'series',
-    /* v0.6.48: el póster viaja con handle y lo sirve image() con la
-     * cadena del pintor (patrón → ficha → mapa de la web). */
-    poster: { source: 'plugin', handle: 'btz-poster-' + slug },
+    poster: poster,
     badges: ['BeatZ-Anime']
   };
 }
@@ -6580,7 +6613,7 @@ async function btzMapaWeb() {
     while ((mM = reM.exec(text))) {
       const slug = mM[1];
       if (vistos[slug]) continue;
-      const titulo = decHtml(mM[0].slice(0, mM[0].indexOf(']('))).replace(/\s+/g, ' ').replace(/^[:#\s!0-9]*/, '').trim();
+      const titulo = decHtml(mM[0].slice(0, mM[0].indexOf(']('))).replace(/Image \d+:\s*/g, '').replace(/\s+/g, ' ').replace(/^[:#\s!]+/, '').trim();
       if (titulo && titulo.length >= 2) {
         vistos[slug] = titulo;
         pares.push({ slug: slug, titulo: titulo });
@@ -6627,7 +6660,8 @@ async function btzPosterDe(slug) {
   let r = null;
   try {
     r = await kino.fetch(directo, { headers: { Referer: BASE_BTZ + '/', 'User-Agent': UA }, timeoutMs: 9000, maxBytes: 262145 });
-  } catch (eF) { r = null; }
+  } catch (eF) { r = null; log('btz póster «' + slug + '»: patrón EXCEPCIÓN ' + ((eF && eF.message) || String(eF))); }
+  if (r && (r.status !== 200 || r.truncated === true)) log('btz póster «' + slug + '»: patrón status ' + (r && r.status) + (r && r.truncated === true ? ' (pesa más del tope de 256 KB)' : ''));
   if (r && r.status === 200 && r.truncated !== true) {
     const ct = String((r.headers && (r.headers['content-type'] || r.headers['Content-Type'])) || '');
     if (!/text\/html/i.test(ct)) {
@@ -6653,13 +6687,14 @@ async function btzPosterDe(slug) {
     try {
       r2 = await traer(ficha, { headers: { Referer: BASE_BTZ + '/' }, timeoutMs: 10000 });
     } catch (eF2) { r2 = null; }
-    if (!r2 || !r2.ok || !r2.text) continue;
+    if (!r2 || !r2.ok || !r2.text) { log('btz póster «' + slug + '»: ficha sin cuerpo ' + ficha + ' (status ' + (r2 && r2.status) + (r2 && r2.error ? ' — ' + r2.error.message : '') + ')'); continue; }
     const og = /<meta property="og:image" content="([^"]+)"/i.exec(r2.text) || /<meta content="([^"]+)" property="og:image"/i.exec(r2.text);
-    if (!og || !og[1]) continue;
+    if (!og || !og[1]) { log('btz póster «' + slug + '»: ficha sin og:image ' + ficha); continue; }
     let r3 = null;
     try {
       r3 = await kino.fetch(og[1], { headers: { Referer: BASE_BTZ + '/', 'User-Agent': UA }, timeoutMs: 9000, maxBytes: 262145 });
-    } catch (eF3) { r3 = null; }
+    } catch (eF3) { r3 = null; log('btz póster «' + slug + '»: og:image EXCEPCIÓN ' + ((eF3 && eF3.message) || String(eF3))); }
+    if (r3 && (r3.status !== 200 || r3.truncated === true)) log('btz póster «' + slug + '»: og:image status ' + (r3 && r3.status) + (r3 && r3.truncated === true ? ' (pesa más del tope de 256 KB)' : ''));
     if (r3 && r3.status === 200 && r3.truncated !== true) {
       const ct3 = String((r3.headers && (r3.headers['content-type'] || r3.headers['Content-Type'])) || '');
       if (!/text\/html/i.test(ct3)) {

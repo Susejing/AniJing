@@ -38,6 +38,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.50 «El retrato a su medida»
+
+El sondeo de las 20:31 aclaró el cuadro: el mapa ya cosecha (14 fichas por el respaldo; la lista completa siguió tras el muro de Cloudflare), pero **todos** los pósters de BeatZ quedaron grises — incluso los que el patrón acierta y que en la 0.6.47 se veían perfectos. La lección: mandar todos los pósters por el plugin los somete al tope de 256 KB y a la conexión del plugin; el camino que ya funcionaba era Kino bajándolos él solo. Ahora cada tarjeta decide con el mapa **en caché**: si el mapa conoce el título bajo otro slug (las secuelas), el póster viaja con handle y lo sirve la cadena del pintor; si no, URL directa de siempre. Y el pintor ya no falla en silencio: cada paso escribe su diagnóstico en el log. De paso, un bug del cosechador Markdown que recortaba el dígito inicial de los títulos («3-gatsu» → «-gatsu»).
+
 ## v0.6.49 «La lista completa»
 
 El sondeo del teléfono (0.6.48 en pantalla, el pintor sí llegó) dejó dos sentencias: el mapa de la web cosechó **0 fichas** — el inicio y sus páginas están tras el muro intermitente de Cloudflare — y la sonda revientaba con «invalid URL» porque le pasaba el handle del póster donde iba una URL. Arreglos: el mapa ahora cosecha de **`/lista-animes/`**, la página del propio sitio que enlista las ~240 fichas con su slug verdadero de una sola vez (con respaldo por lector externo si el muro corta el paso), y la sonda prueba la **cadena real del pintor** y reporta los KB de cada póster.
