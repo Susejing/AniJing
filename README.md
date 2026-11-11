@@ -38,6 +38,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.48 «El pintor de BeatZ»
+
+El truco completo de IvAnime y MangaTrack, ahora para BeatZ: los pósters vuelven a servirse desde el plugin con una cadena de tres pasos — el patrón del almacén, la ficha web con su og:image, y **el mapa de la web**: se cosechan del inicio (y sus páginas) los pares título→slug de todas las fichas BD, se casan con el nombre de la carpeta por parecido y se pide el og:image de la ficha *verdadera* — la que el patrón no adivina (las secuelas type «2nd Season» que vivían grises). Con caché de 24 horas y cuarentena para quienes no tengan imagen en ninguna parte.
+
 ## v0.6.47 «Volver al retrato»
 
 El sondeo del teléfono sentenció la 0.6.46: el padrón de BeatZ va de lujo (258 series, letras 62/64/55/77), pero la conexión del plugin **revienta con excepción** contra la web de BeatZ — así que servir los pósters desde el plugin los apagaba todos, incluso los que Kino cargaba bien él solo, y soltaba un toast de error por cada uno. Los pósters vuelven a la **URL directa** (Kino los baja él mismo, probado en el teléfono toda la tarde); las secuelas sin patrón quedan con su placeholder silencioso. La sonda ahora sí escribe el mensaje de cada excepción.

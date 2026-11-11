@@ -447,6 +447,19 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.48 «El pintor de BeatZ» — el usuario pidió el truco de IvAnime
+// y MangaTrack, y el sondeo de las 20:06 le dio la razón: kino.fetch
+// SÍ llega a la web (200 OK con el patrón; el status-0 de las 16:58
+// fue un mal rato transitorio). La cadena completa del pintor:
+// (1) el patrón <slug>-port.jpg; (2) la ficha /bd/<slug>.html con su
+// og:image; (3) NUEVO: el mapa de la web — se cosechan del inicio
+// (y sus páginas) los pares título→slug de TODAS las fichas /bd/,
+// se casan con el nombre de la carpeta por parecido de títulos y se
+// pide el og:image de la ficha VERDADERA (la secuela «3-gatsu no Lion
+// 2nd Season» vive en otro slug que el patrón no adivina). Con caché
+// de 24 h en kino.storage y cuarentena de 24 h para las que no tienen
+// imagen en ninguna parte (sin toasts repetidos).
+//
 // v0.6.47 «Volver al retrato» — el sondeo del teléfono (log 16:58)
 // sentenció la 0.6.46: el padrón va de lujo (258 series, letras
 // 62/64/55/77) pero kino.fetch REVIENTA con excepción (status 0, ni
@@ -882,7 +895,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.47';
+const VERSION = '0.6.48';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -6498,18 +6511,73 @@ function btzItemDe(nombre, base) {
     ref: 'btz:' + (base || BTZ_RAIZ) + '/' + String(nombre || '').trim(),
     title: String(nombre),
     kind: 'series',
-    /* v0.6.47: de vuelta a la URL directa — el sondeo del teléfono
-     * (log 16:58) mostró que kino.fetch revienta con excepción (status
-     * 0) contra www.beatz-anime.net, así que servir el póster desde el
-     * plugin era empeorar lo que Kino ya cargaba bien él solo. Quien
-     * no coincida con el patrón, placeholder de Kino (silencioso). */
-    poster: BASE_BTZ + '/img/img-anime/' + slug + '/' + slug + '-port.jpg',
+    /* v0.6.48: el póster viaja con handle y lo sirve image() con la
+     * cadena del pintor (patrón → ficha → mapa de la web). */
+    poster: { source: 'plugin', handle: 'btz-poster-' + slug },
     badges: ['BeatZ-Anime']
   };
 }
 
-/* v0.6.46 «El retrato rescatado»: la cadena del póster de BeatZ. */
+/* v0.6.48 «El pintor de BeatZ»: el mapa de la web — pares título→slug
+ * de todas las fichas /bd/, cosechados del inicio y sus páginas. Es lo
+ * que permite rescatar el póster de las secuelas, cuyo slug verdadero
+ * el patrón no adivina. Caché 24 h en memoria y en kino.storage. */
+var BTZ_MAPA = { t: 0, pares: [] };
+
+async function btzMapaWeb() {
+  if (BTZ_MAPA.pares.length && Date.now() - BTZ_MAPA.t < 24 * 60 * 60 * 1000) return BTZ_MAPA.pares;
+  let guardado = null;
+  try { guardado = JSON.parse(String(kino.storage.get('btzMapaWeb') || 'null')); } catch (eG) { guardado = null; }
+  if (guardado && guardado.pares && guardado.pares.length && Date.now() - (guardado.t || 0) < 24 * 60 * 60 * 1000) {
+    BTZ_MAPA.t = guardado.t || 0;
+    BTZ_MAPA.pares = guardado.pares;
+    return BTZ_MAPA.pares;
+  }
+  const pares = [];
+  const vistos = {};
+  for (let p = 1; p <= 12; p++) {
+    const r = await traer(p === 1 ? BASE_BTZ + '/' : BASE_BTZ + '/page/' + p + '/', { timeoutMs: 12000 });
+    if (!r.ok || !r.text) break;
+    let nuevas = 0;
+    const re1 = /<a[^>]+href="[^"]*\/bd\/([a-z0-9-]+)\.html"[^>]*>([^<]{2,140})<\/a>/gi;
+    let m1;
+    while ((m1 = re1.exec(r.text))) {
+      const slug = m1[1];
+      const titulo = decHtml(m1[2]).trim();
+      if (!titulo || vistos[slug]) continue;
+      vistos[slug] = titulo;
+      pares.push({ slug: slug, titulo: titulo });
+      nuevas++;
+    }
+    const re2 = /href="[^"]*\/bd\/([a-z0-9-]+)\.html"[^>]*>[\s\S]{0,300}?<h[1-4][^>]*>([\s\S]{2,140}?)<\/h[1-4]>/gi;
+    let m2;
+    while ((m2 = re2.exec(r.text))) {
+      const slug = m2[1];
+      const titulo = decHtml(String(m2[2]).replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
+      if (!titulo || vistos[slug]) continue;
+      vistos[slug] = titulo;
+      pares.push({ slug: slug, titulo: titulo });
+      nuevas++;
+    }
+    if (!nuevas) break;
+  }
+  if (pares.length) {
+    BTZ_MAPA.t = Date.now();
+    BTZ_MAPA.pares = pares;
+    try { kino.storage.set('btzMapaWeb', JSON.stringify({ t: BTZ_MAPA.t, pares: pares })); } catch (eS) {}
+    log('btz mapa web: ' + pares.length + ' fichas cosechadas');
+  }
+  return pares;
+}
+
+/* La cadena del pintor: patrón → ficha → mapa de la web. Con cuarentena
+ * de 24 h para los slugs que no tienen imagen en ninguna parte. */
 async function btzPosterDe(slug) {
+  let mal = null;
+  try { mal = JSON.parse(String(kino.storage.get('btzPosterMal') || 'null')); } catch (eM) { mal = null; }
+  if (mal && mal[slug] && Date.now() - mal[slug] < 24 * 60 * 60 * 1000) {
+    throw kino.error('unavailable', 'BeatZ: póster en cuarentena');
+  }
   const directo = BASE_BTZ + '/img/img-anime/' + slug + '/' + slug + '-port.jpg';
   let r = null;
   try {
@@ -6523,26 +6591,48 @@ async function btzPosterDe(slug) {
       if (bytes) return { bytes: bytes, mime: /png/i.test(ct) ? 'image/png' : (/webp/i.test(ct) ? 'image/webp' : 'image/jpeg') };
     }
   }
-  let f = null;
-  try { f = await btzFicha(slug); } catch (eFi) { f = null; }
-  if (f && f.poster) {
+  const nombre = slug.replace(/-/g, ' ');
+  const nombreNorm = nombre.toLowerCase().replace(/[^a-z0-9]+/g, '');
+  const fichas = [BASE_BTZ + '/bd/' + slug + '.html'];
+  try {
+    const mapa = await btzMapaWeb();
+    for (const par of mapa) {
+      const tituloNorm = String(par.titulo || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+      if (tituloNorm.length >= 4 && (tituloNorm.indexOf(nombreNorm) >= 0 || (nombreNorm.length >= 4 && nombreNorm.indexOf(tituloNorm) >= 0))) {
+        fichas.push(BASE_BTZ + '/bd/' + par.slug + '.html');
+      }
+    }
+  } catch (eMap) {}
+  for (const ficha of fichas) {
     let r2 = null;
     try {
-      r2 = await kino.fetch(f.poster, { headers: { Referer: BASE_BTZ + '/', 'User-Agent': UA }, timeoutMs: 9000, maxBytes: 262145 });
+      r2 = await traer(ficha, { headers: { Referer: BASE_BTZ + '/' }, timeoutMs: 10000 });
     } catch (eF2) { r2 = null; }
-    if (r2 && r2.status === 200 && r2.truncated !== true) {
-      const ct2 = String((r2.headers && (r2.headers['content-type'] || r2.headers['Content-Type'])) || '');
-      if (!/text\/html/i.test(ct2)) {
-        let bytes2 = '';
-        try { bytes2 = r2.base64(); } catch (eB2) { bytes2 = ''; }
-        if (bytes2) {
-          log('btz póster «' + slug + '»: el patrón falló — servido el og:image de su ficha');
-          return { bytes: bytes2, mime: /png/i.test(ct2) ? 'image/png' : (/webp/i.test(ct2) ? 'image/webp' : 'image/jpeg') };
+    if (!r2 || !r2.ok || !r2.text) continue;
+    const og = /<meta property="og:image" content="([^"]+)"/i.exec(r2.text) || /<meta content="([^"]+)" property="og:image"/i.exec(r2.text);
+    if (!og || !og[1]) continue;
+    let r3 = null;
+    try {
+      r3 = await kino.fetch(og[1], { headers: { Referer: BASE_BTZ + '/', 'User-Agent': UA }, timeoutMs: 9000, maxBytes: 262145 });
+    } catch (eF3) { r3 = null; }
+    if (r3 && r3.status === 200 && r3.truncated !== true) {
+      const ct3 = String((r3.headers && (r3.headers['content-type'] || r3.headers['Content-Type'])) || '');
+      if (!/text\/html/i.test(ct3)) {
+        let bytes3 = '';
+        try { bytes3 = r3.base64(); } catch (eB3) { bytes3 = ''; }
+        if (bytes3) {
+          log('btz póster «' + slug + '»: rescatado de ' + ficha);
+          return { bytes: bytes3, mime: /png/i.test(ct3) ? 'image/png' : (/webp/i.test(ct3) ? 'image/webp' : 'image/jpeg') };
         }
       }
     }
   }
-  log('btz póster «' + slug + '»: ni el patrón ni la ficha lo dieron — placeholder honesto');
+  try {
+    const mal2 = (mal && typeof mal === 'object') ? mal : {};
+    mal2[slug] = Date.now();
+    kino.storage.set('btzPosterMal', JSON.stringify(mal2));
+  } catch (eQ) {}
+  log('btz póster «' + slug + '»: ni el patrón, ni la ficha, ni el mapa lo dieron — placeholder honesto');
   throw kino.error('unavailable', 'BeatZ no entregó la imagen');
 }
 
@@ -7483,6 +7573,14 @@ async function action(key) {
       const conteo = BTZ_RANGOS.map((r) => r.id + '=' + series.filter((n) => btzEnRango(n, r.id)).length);
       log('sonda btz letras: ' + conteo.join(' '));
       partes.push('letras ' + conteo.join('/'));
+      try {
+        const mapa = await btzMapaWeb();
+        log('sonda btz mapa: ' + mapa.length + ' fichas cosechadas de la web');
+        partes.push('mapa ' + mapa.length);
+      } catch (eMap) {
+        log('sonda btz mapa FALLO: ' + ((eMap && eMap.message) || String(eMap)));
+        partes.push('mapa FALLO');
+      }
       let bien = 0;
       const muestras = series.slice(0, 3);
       for (const m of muestras) {
