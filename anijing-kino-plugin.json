@@ -1,10 +1,10 @@
 {
   "id": "anijing",
   "name": "AniJing",
-  "version": "0.6.59",
+  "version": "0.6.60",
   "apiVersion": 20,
   "entry": "plugin.js",
-  "description": "Anime en español desde AnimeAV1, MonosChinos, LataAnime, OtakusTV, AnimeYT, EstrenosAnime, AnimeJara, VerAnime, IvAnime, Az-Animex (descargas vía mirrored.to con nubes de streaming: Voe, StreamTape, StreamWish, LuluStream…) y BeatZ-Anime (BD 1080p subtitulado por descarga directa desde su almacén OpenList), con pantalla propia de Inicio (destacado del día, secciones por fuente, rieles con su Ver más y selector de fuentes), búsqueda, fichas, episodios y extractores de servidores con captura del navegador oculto para los multiservers. El anime con la firma de Susejing.",
+  "description": "Anime en español desde AnimeAV1, MonosChinos, LataAnime, OtakusTV, AnimeYT, EstrenosAnime, AnimeJara, Anime-JL (descargas Mega/Mediafire con opciones online), CrisAnime y Vitt no Fansub (fansub latino con karaokes y colores, descargas Mega/MediaFire/Fireload), IvAnime, Az-Animex (descargas vía mirrored.to con nubes de streaming: Voe, StreamTape, StreamWish, LuluStream…) y BeatZ-Anime (BD 1080p subtitulado por descarga directa desde su almacén OpenList), con pantalla propia de Inicio (destacado del día, secciones por fuente, rieles con su Ver más y selector de fuentes), búsqueda, fichas, episodios y extractores de servidores con captura del navegador oculto para los multiservers. El anime con la firma de Susejing.",
   "author": "Susejing",
   "homepage": "https://github.com/Susejing/AniJing",
   "visualBrowser": true,
@@ -31,7 +31,6 @@
     "henaojara2.com",
     "hj.animejara.com",
     "streamhj.top",
-    "veranime.ninja",
     "*.streamhj.top",
     "animeav1.com",
     "animeyt.cc",
@@ -210,6 +209,10 @@
     "rentry.co",
     "mediafire.com",
     "*.mediafire.com",
+    "anime-jl.net",
+    "*.anime-jl.net",
+    "crisanimex.com",
+    "vitt125nofansub.blogspot.com",
     "www.rentry.co",
     "yourupload.com"
   ],
@@ -366,24 +369,6 @@
       "type": "action",
       "label": "Preparar FireLoad",
       "hint": "Abre la ventanita del captcha del episodio pendiente (dale Play primero)"
-    },
-    {
-      "key": "aduanaVan",
-      "type": "section",
-      "label": "VerAnime"
-    },
-    {
-      "key": "veranimeCf",
-      "type": "action",
-      "label": "Pasar la revisión de VerAnime",
-      "hint": "Abre la ventanita, pasa la revisión de Cloudflare y la galleta se guarda sola"
-    },
-    {
-      "key": "veranimeCfCookie",
-      "type": "password",
-      "label": "Galleta de la revisión",
-      "hint": "Se llena sola al pasar la revisión",
-      "sync": false
     },
     {
       "key": "btzSonda",
