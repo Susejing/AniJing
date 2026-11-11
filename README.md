@@ -40,6 +40,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.61 «El molde beatz-dw»
+
+El primer teléfono de la 0.6.60 mandó tres cosas. **CrisAnime y Vitt caían en portada** con «defs is read-only»: Hermes no deja reasignar un `const` — `let` y a correr. **Sus descargas no van directas**: pasan por acortadores con muro de anuncios (`fire.crisanimex.com` → publicidad, `ouo.io`) y usan el mismo molde «beatz-dw» de OneFansub (marcas «Episodio/Capítulo N» + botones Descargar); el cosechador nuevo lee las marcas, sigue la cadena del acortador una vez y, si aterriza en MediaFire, sirve — si aterriza en publicidad, se descarta con bitácora honesta. **Anime-JL dio 0 capítulos** con el regex estricto: floja sobre el href, con diagnóstico en el log.
+
 ## v0.6.60 «El relevo»
 
 VerAnime sale: su muro de Cloudflare nunca cedió — ni la galleta `cf_clearance` de la ventanita ni el navegador oculto de Kino pasaron el reto (`blocked`), y sus filas llevaban meses calladas. Entran tres fuentes en su lugar: **Anime-JL** (anime-jl.net, catálogo ordenado con fichas, episodios y opciones online de los hosters de siempre), **CrisAnime** (crisanimex.com, un post por serie con los capítulos en Mega/MediaFire/Fireload/Mp4upload — MediaFire se resuelve con su página de descarga) y **Vitt no Fansub** (vitt125nofansub.blogspot.com, fansub latino con karaokes, colores y textos propios, leído por su feed JSON que nunca se cae). Mega queda fuera: su enlace va cifrado y se dice con honestidad. 13 fuentes.
