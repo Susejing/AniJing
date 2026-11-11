@@ -447,6 +447,19 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.47 «Volver al retrato» — el sondeo del teléfono (log 16:58)
+// sentenció la 0.6.46: el padrón va de lujo (258 series, letras
+// 62/64/55/77) pero kino.fetch REVIENTA con excepción (status 0, ni
+// siquiera 403) contra www.beatz-anime.net — servir los pósters desde
+// el plugin los apagaba TODOS, incluso los que Kino cargaba bien él
+// solo, y encima soltaba un toast de error por cada uno. Los pósters
+// vuelven a la URL directa (Kino los baja él mismo, probado en el
+// teléfono toda la tarde); las secuelas sin patrón quedan con su
+// placeholder silencioso. El rescate por og:image queda escrito pero
+// sin uso: depende de la misma conexión que el muro revienta. La
+// sonda ahora sí escribe el mensaje de la excepción (antes decía
+// «[object Object]»).
+//
 // v0.6.46 «El retrato rescatado» — el teléfono confirmó las letras
 // (captura 16:45) pero las portadas de BeatZ seguían grises a montones:
 // el patrón <slug>-port.jpg solo sirve cuando el folder del almacén
@@ -869,7 +882,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.46';
+const VERSION = '0.6.47';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -6485,10 +6498,12 @@ function btzItemDe(nombre, base) {
     ref: 'btz:' + (base || BTZ_RAIZ) + '/' + String(nombre || '').trim(),
     title: String(nombre),
     kind: 'series',
-    /* v0.6.46: el póster viaja como handle y image() lo sirve — primero
-     * el patrón <slug>-port.jpg y, si el almacén lo rompe (secuelas cuyo
-     * folder no coincide), el og:image de la ficha /bd/<slug>.html. */
-    poster: { source: 'plugin', handle: 'btz-poster-' + slug },
+    /* v0.6.47: de vuelta a la URL directa — el sondeo del teléfono
+     * (log 16:58) mostró que kino.fetch revienta con excepción (status
+     * 0) contra www.beatz-anime.net, así que servir el póster desde el
+     * plugin era empeorar lo que Kino ya cargaba bien él solo. Quien
+     * no coincida con el patrón, placeholder de Kino (silencioso). */
+    poster: BASE_BTZ + '/img/img-anime/' + slug + '/' + slug + '-port.jpg',
     badges: ['BeatZ-Anime']
   };
 }
@@ -7474,7 +7489,11 @@ async function action(key) {
         const it = btzItemDe(m);
         try {
           const rp = await traer(it.poster, { timeoutMs: 10000 });
-          log('sonda btz póster «' + m + '»: ' + rp.status + ' ' + (rp.ok ? 'OK' : 'FALLO') + ' ' + it.poster);
+          if (rp.error) {
+            log('sonda btz póster «' + m + '»: EXCEPCIÓN ' + ((rp.error && rp.error.message) || String(rp.error)) + ' ' + it.poster);
+          } else {
+            log('sonda btz póster «' + m + '»: ' + rp.status + ' ' + (rp.ok ? 'OK' : 'FALLO') + ' ' + it.poster);
+          }
           if (rp.ok) bien++;
         } catch (eP) {
           log('sonda btz póster «' + m + '»: EXCEPCIÓN ' + ((eP && eP.message) || String(eP)));
