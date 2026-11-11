@@ -40,6 +40,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.64 «El segundo intento**
+
+Anime-JL ya carga, lista episodios del script y **reproduce** — pero al bajar por su catálogo el sitio tropezó dos veces seguidas (status 500 y status 0) y el scroll se cortó con error. La hoja del catálogo ahora insiste una vez tras 1.5 s antes de rendir: un tropiezo pasajero no corta la vuelta.
+
 ## v0.6.63 «La lista escondida»
 
 El diagnóstico de la 0.6.62 cantó claro: **la ficha de Anime-JL no trae anclas** — sus episodios viven en un `var episodes = [[12,"episodio-12",…],…]` dentro de un `<script>` que `renderEpisodes()` pinta con JavaScript. AniJing ahora lee esa variable y arma el camino con `var anime_info`. **CrisAnime** escondía otra sorpresa: sus botones de descarga van por subdominios-acortador propios (`kiyax`/`raygo`/`oscux`.crisanimex.com) que terminan en `clksz.com`, un muro de anuncios con anti-adblock — el filtro los acepta, el seguidor los intenta y, si el muro no cede, el mensaje lo nombra: catálogo y capítulos sí, reproducción no.
@@ -274,8 +278,4 @@ La 0.6.9 llegó al teléfono con el catálogo de AnimeJara cargando pero **cualq
 Con ellas, la ventanita de «Pasar la revisión» de Cloudflare se retira: ninguna fuente viva la pide hoy. Los episodios sintetizados de AnimeJara son la única apuesta a ciegas: si un capítulo no existe, el aviso honesto lo dice.
 
 ## v0.6.8 «La mudanza»
-
-La 0.6.7 llegó al teléfono con AnimeYT ya reproduciendo (varios sí, algunos no: los Ok.ru muertos de algunos capítulos dan 400 y la captura de Filemoon no siempre pesca), pero **AnimeOnline se quedó mudo: ni catálogo vivo ni episodios**. La causa no fue el plugin sino el sitio: **AnimeOnline se mudó de ww3 a ww4** — ww3.animeonline.ninja sirve ahora la página de aterrizaje de otro sitio y a cada camino del viejo contestaba sin catálogo, mientras que el sitio de verdad vive en ww4 (la ventanita de la revisión lo delataba: sus portadas cargaban allí en color, y el catálogo del teléfono era solo el rescate de la ventanita). La base del plugin se muda a ww4 — que el manifiesto ya conocía — y con ella casan la galleta de la revisión, las fichas, los episodios y el endpoint Dooplay. Los pósters siguen en manos del Cloudflare del sitio: la app los pide sin galleta y él la cierra; el rastro del log queda por si hace falta mirar más.
-
-## v0.6.7 «La segunda vista»
 
