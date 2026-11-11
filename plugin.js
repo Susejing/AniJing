@@ -447,6 +447,18 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.63 «La lista escondida» — el diagnóstico de la 0.6.62 cantó: la
+// ficha de Anime-JL NO trae anclas de episodio; los episodios viven en
+// un script (var episodes = [[12,"episodio-12","…cover.jpg",""],…] y
+// renderEpisodes() los pinta con JavaScript). Ahora se lee la variable
+// y el camino sale de var anime_info = ["2624", título, "slug", …].
+// CrisAnime: sus botones de descarga no van por fire.crisanimex.com
+// sino por subdominios-acortador propios (kiyax/raygo/oscux) que
+// terminan en clksz.com, un muro de anuncios con anti-adblock y
+// JavaScript — el filtro de enlaces de descarga los acepta, el
+// seguidor de acortadores los intenta, y si el muro no cede el
+// mensaje lo nombra: catálogo y capítulos sí, reproducción no.
+
 // v0.6.62 «El corta-corriente» — el segundo teléfono mandó tres lecciones.
 // (1) IvAnime respondió status 0 en TODAS sus filas y sus esperas de 13 s
 // tumbaron el screenEvent de Kino (tope de 20 s) con la pantalla roja
@@ -1024,7 +1036,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.62';
+const VERSION = '0.6.63';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4788,6 +4800,25 @@ registrarFuente({
       vistos.add(num);
       lista.push({ season: 1, number: num, ref: 'jl:' + camino + ':' + num, title: 'Episodio ' + num });
     }
+    /* v0.6.63 «La lista escondida»: la ficha de Anime-JL NO trae anclas —
+     * los episodios viven en un script: var episodes = [[12,"episodio-12",
+     * "episodes_tumbl/….jpg",""],…] y renderEpisodes() los pinta con
+     * JavaScript. Se lee la variable (JSON con comillas simples no hay;
+     * los elementos son [num, "episodio-N", portada, ""]) y el camino se
+     * arma con var anime_info = ["2624", título, "slug", …]. */
+    if (!lista.length) {
+      const aiM = /var\s+anime_info\s*=\s*\[\s*"(\d+)"\s*,[\s\S]{0,300}?"([a-z0-9-]+)"/i.exec(texto);
+      const epRe = /\[\s*(\d{1,4})\s*,\s*"episodio-\d+"/g;
+      let e;
+      while ((e = epRe.exec(texto)) && lista.length < 400) {
+        const num = parseInt(e[1], 10);
+        if (num < 1 || num > 9999 || vistos.has(num)) continue;
+        vistos.add(num);
+        const camino = aiM ? (aiM[1] + '/' + aiM[2]) : slug;
+        lista.push({ season: 1, number: num, ref: 'jl:' + camino + ':' + num, title: 'Episodio ' + num });
+      }
+      if (lista.length) log('jl ficha «' + slug + '»: ' + lista.length + ' episodios leídos del script var episodes');
+    }
     log('jl ficha «' + slug + '»: ' + lista.length + ' episodios de ' + (texto.match(/episodio-\d+/gi) || []).length + ' menciones (' + texto.length + ' letras)');
     if (!lista.length) {
       /* v0.6.62: la muestra ahora apunta a la PRIMERA mención de
@@ -4875,7 +4906,7 @@ function crisTarjetas(html) {
  * igual: el resolve dirá con honestidad si el muro no cede. */
 function enlacesDeCapitulos(html) {
   const texto = String(html || '');
-  const DL = /(mediafire\.com|mega\.nz|fireload\.com|mp4upload\.com|fire\.crisanimex\.com|ouo\.io)/i;
+  const DL = /(mediafire\.com|mega\.nz|fireload\.com|mp4upload\.com|fire\.crisanimex\.com|ouo\.io|[a-z0-9-]+\.crisanimex\.com)/i;
   const marcas = [];
   const reM = /(?:Cap[íi]tulo|Episodio)\s*(\d{1,4})/gi;
   let m;
@@ -4938,9 +4969,11 @@ async function servidoresDeDescarga(urls, refBase) {
         nombre: 'FireLoad', url: u, tipo: 'directo',
         directo: { url: u, mime: mimeDe(u), headers: { Referer: 'https://www.fireload.com/', 'User-Agent': UA } }
       });
-    } else if (/fire\.crisanimex\.com|ouo\.io/i.test(u)) {
+    } else if (/ouo\.io|[a-z0-9-]+\.crisanimex\.com/i.test(u) && !/^(?:www\.)?crisanimex\.com/i.test(u)) {
       /* el acortador: se sigue la cadena de saltos y se mira dónde
-       * cayó — MediaFire servible, publicidad no. */
+       * cayó — MediaFire servible, Mp4Upload servible, publicidad no.
+       * v0.6.63: CrisAnime usa subdominios-acortador propios
+       * (kiyax/raygo/oscux.crisanimex.com), no solo fire. */
       try {
         const r = await traer(u, { timeoutMs: 12000, cuerpoSiempre: true });
         const finalU = String((r && r.url) || '');
@@ -4950,6 +4983,8 @@ async function servidoresDeDescarga(urls, refBase) {
             nombre: 'MediaFire', url: d, tipo: 'directo',
             directo: { url: d, mime: mimeDe(d), headers: { Referer: 'https://www.mediafire.com/', 'User-Agent': UA } }
           });
+        } else if (/mp4upload\.com/i.test(finalU)) {
+          servers.push({ nombre: 'Mp4Upload', url: finalU, tipo: 'mp4upload' });
         } else {
           log('acortador sin video: ' + u.slice(0, 60) + ' → ' + (finalU || 'sin respuesta').slice(0, 60));
         }
@@ -5067,7 +5102,7 @@ registrarFuente({
     const servers = await servidoresDeDescarga(urls, BASE_CRIS);
     if (!servers.length) {
       throw kino.error('unavailable', 'CrisAnime: sin servidores abribles', {
-        userMessage: 'CrisAnime reparte este capítulo por enlaces en Mega (cifrado) o tras un acortador de publicidad que AniJing no cruza. Prueba otro capítulo o fuente.'
+        userMessage: 'CrisAnime reparte este capítulo por acortadores de publicidad (kiyax/raygo/oscux → clksz.com) que no abren sin JavaScript. AniJing no los cruza: catálogo sí, reproducción no.'
       });
     }
     return await probarServidores(servers, idx, function (i) {
