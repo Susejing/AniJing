@@ -38,6 +38,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.56 «El abecedario»
+
+Los catálogos cortos, revisados fuente por fuente con sondeo del día: **LataAnime** — su Directorio ahora recorre el abecedario (el sitio ignora ?page= pero paga por ?letra=). **AnimeYT** — estrena fila «Catálogo» con su directorio completo (1.086 obras, paginado). **AnimeJara** — una página corta ya no corta el catálogo (umbral de «hay siguiente» de 12 a 6). **MonosChinos** ya paginaba completo (4.466 series).
+
 ## v0.6.55 «El riel gordo»
 
 Sondeo de las 10 fuentes: todas vivas y con contenido. El catálogo de las secciones cortaba en 8 tarjetas por riel cuando había muchas filas; ahora se arma con 16/12/8/6/4 y la guarda de tamaño degrada sola si el Inicio no cabe bajo su tope. Los animes que «faltaban» estaban tras el «Ver más» — ahora se ven más de entrada.

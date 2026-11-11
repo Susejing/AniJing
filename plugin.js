@@ -447,6 +447,15 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.56 «El abecedario» — la queja del catálogo corto, sondeada hoy:
+// LataAnime no pagina por número (?page= se ignora) pero SÍ por letra
+// (?letra=A/B verificado con títulos distintos) — el Directorio ahora
+// recorre el abecedario. AnimeYT: /tv/ es su directorio (1.086 obras) y
+// estrena fila «Catálogo» propia con su /tv/page/N/. AnimeJara: el
+// umbral de «hay siguiente» baja de 12 a 6 tarjetas para que una página
+// corta no corte el riel (su /catalogo?page=2 verificado vía jina).
+// MonosChinos ya paginaba bien (4.466 series, ?p=N verificado).
+
 // v0.6.55 «El riel gordo» — sondeo propio de las 10 fuentes: todas
 // vivas y con contenido (solo EstrenosAnime y VerAnime tras su muro CF
 // de siempre, BeatZ me bloquea a mí pero no al teléfono). El «faltan
@@ -959,7 +968,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.55';
+const VERSION = '0.6.56';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -2885,7 +2894,23 @@ registrarFuente({
     else if (ref === 'lat-latino') camino = '/buscar?q=latino';
     else if (ref === 'lat-castellano') camino = '/buscar?q=castellano';
     else if (ref === 'lat-emision') camino = '/emision';
-    else if (ref === 'lat-animes') camino = '/animes';
+    else if (ref === 'lat-animes') {
+      /* v0.6.56 «El abecedario»: el Directorio de LataAnime no pagina
+       * por número (?page= se ignora, sonda de siempre) pero SÍ por
+       * letra (?letra=A, B… verificado hoy: página 1 y letra A/B traen
+       * títulos distintos). El cursor ahora es la letra: página 1 sin
+       * filtro, luego A, B… hasta Z y se cierra. */
+      const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+      const curs = String(cursor || '').trim();
+      const indice = letras.indexOf(curs.toUpperCase());
+      const letra = indice >= 0 ? letras[indice] : null;
+      camino = '/animes' + (letra ? '?letra=' + letra : '');
+      const pagina = await traerLat(camino, 12000);
+      if (!pagina.ok) return { items: [], next: null };
+      const its = latTarjetas(pagina.text).slice(0, 60);
+      const siguiente = letra ? (letras.indexOf(letra) < letras.length - 1 ? letras[letras.indexOf(letra) + 1] : null) : letras[0];
+      return { items: its, next: its.length ? siguiente : null };
+    }
     else if (ref.indexOf('lat-genero-') === 0) { camino = '/genero/' + ref.slice('lat-genero-'.length); paginado = true; }
     if (!camino) return null;
     const pag = parseInt(String(cursor || '1'), 10) || 1;
@@ -3630,6 +3655,14 @@ registrarFuente({
         const items = aytTarjetas(r.text).slice(0, 20);
         return items.length ? { id: 'ayt-latest', title: 'Últimos agregados · AnimeYT', ref: 'ayt-latest', items: items } : null;
       })(),
+      /* v0.6.56 «El archivo»: /tv/ ES el directorio de AnimeYT (1.086 obras,
+       * verificado hoy) y pagina con /tv/page/N/ — ahora tiene su fila
+       * «Catálogo» propia además de Últimos agregados. */
+      (async () => {
+        const r = await traer(BASE_AYT + '/tv/', { headers: { Referer: BASE_AYT + '/' }, timeoutMs: 9000 });
+        const items = aytTarjetas(r.text).slice(0, 20);
+        return items.length ? { id: 'ayt-catalogo', title: 'Catálogo · AnimeYT', ref: 'ayt-catalogo', items: items } : null;
+      })(),
       /* v0.6.24: el ?tipo=pelicula era papel — el sitio lo ignora y
        * mostraba series; /pelicula/ es la página real (sonda v39: 200
        * con tarjetas de película). */
@@ -3665,6 +3698,7 @@ registrarFuente({
     let camino = null;
     let paginado = false;
     if (ref === 'ayt-latest') { camino = '/tv/' + (num > 1 ? 'page/' + num + '/' : ''); paginado = true; }
+    else if (ref === 'ayt-catalogo') { camino = '/tv/' + (num > 1 ? 'page/' + num + '/' : ''); paginado = true; } /* v0.6.56 */
     /* v0.6.24: /pelicula/ pagina con /pelicula/page/N/ (sonda v39:
      * página 2 responde 200 con títulos distintos). Ranking, temporada
      * y género son de una sola página — page/2 devuelve lo mismo y no
@@ -4388,7 +4422,7 @@ registrarFuente({
     }
     const items = jaraTarjetas(r.text).slice(0, 60);
     let next = null;
-    if ((ref === 'jara-catalogo' || esGenero) && items.length >= 12) next = String(num + 1);
+    if ((ref === 'jara-catalogo' || esGenero) && items.length >= 6) next = String(num + 1); /* v0.6.56: umbral 12→6, una página corta ya no corta el riel */
     return { items: items, next: next };
   },
 
