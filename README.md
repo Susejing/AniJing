@@ -38,6 +38,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.51 «La cuarentena corta»
+
+La captura de las 20:39 confirmó el híbrido: la mayoría de las portadas de BeatZ volvió. Dos pulidos finales: la **cuarentena** de 24 h que la 0.6.49 sembró cuando todo fallaba seguía bloqueando el reintento — ahora viaja con la versión y cada versión nueva la borra; y el match del mapa era demasiado ansioso — «Goblin Slayer» lo emparientan con «Goblin Slayer - Goblins Crown» (otra serie) y lo mandaban al pintor sin necesidad. Ahora solo cruza cuando el título coincide **exacto** (normalizado) o lo que sobra es un marcador de secuela (2nd Season, II, película, número) — nunca un «empieza igual».
+
 ## v0.6.50 «El retrato a su medida»
 
 El sondeo de las 20:31 aclaró el cuadro: el mapa ya cosecha (14 fichas por el respaldo; la lista completa siguió tras el muro de Cloudflare), pero **todos** los pósters de BeatZ quedaron grises — incluso los que el patrón acierta y que en la 0.6.47 se veían perfectos. La lección: mandar todos los pósters por el plugin los somete al tope de 256 KB y a la conexión del plugin; el camino que ya funcionaba era Kino bajándolos él solo. Ahora cada tarjeta decide con el mapa **en caché**: si el mapa conoce el título bajo otro slug (las secuelas), el póster viaja con handle y lo sirve la cadena del pintor; si no, URL directa de siempre. Y el pintor ya no falla en silencio: cada paso escribe su diagnóstico en el log. De paso, un bug del cosechador Markdown que recortaba el dígito inicial de los títulos («3-gatsu» → «-gatsu»).

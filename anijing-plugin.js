@@ -447,6 +447,17 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.51 «La cuarentena corta» — la captura 20:39 confirmó el
+// híbrido: la mayoría de las portadas volvió. Dos pulidos: (1) la
+// cuarentena de 24 h sembrada por la 0.6.49 seguía bloqueando el
+// reintento («póster en cuarentena» para los tres de la sonda) —
+// ahora viaja con la versión y cada versión nueva la borra; (2) el
+// match del mapa era ansioso: «Goblin Slayer» lo emparientan con
+// «Goblin Slayer - Goblins Crown» (OTRA serie) y lo mandaba al
+// pintor sin necesidad. Ahora solo cruza cuando el título coincide
+// EXACTO (normalizado) o lo que sobra es marcador de secuela
+// (2nd Season, II, película, número) — nunca un «empieza igual».
+//
 // v0.6.50 «El retrato a su medida» — el sondeo 20:31 (0.6.49) mostró
 // el mapa vivo (14 fichas por el respaldo; la lista completa siguió
 // tras el muro) pero TODOS los pósters grises, incluso los que el
@@ -918,7 +929,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.50';
+const VERSION = '0.6.51';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -6546,7 +6557,17 @@ function btzItemDe(nombre, base) {
     const nombreNorm = String(nombre).toLowerCase().replace(/[^a-z0-9]+/g, '');
     for (const par of mapa) {
       const tn = String(par.titulo || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
-      if (tn.length >= 4 && par.slug !== slug && (tn.indexOf(nombreNorm) >= 0 || (nombreNorm.length >= 4 && nombreNorm.indexOf(tn) >= 0))) {
+      let contradice = false;
+      if (tn === nombreNorm && par.slug !== slug) contradice = true;
+      /* «empieza igual» NO basta: «Goblin Slayer» no es «Goblin Slayer
+       * - Goblins Crown» (otra serie). Solo si lo que sobra es un
+       * marcador de secuela (2nd Season, II, película…) se cruza. */
+      if (!contradice && tn.length >= 8 && nombreNorm.length >= 8 && (tn.indexOf(nombreNorm) === 0 || nombreNorm.indexOf(tn) === 0)) {
+        const largo = tn.length > nombreNorm.length ? tn : nombreNorm;
+        const resto = largo.slice(Math.min(tn.length, nombreNorm.length));
+        if (/(season|temporada|movie|pelicula|ova|especial|^part)/.test(resto) || /^[0-9]+$/.test(resto) || /^[ivxl]+m?$/.test(resto) || /^[0-9]*(nd|rd|st|th)/.test(resto)) contradice = true;
+      }
+      if (contradice) {
         poster = { source: 'plugin', handle: 'btz-poster-' + slug };
         break;
       }
@@ -6651,9 +6672,14 @@ async function btzMapaWeb() {
 /* La cadena del pintor: patrón → ficha → mapa de la web. Con cuarentena
  * de 24 h para los slugs que no tienen imagen en ninguna parte. */
 async function btzPosterDe(slug) {
+  /* La cuarentena viaja con la versión: cada versión nueva la borra,
+   * para que un arreglo no quede preso 24 h de los fallos anteriores
+   * (lección del sondeo 20:39: «póster en cuarentena» para todos). */
   let mal = null;
   try { mal = JSON.parse(String(kino.storage.get('btzPosterMal') || 'null')); } catch (eM) { mal = null; }
-  if (mal && mal[slug] && Date.now() - mal[slug] < 24 * 60 * 60 * 1000) {
+  if (!mal || mal.v !== VERSION || typeof mal.mal !== 'object' || !mal.mal) mal = { v: VERSION, mal: {} };
+  const malMapa = mal.mal;
+  if (malMapa[slug] && Date.now() - malMapa[slug] < 24 * 60 * 60 * 1000) {
     throw kino.error('unavailable', 'BeatZ: póster en cuarentena');
   }
   const directo = BASE_BTZ + '/img/img-anime/' + slug + '/' + slug + '-port.jpg';
@@ -6708,9 +6734,8 @@ async function btzPosterDe(slug) {
     }
   }
   try {
-    const mal2 = (mal && typeof mal === 'object') ? mal : {};
-    mal2[slug] = Date.now();
-    kino.storage.set('btzPosterMal', JSON.stringify(mal2));
+    malMapa[slug] = Date.now();
+    kino.storage.set('btzPosterMal', JSON.stringify({ v: VERSION, mal: malMapa }));
   } catch (eQ) {}
   log('btz póster «' + slug + '»: ni el patrón, ni la ficha, ni el mapa lo dieron — placeholder honesto');
   throw kino.error('unavailable', 'BeatZ no entregó la imagen');
