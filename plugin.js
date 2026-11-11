@@ -447,6 +447,15 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.65 «Los papeles en regla» — el teléfono señaló el papel faltante:
+// Kino rechazó el acortador de CrisAnime con «AniJing necesita
+// kiyax.crisanimex.com, que no está aprobado» — el manifiesto solo
+// declaraba crisanimex.com pelado. Entran *.crisanimex.com (kiyax,
+// raygo, oscux, fire), clksz.com (el muro final) y ouo.io (el de Vitt).
+// Kino pedirá re-aprobación una vez al actualizar. La verdad no cambia:
+// los acortadores rematan en muros de JavaScript, así que cris y vitt
+// siguen catálogo y capítulos sí, reproducción no.
+
 // v0.6.64 «El segundo intento» — el teléfono celebró: Anime-JL carga,
 // lista episodios del script y REPRODUCE (Voe + 8 alternativas). Pero
 // al bajar por su catálogo el sitio tropezó dos veces seguidas (status
@@ -1043,7 +1052,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.64';
+const VERSION = '0.6.65';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
