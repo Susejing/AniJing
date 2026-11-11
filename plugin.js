@@ -447,6 +447,14 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.52 «La sonda con slug» — los diagnósticos de la 0.6.50
+// hablaron y sentenciaron: la sonda le pasaba a btzPosterDe el
+// NOMBRE de la carpeta («3-gatsu no Lion», con espacios) y todo
+// daba 404 («bd/3-gatsu no Lion.html»); la pantalla real usa el
+// slug del handle y por eso sus portadas sí cargan. btzSlugDe()
+// unifica la conversión nombre→slug y la sonda la usa. El pintor
+// estaba bien todo el tiempo.
+//
 // v0.6.51 «La cuarentena corta» — la captura 20:39 confirmó el
 // híbrido: la mayoría de las portadas volvió. Dos pulidos: (1) la
 // cuarentena de 24 h sembrada por la 0.6.49 seguía bloqueando el
@@ -929,7 +937,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.51';
+const VERSION = '0.6.52';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -6538,8 +6546,16 @@ async function btzSeries() {
  * que no, cae al placeholder de Kino sin romper nada). Mismo slug que
  * btzFicha adivina para las fichas. v0.6.42: base opcional para las
  * secciones fuera de la carpeta Anime. */
+/* v0.6.52: el slug de un nombre de carpeta, en UNA función — la
+ * sonda de las 20:46 le pasó a btzPosterDe el nombre crudo («3-gatsu
+ * no Lion», con espacios) y todo dio 404; la pantalla real usa el
+ * slug del handle y por eso sus portadas sí cargan. */
+function btzSlugDe(nombre) {
+  return String(nombre).toLowerCase().replace(/[.']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
 function btzItemDe(nombre, base) {
-  const slug = String(nombre).toLowerCase().replace(/[.']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const slug = btzSlugDe(nombre);
   /* v0.6.50 «El retrato a su medida»: el patrón directo vuelve a ser
    * la regla (en la 0.6.47 se veía de lujo y Kino lo baja él solo, sin
    * el tope de 256 KB del image()); SOLO cuando el mapa de la web —
@@ -7689,12 +7705,12 @@ async function action(key) {
       let bien = 0;
       const muestras = series.slice(0, 3);
       for (const m of muestras) {
-        /* v0.6.49: se prueba la cadena REAL del pintor (btzPosterDe),
-         * no it.poster — que desde la 0.6.48 es un handle, no una URL
-         * (por eso el sondeo de las 20:19 dijo «invalid URL: [object
-         * Object]»). */
+        /* v0.6.52: con slug, como lo hace la pantalla — el nombre
+         * crudo mandaba fichas «bd/3-gatsu no Lion.html» con espacios
+         * y todo daba 404 (log 20:46). */
+        const slugMuestra = btzSlugDe(m);
         try {
-          const rimg = await btzPosterDe(m);
+          const rimg = await btzPosterDe(slugMuestra);
           const kb = rimg && rimg.bytes ? Math.round(rimg.bytes.length * 3 / 4 / 102.4) / 10 : 0;
           log('sonda btz póster «' + m + '»: OK ' + kb + ' KB (cadena del pintor)');
           bien++;

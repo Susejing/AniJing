@@ -38,6 +38,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.52 «La sonda con slug»
+
+Los diagnósticos que la 0.6.50 añadió al pintor hablaron y absolvieron al pintor: la **sonda** le pasaba el nombre de la carpeta crudo («3-gatsu no Lion», con espacios) donde iba el slug («3-gatsu-no-lion»), así que sus fichas daban 404 siempre — la pantalla real usa el slug del handle y por eso sus portadas sí cargan. La conversión nombre→slug vive ahora en una sola función (`btzSlugDe`) que comparten la pantalla y la sonda.
+
 ## v0.6.51 «La cuarentena corta»
 
 La captura de las 20:39 confirmó el híbrido: la mayoría de las portadas de BeatZ volvió. Dos pulidos finales: la **cuarentena** de 24 h que la 0.6.49 sembró cuando todo fallaba seguía bloqueando el reintento — ahora viaja con la versión y cada versión nueva la borra; y el match del mapa era demasiado ansioso — «Goblin Slayer» lo emparientan con «Goblin Slayer - Goblins Crown» (otra serie) y lo mandaban al pintor sin necesidad. Ahora solo cruza cuando el título coincide **exacto** (normalizado) o lo que sobra es un marcador de secuela (2nd Season, II, película, número) — nunca un «empieza igual».
