@@ -447,6 +447,18 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.61 «El molde beatz-dw» — el primer teléfono de la 0.6.60 mandó
+// tres cosas. (1) «defs is read-only»: Hermes no deja reasignar un
+// const — las portadas de CrisAnime y Vitt caían; «let» y a correr.
+// (2) Los enlaces de descarga de CrisAnime y Vitt NO van directos:
+// pasan por acortadores con muro de anuncios (fire.crisanimex.com →
+// publicidad, ouo.io) y usan el mismo molde «beatz-dw» de OneFansub
+// (marcas «Episodio/Capítulo N» + botones Descargar). El cosechador
+// nuevo lee las marcas, sigue la cadena del acortador una vez y, si
+// aterriza en MediaFire, sirve; si aterriza en publicidad, se descarta
+// con bitácora. (3) Anime-JL dio 0 capítulos con el regex estricto:
+// floja sobre el href, con diagnóstico «jl fichá …» en el log.
+//
 // v0.6.60 «El relevo» — sale VerAnime: su muro de Cloudflare nunca cedió
 // (ni la galleta cf_clearance ni el navegador oculto pasaron el reto;
 // kino.browser.page respondió «blocked») y sus filas llevaban meses
@@ -1000,7 +1012,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.60';
+const VERSION = '0.6.61';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4741,17 +4753,30 @@ registrarFuente({
     /* La ficha trae «Lista de episodios»: anclas
      * /anime/<id>/<slug-ep>/episodio-N/. El slug del episodio puede
      * diferir del de la ficha (re-subidas), así que el ref guarda el
-     * camino completo del episodio. */
+     * camino completo del episodio. v0.6.61: regex floja sobre el href
+     * (el teléfono dio 0 capítulos con la estricta) y diagnóstico en
+     * el log con conteos y una muestra. */
+    const texto = String(r.text || '');
     const vistos = new Set();
     const lista = [];
-    const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/anime\/([^"'\/?#]+)\/([^"'\/?#]+)\/episodio-(\d+)\/?["']/gi;
+    const re = /href\s*=\s*["']([^"']*\/anime\/[^"']*\/episodio-(\d+)[^"']*)["']/gi;
     let m;
-    while ((m = re.exec(String(r.text || ''))) && lista.length < 400) {
-      const camino = m[1] + '/' + m[2];
-      const num = parseInt(m[3], 10);
+    while ((m = re.exec(texto)) && lista.length < 400) {
+      let camino = decHtml(m[1]);
+      const num = parseInt(m[2], 10);
       if (num < 1 || num > 9999 || vistos.has(num)) continue;
+      /* del href se queda solo con el camino /anime/<id>/<slug>/episodio-N */
+      const cm = /\/anime\/[^"']*\/episodio-\d+/.exec(camino);
+      if (!cm) continue;
+      camino = cm[0].replace(/\/$/, '');
+      camino = camino.replace(/^\/anime\//, '');
       vistos.add(num);
       lista.push({ season: 1, number: num, ref: 'jl:' + camino + ':' + num, title: 'Episodio ' + num });
+    }
+    log('jl ficha «' + slug + '»: ' + lista.length + ' episodios de ' + (texto.match(/episodio-\d+/gi) || []).length + ' menciones (' + texto.length + ' letras)');
+    if (!lista.length) {
+      const iL = texto.indexOf('Lista de episodios');
+      log('jl diagnóstico: ' + (iL >= 0 ? texto.slice(iL, iL + 300).replace(/\s+/g, ' ') : 'sin «Lista de episodios» en el HTML'));
     }
     if (!lista.length) {
       throw kino.error('not_found', 'Anime-JL: 0 capítulos', {
@@ -4823,25 +4848,39 @@ function crisTarjetas(html) {
   return items;
 }
 
-/* Cosecha los enlaces de descarga de un post (CrisAnime y Vitt usan el
- * mismo formato «Capítulo N ➡»). Devuelve { porNumero: {n: [urls]},
- * orden: [n…] } con solo los servidores que el plugin puede abrir. */
+/* Cosecha los capítulos de un post (CrisAnime y Vitt usan el mismo
+ * molde «beatz-dw»): marcas «Capítulo N» o «Episodio N» y, después de
+ * cada una, los enlaces de descarga hasta la marca siguiente. v0.6.61:
+ * los enlaces NO van directos — pasan por acortadores con muro de
+ * anuncios (fire.crisanimex.com → publicidad, ouo.io). Se cosechan
+ * igual: el resolve dirá con honestidad si el muro no cede. */
 function enlacesDeCapitulos(html) {
-  const re = /<a\b[^>]*href\s*=\s*["']([^"']*(?:mediafire\.com|mega\.nz|fireload\.com|mp4upload\.com)[^"']*)["'][^>]*>([\s\S]{0,200}?)<\/a>/gi;
-  const porNumero = {};
+  const texto = String(html || '');
+  const DL = /(mediafire\.com|mega\.nz|fireload\.com|mp4upload\.com|fire\.crisanimex\.com|ouo\.io)/i;
+  const marcas = [];
+  const reM = /(?:Cap[íi]tulo|Episodio)\s*(\d{1,4})/gi;
   let m;
-  while ((m = re.exec(String(html || '')))) {
-    const url = decHtml(m[1]).trim();
-    const texto = limpio(m[2]);
-    const nm = /cap[íi]tulo\s*(\d+)/i.exec(texto) || /(\d+)\s*(?:\/|\s*$)/.exec(texto);
-    if (!nm) continue;
-    const num = parseInt(nm[1], 10);
-    if (num < 1 || num > 9999 || !/^https?:\/\//i.test(url)) continue;
-    if (!porNumero[num]) porNumero[num] = [];
-    if (porNumero[num].indexOf(url) < 0) porNumero[num].push(url);
+  while ((m = reM.exec(texto))) {
+    const num = parseInt(m[1], 10);
+    if (num >= 1 && num <= 9999) marcas.push({ num: num, idx: m.index });
+  }
+  const porNumero = {};
+  for (let i = 0; i < marcas.length; i++) {
+    if (porNumero[marcas[i].num]) continue;
+    const desde = marcas[i].idx;
+    const hasta = i + 1 < marcas.length ? marcas[i + 1].idx : texto.length;
+    const trozo = texto.slice(desde, hasta);
+    const urls = [];
+    const reL = /href\s*=\s*["']([^"']+)["']/gi;
+    let l;
+    while ((l = reL.exec(trozo))) {
+      const u = decHtml(l[1]).trim();
+      if (/^https?:\/\//i.test(u) && DL.test(u) && urls.indexOf(u) < 0) urls.push(u);
+    }
+    if (urls.length) porNumero[marcas[i].num] = urls;
   }
   const orden = Object.keys(porNumero).map(function (x) { return parseInt(x, 10); }).sort(function (a, b) { return a - b; });
-  return { porNumero: porNumero, orden: orden };
+  return { porNumero: porNumero, orden: orden, total: marcas.length };
 }
 
 /* MediaFire: su página de descarga trae el enlace directo a
@@ -4859,9 +4898,10 @@ async function mediafireDirecto(url) {
 }
 
 /* De la lista de enlaces de un capítulo salen los servidores que el
- * plugin SÍ puede abrir, en orden de preferencia. MediaFire se resuelve
- * a su enlace directo (con Referer de la casa); Mp4Upload pasa por su
- * extractor; FireLoad es un archivo suelto directo. */
+ * plugin SÍ puede abrir, en orden de preferencia. v0.6.61: los
+ * acortadores (fire.crisanimex.com, ouo.io) se siguen una vez — si la
+ * cadena aterriza en MediaFire, hay video; si aterriza en publicidad,
+ * se descarta con bitácora. Mega queda fuera: cifrado. */
 async function servidoresDeDescarga(urls, refBase) {
   const ref = String(refBase || '');
   const servers = [];
@@ -4874,13 +4914,30 @@ async function servidoresDeDescarga(urls, refBase) {
       });
     } else if (/mp4upload\.com/i.test(u)) {
       servers.push({ nombre: 'Mp4Upload', url: u, tipo: 'mp4upload' });
-    } else if (/fireload\.com/i.test(u)) {
+    } else if (/^https?:\/\/[^\/]*fireload\.com/i.test(u)) {
       servers.push({
         nombre: 'FireLoad', url: u, tipo: 'directo',
         directo: { url: u, mime: mimeDe(u), headers: { Referer: 'https://www.fireload.com/', 'User-Agent': UA } }
       });
+    } else if (/fire\.crisanimex\.com|ouo\.io/i.test(u)) {
+      /* el acortador: se sigue la cadena de saltos y se mira dónde
+       * cayó — MediaFire servible, publicidad no. */
+      try {
+        const r = await traer(u, { timeoutMs: 12000, cuerpoSiempre: true });
+        const finalU = String((r && r.url) || '');
+        if (/mediafire\.com\/file/i.test(finalU)) {
+          const d = await mediafireDirecto(finalU);
+          if (d) servers.push({
+            nombre: 'MediaFire', url: d, tipo: 'directo',
+            directo: { url: d, mime: mimeDe(d), headers: { Referer: 'https://www.mediafire.com/', 'User-Agent': UA } }
+          });
+        } else {
+          log('acortador sin video: ' + u.slice(0, 60) + ' → ' + (finalU || 'sin respuesta').slice(0, 60));
+        }
+      } catch (eA) {
+        log('acortador falló', (eA && eA.message) || String(eA));
+      }
     }
-    /* Mega queda fuera: su enlace va cifrado y el plugin no lo abre. */
   }
   return servers;
 }
@@ -4905,7 +4962,9 @@ registrarFuente({
   },
 
   async portada(solo) {
-    const defs = [{ id: 'cris-novedades', titulo: 'Novedades · CrisAnime', camino: '/' }];
+    /* v0.6.61: «let» obligatorio — Hermes no deja reasignar un const
+     * («defs is read-only» en el log del teléfono). */
+    let defs = [{ id: 'cris-novedades', titulo: 'Novedades · CrisAnime', camino: '/' }];
     if (solo === true) {
       const nucleo = NUCLEO_TODAS.cris;
       if (nucleo) defs = defs.filter(function (d) { return nucleo.indexOf(d.id) >= 0; });
@@ -4963,7 +5022,10 @@ registrarFuente({
       });
     }
     const cosecha = enlacesDeCapitulos(r.text);
+    log('cris post «' + slug + '»: ' + cosecha.orden.length + ' capítulos de ' + cosecha.total + ' marcas (' + (r.text || '').length + ' letras)');
     if (!cosecha.orden.length) {
+      const iC = (r.text || '').search(/cap[íi]tulo|episodio/i);
+      log('cris diagnóstico: ' + (iC >= 0 ? (r.text || '').slice(iC, iC + 300).replace(/\s+/g, ' ') : 'sin marcas de capítulo en el HTML'));
       throw kino.error('not_found', 'CrisAnime: 0 capítulos', {
         userMessage: 'No se pudieron leer los capítulos de esta serie en CrisAnime.'
       });
@@ -5067,7 +5129,9 @@ registrarFuente({
   },
 
   async portada(solo) {
-    const defs = [{ id: 'vitt-proyectos', titulo: 'Proyectos · Vitt no Fansub', camino: '/feeds/posts/default?alt=json&max-results=20' }];
+    /* v0.6.61: «let» obligatorio — Hermes no deja reasignar un const
+     * («defs is read-only» en el log del teléfono). */
+    let defs = [{ id: 'vitt-proyectos', titulo: 'Proyectos · Vitt no Fansub', camino: '/feeds/posts/default?alt=json&max-results=20' }];
     if (solo === true) {
       const nucleo = NUCLEO_TODAS.vitt;
       if (nucleo) defs = defs.filter(function (d) { return nucleo.indexOf(d.id) >= 0; });
@@ -5129,7 +5193,10 @@ registrarFuente({
       });
     }
     const cosecha = enlacesDeCapitulos(r.text);
+    log('vitt post «' + slug + '»: ' + cosecha.orden.length + ' capítulos de ' + cosecha.total + ' marcas (' + (r.text || '').length + ' letras)');
     if (!cosecha.orden.length) {
+      const iC = (r.text || '').search(/cap[íi]tulo|episodio|beatz-dw/i);
+      log('vitt diagnóstico: ' + (iC >= 0 ? (r.text || '').slice(iC, iC + 300).replace(/\s+/g, ' ') : 'sin marcas de capítulo en el HTML'));
       throw kino.error('not_found', 'Vitt no Fansub: 0 capítulos', {
         userMessage: 'No se pudieron leer los capítulos de esta serie en Vitt no Fansub.'
       });
