@@ -447,6 +447,13 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.54 «El lector paciente» — la 0.6.53 hace su trabajo (mapa flaco,
+// reintento 30 min, pósters del pintor OK en el log 20:57), pero el
+// respaldo por lector externo no rinde desde el teléfono: jina se queda
+// corto con 15 s. Ahora el lector tiene 25 s y un segundo espejo
+// (codetabs); cada respuesta se prueba con cosechar() y cosecharMd()
+// según lo que traiga. Objetivo: que el mapa llegue a ~240 fichas antes.
+
 // v0.6.53 «El mapa flaco» — el log 20:52 dio la mejor noticia del
 // día: la sonda con slug sirvió pósters de verdad («3-gatsu no
 // Lion»: OK 88 KB, «5-toubun»: OK 80.4 KB, cadena del pintor). La
@@ -946,7 +953,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.53';
+const VERSION = '0.6.54';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -6677,10 +6684,18 @@ async function btzMapaWeb() {
   async function pedirYcosechar(url) {
     let r = await traer(url, { timeoutMs: 12000 });
     if (r.ok && r.text && r.text.indexOf('/bd/') >= 0) return cosechar(r.text);
-    let rj = null;
-    try { rj = await traer('https://r.jina.ai/' + url, { timeoutMs: 15000 }); } catch (eJ) { rj = null; }
-    if (rj && rj.ok && rj.text && rj.text.indexOf('/bd/') >= 0) return cosecharMd(rj.text);
-    return 0;
+    const lectores = ['https://r.jina.ai/' + url, 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(url)];
+    let nuevas = 0;
+    for (let i = 0; i < lectores.length; i++) {
+      let rj = null;
+      try { rj = await traer(lectores[i], { timeoutMs: i === 0 ? 25000 : 12000 }); } catch (eJ) { rj = null; }
+      if (rj && rj.ok && rj.text && rj.text.indexOf('/bd/') >= 0) {
+        nuevas = cosechar(rj.text);
+        if (!nuevas) nuevas = cosecharMd(rj.text);
+        if (nuevas) break;
+      }
+    }
+    return nuevas;
   }
   /* La LISTA de animes primero: una sola página con las ~240 fichas
    * (descubierto el 10-nov: el inicio y sus /page/N/ quedaron detrás

@@ -38,6 +38,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.54 «El lector paciente»
+
+El respaldo de lectura del mapa BeatZ se fortalece: el lector externo (jina) pasa de 15 s a 25 s de espera y se añade un segundo espejo (codetabs). Cada respuesta se procesa con el cosechador HTML o el de markdown según su contenido. La 0.6.53 sigue haciendo su trabajo: mapa flaco detectado y reintento a los 30 minutos, pósters del pintor sirviendo.
+
 ## v0.6.53 «El mapa flaco»
 
 La mejor noticia del día en el log de las 20:52: la sonda (ya con slug) **sirvió pósters de verdad** — «3-gatsu no Lion»: OK 88 KB, «5-toubun»: OK 80.4 KB, cadena del pintor completa. La 2nd Season sin rescate tenía causa clara: el mapa quedó con 14 fichas (solo el inicio del sitio pasó el muro de Cloudflare) y se guardaba 24 horas — un mal rato del muro nos congelaba un mapa flaco hasta el día siguiente. Ahora un mapa completo (≥ 40 fichas) se guarda 24 h como siempre, pero uno flaco vive solo 30 minutos en memoria y se vuelve a intentar en cuanto el muro afloje.
