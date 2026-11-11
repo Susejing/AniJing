@@ -38,6 +38,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.57 «El mapa del almacén»
+
+El mapa de fichas de BeatZ ya no depende de la web (tras el muro de Cloudflare): si la cosecha web sale flaca, el padrón del almacén OpenList — que responde siempre, con sus ~258 series — completa el mapa. El Catálogo BD y el rescate de pósters de secuelas nacen completos aunque Cloudflare no abra; los pares cosechados de la web conservan prioridad porque su slug es el verdadero.
+
 ## v0.6.56 «El abecedario»
 
 Los catálogos cortos, revisados fuente por fuente con sondeo del día: **LataAnime** — su Directorio ahora recorre el abecedario (el sitio ignora ?page= pero paga por ?letra=). **AnimeYT** — estrena fila «Catálogo» con su directorio completo (1.086 obras, paginado). **AnimeJara** — una página corta ya no corta el catálogo (umbral de «hay siguiente» de 12 a 6). **MonosChinos** ya paginaba completo (4.466 series).

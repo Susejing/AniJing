@@ -447,6 +447,13 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.57 «El mapa del almacén» — el log 23:31 sentenció: jina + espejo
+// siguen tras el muro (14 fichas flacas), pero el almacén OpenList
+// responde 200 SIEMPRE y su padrón tiene las 258 series por letras.
+// Ahora btzMapaWeb completa el mapa flaco con el padrón: cada carpeta
+// da su par {slug, titulo}. Los pares de la web (slug verdadero) van
+// primero; el almacén llena lo que falta. Mapa completo sin Cloudflare.
+
 // v0.6.56 «El abecedario» — la queja del catálogo corto, sondeada hoy:
 // LataAnime no pagina por número (?page= se ignora) pero SÍ por letra
 // (?letra=A/B verificado con títulos distintos) — el Directorio ahora
@@ -968,7 +975,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.56';
+const VERSION = '0.6.57';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -6745,6 +6752,30 @@ async function btzMapaWeb() {
   for (let p = 2; pares.length < 40 && p <= 12; p++) {
     nuevas = await pedirYcosechar(BASE_BTZ + '/page/' + p + '/');
     if (!nuevas) break;
+  }
+  /* v0.6.57 «El mapa del almacén»: si la web sigue tras el muro (log
+   * 23:31: jina + espejo = 14 fichas flacas), el padrón del almacén
+   * OpenList — que responde 200 SIEMPRE, 258 series por letras —
+   * completa el mapa: cada carpeta «Nombre» da el par
+   * {slug: btzSlugDe(nombre), titulo: nombre}. Los pares cosechados
+   * de la web van primero (su slug es el verdadero); el almacén solo
+   * llena lo que falta. Con el almacén el mapa nace completo (~258)
+   * aunque Cloudflare no abra. */
+  if (pares.length < COMPLETO) {
+    try {
+      const series = await btzSeries();
+      let delAlmacen = 0;
+      for (const n of series) {
+        const slug = btzSlugDe(n);
+        if (!slug || vistos[slug]) continue;
+        vistos[slug] = n;
+        pares.push({ slug: slug, titulo: n });
+        delAlmacen++;
+      }
+      if (delAlmacen) log('btz mapa: +' + delAlmacen + ' pares del almacén (total ' + pares.length + ')');
+    } catch (eA) {
+      log('btz mapa: el almacén no completó (' + ((eA && eA.message) || String(eA)).slice(0, 80) + ')');
+    }
   }
   if (pares.length) {
     const completo = pares.length >= COMPLETO;
