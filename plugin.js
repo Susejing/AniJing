@@ -447,6 +447,13 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.59 «La ventana ancha» — el log 00:01 (17 tarjetas de 48 anclas,
+// página 2 con OTRAS 17) demostró que las tarjetas del grid de
+// /catalogo SÍ están en el HTML pero se salían de la ventana de 1600
+// letras del ancla. Ventana a 3200, póster de respaldo en
+// background-image (sin banderitas) y diagnóstico con conteos hj y
+// data-anime en el log.
+
 // v0.6.58 «El perezoso visible» — el catálogo de AnimeJara sigue corto
 // en el teléfono (8 tarjetas de ~18): las que faltan cargan su póster
 // perezoso (data-lazy-src / data-src) y el parser solo leía src. Ahora
@@ -981,7 +988,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.58';
+const VERSION = '0.6.59';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4285,7 +4292,12 @@ registrarFuente({
 const BASE_JARA = 'https://animejara.com';
 
 function jaraTarjetas(html) {
-  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/anime\/([^"\/?#]+)[^>]*>([\s\S]{0,1600}?)<\/a>/gi;
+  /* v0.6.59: ventana 1600→3200 — el log del teléfono (v0.6.58: 17
+   * tarjetas de 48 anclas, y la página 2 trae OTRAS 17) demostró que
+   * las tarjetas del grid SÍ están en el HTML pero se salían de la
+   * ventana del ancla. Y su póster puede vivir en un background-image
+   * de CSS en vez de un <img>. */
+  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/anime\/([^"\/?#]+)[^>]*>([\s\S]{0,3200}?)<\/a>/gi;
   const items = [];
   const vistos = new Set();
   let m;
@@ -4315,6 +4327,10 @@ function jaraTarjetas(html) {
         if (alt) titulo = decHtml(alt[1]);
         break;
       }
+    }
+    if (!poster) {
+      const bg = /background(?:-image)?\s*:\s*url\((['"]?)([^"')]+)\1\)/i.exec(ventana);
+      if (bg && !/japones|bandera|flag/i.test(bg[2])) poster = bg[2];
     }
     /* v0.6.11: las tarjetas del catálogo (anime-grid) traen la ficha
      * completa en el atributo data-anime — un JSON con «titulo» y
@@ -4443,7 +4459,9 @@ registrarFuente({
      * cada página del catálogo y cuántas anclas trajo el HTML. */
     if (ref === 'jara-catalogo') {
       const anclas = (r.text.match(/\/anime\/[a-z0-9-]+/gi) || []).length;
-      log('jara catálogo: ' + items.length + ' tarjetas de ' + anclas + ' anclas (página ' + num + ')');
+      const hj = (r.text.match(/hj\.animejara\.com/gi) || []).length;
+      const da = (r.text.match(/data-anime=/gi) || []).length;
+      log('jara catálogo: ' + items.length + ' tarjetas de ' + anclas + ' anclas (página ' + num + ') hj=' + hj + ' data-anime=' + da);
     }
     let next = null;
     if ((ref === 'jara-catalogo' || esGenero) && items.length >= 6) next = String(num + 1); /* v0.6.56: umbral 12→6, una página corta ya no corta el riel */
