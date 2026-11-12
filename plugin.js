@@ -1090,6 +1090,21 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
+// v0.6.75 «El presupuesto» — el Registro del teléfono (sonda 07:13,
+// ya en 0.6.74) sentenció la cascada: «sin tiempo, quedan ids sin
+// probar». Volvía a BAJAR la ficha para cosechar ids (79 KB de más)
+// y probaba 10 candidatos, así que el presupuesto moría antes del
+// AJAX; y los ids de la ficha eran de las series «más reciente»
+// (4690, 4622, 3719 — cambiaban en cada apertura) con un data-id «1»
+// que es puro placeholder. Ahora, en orden de precio: (B) el total
+// que la propia ficha declara («Episodios:25 / 25») — si el crudo lo
+// trae, la lista se genera 1..total SIN una petición más; (C) la
+// página del episodio con SUS ids primero (su JavaScript pinta la
+// lista, el id de la serie vive ahí), luego los de la ficha, el
+// ?ep= del botón al final y a lo sumo 6 candidatos. La sonda también
+// cuenta lo que la pasada dejó sin responder: el total declarado y
+// los enlaces /ver/ crudos de la página del episodio.
+
 // v0.6.74 «El hint gordo» — el teléfono rechazó la actualización con
 // «este plugin tiene un error en su kino-plugin.json». Culpable
 // encontrado en el contrato del repo (contract.json): los ajustes
@@ -1119,7 +1134,7 @@
 // dos, y si tampoco, pregunta por el AJAX de su escuela con el
 // data-id (episode/list). Todo lo demás queda igual.
 
-const VERSION = '0.6.74';
+const VERSION = '0.6.75';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4411,8 +4426,21 @@ registrarFuente({
      * que la cascada es: (B) cosechar la página /ver/<slug>/episodio-1
      * y, si tampoco trae nada, (C) pedir el listado por el AJAX de su
      * escuela con el data-id de la página. */
+    /* (B) el total que la propia ficha declara («Episodios:25 / 25»):
+     * si el crudo lo trae, la lista se genera 1..total sin una
+     * petición más — el camino barato de la 0.6.75. */
+    if (numeros.size < 2) {
+      const tot = /Episodios[^0-9]{0,60}(\d{1,4})\s*\/\s*(\d{1,4})/i.exec(r.text);
+      if (tot) log('eas episodios «' + slug + '»: la ficha declara Episodios ' + tot[1] + '/' + tot[2]);
+      const totalFicha = tot ? parseInt(tot[2], 10) : 0;
+      if (totalFicha > numeros.size && totalFicha <= 500) {
+        for (let n = 1; n <= totalFicha; n++) numeros.add(n);
+        log('eas episodios «' + slug + '»: lista 1..' + totalFicha + ' generada del total de la ficha');
+      }
+    }
     if (numeros.size < 2) {
       const ep1 = await traer(BASE_EAS + '/ver/' + slug + '/episodio-1', { headers: { Referer: BASE_EAS + '/' }, timeoutMs: 10000 });
+      log('eas episodios «' + slug + '»: ep1 status ' + ep1.status + ' len ' + (ep1.text ? ep1.text.length : 0));
       if (ep1.ok && ep1.text) {
         const re2 = /\/ver\/([^"\/?#]+)\/episodio-(\d+)/gi;
         while ((m = re2.exec(ep1.text))) {
@@ -4432,32 +4460,26 @@ registrarFuente({
           const candidatos = [];
           const meterId = function (v) {
             const t = String(v || '');
-            if (t && candidatos.indexOf(t) === -1 && candidatos.length < 10) candidatos.push(t);
+            if (t && t !== '1' && candidatos.indexOf(t) === -1 && candidatos.length < 6) candidatos.push(t);
           };
-          try {
-            const rf = await traer(BASE_EAS + '/anime/' + slug, { headers: { Referer: BASE_EAS + '/' }, timeoutMs: 10000 });
-            if (rf.ok && rf.text) {
-              const p1 = /\bdata-(?:show|anime|movie|media|serie)-?id\s*=\s*["'](\d+)["']/gi;
-              while ((m = p1.exec(rf.text))) meterId(m[1]);
-              const p2 = /\bdata-id\s*=\s*["'](\d+)["']/gi;
-              while ((m = p2.exec(rf.text))) meterId(m[1]);
-              const p3 = /(?:anime|show|movie|media|serie)[_-]?id["'\s:=]{1,4}["']?(\d{1,7})["']?/gi;
-              while ((m = p3.exec(rf.text))) meterId(m[1]);
-            }
-          } catch (eF) { log('eas lista: ficha para ids falló: ' + ((eF && eF.message) || eF)); }
           const pats = [
             /\bdata-(?:show|anime|movie|media|serie)-?id\s*=\s*["'](\d+)["']/gi,
             /\bdata-id\s*=\s*["'](\d+)["']/gi,
             /(?:anime|show|movie|media|serie)[_-]?id["'\s:=]{1,4}["']?(\d{1,7})["']?/gi
           ];
+          /* v0.6.75: los ids de la PÁGINA DEL EPISODIO primero (su
+           * JavaScript pinta la lista, el id de la serie vive ahí);
+           * los de la ficha después (suelen ser de las series «más
+           * reciente»: 4690, 4622, 3719 cambiaban en cada apertura);
+           * y el ?ep= del botón al final. Sin volver a bajar la
+           * ficha: su texto ya está en r.text. */
           for (const p of pats) { while ((m = p.exec(ep1.text))) meterId(m[1]); }
-          /* el id del episodio va al final: algunos clones aceptan
-           * también ese para el listado */
-          const epid = /\bdata-epid\s*=\s*["'](\d+)["']/i.exec(ep1.text);
+          for (const p of pats) { while ((m = p.exec(r.text))) meterId(m[1]); }
+          const epid = /\?ep=(\d+)/.exec(ep1.text) || /\?ep=(\d+)/.exec(r.text);
           if (epid) meterId(epid[1]);
-          log('eas lista: ' + candidatos.length + ' ids candidatos (' + candidatos.join(',') + ')');
+          log('eas lista: ' + candidatos.length + ' ids (episodio primero): ' + candidatos.join(','));
           for (const idc of candidatos) {
-            if (numeros.size >= 2 || queda() < 4000) break;
+            if (numeros.size >= 2 || queda() < 3500) break;
             let ra = null;
             try {
               ra = await traer(BASE_EAS + '/ajax/v2/episode/list?id=' + idc, { headers: EAS_AJAX, timeoutMs: 9000 });
@@ -8338,7 +8360,7 @@ async function action(key) {
     const cand = [];
     const meterId = function (etq, v) {
       const t = String(v || '');
-      if (!t || cand.indexOf(t) >= 0 || cand.length >= 12) return;
+      if (!t || t === '1' || cand.indexOf(t) >= 0 || cand.length >= 6) return;
       cand.push(t);
       log('sonda eas: id ' + t + ' (' + etq + ')');
     };
@@ -8348,6 +8370,7 @@ async function action(key) {
       [/\bdata-epid\s*=\s*["'](\d+)["']/gi, 'data-epid'],
       [/(?:anime|show|movie|media|serie)[_-]?id["'\s:=]{1,4}["']?(\d{1,7})["']?/gi, 'script id']
     ];
+    let epQ = '';
     try {
       const rf = await traer(BASE_EAS + '/anime/' + slugP, { headers: { Referer: BASE_EAS + '/' }, timeoutMs: 12000 });
       const nf = rf && rf.text ? rf.text.length : 0;
@@ -8355,7 +8378,11 @@ async function action(key) {
       partes.push('ficha ' + (rf ? rf.status : '?'));
       if (rf && rf.text) {
         const enlaces = (rf.text.match(/\/ver\/[a-z0-9\-]+\/episodio-\d+/gi) || []).length;
-        log('sonda eas ficha: ' + enlaces + ' enlaces /ver/ en el crudo');
+        const tot = /Episodios[^0-9]{0,60}(\d{1,4})\s*\/\s*(\d{1,4})/i.exec(rf.text);
+        const eq1 = /\?ep=(\d+)/.exec(rf.text);
+        if (eq1) epQ = eq1[1];
+        log('sonda eas ficha: ' + enlaces + ' enlaces /ver/ en el crudo' + (tot ? ', declara Episodios ' + tot[1] + '/' + tot[2] : ', SIN total declarado') + (epQ ? ', ?ep=' + epQ : ''));
+        partes.push(tot ? 'total ' + tot[2] : 'sin total');
         for (const par of PATRONES) { let mm; while ((mm = par[0].exec(rf.text))) meterId(par[1], mm[1]); }
       }
     } catch (eF) { log('sonda eas ficha FALLO: ' + ((eF && eF.message) || eF)); partes.push('ficha FALLO'); }
@@ -8365,14 +8392,16 @@ async function action(key) {
       log('sonda eas episodio: status ' + (rw ? rw.status : 'sin') + ', ' + nw + ' bytes');
       partes.push('episodio ' + (rw ? rw.status : '?'));
       if (rw && rw.text) {
-        const enlaces = (rw.text.match(/\/ver\/[a-z0-9\-]+\/episodio-\d+/gi) || []).length;
-        log('sonda eas episodio: ' + enlaces + ' enlaces /ver/ en el crudo');
+        const lista = (rw.text.match(/\/ver\/[a-z0-9\-]+\/episodio-\d+(?:\?ep=\d+)?/gi) || []).slice(0, 6);
+        if (!epQ) { const eq2 = /\?ep=(\d+)/.exec(rw.text); if (eq2) epQ = eq2[1]; }
+        log('sonda eas episodio: ' + lista.length + ' enlaces /ver/ en el crudo: ' + (lista.join(' | ') || 'ninguno') + (epQ ? ', ?ep=' + epQ : ''));
         for (const par of PATRONES) { let mm; while ((mm = par[0].exec(rw.text))) meterId(par[1], mm[1]); }
       }
     } catch (eW) { log('sonda eas episodio FALLO: ' + ((eW && eW.message) || eW)); partes.push('episodio FALLO'); }
+    if (epQ) { cand.unshift(epQ); log('sonda eas: el ?ep= del botón va primero: ' + epQ); }
     let hallados = 0;
     for (const idc of cand) {
-      if (queda() < 4000) { log('sonda eas: sin tiempo, quedan ids sin probar'); break; }
+      if (queda() < 3500) { log('sonda eas: sin tiempo, ids sin probar: ' + cand.slice(cand.indexOf(idc)).join(',')); break; }
       try {
         const ra = await traer(BASE_EAS + '/ajax/v2/episode/list?id=' + idc, { headers: EAS_AJAX, timeoutMs: 9000 });
         const txt = ra && ra.text ? ra.text : '';
