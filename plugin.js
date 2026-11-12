@@ -447,6 +447,17 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.67 «La puerta falsa» — AySDO también SALe. El log del teléfono
+// (19:31) lo sentenció: sus fichas dan 0 episodios y la investigación
+// confirmó la enfermedad de siempre — las descargas de aysdo.xyz viven
+// en páginas-paste (aysdo-paste.blogspot.com) cuyo «enlace real» es
+// ouo.io, el mismo muro de JavaScript que mató a Vitt; y el panel
+// «Ver Online» de sus posts dice literalmente «Este contenido no está
+// disponible para ver en línea» (el online es para su grupo VIP de
+// Telegram). Los «2 iframes» que veía la cosecha eran del molde, no
+// players. Regla de la casa, otra vez: catálogo sin reproducción no
+// sirve. Once fuentes, todas con reproducción real.
+
 // v0.6.66 «El relevo fansub» — la casa manda y obedece: CrisAnime y
 // Vitt no Fansub SALen. Sus descargas viven tras acortadores con muro
 // de JavaScript (clksz.com, ouo.io) y no se cruzan sin navegador —
@@ -1065,7 +1076,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.66';
+const VERSION = '0.6.67';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4894,222 +4905,6 @@ registrarFuente({
   }
 });
 
-/* ---------- fuente: AySDO (www.aysdo.xyz, recolectora de versiones fansub BD) ---------- */
-
-/* v0.6.66 «El relevo fansub»: CrisAnime y Vitt no Fansub salen — sus
- * descargas viven tras acortadores con muro de JavaScript (clksz.com,
- * ouo.io) y no se cruzan sin navegador: catálogo sin reproducción no
- * sirve. Entra AySDO (AnimeySeriesDO), una recolectora del molde de
- * Az-Animex y Dw-anime: versiones BD de fansubs con estilos (Kashikoi
- * y compañía), HD ligero 720p y Full HD 1080p, con pestañas
- * «Descargas» y «Ver Online» en cada post. Su casa es un blogspot, y
- * blogspot da el regalo de siempre: el feed JSON
- * /feeds/posts/default?alt=json funciona SIEMPRE (sin muro), con
- * búsqueda (?q=) y paginación (start-index). Los capítulos online se
- * cosechan del HTML del post con diagnóstico generoso en el log — si
- * el molde cambia, el log dirá dónde viven los enlaces. */
-const BASE_AYS = 'https://www.aysdo.xyz';
-
-function aysFeed(camino) {
-  return traer(BASE_AYS + camino, { timeoutMs: 12000, cuerpoSiempre: true });
-}
-
-function aysEntradas(json) {
-  try {
-    const feed = json && json.feed;
-    if (!feed || !Array.isArray(feed.entry)) return [];
-    const items = [];
-    for (const e of feed.entry) {
-      let url = '';
-      if (Array.isArray(e.link)) {
-        for (const l of e.link) if (l.rel === 'alternate' && l.href) { url = String(l.href); break; }
-      }
-      if (!url) continue;
-      const mm = /aysdo\.xyz\/(\d{4})\/(\d{2})\/([a-z0-9.-]+)\.html/i.exec(url);
-      if (!mm) continue;
-      const slug = mm[1] + '/' + mm[2] + '/' + mm[3];
-      const titulo = limpio((e.title && e.title.$t) || slugATitulo(mm[3]));
-      if (!titulo || titulo.length < 2) continue;
-      const item = {
-        id: 'ays-' + slug.replace(/\//g, '-'),
-        ref: 'ays:' + slug,
-        title: titulo.slice(0, 200),
-        kind: 'series'
-      };
-      /* El póster vive en el HTML del post (content.$t): primera imagen. */
-      const cuerpo = (e.content && e.content.$t) || '';
-      const im = /<img\b[^>]*src\s*=\s*["']([^"']+\.(?:jpe?g|png|webp))["']/i.exec(cuerpo);
-      if (im) item.poster = decHtml(im[1]);
-      items.push(item);
-    }
-    return items;
-  } catch (e) {
-    log('ays feed ilegible', (e && e.message) || String(e));
-    return [];
-  }
-}
-
-registrarFuente({
-  id: 'ays',
-  etiqueta: 'AySDO',
-
-  async buscar(q) {
-    const texto = String(q || '').trim().slice(0, 100);
-    if (texto.length < 2) return [];
-    try {
-      const r = await aysFeed('/feeds/posts/default?alt=json&max-results=20&q=' + encodeURIComponent(texto));
-      if (!r.ok) return [];
-      let json = null;
-      try { json = JSON.parse(r.text); } catch (eP) { json = null; }
-      const items = aysEntradas(json).slice(0, 25);
-      for (const it of items) it.badges = ['AySDO'];
-      return items;
-    } catch (e) {
-      log('ays buscar', (e && e.message) || String(e));
-      return [];
-    }
-  },
-
-  async portada(solo) {
-    /* Una fila con las publicaciones recientes del feed (versiones BD
-     * de fansubs, estrenos y completas). En «Todas» solo el núcleo. */
-    let defs = [{ id: 'ays-recientes', titulo: 'Versiones · AySDO', camino: '/feeds/posts/default?alt=json&max-results=20' }];
-    if (solo === true) {
-      const nucleo = NUCLEO_TODAS.ays;
-      if (nucleo) defs = defs.filter(function (d) { return nucleo.indexOf(d.id) >= 0; });
-    }
-    const rtas = await Promise.all(defs.map(async (def) => {
-      try {
-        const r = await aysFeed(def.camino);
-        if (!r.ok) {
-          log('ays fila «' + def.titulo + '»: status ' + r.status);
-          return null;
-        }
-        let json = null;
-        try { json = JSON.parse(r.text); } catch (eP) { json = null; }
-        const items = aysEntradas(json).slice(0, 20);
-        return items.length ? { id: def.id, title: def.titulo, ref: def.id, items: items } : null;
-      } catch (e) {
-        log('ays fila «' + def.titulo + '» falló', (e && e.message) || String(e));
-        return null;
-      }
-    }));
-    const filas = [];
-    for (const fila of rtas) if (fila) filas.push(fila);
-    return filas;
-  },
-
-  async hoja(ref, cursor) {
-    if (ref !== 'ays-recientes') return null;
-    const pagina = parseInt(cursor, 10);
-    const num = Number.isFinite(pagina) && pagina > 1 ? pagina : 1;
-    const inicio = (num - 1) * 20 + 1;
-    const r = await aysFeed('/feeds/posts/default?alt=json&max-results=20&start-index=' + inicio);
-    if (!r.ok) {
-      throw kino.error('unavailable', 'AySDO no respondió (status ' + r.status + ')', {
-        userMessage: 'AySDO no respondió. Revisa tu conexión o inténtalo en un rato.'
-      });
-    }
-    let json = null;
-    try { json = JSON.parse(r.text); } catch (eP) { json = null; }
-    const items = aysEntradas(json).slice(0, 20);
-    return { items: items, next: items.length >= 20 ? String(num + 1) : null };
-  },
-
-  async detalle(slug) {
-    const r = await traer(BASE_AYS + '/' + slug + '.html', { timeoutMs: 12000, cuerpoSiempre: true });
-    if (!r.ok || !r.text) return null;
-    const serie = { title: slugATitulo(slug.split('/').pop() || slug) };
-    const h = /<h[1-6][^>]*>([\s\S]{1,300}?)<\/h[1-6]>/i.exec(r.text);
-    if (h) serie.title = limpio(h[1]) || serie.title;
-    const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(r.text);
-    if (og) serie.poster = og[1].indexOf('//') === 0 ? 'https:' + og[1] : og[1];
-    const sinM = /<p[^>]*>([\s\S]{30,600}?)<\/p>/i.exec(r.text);
-    if (sinM) serie.overview = limpio(sinM[1]).slice(0, 400);
-    return serie;
-  },
-
-  async episodios(slug) {
-    const r = await traer(BASE_AYS + '/' + slug + '.html', { timeoutMs: 12000, cuerpoSiempre: true });
-    if (!r.ok || !r.text) {
-      throw kino.error('unavailable', 'AySDO no entregó la serie', {
-        userMessage: 'AySDO no respondió. Revisa tu conexión o inténtalo en un rato.'
-      });
-    }
-    /* El post trae pestañas «Descargas» y «Ver Online»; los episodios
-     * online se cosechan de anclas e iframes que mencionen episodio/
-     * capítulo con número. Diagnóstico generoso: el log mostrará el
-     * HTML alrededor de la pestaña y del primer iframe si no hay nada. */
-    const texto = String(r.text || '');
-    const vistos = new Set();
-    const lista = [];
-    const reA = /<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]{0,240}?)<\/a>/gi;
-    let m;
-    while ((m = reA.exec(texto)) && lista.length < 400) {
-      const href = decHtml(m[1]);
-      const t = limpio(m[2]);
-      const hm = /(?:episodio|cap[íi]tulo)\s*[- ]?(\d{1,4})/i.exec((t + ' ' + href));
-      if (!hm) continue;
-      const num = parseInt(hm[1], 10);
-      if (num < 1 || num > 9999 || vistos.has(num)) continue;
-      if (!/^(?:https?:\/\/|\/)/i.test(href)) continue;
-      if (/aysdo\.xyz\/(?:p|search|feeds)|facebook\.com|twitter|x\.com|t\.me|discord|wa\.me|kofi|ko-fi/i.test(href)) continue;
-      vistos.add(num);
-      lista.push({ season: 1, number: num, ref: 'ays:' + slug + ':' + num, title: 'Episodio ' + num });
-    }
-    /* Los players online: iframe con «Episodio N» al lado (el título
-     * va encima del reproductor). Se toma la marca MÁS CERCANA al
-     * iframe — la más lejana pertenece al episodio anterior. */
-    const reI = /<iframe\b[^>]*?(?:data-src|src)\s*=\s*["']([^"']+)["'][^>]*>/gi;
-    let im2;
-    while ((im2 = reI.exec(texto)) && lista.length < 400) {
-      const cerca = texto.slice(Math.max(0, im2.index - 400), im2.index);
-      const reH = /(?:episodio|cap[íi]tulo)\s*[- ]?(\d{1,4})/gi;
-      let hm = null, h2;
-      while ((h2 = reH.exec(cerca))) hm = h2;
-      if (!hm) continue;
-      const num = parseInt(hm[1], 10);
-      if (num < 1 || num > 9999 || vistos.has(num)) continue;
-      vistos.add(num);
-      lista.push({ season: 1, number: num, ref: 'ays:' + slug + ':' + num, title: 'Episodio ' + num });
-    }
-    log('ays post «' + slug + '»: ' + lista.length + ' episodios de anclas+iframes (' + texto.length + ' letras, ' + (texto.match(/<iframe/gi) || []).length + ' iframes)');
-    if (!lista.length) {
-      const iO = texto.search(/ver online|Ver Online/i);
-      const iF = texto.search(/<iframe/i);
-      const iD = iO >= 0 ? iO : iF;
-      log('ays diagnóstico: ' + (iD >= 0 ? texto.slice(Math.max(0, iD - 200), iD + 500).replace(/\s+/g, ' ') : 'sin pestaña «Ver Online» ni iframes en el HTML'));
-    }
-    if (!lista.length) {
-      throw kino.error('not_found', 'AySDO: 0 capítulos', {
-        userMessage: 'No se pudieron leer los capítulos de esta serie en AySDO.'
-      });
-    }
-    lista.sort(function (a, b) { return a.number - b.number; });
-    return { series: { title: slugATitulo(slug.split('/').pop() || slug) }, episodes: lista };
-  },
-
-  async resolver(slug, n, idx) {
-    const r = await traer(BASE_AYS + '/' + slug + '.html', { timeoutMs: 12000, cuerpoSiempre: true });
-    if (!r.ok || !r.text) {
-      throw kino.error('not_found', 'AySDO no entregó el episodio', {
-        userMessage: 'No se pudo abrir este episodio en AySDO.'
-      });
-    }
-    /* Los players online del post (iframes, data-player, anclas embed)
-     * los lee el cosechador genérico; cada extractor hace el resto. */
-    const servers = await servidoresDePagina(r.text, BASE_AYS);
-    if (!servers.length) {
-      throw kino.error('unavailable', 'AySDO: sin servidores abribles', {
-        userMessage: 'Este episodio de AySDO no trae reproductores que AniJing sepa abrir. Prueba otra fuente.'
-      });
-    }
-    return await probarServidores(servers, idx, function (i) {
-      return 'ays:' + slug + ':' + (n || 1) + ':' + i;
-    });
-  }
-});
-
 /* ---------- fuente: IvAnime (ivanime.buzz, espejo de ivanime.top) ---------- */
 
 const BASE_IVA = 'https://ivanime.buzz';
@@ -7245,7 +7040,6 @@ const FUENTES_PANTALLA = [
   { id: 'eas', nombre: 'EstrenosAnime' },
   { id: 'jara', nombre: 'AnimeJara' },
   { id: 'jl', nombre: 'Anime-JL' },
-  { id: 'ays', nombre: 'AySDO' },
   { id: 'iva', nombre: 'IvAnime' },
   { id: 'az', nombre: 'Az-Animex' },
   { id: 'btz', nombre: 'BeatZ-Anime' }
@@ -7337,10 +7131,10 @@ const NUCLEO_TODAS = {
   eas: ['eas-eps', 'eas-sub', 'eas-lat', 'eas-popular'],
   jara: ['jara-emision', 'jara-catalogo'],
   /* v0.6.60: VerAnime sale (muro CF eterno) y entra Anime-JL.
-   * v0.6.66: CrisAnime y Vitt salen (acortadores con muro de JS);
-   * entra AySDO, la recolectora de versiones fansub BD. */
+   * v0.6.66: CrisAnime y Vitt salen (acortadores con muro de JS).
+   * v0.6.67: AySDO sale también — descargas tras ouo.io y sin
+   * online real («no disponible para ver en línea» en sus posts). */
   jl: ['jl-catalogo', 'jl-recientes'],
-  ays: ['ays-recientes'],
   iva: ['iva-emision', 'iva-directorio'],
   /* v0.6.25: Az-Animex entra con el par de géneros esencial.
    * v0.6.29: y el Directorio A-Z — el catálogo entero a la vista. */

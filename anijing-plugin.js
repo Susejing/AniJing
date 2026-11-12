@@ -447,6 +447,94 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.67 «La puerta falsa» — AySDO también SALe. El log del teléfono
+// (19:31) lo sentenció: sus fichas dan 0 episodios y la investigación
+// confirmó la enfermedad de siempre — las descargas de aysdo.xyz viven
+// en páginas-paste (aysdo-paste.blogspot.com) cuyo «enlace real» es
+// ouo.io, el mismo muro de JavaScript que mató a Vitt; y el panel
+// «Ver Online» de sus posts dice literalmente «Este contenido no está
+// disponible para ver en línea» (el online es para su grupo VIP de
+// Telegram). Los «2 iframes» que veía la cosecha eran del molde, no
+// players. Regla de la casa, otra vez: catálogo sin reproducción no
+// sirve. Once fuentes, todas con reproducción real.
+
+// v0.6.66 «El relevo fansub» — la casa manda y obedece: CrisAnime y
+// Vitt no Fansub SALen. Sus descargas viven tras acortadores con muro
+// de JavaScript (clksz.com, ouo.io) y no se cruzan sin navegador —
+// catálogo sin reproducción no sirve. Entra AySDO (aysdo.xyz), la
+// recolectora del molde de Az-Animex y Dw-anime: versiones BD de
+// fansubs con estilos (karaokes y colores de verdad), HD ligero 720p
+// y Full HD 1080p, con pestañas «Descargas» y «Ver Online». Blogspot
+// de fábrica: el feed JSON siempre responde (búsqueda ?q= y paginación
+// start-index) y los episodios online se cosechan del post (anclas e
+// iframes con «Episodio N» al lado), con diagnóstico generoso en el
+// log por si el molde cambia. Doce fuentes, todas con reproducción
+// real o descarga directa abrible.
+
+// v0.6.65 «Los papeles en regla» — el teléfono señaló el papel faltante:
+// Kino rechazó el acortador de CrisAnime con «AniJing necesita
+// kiyax.crisanimex.com, que no está aprobado» — el manifiesto solo
+// declaraba crisanimex.com pelado. Entran *.crisanimex.com (kiyax,
+// raygo, oscux, fire), clksz.com (el muro final) y ouo.io (el de Vitt).
+// Kino pedirá re-aprobación una vez al actualizar. La verdad no cambia:
+// los acortadores rematan en muros de JavaScript, así que cris y vitt
+// siguen catálogo y capítulos sí, reproducción no.
+
+// v0.6.64 «El segundo intento» — el teléfono celebró: Anime-JL carga,
+// lista episodios del script y REPRODUCE (Voe + 8 alternativas). Pero
+// al bajar por su catálogo el sitio tropezó dos veces seguidas (status
+// 500 del sitio y status 0 de red) y el scroll se cortó con error. La
+// hoja del catálogo ahora insiste una vez tras 1.5 s: un tropiezo
+// pasajero no debe cortar la vuelta por el catálogo.
+
+// v0.6.63 «La lista escondida» — el diagnóstico de la 0.6.62 cantó: la
+// ficha de Anime-JL NO trae anclas de episodio; los episodios viven en
+// un script (var episodes = [[12,"episodio-12","…cover.jpg",""],…] y
+// renderEpisodes() los pinta con JavaScript). Ahora se lee la variable
+// y el camino sale de var anime_info = ["2624", título, "slug", …].
+// CrisAnime: sus botones de descarga no van por fire.crisanimex.com
+// sino por subdominios-acortador propios (kiyax/raygo/oscux) que
+// terminan en clksz.com, un muro de anuncios con anti-adblock y
+// JavaScript — el filtro de enlaces de descarga los acepta, el
+// seguidor de acortadores los intenta, y si el muro no cede el
+// mensaje lo nombra: catálogo y capítulos sí, reproducción no.
+
+// v0.6.62 «El corta-corriente» — el segundo teléfono mandó tres lecciones.
+// (1) IvAnime respondió status 0 en TODAS sus filas y sus esperas de 13 s
+// tumbaron el screenEvent de Kino (tope de 20 s) con la pantalla roja
+// «Tardó demasiado»: corta-corriente de 5 minutos (una fila caída apaga
+// el resto) y esperas de 13/12 s a 8 s en portada, hoja y búsqueda.
+// (2) Anime-JL: 12 menciones de episodio y 0 anclas con la regex con
+// comillas — ahora el href pelado (sin comillas) también vale, y el
+// diagnóstico apunta a la PRIMERA mención de episodio (250 atrás, 350
+// adelante) en vez del encabezado, que no decía nada. (3) CrisAnime y
+// Vitt: los mensajes de resolve nombran al culpable real — el acortador
+// de publicidad (ouo.io en Vitt) que no abre sin JavaScript.
+
+// v0.6.61 «El molde beatz-dw» — el primer teléfono de la 0.6.60 mandó
+// tres cosas. (1) «defs is read-only»: Hermes no deja reasignar un
+// const — las portadas de CrisAnime y Vitt caían; «let» y a correr.
+// (2) Los enlaces de descarga de CrisAnime y Vitt NO van directos:
+// pasan por acortadores con muro de anuncios (fire.crisanimex.com →
+// publicidad, ouo.io) y usan el mismo molde «beatz-dw» de OneFansub
+// (marcas «Episodio/Capítulo N» + botones Descargar). El cosechador
+// nuevo lee las marcas, sigue la cadena del acortador una vez y, si
+// aterriza en MediaFire, sirve; si aterriza en publicidad, se descarta
+// con bitácora. (3) Anime-JL dio 0 capítulos con el regex estricto:
+// floja sobre el href, con diagnóstico «jl fichá …» en el log.
+//
+// v0.6.60 «El relevo» — sale VerAnime: su muro de Cloudflare nunca cedió
+// (ni la galleta cf_clearance ni el navegador oculto pasaron el reto;
+// kino.browser.page respondió «blocked») y sus filas llevaban meses
+// calladas. Entran tres fuentes: Anime-JL (anime-jl.net, catálogo
+// /animes con fichas /anime/<id>/<slug>/, episodios /episodio-N/ y
+// opciones online de los hosters de siempre), CrisAnime (crisanimex.com,
+// un post por serie con capítulos en Mega/MediaFire/Fireload/Mp4upload;
+// MediaFire se resuelve con su página de descarga) y Vitt no Fansub
+// (vitt125nofansub.blogspot.com, fansub latino con karaokes y colores,
+// leído por su feed JSON que nunca se cae). Mega queda fuera: cifrado.
+// 13 fuentes.
+//
 // v0.6.59 «La ventana ancha» — el log 00:01 (17 tarjetas de 48 anclas,
 // página 2 con OTRAS 17) demostró que las tarjetas del grid de
 // /catalogo SÍ están en el HTML pero se salían de la ventana de 1600
@@ -988,7 +1076,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.59';
+const VERSION = '0.6.67';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -1110,24 +1198,9 @@ function b64Latin1(s) {
   } catch (e) { return ''; }
 }
 
-/* v0.6.12: el multiserver-pro (darkanimes.com y familia) no trae las
- * URLs de sus botones en claro: data-url es el base64 de la URL XORada
- * byte a byte con la clave pk (ASCII), y esa pk la entrega su propia
- * API en claro dentro de {"pk":"..."}. Decodificado y verificado con
- * cuatro muestras de sonda (gupload.site, filelions.top, streamwish.top,
- * uqload.cx). */
-function descifrarMsp(valor, pk) {
-  try {
-    const bytes = b64Bytes(String(valor || ''));
-    const clave = String(pk || '');
-    if (!bytes.length || !clave.length) return '';
-    let r = '';
-    for (let i = 0; i < bytes.length; i++) {
-      r += String.fromCharCode(bytes[i] ^ clave.charCodeAt(i % clave.length));
-    }
-    return /^https?:\/\//i.test(r) ? r : '';
-  } catch (e) { return ''; }
-}
+/* v0.6.12 (histórico): el multiserver-pro de VerAnime cifraba sus URLs
+ * con XOR + base64; la fuente salió en la 0.6.60 y el descifrador con
+ * ella. La nota queda como historia del oficio. */
 
 async function traer(url, opciones) {
   const o = opciones || {};
@@ -3097,7 +3170,7 @@ function servidoresDePagina(html) {
   while ((m = aRe.exec(texto))) candidatos.push({ url: m[1], nombre: m[2] });
   const servers = [];
   const vistos = {};
-  const propios = /(animejara\.com|henaojara2\.com|veranime\.ninja|otakustv2?\.com|otakustv\.net|animeyt\.(?:cc|one|org)|estrenosanime\.net|ivanime\.(?:top|buzz))/i;
+  const propios = /(animejara\.com|henaojara2\.com|otakustv2?\.com|otakustv\.net|animeyt\.(?:cc|one|org)|estrenosanime\.net|ivanime\.(?:top|buzz))/i;
   for (let i = 0; i < candidatos.length; i++) {
     const c = candidatos[i];
     let u = desescapar(String(c.url || '').trim());
@@ -4601,382 +4674,99 @@ registrarFuente({
   }
 });
 
-/* ---------- fuente: VerAnime (veranime.ninja, tema Dooplay) ---------- */
+/* ---------- fuente: Anime-JL (anime-jl.net, descargas Mega/Mediafire) ---------- */
 
-/* v0.6.9 «El cambiazo»: entra VerAnime, un Dooplay de los de siempre:
- * tarjetas /anime/<slug>/ con pósters de tmdb, fichas con temporadas y
- * anclas /ver/<slug>-episodio-N/. OJO: sus atributos van con comillas
- * simples (li data-post='…'), por eso los greques dobles no los veían.
- * El player se sirve por el endpoint wp-json/dooplayer/v2/<post>/<tipo>/
- * <nume> y su multiserver es darkanimes.com, pariente del saidochesto:
- * lista sus hosters en onclick('URL'). */
-const BASE_VAN = 'https://veranime.ninja';
-/* v0.6.40: VerAnime se puso tras Cloudflare («Just a moment», 403) y sus
- * espejos históricos (vanime.ninja, veranime.tv) están muertos. La
- * ventanilla «Pasar la revisión» guarda la galleta cf_clearance y las
- * peticiones de la fuente la llevan como Cookie — mismo trato que la
- * sesión de TeraBox. Si el muro sigue, la fuente queda callada con su
- * bitácora honesta (portada vacía, mensaje en el teléfono). */
-function vanCabeceras(extra) {
-  const h = { Referer: BASE_VAN + '/' };
-  const galleta = String(configDe('veranimeCfCookie') || '').trim();
-  if (galleta) h.Cookie = galleta;
-  if (extra) for (const k in extra) h[k] = extra[k];
-  return h;
-}
+/* v0.6.60 «El relevo»: sale VerAnime (su muro de Cloudflare nunca cedió:
+ * ni galleta ni navegador oculto pasaron el reto) y entra Anime-JL, un
+ * catálogo ordenado con fichas /anime/<id>/<slug>/, lista de episodios
+ * con anclas /anime/<id>/<slug>/episodio-N/ y página de episodio con
+ * opciones de servidores online (filemoon, mp4upload, vidhide, streamwish,
+ * filelions…) que el cosechador genérico lee. Sus descargas son VIP,
+ * así que la reproducción vive en las opciones online. */
+const BASE_JL = 'https://www.anime-jl.net';
 
-/* v0.6.42 «La página escondida»: la galleta cf_clearance no basta —
- * Cloudflare la ata al navegador que la pasó, y kino.fetch no lo es
- * (log del teléfono: 403 con galleta guardada). Respaldo de fábrica de
- * Kino para exactamente este caso: kino.browser.page (manifiesto
- * «browser»: «pages») abre la página en el navegador oculto, pasa la
- * revisión él solo y devuelve el HTML. Barato primero, navegador
- * después; una página a la vez en toda la app, así que en la portada
- * solo el riel núcleo la usa y las demás filas quedan con su aviso
- * honesto. */
-const VAN_CF_RE = /just a moment|cf-chl|attention required|checking your browser/i;
-let PAGES_OFF = false;
-/* v0.6.43 «El alto en el muro»: la sonda del teléfono sentenció —
- * kino.browser.page responde «blocked: the page stayed on the site's
- * check»: el navegador oculto también es detectado por Cloudflare y
- * Kino nunca resuelve retos por su cuenta. VerAnime es un muro que el
- * plugin no puede pasar. En vez de quemar 15 peticiones por portada,
- * el muro detectado impone un descanso de 10 minutos: las llamadas de
- * la fuente responden al instante con su vacío honesto. */
-let VAN_DESCANSO = 0;
-function vanEnDescanso() { return Date.now() < VAN_DESCANSO; }
-async function vanPagina(url, ms) {
-  if (vanEnDescanso()) return null;
-  let r = null;
-  try { r = await traer(url, { headers: vanCabeceras(), timeoutMs: ms, cuerpoSiempre: true }); } catch (e) { r = null; }
-  const muro = !r || !r.ok || (r.text && VAN_CF_RE.test(r.text.slice(0, 3000)));
-  if (muro && !PAGES_OFF && kino.browser && typeof kino.browser.page === 'function') {
-    try {
-      const pagina = await kino.browser.page(url, { timeoutMs: Math.max(8000, Math.min(14000, ms + 3000)) });
-      const html = pagina && pagina.html;
-      if (html && html.length > 500) {
-        log('van página escondida: ' + url.slice(-40) + ' (' + html.length + ' letras)');
-        return { ok: true, status: 200, text: html };
-      }
-    } catch (e2) {
-      const code = String((e2 && e2.code) || '');
-      if (code === 'not_allowed' || code === 'browser_unavailable') PAGES_OFF = true;
-      /* «blocked»: el reto no cede ni con el navegador oculto — no
-       * insistir más en esta sesión y dictar el descanso. */
-      if (code === 'blocked') { PAGES_OFF = true; VAN_DESCANSO = Date.now() + 600000; log('van: el muro no cede (navegador oculto bloqueado); descanso de 10 minutos'); }
-      else log('van página escondida falló', (e2 && e2.message) || String(e2));
-    }
-  }
-  /* El descanso solo lo dicta un muro REAL: 403 de Cloudflare o el
-   * «blocked» del navegador oculto — un fallo de red o un 404 cualquiera
-   * no es el muro. */
-  if (muro && !vanEnDescanso() && r && r.status === 403) {
-    VAN_DESCANSO = Date.now() + 600000;
-    log('van: muro de Cloudflare (403); descanso de 10 minutos');
-  }
-  return r;
-}
-
-function vanTarjetas(html) {
-  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/(?:anime|pelicula)\/([^"\/?#]+)[^>]*>([\s\S]{0,900}?)<\/a>/gi;
+function jlTarjetas(html) {
+  /* Las tarjetas del catálogo son anclas /anime/<id>/<slug>/ (SIN
+   * /episodio-) con el póster dentro de la ventana; el título viene en
+   * el h3 o en el alt de la imagen. */
+  const re = /<a\b[^>]*href\s*=\s*["'][^"']*\/anime\/(\d+)\/([^"'?#]+)\/?["'][^>]*>([\s\S]{0,3200}?)<\/a>/gi;
   const items = [];
   const indice = {};
   let m;
   while ((m = re.exec(String(html || ''))) && items.length < 40) {
-    const slug = m[1];
-    if (!slug) continue;
-    let poster = posterEnVentana(m[2]);
+    const slug = m[1] + '/' + m[2];
+    if (indice[slug]) continue;
+    const ventana = m[3];
+    let poster = posterEnVentana(ventana);
     if (!poster) poster = posterAntesDe(String(html || ''), m.index);
-    if (!poster) continue;
-    poster = absolutizar(poster, BASE_VAN);
     let titulo = '';
-    const h = /<h[1-6][^>]*>([\s\S]{1,200}?)<\/h[1-6]>/i.exec(m[2]);
+    const h = /<h[1-6][^>]*>([\s\S]{1,200}?)<\/h[1-6]>/i.exec(ventana);
     if (h) titulo = limpio(h[1]);
     if (!titulo) {
-      const al = /alt\s*=\s*["']([^"']{2,})["']/i.exec(m[2]);
+      const al = /alt\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
       if (al) titulo = decHtml(al[1]);
     }
-    if (!titulo) {
-      /* el ancla del h3 trae el título como texto pelado (Dooplay:
-       * <h3><a href>Título</a></h3>) */
-      const tx = limpio(m[2].replace(/<[^>]+>/g, ' '));
-      if (tx.length >= 2 && tx.length <= 200) titulo = tx;
-    }
-    const esPelicula = /\/pelicula\//.test(m[0]);
-    const existe = indice[slug];
-    if (!existe) {
-      if (!titulo || titulo.length < 2) titulo = slugATitulo(slug);
-      const item = {
-        id: 'van-' + slug,
-        ref: 'van:' + slug,
-        title: titulo.slice(0, 200),
-        poster: poster,
-        kind: esPelicula ? 'movie' : 'series'
-      };
-      indice[slug] = item;
-      items.push(item);
-    } else if (titulo && titulo.length >= 2) {
-      /* el ancla del h3 llega después del ancla del póster: mejora el
-       * título que el primer ancla no traía */
-      existe.title = titulo.slice(0, 200);
-      if (esPelicula) existe.kind = 'movie';
-    }
+    if (!titulo || titulo.length < 2) titulo = slugATitulo(m[2]);
+    const item = {
+      id: 'jl-' + slug.replace(/\//g, '-'),
+      ref: 'jl:' + slug,
+      title: titulo.slice(0, 200),
+      kind: 'series'
+    };
+    if (poster) item.poster = absolutizar(poster, BASE_JL);
+    indice[slug] = item;
+    items.push(item);
   }
   return items;
 }
 
-async function vanFicha(slug) {
-  const a = await vanPagina(BASE_VAN + '/anime/' + slug + '/', 10000);
-  if (a.ok && a.text) return a;
-  const o = await vanPagina(BASE_VAN + '/online/' + slug + '/', 10000);
-  if (o.ok && o.text) return o;
-  const p = await vanPagina(BASE_VAN + '/pelicula/' + slug + '/', 10000);
-  return p;
-}
-
-/* El dooplayer de VerAnime: cada li (con comillas simples o dobles) trae
- * data-post, data-nume y data-type. v0.6.12: la API v2 REST responde 200
- * con el cuerpo VACÍO (la sonda lo probó con todas sus variantes) — el
- * tema usa la puerta admin-ajax: POST a /wp-admin/admin-ajax.php con
- * action doo_player_ajax y {post, nume, type}, que sí devuelve el
- * {"embed_url":...}. El embed de darkanimes.com es un multiserver-pro:
- * botones msp-server con data-url cifrado (base64 de la URL XORada con
- * la pk de su API) repartidos en listas por idioma (data-lang 1 Latino,
- * 2 Castellano, 3 Subtitulado). */
-async function vanServersDe(html) {
-  const texto = String(html || '');
-  const servers = [];
-  const vistos = {};
-  const opciones = [];
-  const liRe = /<li\b[^>]*>[\s\S]{0,400}?<\/li>/gi;
-  let m;
-  while ((m = liRe.exec(texto)) && opciones.length < 8) {
-    const tag = m[0];
-    if (!/dooplay_player_option/.test(tag)) continue;
-    const post = /\bdata-post\s*=\s*["']([^"']+)["']/i.exec(tag);
-    const nume = /\bdata-nume\s*=\s*["']([^"']+)["']/i.exec(tag);
-    const tipo = /\bdata-type\s*=\s*["']([^"']+)["']/i.exec(tag);
-    const sv = /class\s*=\s*["'][^"']*server[^"']*["'][^>]*>([^<]{0,50})</i.exec(tag);
-    if (!post || !nume) continue;
-    opciones.push({
-      post: post[1], nume: nume[1], tipo: tipo ? tipo[1] : 'tv',
-      nombre: sv ? sv[1].replace(/\s+/g, ' ').trim() : ''
-    });
-  }
-  if (!opciones.length) return servers;
-  log('van: ' + opciones.length + ' opciones de player');
-  for (const o of opciones) {
-    if (queda() < 6000) break;
-    let embed = '';
-    /* v0.6.12: la puerta buena es el admin-ajax del tema; la v2 queda
-     * de respaldo por si el sitio vuelve a ella. */
-    try {
-      const r = await traer(BASE_VAN + '/wp-admin/admin-ajax.php', {
-        metodo: 'POST',
-        form: { action: 'doo_player_ajax', post: o.post, nume: o.nume, type: o.tipo },
-        headers: vanCabeceras({ 'User-Agent': UA, 'X-Requested-With': 'XMLHttpRequest' }),
-        timeoutMs: 8000
-      });
-      if (r.ok && r.text) {
-        const em = /["']embed_url["']\s*:\s*["']([^"']+)["']/.exec(r.text);
-        if (em) embed = desescapar(em[1]).replace(/\\\//g, '/');
-        else log('van doo_player_ajax: status ' + r.status + ', ' + r.text.length + ' letras sin embed_url');
-      } else {
-        log('van doo_player_ajax: status ' + (r ? r.status : 'null') + (r && r.text ? ', ' + r.text.length + ' letras' : ''));
-      }
-    } catch (e) {
-      log('van doo_player_ajax falló', (e && e.message) || String(e));
-    }
-    if (!embed) {
-      try {
-        const r = await traer(BASE_VAN + '/wp-json/dooplayer/v2/' + encodeURIComponent(o.post) +
-          '/' + encodeURIComponent(o.tipo) + '/' + encodeURIComponent(o.nume),
-          { headers: vanCabeceras({ 'User-Agent': UA }), timeoutMs: 8000 });
-        if (!r.ok || !r.text) continue;
-        const em = /["']embed_url["']\s*:\s*["']([^"']+)["']/.exec(r.text);
-        if (em) embed = desescapar(em[1]).replace(/\\\//g, '/');
-      } catch (e) { continue; }
-    }
-    if (!embed) continue;
-    if (embed.indexOf('//') === 0) embed = 'https:' + embed;
-    if (!/^https?:\/\//i.test(embed)) continue;
-    if (/darkanimes\.com|saidochesto|multiserver|streamhj\.top/i.test(embed)) {
-      /* multiserver-pro: los botones traen data-url cifrado y la clave
-       * vive en la API que anuncia el div #msp (data-api). Respaldos:
-       * el onclick('URL') de siempre y, si nada, fuera. */
-      try {
-        const r2 = await traer(embed, { headers: vanCabeceras({ 'User-Agent': UA }), timeoutMs: 9000 });
-        if (!r2.ok || !r2.text) { log('van multiserver: status ' + r2.status); continue; }
-        let pk = '';
-        const apiM = /data-api\s*=\s*["']([^"']+)["']/i.exec(r2.text);
-        if (apiM) {
-          try {
-            const r3 = await traer(apiM[1], { headers: { Referer: origenDe(embed) + '/', 'User-Agent': UA }, timeoutMs: 8000 });
-            if (r3.ok && r3.text) {
-              const pkM = /["']pk["']\s*:\s*["']([^"']+)["']/.exec(r3.text);
-              if (pkM) pk = pkM[1];
-              else log('van API del multiserver: sin pk (' + r3.text.length + ' letras)');
-            } else {
-              log('van API del multiserver: status ' + (r3 ? r3.status : 'null'));
-            }
-          } catch (e3) {
-            log('van API del multiserver falló', (e3 && e3.message) || String(e3));
-          }
-        }
-        let sacados = 0;
-        if (pk) {
-          const ulRe = /<ul\b[^>]*msp-list[^>]*data-lang\s*=\s*["'](\d+)["'][^>]*>([\s\S]*?)<\/ul>/gi;
-          let ul;
-          while ((ul = ulRe.exec(r2.text)) && sacados < 12) {
-            const suf = ul[1] === '2' ? ' · CASTELLANO' : ul[1] === '3' ? ' · SUBTITULADO' : ' · LATINO';
-            const liRe2 = /<li\b[^>]*>[\s\S]*?<\/li>/gi;
-            let li;
-            while ((li = liRe2.exec(ul[2])) && sacados < 12) {
-              const du = /data-url\s*=\s*["']([^"']+)["']/i.exec(li[0]);
-              if (!du) continue;
-              const u = descifrarMsp(du[1], pk);
-              if (!u) continue;
-              const nomM = /msp-server-name[^>]*>([^<]{1,60})</i.exec(li[0]);
-              const tipo = detectarTipo(nomM ? nomM[1] : '', u);
-              if (!tipo || tipo === 'generic' || tipo === 'multi') continue;
-              const clave = tipo + '|' + u;
-              if (vistos[clave]) continue;
-              vistos[clave] = true;
-              servers.push({ nombre: (nomM ? limpio(nomM[1]) : ''), url: u, tipo: tipo, sufijo: suf });
-              sacados++;
-            }
-          }
-        }
-        if (!sacados) {
-          /* respaldo viejo: onclick('URL') a lo saidochesto */
-          const odRe = /\(\s*['"](https?:\/\/[^'"]+)['"]\s*\)/gi;
-          while ((m = odRe.exec(r2.text))) {
-            const u = desescapar(m[1]);
-            const tipo = detectarTipo('', u);
-            if (!tipo || tipo === 'generic' || tipo === 'multi') continue;
-            const clave = tipo + '|' + u;
-            if (vistos[clave]) continue;
-            vistos[clave] = true;
-            servers.push({ nombre: '', url: u, tipo: tipo });
-            sacados++;
-          }
-        }
-        log('van multiserver: ' + sacados + ' servidores');
-      } catch (e) {
-        log('multiserver de VerAnime falló', (e && e.message) || String(e));
-      }
-    } else {
-      const tipo = detectarTipo(o.nombre, embed);
-      if (!tipo || tipo === 'generic') continue;
-      const clave = tipo + '|' + embed;
-      if (vistos[clave]) continue;
-      vistos[clave] = true;
-      servers.push({ nombre: o.nombre, url: embed, tipo: tipo });
-    }
-  }
-  return servers;
+function jlCaminoConPagina(camino, num) {
+  const base = String(camino || '/animes');
+  if (num > 1) return base + (base.indexOf('?') >= 0 ? '&' : '?') + 'page=' + num;
+  return base;
 }
 
 registrarFuente({
-  id: 'van',
-  etiqueta: 'VerAnime',
+  id: 'jl',
+  etiqueta: 'Anime-JL',
 
   async buscar(q) {
     const texto = String(q || '').trim().slice(0, 100);
     if (texto.length < 2) return [];
-    if (vanEnDescanso()) { log('van buscar: en descanso por el muro'); return []; }
     try {
-      const r = await vanPagina(BASE_VAN + '/?s=' + encodeURIComponent(texto), 10000);
+      const r = await traer(BASE_JL + '/animes?q=' + encodeURIComponent(texto), { timeoutMs: 12000, cuerpoSiempre: true });
       if (!r.ok) return [];
-      const items = vanTarjetas(r.text).slice(0, 25);
-      for (const it of items) it.badges = ['VerAnime'];
+      const items = jlTarjetas(r.text).slice(0, 25);
+      for (const it of items) it.badges = ['Anime-JL'];
       return items;
     } catch (e) {
-      log('van buscar', (e && e.message) || String(e));
+      log('jl buscar', (e && e.message) || String(e));
       return [];
     }
   },
 
   async portada(solo) {
-    /* v0.6.43: si el muro de Cloudflare mandó a descanso, responder al
-     * instante con el vacío honesto — sin 15 peticiones quemadas. */
-    if (vanEnDescanso()) { log('van portada: en descanso por el muro'); return []; }
-    /* v0.6.13 «El escaparate»: el Inicio de VerAnime crece — el riel
-     * «Anime» de siempre más un riel por género, verificados por sonda
-     * uno a uno (accion 36 páginas, comedia 39, fantasia 40, aventura
-     * 32, drama 26, romance 19; shonen/escolar/peliculas NO existen y
-     * se quedan fuera). Cada riel trae 20 tarjetas y su «Ver más»
-     * pagina en /genero/<slug>/page/N/. */
+    /* Dos filas verificadas: el catálogo entero (/animes) y su orden
+     * «Recientemente actualizados» (?order=created, visto en el sitio).
+     * En «Todas» solo el núcleo (tope de peticiones de Kino). */
     let defs = [
-      { id: 'van-anime', titulo: 'Anime · VerAnime', ref: 'van-anime', genero: 'ver-anime' },
-      { id: 'van-genero-accion', titulo: 'Acción · VerAnime', ref: 'van-genero-accion', genero: 'accion' },
-      { id: 'van-genero-aventura', titulo: 'Aventura · VerAnime', ref: 'van-genero-aventura', genero: 'aventura' },
-      { id: 'van-genero-fantasia', titulo: 'Fantasía · VerAnime', ref: 'van-genero-fantasia', genero: 'fantasia' },
-      { id: 'van-genero-comedia', titulo: 'Comedia · VerAnime', ref: 'van-genero-comedia', genero: 'comedia' },
-      { id: 'van-genero-drama', titulo: 'Drama · VerAnime', ref: 'van-genero-drama', genero: 'drama' },
-      { id: 'van-genero-romance', titulo: 'Romance · VerAnime', ref: 'van-genero-romance', genero: 'romance' },
-      /* v0.6.24 «El escaparate lleno»: la sonda v39b listó los 60
-       * géneros vivos del sitio — estos 7 respondieron 200 con
-       * tarjetas (shounen/escolar/peliculas ya se sabía que NO: los
-       * slugs del dump son los buenos). */
-      { id: 'van-genero-shounen', titulo: 'Shounen · VerAnime', ref: 'van-genero-shounen', genero: 'shounen' },
-      { id: 'van-genero-seinen', titulo: 'Seinen · VerAnime', ref: 'van-genero-seinen', genero: 'seinen' },
-      { id: 'van-genero-isekai', titulo: 'Isekai · VerAnime', ref: 'van-genero-isekai', genero: 'isekai' },
-      { id: 'van-genero-mecha', titulo: 'Mecha · VerAnime', ref: 'van-genero-mecha', genero: 'mecha' },
-      { id: 'van-genero-misterio', titulo: 'Misterio · VerAnime', ref: 'van-genero-misterio', genero: 'misterio' },
-      { id: 'van-genero-psicologico', titulo: 'Psicológico · VerAnime', ref: 'van-genero-psicologico', genero: 'psicologico' },
-      { id: 'van-genero-sobrenatural', titulo: 'Sobrenatural · VerAnime', ref: 'van-genero-sobrenatural', genero: 'sobrenatural' },
-      /* v0.6.24: /pelicula/ responde 200 con tarjetas de película
-       * (vanTarjetas ya las marca kind 'movie' y vanFicha rebota a
-       * /pelicula/<slug>/) y pagina con «Página X de Y» igual que los
-       * géneros. */
-      { id: 'van-peliculas', titulo: 'Películas · VerAnime', ref: 'van-peliculas', camino: '/pelicula/' }
+      { id: 'jl-catalogo', titulo: 'Catálogo · Anime-JL', camino: '/animes' },
+      { id: 'jl-recientes', titulo: 'Recientes · Anime-JL', camino: '/animes?order=created' }
     ];
-    /* v0.6.26: en «Todas» solo se consulta el núcleo (tope de Kino:
-     * 60 peticiones por llamada — la 0.6.25 lo reventó). */
     if (solo === true) {
-      const nucleo = NUCLEO_TODAS.van;
+      const nucleo = NUCLEO_TODAS.jl;
       if (nucleo) defs = defs.filter(function (d) { return nucleo.indexOf(d.id) >= 0; });
     }
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
-        const destino = def.camino || ('/genero/' + def.genero + '/');
-        /* v0.6.42: solo el riel núcleo («Anime») usa el respaldo del
-         * navegador oculto — kino.browser.page hace una página a la vez
-         * en toda la app y 15 capturas en cadena reventarían la
-         * portada; el resto de filas vive de la galleta y, si el muro
-         * no cede, del aviso honesto. */
-        const r = def.ref === 'van-anime'
-          ? await vanPagina(BASE_VAN + destino, 11000)
-          : await traer(BASE_VAN + destino, { headers: vanCabeceras(), timeoutMs: 11000, cuerpoSiempre: true });
-        let items = r && r.ok ? vanTarjetas(r.text).slice(0, 20) : [];
-        /* v0.6.10 conservada: SOLO el riel «Anime» conserva su respaldo
-         * en la home del sitio — es el género maestro; los demás viven
-         * o mueren por su género, con bitácora honesta. */
-        if (!items.length && def.ref === 'van-anime') {
-          try {
-            const h = await traer(BASE_VAN + '/', { headers: vanCabeceras(), timeoutMs: 10000, cuerpoSiempre: true });
-            if (h.ok) items = vanTarjetas(h.text).slice(0, 20);
-            if (!items.length && h.text) {
-              log('van home: status ' + h.status + ', ' + h.text.length + ' letras, 0 tarjetas');
-              const hp = await vanPagina(BASE_VAN + '/', 10000);
-              if (hp && hp.ok && hp.text) items = vanTarjetas(hp.text).slice(0, 20);
-            }
-          } catch (e2) {
-            log('van home falló', (e2 && e2.message) || String(e2));
-          }
+        const r = await traer(BASE_JL + jlCaminoConPagina(def.camino, 1), { timeoutMs: 12000, cuerpoSiempre: true });
+        const items = r && r.ok ? jlTarjetas(r.text).slice(0, 20) : [];
+        if (!items.length && r && r.text) {
+          log('jl fila «' + def.titulo + '»: status ' + r.status + ', ' + r.text.length + ' letras, 0 tarjetas');
         }
-        if (!items.length) {
-          if (r && r.text) {
-            log('van fila «' + def.titulo + '»: status ' + r.status + ', ' + r.text.length + ' letras, 0 tarjetas' +
-              (/cloudflare|just a moment|cf-chl/i.test(r.text) ? ' (huele a reto de Cloudflare)' : ''));
-          } else {
-            log('van fila «' + def.titulo + '» no respondió (status ' + (r ? r.status : 'null') + ')');
-          }
-        }
-        return items.length ? { id: def.id, title: def.titulo, ref: def.ref, items: items } : null;
+        return items.length ? { id: def.id, title: def.titulo, ref: def.id, camino: def.camino, items: items } : null;
       } catch (e) {
-        log('van fila «' + def.titulo + '» falló', (e && e.message) || String(e));
+        log('jl fila «' + def.titulo + '» falló', (e && e.message) || String(e));
         return null;
       }
     }));
@@ -4986,41 +4776,38 @@ registrarFuente({
   },
 
   async hoja(ref, cursor) {
-    /* v0.6.13: cada riel de género abre su propio /genero/<slug>/ y
-     * pagina con /genero/<slug>/page/N/ (verificado por sonda: la
-     * página 2 responde 200 con 69 anclas, igual que la 1).
-     * v0.6.24: «Películas» hace lo propio con /pelicula/ (sonda v39:
-     * página 2 con «Página X de Y» y tarjetas distintas). */
-    let base = null;
-    if (ref === 'van-peliculas') base = '/pelicula';
-    else if (ref === 'van-anime') base = '/genero/ver-anime';
-    else if (ref.indexOf('van-genero-') === 0) base = '/genero/' + ref.slice('van-genero-'.length);
-    if (!base) return null;
-    if (vanEnDescanso()) {
-      throw kino.error('unavailable', 'VerAnime tras Cloudflare (descanso)', {
-        userMessage: 'VerAnime está tras un muro de Cloudflare que el plugin no puede pasar. Vuelve a intentarlo en unos minutos.'
-      });
-    }
+    const defs = { 'jl-catalogo': '/animes', 'jl-recientes': '/animes?order=created' };
+    const camino = defs[ref];
+    if (!camino) return null;
     const pagina = parseInt(cursor, 10);
     const num = Number.isFinite(pagina) && pagina > 1 ? pagina : 1;
-    const camino = num > 1 ? base + '/page/' + num + '/' : base + '/';
-    const r = await vanPagina(BASE_VAN + camino, 12000);
+    /* v0.6.64 «El segundo intento»: el catálogo de Anime-JL tropieza a
+     * ratos (status 500 del sitio y status 0 de red en el teléfono, uno
+     * tras otro al bajar por el catálogo). Antes de rendir, un segundo
+     * intento tras una pausa corta: un 500 pasajero no debe cortar el
+     * scroll. */
+    let r = await traer(BASE_JL + jlCaminoConPagina(camino, num), { timeoutMs: 12000, cuerpoSiempre: true });
     if (!r.ok) {
-      throw kino.error('unavailable', 'VerAnime no respondió (status ' + r.status + ')', {
-        userMessage: 'VerAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
+      log('jl hoja «' + ref + '» página ' + num + ': status ' + r.status + ' — segundo intento');
+      await new Promise(function (ok) { setTimeout(ok, 1500); });
+      r = await traer(BASE_JL + jlCaminoConPagina(camino, num), { timeoutMs: 12000, cuerpoSiempre: true });
+    }
+    if (!r.ok) {
+      throw kino.error('unavailable', 'Anime-JL no respondió (status ' + r.status + ')', {
+        userMessage: 'Anime-JL no respondió. Revisa tu conexión o inténtalo en un rato.'
       });
     }
-    const items = vanTarjetas(r.text).slice(0, 60);
-    let next = null;
-    const pg = /P[áa]gina\s+(\d+)\s+de\s+(\d+)/i.exec(r.text);
-    if (pg && parseInt(pg[1], 10) < parseInt(pg[2], 10)) next = String(parseInt(pg[1], 10) + 1);
+    const items = jlTarjetas(r.text).slice(0, 60);
+    /* El catálogo no anuncia «Página X de Y»: hay siguiente si la página
+     * vino llena (Kino corta solo cuando una página vuelve vacía). */
+    const next = items.length >= 20 ? String(num + 1) : null;
     return { items: items, next: next };
   },
 
   async detalle(slug) {
-    const r = await vanFicha(slug);
+    const r = await traer(BASE_JL + '/anime/' + slug + '/', { timeoutMs: 12000, cuerpoSiempre: true });
     if (!r.ok || !r.text) return null;
-    const serie = { title: slugATitulo(slug) };
+    const serie = { title: slugATitulo(slug.split('/').pop() || slug) };
     const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
     if (h) serie.title = limpio(h[1]) || serie.title;
     const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(r.text);
@@ -5031,76 +4818,105 @@ registrarFuente({
   },
 
   async episodios(slug) {
-    const r = await vanFicha(slug);
+    const r = await traer(BASE_JL + '/anime/' + slug + '/', { timeoutMs: 12000, cuerpoSiempre: true });
     if (!r.ok || !r.text) {
-      throw kino.error('unavailable', 'VerAnime no entregó la serie', {
-        userMessage: 'VerAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
+      throw kino.error('unavailable', 'Anime-JL no entregó la serie', {
+        userMessage: 'Anime-JL no respondió. Revisa tu conexión o inténtalo en un rato.'
       });
     }
-    /* Dooplay de siempre: cada li de temporada trae «numerando» (temp -
-     * número) y el ancla /ver/<slug>-episodio-N/. */
-    const texto = r.text;
+    /* La ficha trae «Lista de episodios»: anclas
+     * /anime/<id>/<slug-ep>/episodio-N/. El slug del episodio puede
+     * diferir del de la ficha (re-subidas), así que el ref guarda el
+     * camino completo del episodio. v0.6.61: regex floja sobre el href
+     * (el teléfono dio 0 capítulos con la estricta) y diagnóstico en
+     * el log con conteos y una muestra. */
+    const texto = String(r.text || '');
     const vistos = new Set();
     const lista = [];
-    const liRe = /<li\b[^>]*>[\s\S]{0,700}?<\/li>/gi;
+    /* v0.6.62: el teléfono mostró 12 menciones de episodio y 0 anclas con
+     * la regex con comillas — los href de Anime-JL pueden ir sin comillas.
+     * Ahora se acepta href pelado (con o sin comillas). */
+    const re = /href\s*=\s*["']?([^"'\s>]*\/anime\/[^"'\s>]*\/episodio-(\d+)[^"'\s>]*)["']?/gi;
     let m;
-    while ((m = liRe.exec(texto)) && lista.length < 400) {
-      const tag = m[0];
-      const em = /href\s*=\s*["'][^"']*\/ver\/([^"'\/?#]+)-episodio-(\d+)\/?["']/i.exec(tag);
-      if (!em) continue;
-      const epslug = em[1] + '-episodio-' + em[2];
-      const num = parseInt(em[2], 10);
-      if (vistos.has(epslug) || num < 1 || num > 9999) continue;
-      vistos.add(epslug);
-      let season = 1;
-      const nm = /(\d+)\s*-\s*(\d+)/.exec(limpio(tag));
-      if (nm && parseInt(nm[2], 10) === num) season = parseInt(nm[1], 10);
-      lista.push({ season: season, number: num, ref: 'van:' + epslug + ':' + num, title: 'Episodio ' + num });
+    while ((m = re.exec(texto)) && lista.length < 400) {
+      let camino = decHtml(m[1]);
+      const num = parseInt(m[2], 10);
+      if (num < 1 || num > 9999 || vistos.has(num)) continue;
+      /* del href se queda solo con el camino /anime/<id>/<slug>/episodio-N */
+      const cm = /\/anime\/[^"']*\/episodio-\d+/.exec(camino);
+      if (!cm) continue;
+      camino = cm[0].replace(/\/$/, '');
+      camino = camino.replace(/^\/anime\//, '');
+      vistos.add(num);
+      lista.push({ season: 1, number: num, ref: 'jl:' + camino + ':' + num, title: 'Episodio ' + num });
+    }
+    /* v0.6.63 «La lista escondida»: la ficha de Anime-JL NO trae anclas —
+     * los episodios viven en un script: var episodes = [[12,"episodio-12",
+     * "episodes_tumbl/….jpg",""],…] y renderEpisodes() los pinta con
+     * JavaScript. Se lee la variable (JSON con comillas simples no hay;
+     * los elementos son [num, "episodio-N", portada, ""]) y el camino se
+     * arma con var anime_info = ["2624", título, "slug", …]. */
+    if (!lista.length) {
+      const aiM = /var\s+anime_info\s*=\s*\[\s*"(\d+)"\s*,[\s\S]{0,300}?"([a-z0-9-]+)"/i.exec(texto);
+      const epRe = /\[\s*(\d{1,4})\s*,\s*"episodio-\d+"/g;
+      let e;
+      while ((e = epRe.exec(texto)) && lista.length < 400) {
+        const num = parseInt(e[1], 10);
+        if (num < 1 || num > 9999 || vistos.has(num)) continue;
+        vistos.add(num);
+        const camino = aiM ? (aiM[1] + '/' + aiM[2]) : slug;
+        lista.push({ season: 1, number: num, ref: 'jl:' + camino + ':' + num, title: 'Episodio ' + num });
+      }
+      if (lista.length) log('jl ficha «' + slug + '»: ' + lista.length + ' episodios leídos del script var episodes');
+    }
+    log('jl ficha «' + slug + '»: ' + lista.length + ' episodios de ' + (texto.match(/episodio-\d+/gi) || []).length + ' menciones (' + texto.length + ' letras)');
+    if (!lista.length) {
+      /* v0.6.62: la muestra ahora apunta a la PRIMERA mención de
+       * episodio-N (no al encabezado «Lista de episodios», que no dice
+       * nada de cómo vive el enlace). 250 letras atrás y 350 adelante. */
+      const mM = /episodio-\d+/i.exec(texto);
+      const iM = mM ? mM.index : -1;
+      log('jl diagnóstico: ' + (iM >= 0 ? texto.slice(Math.max(0, iM - 250), iM + 350).replace(/\s+/g, ' ') : 'sin menciones de episodio en el HTML'));
     }
     if (!lista.length) {
-      /* sin anclas de episodio puede ser una PELÍCULA: su ficha trae el
-       * dooplayer a cuestas y se lista como único episodio. */
-      if (/dooplay_player_option/.test(texto)) {
-        return {
-          series: { title: slugATitulo(slug) },
-          episodes: [{ season: 1, number: 1, ref: 'van:' + slug + ':1', title: 'Película' }]
-        };
-      }
-      throw kino.error('not_found', 'VerAnime: 0 capítulos', {
-        userMessage: 'No se pudieron leer los capítulos de esta serie en VerAnime.'
+      throw kino.error('not_found', 'Anime-JL: 0 capítulos', {
+        userMessage: 'No se pudieron leer los capítulos de esta serie en Anime-JL.'
       });
     }
-    lista.sort(function (a, b) { return a.season - b.season || a.number - b.number; });
-    return { series: { title: slugATitulo(slug) }, episodes: lista };
+    lista.sort(function (a, b) { return a.number - b.number; });
+    return { series: { title: slugATitulo(slug.split('/').pop() || slug) }, episodes: lista };
   },
 
-  async resolver(epslug, n, idx) {
-    let epUrl = BASE_VAN + '/ver/' + epslug + '/';
-    let r = await traer(epUrl, { headers: vanCabeceras({ 'User-Agent': UA }), timeoutMs: 10000 });
-    /* si la página de episodio no existe, puede ser una PELÍCULA: su
-     * ficha lleva el dooplayer a cuestas. */
+  async resolver(camino, n, idx) {
+    const epUrl = BASE_JL + '/anime/' + camino + '/episodio-' + (n || 1) + '/';
+    const r = await traer(epUrl, { timeoutMs: 12000, cuerpoSiempre: true });
     if (!r.ok || !r.text) {
-      const p = await vanFicha(epslug);
-      if (p.ok && p.text) {
-        r = p;
-        epUrl = p.url || epUrl;
-      }
-    }
-    if (!r.ok || !r.text) {
-      throw kino.error('not_found', 'VerAnime no entregó el episodio', {
-        userMessage: 'No se pudo abrir este episodio en VerAnime.'
+      throw kino.error('not_found', 'Anime-JL no entregó el episodio', {
+        userMessage: 'No se pudo abrir este episodio en Anime-JL.'
       });
     }
-    const servers = (await vanServersDe(r.text)).concat(servidoresDePagina(r.text));
+    /* Las «Opciones» del episodio son embeds de los hosters de siempre:
+     * el cosechador genérico los lee y el extractor de cada uno hace el
+     * resto; si ninguno cede, captura del navegador oculto. */
+    const servers = servidoresDePagina(r.text);
     return await probarConCaptura(epUrl, servers, idx, function (i) {
-      return 'van:' + epslug + ':' + (n || 1) + ':' + i;
-    }, 'VerAnime', BASE_VAN);
+      return 'jl:' + camino + ':' + (n || 1) + ':' + i;
+    }, 'Anime-JL', BASE_JL);
   }
 });
 
 /* ---------- fuente: IvAnime (ivanime.buzz, espejo de ivanime.top) ---------- */
 
 const BASE_IVA = 'https://ivanime.buzz';
+/* v0.6.62 «El corta-corriente»: IvAnime respondió status 0 en TODAS sus
+ * filas y sus esperas de 13 s tumbaron el screenEvent de Kino (tope de
+ * 20 s) con la pantalla roja «Tardó demasiado». Si el sitio no responde,
+ * se marca la caída y durante 5 minutos las demás peticiones se saltan
+ * sin esperar: la pantalla se arma con lo que haya y Kino no se pasa
+ * del tope. */
+let IVA_CAIDA = 0;
+function ivaViva() { return Date.now() >= IVA_CAIDA; }
+function ivaCayo() { IVA_CAIDA = Date.now() + 5 * 60 * 1000; }
 /* v0.6.12: el epslug de los capítulos de IvAnime NO es el slug de la
  * serie (la ficha de «…-sub-espanol» enlaza /ver/… SIN el sufijo): el
  * prefijo real se aprende en episodios() y se guarda aquí para que
@@ -5256,6 +5072,11 @@ registrarFuente({
   async buscar(q) {
     const texto = String(q || '').trim().slice(0, 100);
     if (texto.length < 2) return [];
+    /* v0.6.62: corta-corriente en la búsqueda también. */
+    if (!ivaViva()) {
+      log('iva corta-corriente: búsqueda saltada (caída reciente)');
+      return [];
+    }
     try {
       /* Se prueba el ?s= de siempre; si el sitio lo ignora, se filtra el
        * Inicio por título como plan B honesto. */
@@ -5317,12 +5138,15 @@ registrarFuente({
     }
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
-        /* v0.6.13: las páginas de IvAnime son pesadas (la home pasa de
-         * 100 KB) y en el teléfono 9 s se quedaban cortos: la espera
-         * crece, el cuerpo se lee aunque el estado mienta y cada fila
-         * vacía deja bitácora con estado y tamaño — el log dirá qué
-         * pasó (reto, vacío o red). */
-        const r = await traer(BASE_IVA + def.camino, { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 13000, cuerpoSiempre: true });
+        /* v0.6.62: corta-corriente — si IvAnime está caída, las filas se
+         * saltan sin esperar y el timeout baja de 13 s a 8 s para no
+         * pisar el tope de 20 s del screenEvent de Kino. */
+        if (!ivaViva()) {
+          log('iva corta-corriente: fila «' + def.camino + '» saltada (caída reciente)');
+          return null;
+        }
+        const r = await traer(BASE_IVA + def.camino, { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 8000, cuerpoSiempre: true });
+        if (r.status === 0) ivaCayo();
         const items = ivaTarjetas(r.text).slice(0, 20);
         if (!items.length && r.text) {
           log('iva fila «' + def.camino + '»: status ' + r.status + ', ' + r.text.length + ' letras, 0 tarjetas' +
@@ -5362,7 +5186,13 @@ registrarFuente({
     const paginado = ref === 'iva-directorio' || ref.indexOf('iva-genero-') === 0;
     const pag = parseInt(String(cursor || '1'), 10) || 1;
     const num = paginado && pag > 1 ? pag : 1;
-    const r = await traer(BASE_IVA + camino + (paginado && num > 1 ? '?p=' + num : ''), { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 12000 });
+    /* v0.6.62: corta-corriente también en la hoja (espera 12 s → 8 s). */
+    if (!ivaViva()) {
+      log('iva corta-corriente: hoja «' + ref + '» saltada (caída reciente)');
+      return { items: [], next: null };
+    }
+    const r = await traer(BASE_IVA + camino + (paginado && num > 1 ? '?p=' + num : ''), { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 8000 });
+    if (r.status === 0) ivaCayo();
     if (!r.ok) {
       if (paginado && num > 1) return { items: [], next: null };
       throw kino.error('unavailable', 'IvAnime no respondió (status ' + r.status + ')', {
@@ -7209,7 +7039,7 @@ const FUENTES_PANTALLA = [
   { id: 'ayt', nombre: 'AnimeYT' },
   { id: 'eas', nombre: 'EstrenosAnime' },
   { id: 'jara', nombre: 'AnimeJara' },
-  { id: 'van', nombre: 'VerAnime' },
+  { id: 'jl', nombre: 'Anime-JL' },
   { id: 'iva', nombre: 'IvAnime' },
   { id: 'az', nombre: 'Az-Animex' },
   { id: 'btz', nombre: 'BeatZ-Anime' }
@@ -7300,7 +7130,11 @@ const NUCLEO_TODAS = {
   ayt: ['ayt-latest', 'ayt-peliculas'],
   eas: ['eas-eps', 'eas-sub', 'eas-lat', 'eas-popular'],
   jara: ['jara-emision', 'jara-catalogo'],
-  van: ['van-anime', 'van-peliculas'],
+  /* v0.6.60: VerAnime sale (muro CF eterno) y entra Anime-JL.
+   * v0.6.66: CrisAnime y Vitt salen (acortadores con muro de JS).
+   * v0.6.67: AySDO sale también — descargas tras ouo.io y sin
+   * online real («no disponible para ver en línea» en sus posts). */
+  jl: ['jl-catalogo', 'jl-recientes'],
   iva: ['iva-emision', 'iva-directorio'],
   /* v0.6.25: Az-Animex entra con el par de géneros esencial.
    * v0.6.29: y el Directorio A-Z — el catálogo entero a la vista. */
@@ -7866,27 +7700,9 @@ async function action(key) {
     }
     return { message: 'Sondeo de BeatZ: ' + partes.join(' · ') + '. Mándame el log del teléfono y con eso arreglo la fuente.' };
   }
-  if (key !== 'teraboxLogin' && key !== 'fireloadPrep' && key !== 'veranimeCf') return null;
+  if (key !== 'teraboxLogin' && key !== 'fireloadPrep') return null;
   if (!kino.visualBrowser || !kino.visualBrowser.available) {
     return { message: 'Este aparato no puede abrir la ventanita (solo en el teléfono o la tablet).' };
-  }
-  if (key === 'veranimeCf') {
-    /* v0.6.40 «El retratista»: VerAnime se escondió tras Cloudflare. La
-     * ventanita abre el sitio de verdad; al pasar la revisión aparece la
-     * galleta cf_clearance, se guarda sellada y las peticiones de la
-     * fuente la llevan. Si el muro exige el mismo navegador que la pasó,
-     * la fuente seguirá callada — se dice con honestidad. */
-    const r = await kino.visualBrowser.open({
-      url: 'https://veranime.ninja/',
-      title: 'Pasa la revisión de VerAnime',
-      doneWhen: { cookies: ['cf_clearance'] },
-      collect: { cookies: ['cf_clearance'], storeAs: { setting: 'veranimeCfCookie', format: 'header' } },
-      userAgent: 'browser',
-      timeoutMs: 600000
-    });
-    if (r.status === 'done' && r.stored) return { message: 'Revisión guardada. Dale al botón Reintentar en VerAnime; si sigue sin cargar, el muro no cedió.' };
-    if (r.status === 'timeout') return { message: 'La ventanita se quedó esperando. Vuelve a «Pasar la revisión de VerAnime».' };
-    return { message: 'No se guardó la revisión (¿cerraste antes de tiempo?). Vuelve a intentarlo.' };
   }
   if (key === 'teraboxLogin') {
     /* v0.6.36: la sonda v63 — /spanish/login salta en el teléfono a
