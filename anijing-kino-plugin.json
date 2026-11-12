@@ -1,10 +1,10 @@
 {
   "id": "anijing",
   "name": "AniJing",
-  "version": "0.6.73",
+  "version": "0.6.74",
   "apiVersion": 20,
   "entry": "plugin.js",
-  "description": "Anime en español desde AnimeAV1, MonosChinos, LataAnime, OtakusTV, AnimeYT, EstrenosAnime, AnimeJara, Anime-JL (descargas Mega/Mediafire con opciones online), MundoDonghua y SeriesDonghua (donghua subtitulado y latino: MundoDonghua es el catálogo más completo, 384 series), IvAnime, Az-Animex (descargas vía mirrored.to con nubes de streaming: Voe, StreamTape, StreamWish, LuluStream…) y BeatZ-Anime (BD 1080p subtitulado por descarga directa desde su almacén OpenList), con pantalla propia de Inicio (destacado del día, secciones por fuente, rieles con su Ver más y selector de fuentes), búsqueda, fichas, episodios y extractores de servidores con captura del navegador oculto para los multiservers. El anime con la firma de Susejing.",
+  "description": "Anime en español: AnimeAV1, MonosChinos, LataAnime, OtakusTV, AnimeYT, EstrenosAnime, AnimeJara, Anime-JL, MundoDonghua, SeriesDonghua, IvAnime, Az-Animex y BeatZ-Anime, con pantalla propia de Inicio, búsqueda, fichas, episodios y extractores de servidores. El anime con la firma de Susejing.",
   "author": "Susejing",
   "homepage": "https://github.com/Susejing/AniJing",
   "visualBrowser": true,
@@ -390,7 +390,7 @@
       "key": "easSonda",
       "type": "action",
       "label": "Sondear EstrenosAnime",
-      "hint": "Prueba la lista de episodios de EstrenosAnime paso a paso y escribe lo que encuentra en el log"
+      "hint": "Prueba la ficha y la página del episodio de EstrenosAnime y escribe al log"
     }
   ]
 }

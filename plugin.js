@@ -1090,6 +1090,16 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
+// v0.6.74 «El hint gordo» — el teléfono rechazó la actualización con
+// «este plugin tiene un error en su kino-plugin.json». Culpable
+// encontrado en el contrato del repo (contract.json): los ajustes
+// tienen hintMaxChars 80 y el hint del sondeador de EstrenosAnime
+// (0.6.73) traía 94; y descriptionMaxChars es 300 y la descripción
+// llevaba ~700 creciendo fuente a fuente. Manifiesto a dieta:
+// descripción ≤300, hint ≤80, y versión al día en los DOS manifiestos
+// (kino-plugin.json y anijing-kino-plugin.json, idénticos). El código
+// no cambia: solo VERSION.
+
 // v0.6.73 «El id escondido» — la cascada de la 0.6.72 no bastaba: el
 // AJAX de la lista (episode/list) no pide el id del EPISODIO (data-epid,
 // ese lo usa la parte de servidores) sino el de la SERIE, que puede
@@ -1109,7 +1119,7 @@
 // dos, y si tampoco, pregunta por el AJAX de su escuela con el
 // data-id (episode/list). Todo lo demás queda igual.
 
-const VERSION = '0.6.73';
+const VERSION = '0.6.74';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -8498,3 +8508,4 @@ async function action(key) {
 }
 
 export { search, home, browse, episodes, details, resolve, screen, screenEvent, image, action };
+
