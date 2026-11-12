@@ -1006,6 +1006,7 @@
 // SOLO su núcleo — las filas que de verdad se muestran ahí: 37
 // peticiones en vez de 61. Las secciones individuales siguen
 // trayendo sus rieles completos (van con sus 15, az con sus 7 — cada
+
 // una sola bajo el tope). Queda la deuda anotada: mc, lat, otv y
 // ayt arman sus filas en tareas ansiosas (IIFE) y aún pagan un
 // puñado de fetches de más en «Todas» — con 37 de holgura no
@@ -1089,6 +1090,16 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
+// v0.6.73 «El id escondido» — la cascada de la 0.6.72 no bastaba: el
+// AJAX de la lista (episode/list) no pide el id del EPISODIO (data-epid,
+// ese lo usa la parte de servidores) sino el de la SERIE, que puede
+// vivir en otro atributo o en un script; y la respuesta llega como JSON
+// con el html adentro y las barras escapadas (\/ver\/…), que rompía el
+// regex del crudo. Ahora se cosechan TODOS los ids candidatos de la
+// página del episodio y de la ficha, se pregunta a cada uno decodificando
+// de verdad, y hay botón nuevo «Sondear EstrenosAnime» en ajustes para
+// ver la verdad desde el teléfono (el AJAX solo pasa allá).
+//
 // v0.6.72 «La lista que se mudó» — EstrenosAnime rediseñó sus fichas
 // /anime/<slug>: ahora solo traen el botón «Ver Ahora» al episodio 1
 // (verificado en vivo el 12 nov 2026: un solo enlace por serie — por
@@ -1098,7 +1109,7 @@
 // dos, y si tampoco, pregunta por el AJAX de su escuela con el
 // data-id (episode/list). Todo lo demás queda igual.
 
-const VERSION = '0.6.72';
+const VERSION = '0.6.73';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -2463,6 +2474,7 @@ registrarFuente({
   },
 
   async resolver(slug, ep, idx) {
+
     const n = ep || 1;
     const raiz = await datosDe('/media/' + slug + '/' + n + '/__data.json');
     if (!raiz) {
@@ -3978,6 +3990,7 @@ function easFichas(html) {
   const items = [];
   const vistos = new Set();
   let m;
+
   while ((m = re.exec(String(html || ''))) && items.length < 40) {
     const slug = m[1];
     if (!slug || vistos.has(slug)) continue;
@@ -4396,23 +4409,77 @@ registrarFuente({
           if (m[1] === slug) numeros.add(parseInt(m[2], 10));
         }
         if (numeros.size < 2) {
-          const did = /data-id=["'](\d+)["']/i.exec(ep1.text);
-          if (did) {
-            const caminos = ['/ajax/v2/episode/list?id=', '/ajax/episode/list?id=', '/ajax/v2/episode-list?id='];
-            for (const camino of caminos) {
-              if (numeros.size >= 2 || queda() < 4000) break;
-              const ra = await traer(BASE_EAS + camino + did[1], { headers: EAS_AJAX, timeoutMs: 9000 });
-              if (!ra.ok || !ra.text) continue;
+          /* v0.6.73 «El id escondido» — la 0.6.72 pedía el listado con
+           * data-id, pero ese atributo no es el id de la SERIE (el que
+           * pide episode/list): el del episodio vive en data-epid y el
+           * de la serie puede estar en otro atributo o en un script.
+           * Además la respuesta llega como JSON con el html adentro y
+           * las barras escapadas (\/ver\/…), que rompía el regex del
+           * crudo — easServersDe ya lo sabía («se parsea de verdad»).
+           * Ahora: se cosechan TODOS los ids candidatos de la página
+           * del episodio y de la ficha, se pregunta a cada uno y se
+           * decodifica antes de cazar rutas o números. */
+          const candidatos = [];
+          const meterId = function (v) {
+            const t = String(v || '');
+            if (t && candidatos.indexOf(t) === -1 && candidatos.length < 10) candidatos.push(t);
+          };
+          try {
+            const rf = await traer(BASE_EAS + '/anime/' + slug, { headers: { Referer: BASE_EAS + '/' }, timeoutMs: 10000 });
+            if (rf.ok && rf.text) {
+              const p1 = /\bdata-(?:show|anime|movie|media|serie)-?id\s*=\s*["'](\d+)["']/gi;
+              while ((m = p1.exec(rf.text))) meterId(m[1]);
+              const p2 = /\bdata-id\s*=\s*["'](\d+)["']/gi;
+              while ((m = p2.exec(rf.text))) meterId(m[1]);
+              const p3 = /(?:anime|show|movie|media|serie)[_-]?id["'\s:=]{1,4}["']?(\d{1,7})["']?/gi;
+              while ((m = p3.exec(rf.text))) meterId(m[1]);
+            }
+          } catch (eF) { log('eas lista: ficha para ids falló: ' + ((eF && eF.message) || eF)); }
+          const pats = [
+            /\bdata-(?:show|anime|movie|media|serie)-?id\s*=\s*["'](\d+)["']/gi,
+            /\bdata-id\s*=\s*["'](\d+)["']/gi,
+            /(?:anime|show|movie|media|serie)[_-]?id["'\s:=]{1,4}["']?(\d{1,7})["']?/gi
+          ];
+          for (const p of pats) { while ((m = p.exec(ep1.text))) meterId(m[1]); }
+          /* el id del episodio va al final: algunos clones aceptan
+           * también ese para el listado */
+          const epid = /\bdata-epid\s*=\s*["'](\d+)["']/i.exec(ep1.text);
+          if (epid) meterId(epid[1]);
+          log('eas lista: ' + candidatos.length + ' ids candidatos (' + candidatos.join(',') + ')');
+          for (const idc of candidatos) {
+            if (numeros.size >= 2 || queda() < 4000) break;
+            let ra = null;
+            try {
+              ra = await traer(BASE_EAS + '/ajax/v2/episode/list?id=' + idc, { headers: EAS_AJAX, timeoutMs: 9000 });
+            } catch (eA) { log('eas lista id ' + idc + ' falló: ' + ((eA && eA.message) || eA)); continue; }
+            if (!ra || !ra.ok || !ra.text) { log('eas lista id ' + idc + ': status ' + (ra ? ra.status : 'sin respuesta')); continue; }
+            /* decodificar: JSON con html adentro (barras escapadas) */
+            let plano = ra.text;
+            try {
+              const j = JSON.parse(plano);
+              const h = j && typeof j === 'object' ? (typeof j.html === 'string' ? j.html : (j.data && typeof j.data.html === 'string' ? j.data.html : '')) : '';
+              if (h) plano = h;
+            } catch (eJ) {
+              plano = String(plano).replace(/\\\//g, '/').replace(/\\"/g, '"');
+            }
+            /* solo se aceptan números si el fragmento nombra la serie:
+             * un id equivocado devuelve OTRA serie y metería capítulos
+             * ajenos */
+            if (plano.indexOf(slug) !== -1) {
               const re3 = /\/ver\/([^"\/?#]+)\/episodio-(\d+)/gi;
-              while ((m = re3.exec(ra.text))) {
+              while ((m = re3.exec(plano))) {
                 if (m[1] === slug) numeros.add(parseInt(m[2], 10));
               }
               if (numeros.size < 2) {
-                /* el fragmento a veces trae solo el número, sin la ruta */
+                const reN = /\bdata-number\s*=\s*["'](\d{1,4})["']/gi;
+                while ((m = reN.exec(plano))) numeros.add(parseInt(m[1], 10));
+              }
+              if (numeros.size < 2) {
                 const re4 = /\bepisodio-(\d+)\b/gi;
-                while ((m = re4.exec(ra.text))) numeros.add(parseInt(m[1], 10));
+                while ((m = re4.exec(plano))) numeros.add(parseInt(m[1], 10));
               }
             }
+            log('eas lista id ' + idc + ': ' + numeros.size + ' caps hasta ahora');
           }
         }
       }
@@ -5289,6 +5356,7 @@ async function sdhServidores(html, epUrl) {
         headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json', Referer: epUrl },
         timeoutMs: 12000
       });
+
       if (r.ok && r.text) {
         const j = JSON.parse(r.text);
         if (j && j.success && j.embed_url) embed = absolutizar(j.embed_url, BASE_SDH);
@@ -6644,6 +6712,7 @@ async function azFldSrv4(dl) {
 
 async function azFldResolver(slug, num, url) {
   /* v0.6.34 «El atajo»: la página del archivo trae el enlace directo
+
    * INCORPORADO en el crudo — window.Fl = {"dlink": "…?pt=…"}. Se
    * pesca con el UA de navegador, fresco en cada Play. */
   const r = await traer(url, { headers: { 'User-Agent': UA, 'Referer': 'https://www.fireload.com/' }, timeoutMs: 15000 });
@@ -8052,6 +8121,7 @@ async function screenEvent(e) {
       return { state: { fuente: fuente, filas: datos.filas, hero: datos.hero, errorPantalla: false } };
     } catch (err) {
       log('cargar la pantalla falló', (err && err.message) || String(err));
+
       return { state: { fuente: fuente, errorPantalla: true } };
     }
   }
@@ -8246,6 +8316,79 @@ async function image(arg) {
  * y solo tras el toque de la persona; el plugin nunca ve lo que se
  * teclea adentro. */
 async function action(key) {
+  if (key === 'easSonda') {
+    /* v0.6.73 «El sondeo de la lista»: diagnóstico de EstrenosAnime
+     * desde el teléfono de verdad — el único lugar donde el AJAX pasa
+     * (exige X-Requested-With y desde fuera da 400). Caza los ids
+     * candidatos de la ficha y de la página del episodio de una serie
+     * de prueba (one-piece), pregunta el listado a cada uno y anota
+     * TODO en el log; el mensaje es solo el resumen. */
+    const partes = [];
+    const slugP = 'one-piece';
+    const cand = [];
+    const meterId = function (etq, v) {
+      const t = String(v || '');
+      if (!t || cand.indexOf(t) >= 0 || cand.length >= 12) return;
+      cand.push(t);
+      log('sonda eas: id ' + t + ' (' + etq + ')');
+    };
+    const PATRONES = [
+      [/\bdata-(?:show|anime|movie|media|serie)-?id\s*=\s*["'](\d+)["']/gi, 'data-*-id'],
+      [/\bdata-id\s*=\s*["'](\d+)["']/gi, 'data-id'],
+      [/\bdata-epid\s*=\s*["'](\d+)["']/gi, 'data-epid'],
+      [/(?:anime|show|movie|media|serie)[_-]?id["'\s:=]{1,4}["']?(\d{1,7})["']?/gi, 'script id']
+    ];
+    try {
+      const rf = await traer(BASE_EAS + '/anime/' + slugP, { headers: { Referer: BASE_EAS + '/' }, timeoutMs: 12000 });
+      const nf = rf && rf.text ? rf.text.length : 0;
+      log('sonda eas ficha: status ' + (rf ? rf.status : 'sin') + ', ' + nf + ' bytes');
+      partes.push('ficha ' + (rf ? rf.status : '?'));
+      if (rf && rf.text) {
+        const enlaces = (rf.text.match(/\/ver\/[a-z0-9\-]+\/episodio-\d+/gi) || []).length;
+        log('sonda eas ficha: ' + enlaces + ' enlaces /ver/ en el crudo');
+        for (const par of PATRONES) { let mm; while ((mm = par[0].exec(rf.text))) meterId(par[1], mm[1]); }
+      }
+    } catch (eF) { log('sonda eas ficha FALLO: ' + ((eF && eF.message) || eF)); partes.push('ficha FALLO'); }
+    try {
+      const rw = await traer(BASE_EAS + '/ver/' + slugP + '/episodio-1', { headers: { Referer: BASE_EAS + '/' }, timeoutMs: 12000 });
+      const nw = rw && rw.text ? rw.text.length : 0;
+      log('sonda eas episodio: status ' + (rw ? rw.status : 'sin') + ', ' + nw + ' bytes');
+      partes.push('episodio ' + (rw ? rw.status : '?'));
+      if (rw && rw.text) {
+        const enlaces = (rw.text.match(/\/ver\/[a-z0-9\-]+\/episodio-\d+/gi) || []).length;
+        log('sonda eas episodio: ' + enlaces + ' enlaces /ver/ en el crudo');
+        for (const par of PATRONES) { let mm; while ((mm = par[0].exec(rw.text))) meterId(par[1], mm[1]); }
+      }
+    } catch (eW) { log('sonda eas episodio FALLO: ' + ((eW && eW.message) || eW)); partes.push('episodio FALLO'); }
+    let hallados = 0;
+    for (const idc of cand) {
+      if (queda() < 4000) { log('sonda eas: sin tiempo, quedan ids sin probar'); break; }
+      try {
+        const ra = await traer(BASE_EAS + '/ajax/v2/episode/list?id=' + idc, { headers: EAS_AJAX, timeoutMs: 9000 });
+        const txt = ra && ra.text ? ra.text : '';
+        log('sonda eas lista id ' + idc + ': status ' + (ra ? ra.status : 'sin') + ', ' + txt.length + ' bytes, head: ' + txt.slice(0, 160));
+        if (txt) {
+          let plano = txt;
+          try {
+            const j = JSON.parse(plano);
+            if (j && typeof j === 'object' && typeof j.html === 'string') plano = j.html;
+          } catch (eJ) { plano = plano.replace(/\\\//g, '/').replace(/\\"/g, '"'); }
+          const propios = [];
+          const re3 = /\/ver\/([a-z0-9\-]+)\/episodio-(\d+)/gi;
+          let mm;
+          while ((mm = re3.exec(plano))) if (mm[1] === slugP) propios.push(parseInt(mm[2], 10));
+          if (propios.length) {
+            hallados++;
+            log('sonda eas lista id ' + idc + ': ¡LISTA! ' + propios.length + ' episodios (' + Math.min.apply(null, propios) + '–' + Math.max.apply(null, propios) + ')');
+          } else {
+            log('sonda eas lista id ' + idc + ': sin episodios de ' + slugP + ' en la respuesta');
+          }
+        }
+      } catch (eL) { log('sonda eas lista id ' + idc + ' FALLO: ' + ((eL && eL.message) || eL)); }
+    }
+    partes.push('ids ' + cand.length + ', listas ' + hallados);
+    return { message: 'Sondeo de EstrenosAnime: ' + partes.join(' · ') + '. Mándame el Registro (Ajustes ▸ Registro de AniJing) y con eso remato la lista.' };
+  }
   if (key === 'btzSonda') {
     /* v0.6.45 «El sondeo del almacén»: diagnóstico de BeatZ desde el
      * teléfono de verdad — raíz, padrón página por página, letras y
