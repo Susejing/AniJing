@@ -40,6 +40,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.68 «El dragón oriental»
+
+**Entran dos fuentes de donghua** (subtitulado y latino), a pedido del público: **MundoDonghua** — el catálogo más completo en español, 384 series con versiones «Latino» y «Castellano» — y **SeriesDonghua**. En MundoDonghua los servidores viven escondidos dentro de empaquetadores p.a.c.k.e.r en cada capítulo (VOE, Filemoon, VidHide, StreamWish o un HLS directo) — el mismo baile de Dean Edwards que AniJing ya desempaca desde Voe. SeriesDonghua trae los servidores a la vista y **Dailymotion estrena extractor propio**: su API pública de metadata entrega el video sin bailes. Trece fuentes.
+
 ## v0.6.67 «La puerta falsa»
 
 **AySDO sale.** El log del teléfono lo mostró (0 episodios en sus fichas) y la investigación confirmó la enfermedad de siempre: sus descargas viven en páginas-paste (`aysdo-paste.blogspot.com`) cuyo «enlace real» es **ouo.io**, el mismo muro de JavaScript que sacó a Vitt; y su panel «Ver Online» dice literalmente «Este contenido no está disponible para ver en línea» (el online es para su grupo VIP de Telegram). Regla de la casa, otra vez: catálogo sin reproducción no sirve. Once fuentes, todas con reproducción real.
