@@ -447,6 +447,19 @@
 // pulgar del héroe, y de último una portada grande. La sinopsis se
 // ancla al h1: el primer <p> con cuerpo DESPUÉS del título.
 //
+// v0.6.68 «El dragón oriental» — a pedido del usuario entran DOS
+// fuentes de donghua, subtitulado y latino. MundoDonghua (md), la más
+// completa (384 series, con versiones «Latino» y «Castellano»): su
+// mecánica se aprendió del plugin no oficial de Kino — tarjetas
+// md-card, fichas con md-episode-item y servidores DENTRO de packers
+// p.a.c.k.e.r en /ver/<slug>/<n> (asura=VOE, fmoon=Filemoon,
+// vhide=VidHide, swish=StreamWish… o un file:"…m3u8" directo), el mismo
+// baile de Dean Edwards que AniJing ya desempaca desde Voe. Y
+// SeriesDonghua (sdh), catálogo plano con servidores a la vista
+// (Dailymotion, Ok.ru, Rumble, VOE) — Dailymotion estrena extractor
+// propio: su API pública de metadata entrega el m3u8 sin bailes. Trece
+// fuentes.
+
 // v0.6.67 «La puerta falsa» — AySDO también SALe. El log del teléfono
 // (19:31) lo sentenció: sus fichas dan 0 episodios y la investigación
 // confirmó la enfermedad de siempre — las descargas de aysdo.xyz viven
@@ -1076,7 +1089,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.67';
+const VERSION = '0.6.68';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -1550,6 +1563,7 @@ const TIPO_ETIQUETA = {
   uqload: 'Uqload', streamtape: 'StreamTape', yourupload: 'YourUpload', upnshare: 'UPNShare',
   dood: 'Doodstream', okru: 'Ok.ru', hexload: 'Hexload', savefiles: 'SaveFiles', filemoon: 'Filemoon',
   streamwish: 'StreamWish', lulu: 'LuluStream', vidhide: 'Vidhide', wolfstream: 'WolfStream',
+  dailymotion: 'Dailymotion',
   multi: 'Multiserver', generic: 'Servidor'
 };
 
@@ -1557,7 +1571,7 @@ const TIPO_ORDEN = {
   zilla: 1, directo: 2, voe: 3, upnshare: 4, mixdrop: 5, mp4upload: 6, uqload: 7,
   yourupload: 8, streamtape: 9, okru: 10, savefiles: 11, dood: 12, hexload: 13,
   lulu: 14, streamwish: 15, vidhide: 16, filemoon: 17, wolfstream: 18,
-  multi: 19, generic: 20
+  dailymotion: 18, multi: 19, generic: 20
 };
 
 function detectarTipo(nombre, url) {
@@ -1581,6 +1595,7 @@ function detectarTipo(nombre, url) {
   if (/yourupload|gupload/i.test(nu)) return 'yourupload';
   if (/streamtape/i.test(nu)) return 'streamtape';
   if (/wolfstream/i.test(nu)) return 'wolfstream';
+  if (/dailymotion|dai\.ly/i.test(nu)) return 'dailymotion';
   /* v0.6.0: los agregadores propios (saidochesto y compañía) se abren con el
      navegador oculto: la captura pesca el video aunque el player no se deje
      leer. v0.6.9: streamhj.top (el multiserver de AnimeJara) es de la familia. */
@@ -2020,12 +2035,50 @@ async function exMulti(u) {
   return await capturar(u, 'Multiserver');
 }
 
+/* --- Dailymotion (donghua: SeriesDonghua): el metadata público del
+ * player entrega los m3u8 sin bailes --- */
+
+async function exDailymotion(u) {
+  let url = String(u || '').trim();
+  const m = /dailymotion\.com\/(?:embed\/video|video)\/([a-z0-9]+)/i.exec(url);
+  if (!m) throw new Error('Dailymotion sin id');
+  const r = await traer('https://www.dailymotion.com/player/metadata/video/' + m[1], {
+    timeoutMs: 10000,
+    headers: { Referer: 'https://www.dailymotion.com/' }
+  });
+  if (!r.ok || !r.text) throw new Error('Dailymotion metadata status ' + r.status);
+  let j;
+  try { j = JSON.parse(r.text); } catch (e) { throw new Error('Dailymotion JSON ilegible'); }
+  if (j && j.error) throw new Error('Dailymotion: ' + (j.error.title || j.error.type || 'error'));
+  const cualidades = (j && j.qualities) || {};
+  let mejor = null;
+  for (const clave of ['auto', '1080', '720', '480', '380', '240']) {
+    const arr = cualidades[clave] || [];
+    for (const f of arr) {
+      if (f && f.url && /mpegurl|m3u8/i.test(String(f.type || f.url))) { mejor = f.url; break; }
+    }
+    if (mejor) break;
+  }
+  if (!mejor) {
+    /* último recurso: cualquier m3u8 en las cualidades */
+    for (const q of Object.keys(cualidades)) {
+      for (const f of (cualidades[q] || [])) {
+        if (f && /\.m3u8/i.test(String(f.url || ''))) { mejor = f.url; break; }
+      }
+      if (mejor) break;
+    }
+  }
+  if (!mejor) throw new Error('Dailymotion sin m3u8');
+  return { url: mejor, mime: 'application/vnd.apple.mpegurl', headers: { Referer: 'https://www.dailymotion.com/' } };
+}
+
 const EXTRACTORES = {
   voe: exVoe, mp4upload: exMp4Upload, mixdrop: exMixdrop, uqload: exUqload,
   streamtape: exStreamtape, yourupload: exYourUpload, upnshare: exUpnshare,
   dood: exDood, okru: exOkru, hexload: exHexload, savefiles: exSavefiles,
   filemoon: exFilemoon, streamwish: exGenerico, lulu: exGenerico, vidhide: exGenerico,
-  wolfstream: exWolfstream, multi: exMulti, generic: exGenerico
+  wolfstream: exWolfstream, multi: exMulti, generic: exGenerico,
+  dailymotion: exDailymotion
 };
 
 async function abrirServidor(server) {
@@ -4905,6 +4958,415 @@ registrarFuente({
   }
 });
 
+/* ---------- fuente: MundoDonghua (www.mundodonghua.com, el imperio del donghua en español) ---------- */
+
+/* v0.6.68 «El dragón oriental»: entran DOS fuentes de donghua a pedido
+ * del usuario — subtitulado y latino. MundoDonghua es la más completa
+ * (384 series, con versiones «Latino» y «Castellano» en el catálogo).
+ * Su mecánica salió a la luz leyendo el plugin no oficial de Kino
+ * (xuper-plugin/kino-plugin-mundodonghua): catálogo /lista-donghuas con
+ * tarjetas md-card, ficha /donghua/<slug> con la lista md-episode-item,
+ * y el capítulo /ver/<slug>/<n> guarda sus servidores DENTRO de packers
+ * p.a.c.k.e.r (eval(function(p,a,c,k,e,…))) — el mismo baile de Dean
+ * Edwards que AniJing ya desempaca desde Voe; cada bloque trae
+ * $("#<id>_tab") con el id del servidor (asura=VOE, fmoon=Filemoon,
+ * vhide=VidHide, swish=StreamWish…) y su iframe o un file:"…m3u8"
+ * directo. La búsqueda vive en /busquedas?donghua=q. */
+const BASE_MD = 'https://www.mundodonghua.com';
+const MD_NOMBRES = { asura: 'VOE', fmoon: 'Filemoon', vhide: 'VidHide', swish: 'StreamWish', kaga: 'VGEmbed', sp2p: 'StreamP2P' };
+
+function mdTarjetas(html) {
+  const bloques = String(html || '').split(/<div class="md-card">/i).slice(1);
+  const items = [];
+  const indice = {};
+  for (const bloque of bloques) {
+    if (items.length >= 40) break;
+    const href = (/<a\b[^>]*\bhref\s*=\s*["']([^"']+)["']/i.exec(bloque) || [])[1] || '';
+    const ver = /\/ver\/([^\/?#"]+)\/(\d+)/i.exec(href);
+    const sl = ver ? ver[1] : (/\/donghua\/([^\/?#"]+)/i.exec(href) || [])[1];
+    if (!sl) continue;
+    let slug = decHtml(sl);
+    try { slug = decodeURIComponent(slug); } catch (e) {}
+    if (indice[slug]) continue;
+    let titulo = limpio((/<h[1-6][^>]*class="md-card-title"[^>]*>([\s\S]{1,300}?)<\/h[1-6]>/i.exec(bloque) || [])[1]);
+    titulo = titulo.replace(/\s+Episodio\s+\d+\s*$/i, '').trim();
+    if (!titulo) {
+      const al = /alt\s*=\s*["']([^"']{2,})["']/i.exec(bloque);
+      if (al) titulo = decHtml(al[1]).replace(/\s+Episodio\s+\d+\s*$/i, '').trim();
+    }
+    if (!titulo || titulo.length < 2) titulo = slugATitulo(slug);
+    const item = { id: 'md-' + slug.replace(/\//g, '-'), ref: 'md:' + slug, title: titulo.slice(0, 200), kind: 'series' };
+    const img = posterEnVentana(bloque);
+    if (img) item.poster = absolutizar(img, BASE_MD);
+    const ins = [];
+    if (ver) ins.push('Ep. ' + parseInt(ver[2], 10));
+    if (/latino/i.test(titulo)) ins.push('Latino');
+    else if (/castellano/i.test(titulo)) ins.push('Castellano');
+    const badge = limpio((/<span class="md-card-badge[^"]*"[^>]*>([\s\S]{1,120}?)<\/span>/i.exec(bloque) || [])[1]);
+    if (badge && !/^donghua$/i.test(badge)) ins.push(badge);
+    if (ins.length) item.badges = ins;
+    indice[slug] = item;
+    items.push(item);
+  }
+  return items;
+}
+
+/* Los servidores del capítulo viven en packers individuales; cada uno se
+ * desempaca por separado para que su $("#<id>_tab") no se cruce con el
+ * vecino. */
+function mdServidores(html) {
+  const src = String(html || '');
+  const partes = src.split(/eval\(function\(p,a,c,k,e,/i).slice(1);
+  const servers = [];
+  const vistos = {};
+  for (const parte of partes) {
+    const desemp = jsUnpack('eval(function(p,a,c,k,e,' + parte.slice(0, 20000));
+    if (!desemp) continue;
+    const idM = /\$\("#([a-z0-9_]+?)_tab"\)/i.exec(desemp);
+    if (!idM) continue;
+    const id = idM[1];
+    const fr = /<iframe\b[^>]*\bsrc\s*=\s*["']([^"']+)["']/i.exec(desemp);
+    const fl = /file\s*:\s*["']([^"']+)["']/i.exec(desemp);
+    let url = String((fr ? fr[1] : (fl ? fl[1] : '')) || '').replace(/\\\//g, '/').trim();
+    if (url.indexOf('//') === 0) url = 'https:' + url;
+    if (!/^https?:\/\//i.test(url) || vistos[id]) continue;
+    vistos[id] = true;
+    servers.push({ id: id, url: url, hls: !fr && /\.m3u8/i.test(url) });
+  }
+  return servers;
+}
+
+registrarFuente({
+  id: 'md',
+  etiqueta: 'MundoDonghua',
+
+  async buscar(q) {
+    const texto = String(q || '').trim().slice(0, 100);
+    if (texto.length < 2) return [];
+    try {
+      const r = await traer(BASE_MD + '/busquedas?donghua=' + encodeURIComponent(texto), { timeoutMs: 12000, cuerpoSiempre: true });
+      if (!r.ok) return [];
+      const items = mdTarjetas(r.text).slice(0, 25);
+      for (const it of items) it.badges = (it.badges || []).concat(['MundoDonghua']);
+      return items;
+    } catch (e) {
+      log('md buscar', (e && e.message) || String(e));
+      return [];
+    }
+  },
+
+  async portada(solo) {
+    /* Tres filas: nuevos episodios, en emisión y el catálogo entero
+     * (384 series). En «Todas» solo el núcleo (tope de peticiones). */
+    let defs = [
+      { id: 'md-recientes', titulo: 'Nuevos episodios · MundoDonghua', camino: '/lista-episodios' },
+      { id: 'md-emision', titulo: 'En emisión · MundoDonghua', camino: '/lista-donghuas-emision' },
+      { id: 'md-todas', titulo: 'Donghuas · MundoDonghua', camino: '/lista-donghuas' }
+    ];
+    if (solo === true) {
+      const nucleo = NUCLEO_TODAS.md;
+      if (nucleo) defs = defs.filter(function (d) { return nucleo.indexOf(d.id) >= 0; });
+    }
+    const rtas = await Promise.all(defs.map(async (def) => {
+      try {
+        const r = await traer(BASE_MD + def.camino, { timeoutMs: 12000, cuerpoSiempre: true });
+        const items = r && r.ok ? mdTarjetas(r.text).slice(0, 20) : [];
+        if (!items.length && r && r.text) {
+          log('md fila «' + def.titulo + '»: status ' + r.status + ', ' + r.text.length + ' letras, 0 tarjetas');
+        }
+        return items.length ? { id: def.id, title: def.titulo, ref: def.id, items: items } : null;
+      } catch (e) {
+        log('md fila «' + def.titulo + '» falló', (e && e.message) || String(e));
+        return null;
+      }
+    }));
+    const filas = [];
+    for (const fila of rtas) if (fila) filas.push(fila);
+    return filas;
+  },
+
+  async hoja(ref, cursor) {
+    const defs = { 'md-recientes': '/lista-episodios', 'md-emision': '/lista-donghuas-emision', 'md-todas': '/lista-donghuas', 'md-finalizadas': '/lista-donghuas-finalizados' };
+    const camino = defs[ref];
+    if (!camino) return null;
+    const pagina = parseInt(cursor, 10);
+    const num = Number.isFinite(pagina) && pagina > 1 ? pagina : 1;
+    const url = BASE_MD + camino + (num > 1 ? '?page=' + num : '');
+    const r = await traer(url, { timeoutMs: 12000, cuerpoSiempre: true });
+    /* Una página que no existe es el final callado del scroll (el
+     * catálogo no anuncia su tamaño). */
+    if (!r.ok) {
+      if (num > 1) return { items: [], next: null };
+      throw kino.error('unavailable', 'MundoDonghua no respondió (status ' + r.status + ')', {
+        userMessage: 'MundoDonghua no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    const items = mdTarjetas(r.text).slice(0, 60);
+    const next = items.length >= 20 ? String(num + 1) : null;
+    return { items: items, next: next };
+  },
+
+  async detalle(slug) {
+    const r = await traer(BASE_MD + '/donghua/' + encodeURIComponent(slug), { timeoutMs: 12000, cuerpoSiempre: true });
+    if (!r.ok || !r.text) return null;
+    const serie = { title: slugATitulo(slug) };
+    const h = /class="md-detail-title"[^>]*>([\s\S]{1,300}?)<\//i.exec(r.text);
+    if (h) serie.title = limpio(h[1]) || serie.title;
+    const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(r.text);
+    if (og) serie.poster = absolutizar(og[1], BASE_MD);
+    const sinM = /class="md-detail-synopsis"[^>]*>([\s\S]{1,900}?)<\/(?:p|div)>/i.exec(r.text);
+    if (sinM) serie.overview = limpio(sinM[1]).slice(0, 400);
+    return serie;
+  },
+
+  async episodios(slug) {
+    const r = await traer(BASE_MD + '/donghua/' + encodeURIComponent(slug), { timeoutMs: 12000, cuerpoSiempre: true });
+    if (!r.ok || !r.text) {
+      throw kino.error('unavailable', 'MundoDonghua no entregó la serie', {
+        userMessage: 'MundoDonghua no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    /* La ficha trae la lista completa: <li class="md-episode-item…"><a
+     * href="/ver/<slug>/<n>">. Regex floja sobre el href (lección jl:
+     * los href pueden ir sin comillas). */
+    const texto = String(r.text || '');
+    const vistos = new Set();
+    const lista = [];
+    const re = /href\s*=\s*["']?([^"'\s>]*\/ver\/([^"'\s>\/]+)\/(\d{1,4}))/gi;
+    let m;
+    while ((m = re.exec(texto)) && lista.length < 900) {
+      const num = parseInt(m[3], 10);
+      if (num < 1 || num > 9999 || vistos.has(num)) continue;
+      vistos.add(num);
+      lista.push({ season: 1, number: num, ref: 'md:' + slug + ':' + num, title: 'Episodio ' + num });
+    }
+    log('md ficha «' + slug + '»: ' + lista.length + ' episodios de ' + (texto.match(/\/ver\//g) || []).length + ' menciones /ver/ (' + texto.length + ' letras)');
+    if (!lista.length) {
+      const mM = /md-episode-item/i.exec(texto);
+      const iM = mM ? mM.index : -1;
+      log('md diagnóstico: ' + (iM >= 0 ? texto.slice(Math.max(0, iM - 200), iM + 500).replace(/\s+/g, ' ') : 'sin md-episode-item en el HTML'));
+    }
+    if (!lista.length) {
+      throw kino.error('not_found', 'MundoDonghua: 0 capítulos', {
+        userMessage: 'No se pudieron leer los capítulos de esta serie en MundoDonghua.'
+      });
+    }
+    lista.sort(function (a, b) { return a.number - b.number; });
+    const serie = { title: slugATitulo(slug) };
+    const h = /class="md-detail-title"[^>]*>([\s\S]{1,300}?)<\//i.exec(texto);
+    if (h) serie.title = limpio(h[1]) || serie.title;
+    const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(texto);
+    if (og) serie.poster = absolutizar(og[1], BASE_MD);
+    return { series: serie, episodes: lista };
+  },
+
+  async resolver(slug, n, idx) {
+    const epUrl = BASE_MD + '/ver/' + encodeURIComponent(slug) + '/' + (n || 1);
+    const r = await traer(epUrl, { timeoutMs: 12000, cuerpoSiempre: true, headers: { Referer: BASE_MD + '/' } });
+    if (!r.ok || !r.text) {
+      throw kino.error('not_found', 'MundoDonghua no entregó el episodio', {
+        userMessage: 'No se pudo abrir este episodio en MundoDonghua.'
+      });
+    }
+    const md = mdServidores(r.text);
+    if (!md.length) {
+      log('md diagnóstico: ' + r.text.slice(0, 400).replace(/\s+/g, ' '));
+      throw kino.error('unavailable', 'MundoDonghua: sin servidores en el capítulo', {
+        userMessage: 'Este episodio no trae servidores que AniJing sepa abrir. Prueba otro capítulo o fuente.'
+      });
+    }
+    /* Los HLS directos (file:"…m3u8") se verifican aquí mismo con una
+     * petición: si no anuncian #EXTM3U, no entran al reparto. */
+    const servers = [];
+    for (const s of md) {
+      if (s.hls) {
+        try {
+          const h = await traer(s.url, { timeoutMs: 10000, cuerpoSiempre: true, headers: { Referer: BASE_MD + '/' } });
+          if (h.ok && /#EXTM3U/i.test(String(h.text || ''))) {
+            servers.push({ nombre: MD_NOMBRES[s.id] || s.id, tipo: 'directo', directo: { url: s.url, mime: 'application/vnd.apple.mpegurl', headers: { Referer: BASE_MD + '/', Origin: BASE_MD } } });
+          }
+        } catch (e) {}
+      } else {
+        const nombre = MD_NOMBRES[s.id] || s.id;
+        const tipo = detectarTipo(nombre, s.url);
+        if (tipo) servers.push({ nombre: nombre, url: s.url, tipo: tipo });
+      }
+    }
+    if (!servers.length) {
+      throw kino.error('unavailable', 'MundoDonghua: sin servidores abribles', {
+        userMessage: 'Ningún servidor de este episodio abrió. Prueba de nuevo más tarde.'
+      });
+    }
+    return await probarConCaptura(epUrl, servers, idx, function (i) {
+      return 'md:' + slug + ':' + (n || 1) + ':' + i;
+    }, 'MundoDonghua', BASE_MD);
+  }
+});
+
+/* ---------- fuente: SeriesDonghua (seriesdonghua.com, catálogo plano de donghua sub español) ---------- */
+
+/* v0.6.68: la segunda fuente donghua. HTML plano y honesto: catálogo
+ * /todos-los-donghuas (más /donghuas-en-emision y /donghuas-finalizados),
+ * ficha /<slug>/ con la lista de episodios en anclas /<slug>-episodio-N/,
+ * y el capítulo con sus servidores a la vista (Dailymotion, Ok.ru,
+ * Rumble, VOE). Sin buscador propio detectado: la búsqueda global sigue
+ * con las demás fuentes. Dailymotion gana extractor propio: su API
+ * pública de metadata (/player/metadata/video/<id>) entrega el m3u8 sin
+ * bailes. */
+const BASE_SDH = 'https://seriesdonghua.com';
+const SDH_PROPIAS = /^(?:todos-los-donghuas|donghuas-en-emision|donghuas-finalizados|inicio|iniciar-sesion|registrarse|politica-de-privacidad|dmca|contacto)$/i;
+
+function sdhTarjetas(html) {
+  const re = /<a\b[^>]*href\s*=\s*["'](?:https?:\/\/seriesdonghua\.com)?\/([a-z0-9-]+)\/["'][^>]*>([\s\S]{0,3200}?)<\/a>/gi;
+  const items = [];
+  const indice = {};
+  let m;
+  while ((m = re.exec(String(html || ''))) && items.length < 40) {
+    const slug = m[1];
+    if (/episodio/i.test(slug) || SDH_PROPIAS.test(slug) || indice[slug]) continue;
+    const ventana = m[2];
+    if (!/<img\b/i.test(ventana)) continue;
+    let titulo = '';
+    const h = /<h[1-6][^>]*>([\s\S]{1,200}?)<\/h[1-6]>/i.exec(ventana);
+    if (h) titulo = limpio(h[1]);
+    if (!titulo) {
+      const al = /alt\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
+      if (al) titulo = decHtml(al[1]);
+    }
+    titulo = titulo.replace(/^Donghua\s+/i, '').replace(/\s+Sub\s+Espa\u00f1ol\s*$/i, '').trim();
+    if (!titulo || titulo.length < 2) titulo = slugATitulo(slug);
+    const item = { id: 'sdh-' + slug, ref: 'sdh:' + slug, title: titulo.slice(0, 200), kind: 'series' };
+    const poster = posterEnVentana(ventana);
+    if (poster) item.poster = absolutizar(poster, BASE_SDH);
+    indice[slug] = item;
+    items.push(item);
+  }
+  return items;
+}
+
+registrarFuente({
+  id: 'sdh',
+  etiqueta: 'SeriesDonghua',
+
+  async portada(solo) {
+    let defs = [
+      { id: 'sdh-todas', titulo: 'Catálogo · SeriesDonghua', camino: '/todos-los-donghuas' },
+      { id: 'sdh-emision', titulo: 'En emisión · SeriesDonghua', camino: '/donghuas-en-emision' },
+      { id: 'sdh-finalizadas', titulo: 'Finalizados · SeriesDonghua', camino: '/donghuas-finalizados' }
+    ];
+    if (solo === true) {
+      const nucleo = NUCLEO_TODAS.sdh;
+      if (nucleo) defs = defs.filter(function (d) { return nucleo.indexOf(d.id) >= 0; });
+    }
+    const rtas = await Promise.all(defs.map(async (def) => {
+      try {
+        const r = await traer(BASE_SDH + def.camino + '/', { timeoutMs: 12000, cuerpoSiempre: true });
+        const items = r && r.ok ? sdhTarjetas(r.text).slice(0, 20) : [];
+        if (!items.length && r && r.text) {
+          log('sdh fila «' + def.titulo + '»: status ' + r.status + ', ' + r.text.length + ' letras, 0 tarjetas');
+        }
+        return items.length ? { id: def.id, title: def.titulo, ref: def.id, items: items } : null;
+      } catch (e) {
+        log('sdh fila «' + def.titulo + '» falló', (e && e.message) || String(e));
+        return null;
+      }
+    }));
+    const filas = [];
+    for (const fila of rtas) if (fila) filas.push(fila);
+    return filas;
+  },
+
+  async hoja(ref, cursor) {
+    const defs = { 'sdh-todas': '/todos-los-donghuas', 'sdh-emision': '/donghuas-en-emision', 'sdh-finalizadas': '/donghuas-finalizados' };
+    const camino = defs[ref];
+    if (!camino) return null;
+    const pagina = parseInt(cursor, 10);
+    const num = Number.isFinite(pagina) && pagina > 1 ? pagina : 1;
+    const r = await traer(BASE_SDH + camino + (num > 1 ? '?page=' + num : '') + '/', { timeoutMs: 12000, cuerpoSiempre: true });
+    if (!r.ok) {
+      if (num > 1) return { items: [], next: null };
+      throw kino.error('unavailable', 'SeriesDonghua no respondió (status ' + r.status + ')', {
+        userMessage: 'SeriesDonghua no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    const items = sdhTarjetas(r.text).slice(0, 60);
+    const next = items.length >= 20 ? String(num + 1) : null;
+    return { items: items, next: next };
+  },
+
+  async detalle(slug) {
+    const r = await traer(BASE_SDH + '/' + slug + '/', { timeoutMs: 12000, cuerpoSiempre: true });
+    if (!r.ok || !r.text) return null;
+    const serie = { title: slugATitulo(slug) };
+    const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
+    if (h) serie.title = limpio(h[1]).replace(/\s+Sub\s+Espa\u00f1ol\s*$/i, '').trim() || serie.title;
+    const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(r.text);
+    if (og) serie.poster = absolutizar(og[1], BASE_SDH);
+    const sinM = /<p[^>]*>([\s\S]{30,900}?)<\/p>/i.exec(r.text);
+    if (sinM) serie.overview = limpio(sinM[1]).slice(0, 400);
+    return serie;
+  },
+
+  async episodios(slug) {
+    const r = await traer(BASE_SDH + '/' + slug + '/', { timeoutMs: 12000, cuerpoSiempre: true });
+    if (!r.ok || !r.text) {
+      throw kino.error('unavailable', 'SeriesDonghua no entregó la serie', {
+        userMessage: 'SeriesDonghua no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    const texto = String(r.text || '');
+    const vistos = new Set();
+    const lista = [];
+    const re = /href\s*=\s*["']?[^"'\s>]*\/([a-z0-9-]+)-episodio-(\d{1,4})\/?["']?/gi;
+    let m;
+    while ((m = re.exec(texto)) && lista.length < 900) {
+      if (m[1] !== slug) continue;
+      const num = parseInt(m[2], 10);
+      if (num < 1 || num > 9999 || vistos.has(num)) continue;
+      vistos.add(num);
+      lista.push({ season: 1, number: num, ref: 'sdh:' + slug + ':' + num, title: 'Episodio ' + num });
+    }
+    log('sdh ficha «' + slug + '»: ' + lista.length + ' episodios de ' + (texto.match(/-episodio-\d+/gi) || []).length + ' menciones (' + texto.length + ' letras)');
+    if (!lista.length) {
+      const mM = /-episodio-\d+/i.exec(texto);
+      const iM = mM ? mM.index : -1;
+      log('sdh diagnóstico: ' + (iM >= 0 ? texto.slice(Math.max(0, iM - 250), iM + 350).replace(/\s+/g, ' ') : 'sin menciones de episodio en el HTML'));
+    }
+    if (!lista.length) {
+      throw kino.error('not_found', 'SeriesDonghua: 0 capítulos', {
+        userMessage: 'No se pudieron leer los capítulos de esta serie en SeriesDonghua.'
+      });
+    }
+    lista.sort(function (a, b) { return a.number - b.number; });
+    const serie = { title: slugATitulo(slug) };
+    const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(texto);
+    if (h) serie.title = limpio(h[1]).replace(/\s+Sub\s+Espa\u00f1ol\s*$/i, '').trim() || serie.title;
+    const og = /property=["']og:image["'][^>]*content=["']([^"']+)["']/i.exec(texto);
+    if (og) serie.poster = absolutizar(og[1], BASE_SDH);
+    return { series: serie, episodes: lista };
+  },
+
+  async resolver(slug, n, idx) {
+    const epUrl = BASE_SDH + '/' + slug + '-episodio-' + (n || 1) + '/';
+    const r = await traer(epUrl, { timeoutMs: 12000, cuerpoSiempre: true, headers: { Referer: BASE_SDH + '/' } });
+    if (!r.ok || !r.text) {
+      throw kino.error('not_found', 'SeriesDonghua no entregó el episodio', {
+        userMessage: 'No se pudo abrir este episodio en SeriesDonghua.'
+      });
+    }
+    const servers = servidoresDePagina(r.text);
+    if (!servers.length) {
+      log('sdh diagnóstico: ' + r.text.slice(0, 400).replace(/\s+/g, ' '));
+      throw kino.error('unavailable', 'SeriesDonghua: sin servidores abribles', {
+        userMessage: 'Este episodio no trae reproductores que AniJing sepa abrir. Prueba otra fuente.'
+      });
+    }
+    return await probarConCaptura(epUrl, servers, idx, function (i) {
+      return 'sdh:' + slug + ':' + (n || 1) + ':' + i;
+    }, 'SeriesDonghua', BASE_SDH);
+  }
+});
+
 /* ---------- fuente: IvAnime (ivanime.buzz, espejo de ivanime.top) ---------- */
 
 const BASE_IVA = 'https://ivanime.buzz';
@@ -7040,6 +7502,8 @@ const FUENTES_PANTALLA = [
   { id: 'eas', nombre: 'EstrenosAnime' },
   { id: 'jara', nombre: 'AnimeJara' },
   { id: 'jl', nombre: 'Anime-JL' },
+  { id: 'md', nombre: 'MundoDonghua' },
+  { id: 'sdh', nombre: 'SeriesDonghua' },
   { id: 'iva', nombre: 'IvAnime' },
   { id: 'az', nombre: 'Az-Animex' },
   { id: 'btz', nombre: 'BeatZ-Anime' }
@@ -7135,6 +7599,8 @@ const NUCLEO_TODAS = {
    * v0.6.67: AySDO sale también — descargas tras ouo.io y sin
    * online real («no disponible para ver en línea» en sus posts). */
   jl: ['jl-catalogo', 'jl-recientes'],
+  md: ['md-recientes'],
+  sdh: ['sdh-todas'],
   iva: ['iva-emision', 'iva-directorio'],
   /* v0.6.25: Az-Animex entra con el par de géneros esencial.
    * v0.6.29: y el Directorio A-Z — el catálogo entero a la vista. */
