@@ -1089,7 +1089,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.68';
+const VERSION = '0.6.69';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -5216,6 +5216,44 @@ registrarFuente({
 const BASE_SDH = 'https://seriesdonghua.com';
 const SDH_PROPIAS = /^(?:todos-los-donghuas|donghuas-en-emision|donghuas-finalizados|inicio|iniciar-sesion|registrarse|politica-de-privacidad|dmca|contacto)$/i;
 
+/* v0.6.69 «La pestaña escondida»: el capítulo de SeriesDonghua NO trae
+ * iframes en el HTML (por eso la 0.6.68 decía «sin servidores abribles»
+ * en el teléfono mientras el banco en verde): muestra pestañas
+ * <button class="server-tab-btn" data-video-id="…" data-server-index="…">
+ * y la dirección del reproductor sale de POST /api/player/get-server con
+ * el token CSRF de la página. Mecánica aprendida del plugin no oficial
+ * myne23/donghuas-sub-es. */
+async function sdhServidores(html, epUrl) {
+  const csrf = (/meta\s+name=["']csrf-token["']\s+content=["']([^"']+)["']/i.exec(html) || [])[1] || '';
+  const servers = [];
+  const re = /<button[^>]*server-tab-btn[^>]*>/gi;
+  let m;
+  while ((m = re.exec(html))) {
+    const tag = m[0];
+    const vid = (/data-video-id=["'](\d+)["']/i.exec(tag) || [])[1];
+    const idx = (/data-server-index=["'](\d+)["']/i.exec(tag) || [])[1];
+    if (!vid || idx === undefined) continue;
+    const cierre = html.indexOf('</button>', m.index);
+    const cuerpo = cierre >= 0 ? html.slice(m.index, cierre + 9) : tag;
+    const nombre = limpio((/<span>([^<]+)<\/span>/i.exec(cuerpo) || [])[1] || ('Servidor ' + (Number(idx) + 1)));
+    let embed = '';
+    try {
+      const r = await traer(BASE_SDH + '/api/player/get-server', {
+        json: { video_id: Number(vid), server_index: Number(idx) },
+        headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json', Referer: epUrl },
+        timeoutMs: 12000
+      });
+      if (r.ok && r.text) {
+        const j = JSON.parse(r.text);
+        if (j && j.success && j.embed_url) embed = absolutizar(j.embed_url, BASE_SDH);
+      }
+    } catch (e) { embed = ''; }
+    if (!embed) continue;
+    servers.push({ nombre: nombre, tipo: detectarTipo(nombre, embed), url: embed });
+  }
+  return servers;
+}
+
 function sdhTarjetas(html) {
   const re = /<a\b[^>]*href\s*=\s*["'](?:https?:\/\/seriesdonghua\.com)?\/([a-z0-9-]+)\/["'][^>]*>([\s\S]{0,3200}?)<\/a>/gi;
   const items = [];
@@ -5354,7 +5392,12 @@ registrarFuente({
         userMessage: 'No se pudo abrir este episodio en SeriesDonghua.'
       });
     }
-    const servers = servidoresDePagina(r.text);
+    /* v0.6.69: primero las pestañas server-tab-btn + API (el camino real
+     * del sitio); servidoresDePagina queda de respaldo por si el HTML
+     * vuelve a traer iframes a la vista. */
+    let servers = [];
+    try { servers = await sdhServidores(r.text, epUrl); } catch (e) { servers = []; }
+    if (!servers.length) servers = servidoresDePagina(r.text);
     if (!servers.length) {
       log('sdh diagnóstico: ' + r.text.slice(0, 400).replace(/\s+/g, ' '));
       throw kino.error('unavailable', 'SeriesDonghua: sin servidores abribles', {
