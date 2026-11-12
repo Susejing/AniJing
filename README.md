@@ -40,6 +40,10 @@ Honesto: Mega y Netu quedan fuera (van cifrados o piden captcha). AnimoraTV bloq
 
 El teléfono rechazó la 0.6.40 con «error en su kino-plugin.json»: la ventanilla de VerAnime tenía un texto de ayuda de 83 caracteres (tope de Kino: 80) y guardaba la galleta en el ajuste del botón en vez del campo password `veranimeCfCookie`. Ambos corregidos; nada más cambia.
 
+## v0.6.71 «La ventanita»
+
+La vitrina salió y el teléfono mandó de nuevo: el botón **«Acerca de AniJing»** no abría nada — Kino abre los pop-ups declarados con la respuesta `{ ui: [{ open: key }] }`, y el `{ open: key }` pelado de la 0.6.70 lo dejaba caer. Corregido, y la ventana ahora trae su botón «Cerrar». Además, la **caché del Inicio lleva la versión en la llave**: al actualizar el plugin la pantalla se rearma de una, sin servir el estado viejo (así el destacado y las insignias nuevas se ven al instante, sin esperar los 10 minutos de la caché).
+
 ## v0.6.70 «La vitrina pulida»
 
 **Tres toques de estética, a pedido del público.** El **destacado del Inicio** se presenta como en una cartelera: año, nota con estrella y géneros encima de la sinopsis («2009 · 8.2 ★ · Romance, Sobrenatural — …»). Las **insignias de idioma** llegan a todas las filas que el propio sitio declara: LataAnime entera con «Latino», el par sub/latino de EstrenosAnime, el catálogo «Sub» de SeriesDonghua — las de MundoDonghua ya traían la suya de fábrica. Y al pie del Inicio vive la **firma con su ventana «Acerca de AniJing»**: versión, fuentes, lema y licencia, a un toque. Nada funcional cambia.
