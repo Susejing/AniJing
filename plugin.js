@@ -1089,7 +1089,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.69';
+const VERSION = '0.6.70';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -7593,11 +7593,23 @@ async function heroDeAv1() {
     for (let i = 0; i < feat.length; i++) {
       const m = feat[(dia + i) % feat.length];
       if (m && m.slug && m.title && m.id != null) {
+        /* v0.6.70 «La vitrina pulida»: el destacado se presenta como en
+         * una cartelera — año, nota con estrella y géneros encima de la
+         * sinopsis (heroCard no tiene campos propios para eso: viajan
+         * en el texto, separados con «·» y un guion largo). */
+        const vitrina = [];
+        const anho = m.startDate ? String(m.startDate).slice(0, 4) : '';
+        if (/^\d{4}$/.test(anho)) vitrina.push(anho);
+        if (typeof m.score === 'number' && m.score > 0 && m.score <= 10) vitrina.push((Math.round(m.score * 10) / 10) + ' ★');
+        if (Array.isArray(m.genres)) {
+          const generos = m.genres.map(function (g) { return g && typeof g === 'object' && g.name ? String(g.name) : (typeof g === 'string' ? g : ''); }).filter(Boolean).slice(0, 3);
+          if (generos.length) vitrina.push(generos.join(', '));
+        }
         return {
           id: 'av1-' + m.slug,
           ref: 'av1:' + m.slug,
           title: limpio(m.title).slice(0, 120),
-          texto: m.synopsis ? limpio(m.synopsis).slice(0, 220) : 'Anime destacado de hoy en AnimeAV1.',
+          texto: (vitrina.length ? vitrina.join(' · ') + ' — ' : '') + (m.synopsis ? limpio(m.synopsis).slice(0, 200) : 'Anime destacado de hoy en AnimeAV1.'),
           imagen: backdropDe(m.id)
         };
       }
@@ -7651,6 +7663,19 @@ const NUCLEO_TODAS = {
   /* v0.6.38: BeatZ-Anime entra con su catálogo BD. */
   btz: ['btz-catalogo']
 };
+
+/* v0.6.70 «La vitrina pulida»: insignia de idioma por fila — las filas
+ * que el propio sitio declara de un idioma (LataAnime entero, el par
+ * sub/latino de EstrenosAnime, el catálogo sub de SeriesDonghua) viajan
+ * con su chip; las filas de MundoDonghua ya traen el suyo de fábrica y
+ * no se tocan. */
+function idiomaDeFila(id, fuente) {
+  const i = String(id || '');
+  if (fuente === 'lat') return 'Latino';
+  if (/^(eas|jara)-lat$|-latino$/i.test(i)) return 'Latino';
+  if (/^(eas|jara)-sub$|^sdh-/.test(i)) return 'Sub';
+  return '';
+}
 
 async function cargarPantalla(fuente) {
   /* v0.6.31 «El galerista»: la portada se guarda 10 minutos en
@@ -7715,7 +7740,11 @@ async function cargarPantalla(fuente) {
     const porRiel = anchos[ia];
     const fuera = [];
     for (const fila of filas) {
+      const idioma = idiomaDeFila(fila.id, fila.fuente);
       const items = (fila.items || []).slice(0, porRiel).map(compactarItem);
+      for (const it of items) {
+        if (idioma) it.badges = [idioma].concat((it.badges || []).filter(function (b) { return b !== idioma; })).slice(0, 2);
+      }
       if (!items.length) continue;
       fuera.push({ id: fila.id, title: fila.title, ref: fila.ref || null, fuente: fila.fuente || '', items: items });
     }
@@ -7912,6 +7941,21 @@ async function screen(arg) {
     } else {
       for (const fila of filas) cuerpo.push(rielDe(fila));
     }
+    /* v0.6.70 «La vitrina pulida»: pie con la firma y el «Acerca de» —
+     * un AlertDialog declarado en el árbol que el evento 'acerca' abre
+     * con su { open: key }. */
+    cuerpo.push({ type: 'Text', text: 'AniJing ' + VERSION + ' · El anime con la firma de Susejing', style: 'caption', padding: 4 });
+    cuerpo.push({ type: 'TextButton', labelText: 'Acerca de AniJing', labelTextEn: 'About AniJing', onPressed: 'acerca', alignSelf: 'center' });
+    cuerpo.push({
+      type: 'AlertDialog', key: 'acercaPop',
+      title: 'Acerca de AniJing',
+      children: [
+        { type: 'Text', text: 'AniJing ' + VERSION + ' — anime y donghua en español para Kino.' },
+        { type: 'Text', text: FUENTES_PANTALLA.length + ' fuentes con reproducción real: pantalla propia de Inicio, búsqueda global, insignias de idioma y extractores propios para cada servidor.' },
+        { type: 'Text', text: 'El anime con la firma de Susejing.' },
+        { type: 'Text', text: 'GPL-3.0 © 2026 Susejing.' }
+      ]
+    });
   }
   return {
     type: 'Scaffold',
@@ -7974,6 +8018,8 @@ async function screenEvent(e) {
    * con AniJing entre las fuentes: así salen títulos como Grisaia
    * que el catálogo por géneros no trae. */
   if (nombre === 'buscarLupa') return { focus: 'ajq' };
+  /* v0.6.70: el «Acerca de» abre su ventana declarada en el árbol. */
+  if (nombre === 'acerca') return { open: 'acercaPop' };
   if (nombre === 'buscar') {
     const q = String(ev.value || '').trim();
     if (!q) return { toast: 'Escribe qué buscar — por ejemplo «grisaia».' };
