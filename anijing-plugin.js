@@ -1089,7 +1089,7 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.70';
+const VERSION = '0.6.71';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -7682,7 +7682,9 @@ async function cargarPantalla(fuente) {
    * kino.storage — el Inicio repetido no gasta peticiones ni
    * espera (y si una fuente tarda, la caché la salva). */
   try {
-    const g = kino.storage.get('ajPantalla:' + (fuente || 'todas'));
+    /* v0.6.71: la llave de caché lleva la versión — al actualizar el
+     * plugin el Inicio se rearma de una, sin servir la pantalla vieja. */
+    const g = kino.storage.get('ajPantalla:' + VERSION + ':' + (fuente || 'todas'));
     if (g && typeof g === 'object' && g.datos && Array.isArray(g.datos.filas) && g.datos.filas.length && Date.now() - (g.t || 0) < 600000) {
       log('pantalla «' + (fuente || 'todas') + '» servida de caché (' + g.datos.filas.length + ' filas)');
       return g.datos;
@@ -7756,7 +7758,7 @@ async function cargarPantalla(fuente) {
   let pesoFin = 0;
   try { pesoFin = JSON.stringify(datos).length; } catch (eJ2) { pesoFin = 0; }
   if (datos && pesoFin > 0 && pesoFin <= 45000) {
-    try { kino.storage.set('ajPantalla:' + (fuente || 'todas'), { t: Date.now(), datos: datos }); } catch (eS3) {}
+    try { kino.storage.set('ajPantalla:' + VERSION + ':' + (fuente || 'todas'), { t: Date.now(), datos: datos }); } catch (eS3) {}
   }
   log('pantalla «' + (fuente || 'todas') + '» armada: ' + ((datos && datos.filas) ? datos.filas.length : 0) + ' filas, ' + (Math.round(pesoFin / 102.4) / 10) + ' KB de estado');
   return datos;
@@ -7954,7 +7956,8 @@ async function screen(arg) {
         { type: 'Text', text: FUENTES_PANTALLA.length + ' fuentes con reproducción real: pantalla propia de Inicio, búsqueda global, insignias de idioma y extractores propios para cada servidor.' },
         { type: 'Text', text: 'El anime con la firma de Susejing.' },
         { type: 'Text', text: 'GPL-3.0 © 2026 Susejing.' }
-      ]
+      ],
+      buttons: [{ label: 'Cerrar', labelEn: 'Close' }]
     });
   }
   return {
@@ -8018,8 +8021,10 @@ async function screenEvent(e) {
    * con AniJing entre las fuentes: así salen títulos como Grisaia
    * que el catálogo por géneros no trae. */
   if (nombre === 'buscarLupa') return { focus: 'ajq' };
-  /* v0.6.70: el «Acerca de» abre su ventana declarada en el árbol. */
-  if (nombre === 'acerca') return { open: 'acercaPop' };
+  /* v0.6.71 «La ventanita»: Kino abre los pop-ups declarados con la
+   * respuesta { ui: [{ open: key }] } — el { open: key } pelado de la
+   * 0.6.70 lo dejaba caer y el botón no hacía nada. */
+  if (nombre === 'acerca') return { ui: [{ open: 'acercaPop' }] };
   if (nombre === 'buscar') {
     const q = String(ev.value || '').trim();
     if (!q) return { toast: 'Escribe qué buscar — por ejemplo «grisaia».' };
