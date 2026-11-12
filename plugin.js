@@ -1089,7 +1089,16 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
-const VERSION = '0.6.71';
+// v0.6.72 «La lista que se mudó» — EstrenosAnime rediseñó sus fichas
+// /anime/<slug>: ahora solo traen el botón «Ver Ahora» al episodio 1
+// (verificado en vivo el 12 nov 2026: un solo enlace por serie — por
+// eso TODAS las series mostraban un solo capítulo). La lista completa
+// vive en la página del episodio (escuela Aniwatch): episodios() ahora
+// la cosecha de /ver/<slug>/episodio-1 cuando la ficha trae menos de
+// dos, y si tampoco, pregunta por el AJAX de su escuela con el
+// data-id (episode/list). Todo lo demás queda igual.
+
+const VERSION = '0.6.72';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4370,6 +4379,43 @@ registrarFuente({
     let m;
     while ((m = re.exec(r.text))) {
       if (m[1] === slug) numeros.add(parseInt(m[2], 10));
+    }
+    /* v0.6.72 — LA FICHA YA NO TRAE LA LISTA: el sitio rediseñó sus
+     * fichas /anime/ y ahora solo traen el botón «Ver Ahora» al
+     * episodio 1 (verificado en vivo: 1 solo enlace por serie — el
+     * síntoma «solo sale un capítulo y es en todos»). La lista
+     * COMPLETA vive en la página del episodio (escuela Aniwatch), así
+     * que la cascada es: (B) cosechar la página /ver/<slug>/episodio-1
+     * y, si tampoco trae nada, (C) pedir el listado por el AJAX de su
+     * escuela con el data-id de la página. */
+    if (numeros.size < 2) {
+      const ep1 = await traer(BASE_EAS + '/ver/' + slug + '/episodio-1', { headers: { Referer: BASE_EAS + '/' }, timeoutMs: 10000 });
+      if (ep1.ok && ep1.text) {
+        const re2 = /\/ver\/([^"\/?#]+)\/episodio-(\d+)/gi;
+        while ((m = re2.exec(ep1.text))) {
+          if (m[1] === slug) numeros.add(parseInt(m[2], 10));
+        }
+        if (numeros.size < 2) {
+          const did = /data-id=["'](\d+)["']/i.exec(ep1.text);
+          if (did) {
+            const caminos = ['/ajax/v2/episode/list?id=', '/ajax/episode/list?id=', '/ajax/v2/episode-list?id='];
+            for (const camino of caminos) {
+              if (numeros.size >= 2 || queda() < 4000) break;
+              const ra = await traer(BASE_EAS + camino + did[1], { headers: EAS_AJAX, timeoutMs: 9000 });
+              if (!ra.ok || !ra.text) continue;
+              const re3 = /\/ver\/([^"\/?#]+)\/episodio-(\d+)/gi;
+              while ((m = re3.exec(ra.text))) {
+                if (m[1] === slug) numeros.add(parseInt(m[2], 10));
+              }
+              if (numeros.size < 2) {
+                /* el fragmento a veces trae solo el número, sin la ruta */
+                const re4 = /\bepisodio-(\d+)\b/gi;
+                while ((m = re4.exec(ra.text))) numeros.add(parseInt(m[1], 10));
+              }
+            }
+          }
+        }
+      }
     }
     if (!numeros.size) {
       throw kino.error('not_found', 'EstrenosAnime: 0 capítulos', {
