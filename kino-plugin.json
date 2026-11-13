@@ -1,10 +1,10 @@
 {
   "id": "anijing",
   "name": "AniJing",
-  "version": "0.6.77",
+  "version": "0.6.78",
   "apiVersion": 20,
   "entry": "plugin.js",
-  "description": "Anime en español: AnimeAV1, MonosChinos, LataAnime, OtakusTV, AnimeYT, EstrenosAnime, AnimeJara, Anime-JL, MundoDonghua, SeriesDonghua, IvAnime, Az-Animex y BeatZ-Anime, con pantalla propia de Inicio, búsqueda, fichas, episodios y extractores de servidores. El anime con la firma de Susejing.",
+  "description": "Anime en español: AnimeAV1, MonosChinos, LataAnime, OtakusTV, AnimeYT, EstrenosAnime, AnimeJara, Anime-JL, MundoDonghua, SeriesDonghua, DonghuaLife, IvAnime, Az-Animex y BeatZ-Anime, con pantalla propia, búsqueda, fichas, episodios y extractores. El anime con la firma de Susejing.",
   "author": "Susejing",
   "homepage": "https://github.com/Susejing/AniJing",
   "visualBrowser": true,
@@ -221,7 +221,11 @@
     "anime-jl.net",
     "*.anime-jl.net",
     "www.rentry.co",
-    "yourupload.com"
+    "yourupload.com",
+    "donghualife.com",
+    "www.donghualife.com",
+    "rumble.com",
+    "www.rumble.com"
   ],
   "streamHosts": "any",
   "browser": "pages",

@@ -1157,7 +1157,18 @@
 // dos, y si tampoco, pregunta por el AJAX de su escuela con el
 // data-id (episode/list). Todo lo demás queda igual.
 
-const VERSION = '0.6.77';
+// v0.6.78 «La vida nueva» — entra DonghuaLife (donghualife.com): 353
+// donghuas + películas, Next.js SIN Cloudflare (kino.fetch pasa). El
+// catálogo /series pagina con ?page=N y busca en el servidor con ?q=;
+// las fichas /series/<slug> traen la lista completa de capítulos como
+// enlaces /watch/<slug>-<temporada>-<episodio> (el ref del episodio ES
+// ese código, así resolver() no adivina la temporada). Los
+// reproductores se cosechan del HTML crudo (ok.ru, Dailymotion, Rumble)
+// con extractor nuevo exRumble (embedJS entrega JSON con las URLs por
+// calidad, probado en vivo) y la captura del navegador oculto como
+// respaldo. Host nuevo rumble.com: Kino pide aprobarlo una vez.
+
+const VERSION = '0.6.78';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -1631,7 +1642,7 @@ const TIPO_ETIQUETA = {
   uqload: 'Uqload', streamtape: 'StreamTape', yourupload: 'YourUpload', upnshare: 'UPNShare',
   dood: 'Doodstream', okru: 'Ok.ru', hexload: 'Hexload', savefiles: 'SaveFiles', filemoon: 'Filemoon',
   streamwish: 'StreamWish', lulu: 'LuluStream', vidhide: 'Vidhide', wolfstream: 'WolfStream',
-  dailymotion: 'Dailymotion',
+  dailymotion: 'Dailymotion', rumble: 'Rumble',
   multi: 'Multiserver', generic: 'Servidor'
 };
 
@@ -1639,7 +1650,7 @@ const TIPO_ORDEN = {
   zilla: 1, directo: 2, voe: 3, upnshare: 4, mixdrop: 5, mp4upload: 6, uqload: 7,
   yourupload: 8, streamtape: 9, okru: 10, savefiles: 11, dood: 12, hexload: 13,
   lulu: 14, streamwish: 15, vidhide: 16, filemoon: 17, wolfstream: 18,
-  dailymotion: 18, multi: 19, generic: 20
+  dailymotion: 18, multi: 19, generic: 20, rumble: 21
 };
 
 function detectarTipo(nombre, url) {
@@ -1664,6 +1675,7 @@ function detectarTipo(nombre, url) {
   if (/streamtape/i.test(nu)) return 'streamtape';
   if (/wolfstream/i.test(nu)) return 'wolfstream';
   if (/dailymotion|dai\.ly/i.test(nu)) return 'dailymotion';
+  if (/rumble/i.test(nu)) return 'rumble';
   /* v0.6.0: los agregadores propios (saidochesto y compañía) se abren con el
      navegador oculto: la captura pesca el video aunque el player no se deje
      leer. v0.6.9: streamhj.top (el multiserver de AnimeJara) es de la familia. */
@@ -2140,13 +2152,45 @@ async function exDailymotion(u) {
   return { url: mejor, mime: 'application/vnd.apple.mpegurl', headers: { Referer: 'https://www.dailymotion.com/' } };
 }
 
+/* v0.6.78: Rumble — el embedJS público entrega el manifiesto del video
+ * como JSON con las URLs por calidad (probado en vivo: ua.{240..1080} →
+ * mp4 del CDN hugh.cdn.rumble.cloud). Los premium responden sin ua. */
+async function exRumble(u) {
+  const m = /rumble\.com\/embed\/([a-z0-9.]+)/i.exec(String(u || ''));
+  if (!m) throw new Error('Rumble sin id');
+  const r = await traer('https://rumble.com/embedJS/u3/?request=video&v=' + encodeURIComponent(m[1]), {
+    timeoutMs: 12000,
+    headers: { Referer: 'https://rumble.com/', Accept: 'application/json' }
+  });
+  if (!r.ok || !r.text) throw new Error('Rumble HTTP ' + r.status);
+  let j;
+  try { j = JSON.parse(r.text); } catch (e) { throw new Error('Rumble JSON ilegible'); }
+  if (j && j.error) throw new Error('Rumble: ' + String(j.error).slice(0, 80));
+  const cualidades = (j && j.ua) || {};
+  const claves = Object.keys(cualidades).filter(function (k) { return /^\d+$/.test(k); })
+    .sort(function (a, b) { return Number(b) - Number(a); });
+  let mejor = '';
+  for (const k of claves) {
+    const f = cualidades[k];
+    const url = Array.isArray(f) ? f[0] : (f && f.url);
+    if (url && /^https?:\/\//i.test(String(url))) { mejor = String(url); break; }
+  }
+  if (!mejor && j && typeof j.u === 'string' && /^https?:\/\//i.test(j.u)) mejor = j.u;
+  if (!mejor) throw new Error('Rumble sin video');
+  return {
+    url: mejor,
+    mime: /\.m3u8/i.test(mejor) ? MIME_HLS : 'video/mp4',
+    headers: { Referer: 'https://rumble.com/', 'User-Agent': UA }
+  };
+}
+
 const EXTRACTORES = {
   voe: exVoe, mp4upload: exMp4Upload, mixdrop: exMixdrop, uqload: exUqload,
   streamtape: exStreamtape, yourupload: exYourUpload, upnshare: exUpnshare,
   dood: exDood, okru: exOkru, hexload: exHexload, savefiles: exSavefiles,
   filemoon: exFilemoon, streamwish: exGenerico, lulu: exGenerico, vidhide: exGenerico,
   wolfstream: exWolfstream, multi: exMulti, generic: exGenerico,
-  dailymotion: exDailymotion
+  dailymotion: exDailymotion, rumble: exRumble
 };
 
 async function abrirServidor(server) {
@@ -5631,6 +5675,261 @@ registrarFuente({
   }
 });
 
+/* ---------- fuente: DonghuaLife (donghualife.com, Next.js sin Cloudflare) ---------- */
+
+const BASE_DLF = 'https://donghualife.com';
+
+/* v0.6.78 «La vida nueva»: las tarjetas del catálogo van como anclas
+ * /series/<slug> con la portada adentro; la imagen casi siempre viaja
+ * por el optimizador _next/image con la ruta real percent-encoded en
+ * url=%2Fimages%2F… — se decodifica y se sirve directa (el sitio la
+ * entrega sin optimizar también). */
+function dlfPoster(ventana) {
+  const v = String(ventana || '');
+  const nx = /[?&]url=([^&"'\s]+)/i.exec(v);
+  if (nx) {
+    try {
+      const real = decodeURIComponent(nx[1]);
+      if (/^https?:\/\//i.test(real)) return real;
+      if (/^\//.test(real)) return BASE_DLF + real;
+    } catch (e) {}
+  }
+  const p = posterEnVentana(v);
+  return p ? absolutizar(p, BASE_DLF) : '';
+}
+
+function dlfTarjetas(html) {
+  const re = /<a\b[^>]*href\s*=\s*["'](?:https?:\/\/donghualife\.com)?\/series\/([a-z0-9-]+)\/?["'][^>]*>([\s\S]{0,3200}?)<\/a>/gi;
+  const items = [];
+  const indice = {};
+  let m;
+  while ((m = re.exec(String(html || ''))) && items.length < 40) {
+    const slug = m[1];
+    if (indice[slug]) continue;
+    const ventana = m[2];
+    if (!/<img\b/i.test(ventana)) continue;
+    let titulo = '';
+    const h = /<h[1-6][^>]*>([\s\S]{1,200}?)<\/h[1-6]>/i.exec(ventana);
+    if (h) titulo = limpio(h[1]);
+    if (!titulo) {
+      const al = /alt\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
+      if (al) titulo = decHtml(al[1]);
+    }
+    if (!titulo || titulo.length < 2) titulo = slugATitulo(slug);
+    const item = { id: 'dlf-' + slug, ref: 'dlf:' + slug, title: titulo.slice(0, 200), kind: 'series' };
+    const poster = dlfPoster(ventana);
+    if (poster) item.poster = poster;
+    indice[slug] = item;
+    items.push(item);
+  }
+  return items;
+}
+
+/* Los reproductores del capítulo: el HTML crudo trae los embeds (ok.ru,
+ * Dailymotion, Rumble…), a veces con las barras escapadas del payload
+ * de Next.js (https:\/\/) — se busca en el texto y en su versión
+ * destapada, y los iframes genéricos quedan de respaldo. */
+function dlfServidores(html) {
+  const crudo = String(html || '');
+  /* el payload de Next.js escapa las barras en UNA o DOS capas
+   * (https:\/\/ y https:\\/\/ dentro del JSON del JSON) — se destapan
+   * ambas y queda una tercera variante sin barras invertidas. */
+  let texto = crudo.replace(/\\{1,2}\//g, '/');
+  const texto2 = texto.indexOf('\\') >= 0 ? texto.replace(/\\/g, '') : '';
+  const vistos = {};
+  const servers = [];
+  const patrones = [
+    /https?:\/\/[^"'\s<>\\]*?ok\.ru\/videoembed\/[A-Za-z0-9_-]+/gi,
+    /https?:\/\/[^"'\s<>\\]*?dailymotion\.com\/embed\/video\/[a-z0-9]+/gi,
+    /https?:\/\/[^"'\s<>\\]*?rumble\.com\/embed\/[a-z0-9.]+/gi
+  ];
+  for (const re of patrones) {
+    let m;
+    for (const fuente of [texto, texto2]) {
+      if (!fuente) continue;
+      re.lastIndex = 0;
+      while ((m = re.exec(fuente))) {
+        const url = m[0];
+        const tipo = detectarTipo('', url);
+        if (!tipo || vistos[url]) continue;
+        vistos[url] = true;
+        servers.push({ nombre: '', tipo: tipo, url: url });
+      }
+    }
+  }
+  const reI = /<iframe[^>]+src\s*=\s*["']([^"']+)["']/gi;
+  let mi;
+  while ((mi = reI.exec(crudo))) {
+    const u = absolutizar(mi[1], BASE_DLF);
+    if (!/^https?:\/\//i.test(u) || vistos[u]) continue;
+    if (/google|facebook|disqus|gravatar|adservice|doubleclick|gstatic/i.test(u)) continue;
+    const tipo = detectarTipo('', u);
+    if (!tipo) continue;
+    vistos[u] = true;
+    servers.push({ nombre: '', tipo: tipo, url: u });
+  }
+  for (const s of servers) {
+    if (!s.nombre) s.nombre = TIPO_ETIQUETA[s.tipo] || 'Servidor';
+  }
+  return servers;
+}
+
+registrarFuente({
+  id: 'dlf',
+  etiqueta: 'DonghuaLife',
+
+  async buscar(q) {
+    const texto = String(q || '').trim().slice(0, 100);
+    if (texto.length < 2) return [];
+    try {
+      /* el sitio busca EN EL SERVIDOR con ?q= (verificado: «martial»
+       * trae 9 resultados). */
+      const r = await traer(BASE_DLF + '/series?q=' + encodeURIComponent(texto), { timeoutMs: 12000, cuerpoSiempre: true });
+      if (!r.ok) return [];
+      const items = dlfTarjetas(r.text).slice(0, 25);
+      for (const it of items) it.badges = (it.badges || []).concat(['DonghuaLife']);
+      return items;
+    } catch (e) {
+      log('dlf buscar', (e && e.message) || String(e));
+      return [];
+    }
+  },
+
+  async portada(solo) {
+    let defs = [
+      { id: 'dlf-recientes', titulo: 'Recientes · DonghuaLife', camino: '/series?sort=latest' },
+      { id: 'dlf-todas', titulo: 'Donghuas · DonghuaLife', camino: '/series' },
+      { id: 'dlf-peliculas', titulo: 'Películas · DonghuaLife', camino: '/peliculas' }
+    ];
+    if (solo === true) {
+      const nucleo = NUCLEO_TODAS.dlf;
+      if (nucleo) defs = defs.filter(function (d) { return nucleo.indexOf(d.id) >= 0; });
+    }
+    const rtas = await Promise.all(defs.map(async (def) => {
+      try {
+        const r = await traer(BASE_DLF + def.camino, { timeoutMs: 12000, cuerpoSiempre: true });
+        const items = r && r.ok ? dlfTarjetas(r.text).slice(0, 24) : [];
+        if (!items.length && r && r.text) {
+          log('dlf fila «' + def.titulo + '»: status ' + r.status + ', ' + r.text.length + ' letras, 0 tarjetas');
+        }
+        return items.length ? { id: def.id, title: def.titulo, ref: def.id, items: items } : null;
+      } catch (e) {
+        log('dlf fila «' + def.titulo + '» falló', (e && e.message) || String(e));
+        return null;
+      }
+    }));
+    const filas = [];
+    for (const fila of rtas) if (fila) filas.push(fila);
+    return filas;
+  },
+
+  async hoja(ref, cursor) {
+    const defs = { 'dlf-recientes': '/series?sort=latest', 'dlf-todas': '/series', 'dlf-peliculas': '/peliculas' };
+    const camino = defs[ref];
+    if (!camino) return null;
+    const pagina = parseInt(cursor, 10);
+    const num = Number.isFinite(pagina) && pagina > 1 ? pagina : 1;
+    const r = await traer(BASE_DLF + camino + (num > 1 ? (camino.indexOf('?') >= 0 ? '&' : '?') + 'page=' + num : ''), { timeoutMs: 12000, cuerpoSiempre: true });
+    if (!r.ok) {
+      if (num > 1) return { items: [], next: null };
+      throw kino.error('unavailable', 'DonghuaLife no respondió (status ' + r.status + ')', {
+        userMessage: 'DonghuaLife no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    const items = dlfTarjetas(r.text).slice(0, 60);
+    const next = items.length >= 20 ? String(num + 1) : null;
+    return { items: items, next: next };
+  },
+
+  async detalle(slug) {
+    const r = await traer(BASE_DLF + '/series/' + slug, { timeoutMs: 12000, cuerpoSiempre: true });
+    if (!r.ok || !r.text) return null;
+    const serie = { title: slugATitulo(slug) };
+    const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
+    if (h) serie.title = limpio(h[1]) || serie.title;
+    const poster = dlfPoster(r.text.slice(0, 12000));
+    if (poster) serie.poster = poster;
+    let sinopsis = '';
+    const s1 = /<h[23][^>]*>[^<]*Sinopsis[^<]*<\/h[23]>\s*(?:<[^>]+>\s*){0,3}<p[^>]*>([\s\S]{30,1200}?)<\/p>/i.exec(r.text);
+    if (s1) sinopsis = limpio(s1[1]);
+    if (!sinopsis) {
+      const s2 = /<p[^>]*>([\s\S]{30,900}?)<\/p>/i.exec(r.text);
+      if (s2) sinopsis = limpio(s2[1]);
+    }
+    if (sinopsis) serie.overview = sinopsis.slice(0, 400);
+    return serie;
+  },
+
+  async episodios(slug) {
+    const r = await traer(BASE_DLF + '/series/' + slug, { timeoutMs: 12000, cuerpoSiempre: true });
+    if (!r.ok || !r.text) {
+      throw kino.error('unavailable', 'DonghuaLife no entregó la serie', {
+        userMessage: 'DonghuaLife no respondió. Revisa tu conexión o inténtalo en un rato.'
+      });
+    }
+    const texto = String(r.text || '');
+    /* Los capítulos son enlaces /watch/<slug>-<temporada>-<episodio>;
+     * el ref guarda el código COMPLETO para que resolver() no tenga que
+     * adivinar la temporada (y la lista se numera 1..N en orden, porque
+     * la numeración interna del sitio puede arrancar en cualquier
+     * número). */
+    const esc = slug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp('/watch/' + esc + '-(\\d{1,2})-(\\d{1,4})', 'gi');
+    const vistos = {};
+    const lista = [];
+    let m;
+    while ((m = re.exec(texto)) && lista.length < 1200) {
+      const t = parseInt(m[1], 10);
+      const e = parseInt(m[2], 10);
+      if (t < 1 || e < 1) continue;
+      const clave = t + 'x' + e;
+      if (vistos[clave]) continue;
+      vistos[clave] = true;
+      lista.push({ t: t, e: e });
+    }
+    log('dlf ficha «' + slug + '»: ' + lista.length + ' capítulos de ' + (texto.match(/\/watch\//g) || []).length + ' menciones /watch (' + texto.length + ' letras)');
+    if (!lista.length) {
+      const w = texto.indexOf('/watch/');
+      log('dlf diagnóstico: ' + (w >= 0 ? texto.slice(Math.max(0, w - 250), w + 350).replace(/\s+/g, ' ') : 'sin menciones /watch en el HTML'));
+      throw kino.error('not_found', 'DonghuaLife: 0 capítulos', {
+        userMessage: 'No se pudieron leer los capítulos de esta serie en DonghuaLife.'
+      });
+    }
+    lista.sort(function (a, b) { return a.t - b.t || a.e - b.e; });
+    const eps = lista.map(function (x, i) {
+      return { season: x.t, number: i + 1, ref: 'dlf:' + slug + '-' + x.t + '-' + x.e, title: 'Episodio ' + (i + 1) };
+    });
+    const serie = { title: slugATitulo(slug) };
+    const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(texto);
+    if (h) serie.title = limpio(h[1]) || serie.title;
+    const poster = dlfPoster(texto.slice(0, 12000));
+    if (poster) serie.poster = poster;
+    return { series: serie, episodes: eps };
+  },
+
+  async resolver(codigo, n, idx) {
+    /* El ref del episodio ES el código de la página de reproducción:
+     * '<slug>-<temporada>-<episodio>', el mismo tramo de /watch/. */
+    const epUrl = BASE_DLF + '/watch/' + String(codigo || '');
+    const r = await traer(epUrl, { timeoutMs: 12000, cuerpoSiempre: true, headers: { Referer: BASE_DLF + '/' } });
+    if (!r.ok || !r.text) {
+      throw kino.error('not_found', 'DonghuaLife no entregó el episodio', {
+        userMessage: 'No se pudo abrir este episodio en DonghuaLife.'
+      });
+    }
+    const servers = dlfServidores(r.text);
+    if (!servers.length) {
+      log('dlf diagnóstico: ' + r.text.slice(0, 400).replace(/\s+/g, ' '));
+      throw kino.error('unavailable', 'DonghuaLife: sin servidores abribles', {
+        userMessage: 'Este episodio no trae reproductores que AniJing sepa abrir. Prueba otra fuente.'
+      });
+    }
+    return await probarConCaptura(epUrl, servers, idx, function (i) {
+      return 'dlf:' + codigo + ':' + (n || 1) + ':' + i;
+    }, 'DonghuaLife', BASE_DLF);
+  }
+});
+
 /* ---------- fuente: IvAnime (ivanime.buzz, espejo de ivanime.top) ---------- */
 
 const BASE_IVA = 'https://ivanime.buzz';
@@ -7772,6 +8071,7 @@ const FUENTES_PANTALLA = [
   { id: 'jl', nombre: 'Anime-JL' },
   { id: 'md', nombre: 'MundoDonghua' },
   { id: 'sdh', nombre: 'SeriesDonghua' },
+  { id: 'dlf', nombre: 'DonghuaLife' },
   { id: 'iva', nombre: 'IvAnime' },
   { id: 'az', nombre: 'Az-Animex' },
   { id: 'btz', nombre: 'BeatZ-Anime' }
@@ -7881,6 +8181,7 @@ const NUCLEO_TODAS = {
   jl: ['jl-catalogo', 'jl-recientes'],
   md: ['md-recientes'],
   sdh: ['sdh-todas'],
+  dlf: ['dlf-recientes'],
   iva: ['iva-emision', 'iva-directorio'],
   /* v0.6.25: Az-Animex entra con el par de géneros esencial.
    * v0.6.29: y el Directorio A-Z — el catálogo entero a la vista. */
