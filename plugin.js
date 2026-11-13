@@ -1090,6 +1090,17 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
+// v0.6.77 «La sección nueva» — SeriesDonghua mostraba poco: la portada
+// recortaba sus filas a 20 y le faltaba la sección que el sitio tiene
+// y el plugin no: «Nuevos Episodios» (/episodios, los últimos capítulos
+// publicados con su fecha). Ahora: fila nueva en la pantalla de sdh (y
+// en su hoja, de una sola página), filas de 24 tarjetas (el tamaño de
+// página del sitio), y su cosechador propio — las tarjetas de
+// /episodios apuntan a la página del EPISODIO con la fecha pegada al
+// título, así que se recorta el slug a la serie, se deduplica y se
+// limpia el título. El catálogo paginado ya funcionaba (?page=N
+// verificado: página 2 trae series distintas).
+
 // v0.6.76 «Los capítulos fantasma» — el teléfono celebró la 0.6.75
 // («lista 1..13 generada del total de la ficha» en todas) pero mandó
 // la queja fina: con algunos animes «se queda cargando». El log 18:07
@@ -1146,7 +1157,7 @@
 // dos, y si tampoco, pregunta por el AJAX de su escuela con el
 // data-id (episode/list). Todo lo demás queda igual.
 
-const VERSION = '0.6.76';
+const VERSION = '0.6.77';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -5377,7 +5388,7 @@ registrarFuente({
  * pública de metadata (/player/metadata/video/<id>) entrega el m3u8 sin
  * bailes. */
 const BASE_SDH = 'https://seriesdonghua.com';
-const SDH_PROPIAS = /^(?:todos-los-donghuas|donghuas-en-emision|donghuas-finalizados|inicio|iniciar-sesion|registrarse|politica-de-privacidad|dmca|contacto)$/i;
+const SDH_PROPIAS = /^(?:todos-los-donghuas|donghuas-en-emision|donghuas-finalizados|episodios|inicio|iniciar-sesion|registrarse|politica-de-privacidad|dmca|contacto)$/i;
 
 /* v0.6.69 «La pestaña escondida»: el capítulo de SeriesDonghua NO trae
  * iframes en el HTML (por eso la 0.6.68 decía «sin servidores abribles»
@@ -5446,6 +5457,43 @@ function sdhTarjetas(html) {
   return items;
 }
 
+/* v0.6.77 «La sección nueva»: las tarjetas de /episodios apuntan a la
+ * página del EPISODIO (/<slug>-episodio-N/) y traen la fecha y las
+ * vistas pegadas al título («Jade Dynasty 4 12-11-2026 922»). Se
+ * cosechan igual pero el slug se recorta a la serie, se deduplica y
+ * el título se limpia — la fila «Nuevos episodios». */
+function sdhTarjetasNuevos(html) {
+  const re = /<a\b[^>]*href\s*=\s*["'](?:https?:\/\/seriesdonghua\.com)?\/([a-z0-9-]+)\/["'][^>]*>([\s\S]{0,3200}?)<\/a>/gi;
+  const items = [];
+  const indice = {};
+  let m;
+  while ((m = re.exec(String(html || ''))) && items.length < 24) {
+    const crudo = m[1];
+    if (SDH_PROPIAS.test(crudo)) continue;
+    const epM = /^(.*?)-episodio-\d+$/.exec(crudo);
+    if (!epM) continue;
+    const slug = epM[1];
+    if (indice[slug]) continue;
+    const ventana = m[2];
+    if (!/<img\b/i.test(ventana)) continue;
+    let titulo = '';
+    const h = /<h[1-6][^>]*>([\s\S]{1,200}?)<\/h[1-6]>/i.exec(ventana);
+    if (h) titulo = limpio(h[1]);
+    if (!titulo) {
+      const al = /alt\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
+      if (al) titulo = decHtml(al[1]);
+    }
+    titulo = titulo.replace(/^Donghua\s+/i, '').replace(/\s+Sub\s+Espa\u00f1ol\s*$/i, '').replace(/\s+\d{1,2}-\d{1,2}-\d{4}[\s\S]*$/i, '').replace(/\s+Episodio\s+\d+\s*$/i, '').trim();
+    if (!titulo || titulo.length < 2) titulo = slugATitulo(slug);
+    const item = { id: 'sdh-' + slug, ref: 'sdh:' + slug, title: titulo.slice(0, 200), kind: 'series' };
+    const poster = posterEnVentana(ventana);
+    if (poster) item.poster = absolutizar(poster, BASE_SDH);
+    indice[slug] = item;
+    items.push(item);
+  }
+  return items;
+}
+
 registrarFuente({
   id: 'sdh',
   etiqueta: 'SeriesDonghua',
@@ -5454,7 +5502,8 @@ registrarFuente({
     let defs = [
       { id: 'sdh-todas', titulo: 'Catálogo · SeriesDonghua', camino: '/todos-los-donghuas' },
       { id: 'sdh-emision', titulo: 'En emisión · SeriesDonghua', camino: '/donghuas-en-emision' },
-      { id: 'sdh-finalizadas', titulo: 'Finalizados · SeriesDonghua', camino: '/donghuas-finalizados' }
+      { id: 'sdh-finalizadas', titulo: 'Finalizados · SeriesDonghua', camino: '/donghuas-finalizados' },
+      { id: 'sdh-episodios', titulo: 'Nuevos episodios · SeriesDonghua', camino: '/episodios', nuevos: true }
     ];
     if (solo === true) {
       const nucleo = NUCLEO_TODAS.sdh;
@@ -5463,7 +5512,10 @@ registrarFuente({
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
         const r = await traer(BASE_SDH + def.camino + '/', { timeoutMs: 12000, cuerpoSiempre: true });
-        const items = r && r.ok ? sdhTarjetas(r.text).slice(0, 20) : [];
+        /* v0.6.77: la fila de /episodios lleva su cosechador propio y
+         * las filas suben de 20 a 24 (el tamaño de página del sitio). */
+        const cosecha = def.nuevos ? sdhTarjetasNuevos : sdhTarjetas;
+        const items = r && r.ok ? cosecha(r.text).slice(0, 24) : [];
         if (!items.length && r && r.text) {
           log('sdh fila «' + def.titulo + '»: status ' + r.status + ', ' + r.text.length + ' letras, 0 tarjetas');
         }
@@ -5479,7 +5531,7 @@ registrarFuente({
   },
 
   async hoja(ref, cursor) {
-    const defs = { 'sdh-todas': '/todos-los-donghuas', 'sdh-emision': '/donghuas-en-emision', 'sdh-finalizadas': '/donghuas-finalizados' };
+    const defs = { 'sdh-todas': '/todos-los-donghuas', 'sdh-emision': '/donghuas-en-emision', 'sdh-finalizadas': '/donghuas-finalizados', 'sdh-episodios': '/episodios' };
     const camino = defs[ref];
     if (!camino) return null;
     const pagina = parseInt(cursor, 10);
@@ -5490,6 +5542,11 @@ registrarFuente({
       throw kino.error('unavailable', 'SeriesDonghua no respondió (status ' + r.status + ')', {
         userMessage: 'SeriesDonghua no respondió. Revisa tu conexión o inténtalo en un rato.'
       });
+    }
+    /* v0.6.77: /episodios es una sola página, sin paginar, y sus
+     * tarjetas son de EPISODIO → cosechador nuevo con ref de serie. */
+    if (ref === 'sdh-episodios') {
+      return { items: sdhTarjetasNuevos(r.text).slice(0, 24), next: null };
     }
     const items = sdhTarjetas(r.text).slice(0, 60);
     const next = items.length >= 20 ? String(num + 1) : null;
