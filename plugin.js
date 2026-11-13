@@ -1090,6 +1090,18 @@
 // extra. Y el detalle gana bitácora — un export sin línea en el
 // log es indistinguible de un export muerto.
 
+// v0.6.76 «Los capítulos fantasma» — el teléfono celebró la 0.6.75
+// («lista 1..13 generada del total de la ficha» en todas) pero mandó
+// la queja fina: con algunos animes «se queda cargando». El log 18:07
+// lo explicó: la ficha de las series EN EMISIÓN declara «Episodios
+// 6/12» — 6 EMITIDOS de 12 planeados — y la lista se generaba 1..12,
+// así que los capítulos que el sitio aún no publica (7..12) abrían
+// contra servidores inexistentes: carga eterna. Ahora la lista va
+// 1..EMITIDOS (el primer número); cuando el sitio estrene más, la
+// ficha declarará más y la lista crece sola. De paso: el buscador
+// global ya no llama f.buscar en las fuentes que no lo traen (sdh
+// «not a function» en el log 11:27).
+
 // v0.6.75 «El presupuesto» — el Registro del teléfono (sonda 07:13,
 // ya en 0.6.74) sentenció la cascada: «sin tiempo, quedan ids sin
 // probar». Volvía a BAJAR la ficha para cosechar ids (79 KB de más)
@@ -1134,7 +1146,7 @@
 // dos, y si tampoco, pregunta por el AJAX de su escuela con el
 // data-id (episode/list). Todo lo demás queda igual.
 
-const VERSION = '0.6.75';
+const VERSION = '0.6.76';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4432,10 +4444,16 @@ registrarFuente({
     if (numeros.size < 2) {
       const tot = /Episodios[^0-9]{0,60}(\d{1,4})\s*\/\s*(\d{1,4})/i.exec(r.text);
       if (tot) log('eas episodios «' + slug + '»: la ficha declara Episodios ' + tot[1] + '/' + tot[2]);
-      const totalFicha = tot ? parseInt(tot[2], 10) : 0;
-      if (totalFicha > numeros.size && totalFicha <= 500) {
-        for (let n = 1; n <= totalFicha; n++) numeros.add(n);
-        log('eas episodios «' + slug + '»: lista 1..' + totalFicha + ' generada del total de la ficha');
+      /* v0.6.76 «Los capítulos fantasma»: el PRIMER número son los
+       * EMITIDOS («6/12» = 6 al aire de 12 planeados — log 18:07:
+       * juuou-mujin-dandivine 6/12 e hyouken t2 2/12 generaban hasta
+       * 12 y los que el sitio aún no publica se quedaban cargando).
+       * La lista va 1..emitidos; cuando el sitio estrene más, la
+       * ficha declarará más y la lista crece sola. */
+      const emitidos = tot ? parseInt(tot[1], 10) : 0;
+      if (emitidos > numeros.size && emitidos <= 500) {
+        for (let n = 1; n <= emitidos; n++) numeros.add(n);
+        log('eas episodios «' + slug + '»: lista 1..' + emitidos + ' generada (emitidos' + (tot && parseInt(tot[2], 10) !== emitidos ? '; total ' + tot[2] : ' de la ficha') + ')');
       }
     }
     if (numeros.size < 2) {
@@ -7582,6 +7600,9 @@ async function search(query) {
   const fuentes = Object.values(FUENTES);
   const respuestas = await Promise.all(fuentes.map(async (f) => {
     try {
+      /* v0.6.76: no todas las fuentes traen buscador propio (sdh no) —
+       * llamarlo a ciegas era un «not a function» en cada búsqueda. */
+      if (typeof f.buscar !== 'function') return { items: [], fallo: false };
       return { items: await f.buscar(q || (query && query.originalTitle), query), fallo: false };
     } catch (e) {
       log('buscar falló en ' + f.id, (e && e.message) || String(e));
@@ -8537,4 +8558,5 @@ async function action(key) {
 }
 
 export { search, home, browse, episodes, details, resolve, screen, screenEvent, image, action };
+
 
