@@ -1168,7 +1168,22 @@
 // calidad, probado en vivo) y la captura del navegador oculto como
 // respaldo. Host nuevo rumble.com: Kino pide aprobarlo una vez.
 
-const VERSION = '0.6.78';
+// v0.6.79 «El respaldo que faltaba» — el teléfono sentenció la 0.6.78:
+// DonghuaLife lista perfecto (208 episodios en Throne of Seal) pero NO
+// reproduce («no trae reproductores que AniJing sepa abrir») y los
+// catálogos de DonghuaLife y SeriesDonghua se cortan en un puñado de
+// tarjetas. Tres arreglos: (1) el resolver de dlf ya no se rinde cuando
+// el HTML crudo no trae embeds — el reproductor del sitio carga por
+// JavaScript, así que la captura del navegador oculto abre la página de
+// verdad y pesca el video; (2) los cosechadores de tarjetas (sdh y dlf)
+// ya no exigen la imagen DENTRO del ancla: ventana a 6000 y si el
+// póster vive fuera se mira hacia atrás (posterAntesDe, escuela
+// EstrenosAnime) en vez de botar la tarjeta; (3) botón nuevo «Sondear
+// Donghua» en ajustes: cuenta anclas/tarjetas de los dos catálogos,
+// prueba la página 2 y disecciona la página de reproducción — todo al
+// Registro para afinar con la verdad del teléfono.
+
+const VERSION = '0.6.79';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -5474,7 +5489,7 @@ async function sdhServidores(html, epUrl) {
 }
 
 function sdhTarjetas(html) {
-  const re = /<a\b[^>]*href\s*=\s*["'](?:https?:\/\/seriesdonghua\.com)?\/([a-z0-9-]+)\/["'][^>]*>([\s\S]{0,3200}?)<\/a>/gi;
+  const re = /<a\b[^>]*href\s*=\s*["'](?:https?:\/\/seriesdonghua\.com)?\/([a-z0-9-]+)\/?["'][^>]*>([\s\S]{0,6000}?)<\/a>/gi;
   const items = [];
   const indice = {};
   let m;
@@ -5482,7 +5497,6 @@ function sdhTarjetas(html) {
     const slug = m[1];
     if (/episodio/i.test(slug) || SDH_PROPIAS.test(slug) || indice[slug]) continue;
     const ventana = m[2];
-    if (!/<img\b/i.test(ventana)) continue;
     let titulo = '';
     const h = /<h[1-6][^>]*>([\s\S]{1,200}?)<\/h[1-6]>/i.exec(ventana);
     if (h) titulo = limpio(h[1]);
@@ -5491,10 +5505,15 @@ function sdhTarjetas(html) {
       if (al) titulo = decHtml(al[1]);
     }
     titulo = titulo.replace(/^Donghua\s+/i, '').replace(/\s+Sub\s+Espa\u00f1ol\s*$/i, '').trim();
+    /* v0.6.79: sin exigir <img> dentro del ancla — si la imagen vive
+     * fuera, se mira hacia atrás (posterAntesDe) en vez de botarla. */
+    let poster = posterEnVentana(ventana);
+    if (!poster) poster = posterAntesDe(html, m.index);
+    if (poster) poster = absolutizar(poster, BASE_SDH);
+    if (!poster && !titulo) continue;
     if (!titulo || titulo.length < 2) titulo = slugATitulo(slug);
     const item = { id: 'sdh-' + slug, ref: 'sdh:' + slug, title: titulo.slice(0, 200), kind: 'series' };
-    const poster = posterEnVentana(ventana);
-    if (poster) item.poster = absolutizar(poster, BASE_SDH);
+    if (poster) item.poster = poster;
     indice[slug] = item;
     items.push(item);
   }
@@ -5699,7 +5718,7 @@ function dlfPoster(ventana) {
 }
 
 function dlfTarjetas(html) {
-  const re = /<a\b[^>]*href\s*=\s*["'](?:https?:\/\/donghualife\.com)?\/series\/([a-z0-9-]+)\/?["'][^>]*>([\s\S]{0,3200}?)<\/a>/gi;
+  const re = /<a\b[^>]*href\s*=\s*["'](?:https?:\/\/donghualife\.com)?\/series\/([a-z0-9-]+)\/?["'][^>]*>([\s\S]{0,6000}?)<\/a>/gi;
   const items = [];
   const indice = {};
   let m;
@@ -5707,7 +5726,6 @@ function dlfTarjetas(html) {
     const slug = m[1];
     if (indice[slug]) continue;
     const ventana = m[2];
-    if (!/<img\b/i.test(ventana)) continue;
     let titulo = '';
     const h = /<h[1-6][^>]*>([\s\S]{1,200}?)<\/h[1-6]>/i.exec(ventana);
     if (h) titulo = limpio(h[1]);
@@ -5715,9 +5733,17 @@ function dlfTarjetas(html) {
       const al = /alt\s*=\s*["']([^"']{2,})["']/i.exec(ventana);
       if (al) titulo = decHtml(al[1]);
     }
+    /* v0.6.79: la imagen puede vivir FUERA del ancla (escuela
+     * EstrenosAnime) — antes esas tarjetas se descartaban enteras y el
+     * catálogo quedaba en cuatro títulos. Póster de la ventana o el
+     * <img> más cercano hacia atrás; sin título ni imagen, no es
+     * tarjeta. */
+    let poster = dlfPoster(ventana);
+    if (!poster) poster = posterAntesDe(html, m.index);
+    const conCara = /<img\b/i.test(ventana) || !!poster || !!titulo;
+    if (!conCara) continue;
     if (!titulo || titulo.length < 2) titulo = slugATitulo(slug);
     const item = { id: 'dlf-' + slug, ref: 'dlf:' + slug, title: titulo.slice(0, 200), kind: 'series' };
-    const poster = dlfPoster(ventana);
     if (poster) item.poster = poster;
     indice[slug] = item;
     items.push(item);
@@ -5917,9 +5943,25 @@ registrarFuente({
         userMessage: 'No se pudo abrir este episodio en DonghuaLife.'
       });
     }
-    const servers = dlfServidores(r.text);
+    let servers = dlfServidores(r.text);
     if (!servers.length) {
-      log('dlf diagnóstico: ' + r.text.slice(0, 400).replace(/\s+/g, ' '));
+      /* v0.6.79: el reproductor de DonghuaLife carga por JavaScript —
+       * el HTML crudo puede venir sin embeds. Antes de rendirse, la
+       * captura del navegador oculto abre la página de verdad y pesca
+       * el video (misma red de seguridad de OtakusTV/EstrenosAnime). */
+      log('dlf sin embeds en el crudo (' + r.text.length + ' letras) — probando la captura');
+      if (puedeCapturar() && queda() > 8000) {
+        try {
+          const st = await capturar(epUrl, 'DonghuaLife', BASE_DLF);
+          const salida = { url: st.url, label: 'DonghuaLife (captura)', expiresInSeconds: 1800 };
+          if (st.mime) salida.mime = st.mime;
+          salida.headers = st.headers || { 'User-Agent': UA };
+          log('resolve por captura: DonghuaLife');
+          return salida;
+        } catch (e2) {
+          log('la captura de DonghuaLife falló', (e2 && e2.message) || String(e2));
+        }
+      }
       throw kino.error('unavailable', 'DonghuaLife: sin servidores abribles', {
         userMessage: 'Este episodio no trae reproductores que AniJing sepa abrir. Prueba otra fuente.'
       });
@@ -8806,6 +8848,57 @@ async function action(key) {
     }
     partes.push('ids ' + cand.length + ', listas ' + hallados);
     return { message: 'Sondeo de EstrenosAnime: ' + partes.join(' · ') + '. Mándame el Registro (Ajustes ▸ Registro de AniJing) y con eso remato la lista.' };
+  }
+  if (key === 'dhSonda') {
+    /* v0.6.79 «El sondeo donghua»: diagnóstico de DonghuaLife y
+     * SeriesDonghua desde el teléfono de verdad — cuántas tarjetas hay
+     * en el HTML crudo, cómo se ven, si la página 2 es otra y qué trae
+     * la página de reproducción. Todo al log; el mensaje es el resumen. */
+    const partes = [];
+    try {
+      const r = await traer(BASE_DLF + '/series', { timeoutMs: 12000, cuerpoSiempre: true });
+      const t = r && r.text ? r.text : '';
+      const anclas = (t.match(/href\s*=\s*["'][^"']*\/series\/[a-z0-9-]+/gi) || []);
+      const mias = dlfTarjetas(t);
+      log('sonda dlf catálogo: status ' + (r ? r.status : 'sin') + ', ' + t.length + ' letras, ' + anclas.length + ' anclas /series/, ' + mias.length + ' tarjetas mías: ' + mias.slice(0, 6).map(function (x) { return x.title; }).join(' | '));
+      partes.push('dlf cat ' + mias.length + '/' + anclas.length);
+      const iA = t.search(/href\s*=\s*["'][^"']*\/series\/[a-z0-9-]+/i);
+      if (iA >= 0) log('sonda dlf muestra de tarjeta: ' + t.slice(Math.max(0, iA - 100), iA + 900).replace(/\s+/g, ' '));
+      const r2 = await traer(BASE_DLF + '/series?page=2', { timeoutMs: 12000, cuerpoSiempre: true });
+      const t2 = r2 && r2.text ? r2.text : '';
+      const mias2 = dlfTarjetas(t2);
+      log('sonda dlf pág2: status ' + (r2 ? r2.status : 'sin') + ', ' + t2.length + ' letras, ' + mias2.length + ' tarjetas: ' + mias2.slice(0, 5).map(function (x) { return x.title; }).join(' | '));
+      partes.push('pág2 ' + mias2.length);
+    } catch (eD) { log('sonda dlf catálogo FALLO: ' + ((eD && eD.message) || eD)); partes.push('dlf cat FALLO'); }
+    try {
+      const rf = await traer(BASE_DLF + '/series/martial-master', { timeoutMs: 12000, cuerpoSiempre: true });
+      const tf = rf && rf.text ? rf.text : '';
+      const codes = (tf.match(/\/watch\/[a-z0-9-]+-\d+-\d+/gi) || []);
+      log('sonda dlf ficha: status ' + (rf ? rf.status : 'sin') + ', ' + tf.length + ' letras, ' + codes.length + ' códigos /watch/ (primero: ' + (codes[0] || 'ninguno') + ')');
+      partes.push('ficha ' + codes.length);
+      if (codes.length) {
+        const rw = await traer(BASE_DLF + codes[0].replace(/^\/watch\//, '/watch/'), { timeoutMs: 12000, cuerpoSiempre: true, headers: { Referer: BASE_DLF + '/' } });
+        const tw = rw && rw.text ? rw.text : '';
+        const cuenta = function (re) { return (tw.match(re) || []).length; };
+        log('sonda dlf watch ' + codes[0] + ': status ' + (rw ? rw.status : 'sin') + ', ' + tw.length + ' letras, ok.ru ' + cuenta(/ok\.ru/gi) + ', dailymotion ' + cuenta(/dailymotion/gi) + ', rumble ' + cuenta(/rumble/gi) + ', iframes ' + cuenta(/<iframe/gi) + ', __next_f ' + cuenta(/__next_f/g) + ', «Fuentes» ' + cuenta(/Fuentes/g));
+        const iF = tw.indexOf('Fuentes');
+        if (iF >= 0) log('sonda dlf watch muestra: ' + tw.slice(iF, iF + 700).replace(/\s+/g, ' '));
+        const servs = dlfServidores(tw);
+        log('sonda dlf watch servidores míos: ' + (servs.length ? servs.map(function (s) { return s.tipo + ' ' + s.url; }).join(' | ') : 'NINGUNO'));
+        partes.push('watch ' + servs.length);
+      }
+    } catch (eW) { log('sonda dlf watch FALLO: ' + ((eW && eW.message) || eW)); partes.push('watch FALLO'); }
+    try {
+      const rs = await traer(BASE_SDH + '/todos-los-donghuas/', { timeoutMs: 12000, cuerpoSiempre: true });
+      const ts = rs && rs.text ? rs.text : '';
+      const anclasS = (ts.match(/href\s*=\s*["'][^"']*\/[a-z0-9-]+\/["']/gi) || []);
+      const miasS = sdhTarjetas(ts);
+      log('sonda sdh catálogo: status ' + (rs ? rs.status : 'sin') + ', ' + ts.length + ' letras, ' + anclasS.length + ' anclas, ' + miasS.length + ' tarjetas mías: ' + miasS.slice(0, 6).map(function (x) { return x.title; }).join(' | '));
+      const iS = ts.search(/href\s*=\s*["'][^"']*\/[a-z0-9-]+\/["']/i);
+      if (iS >= 0) log('sonda sdh muestra de tarjeta: ' + ts.slice(Math.max(0, iS - 100), iS + 900).replace(/\s+/g, ' '));
+      partes.push('sdh cat ' + miasS.length + '/' + anclasS.length);
+    } catch (eS) { log('sonda sdh catálogo FALLO: ' + ((eS && eS.message) || eS)); partes.push('sdh FALLO'); }
+    return { message: 'Sondeo donghua: ' + partes.join(' · ') + '. Mándame el Registro (Ajustes ▸ Registro de AniJing) y con eso afino las dos fuentes.' };
   }
   if (key === 'btzSonda') {
     /* v0.6.45 «El sondeo del almacén»: diagnóstico de BeatZ desde el
