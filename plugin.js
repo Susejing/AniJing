@@ -1253,8 +1253,22 @@
 // traductor primero. El directo de ivanime.buzz/.top sigue negado por
 // Kino («host not allowed») AUN tras reinstalar — negación por debajo
 // del manifiesto; el traductor es el único puente vivo.
+//
+// v0.6.87 «La memoria de iva» — el teléfono probó la 0.6.86 y el Registro
+// contó la vida real: la portada YA NO TUMBA (1 fila armada sin timeout —
+// el relevo de uno funcionó), pero el traductor de Google sirve ~UNA
+// página por minuto y cada pantalla volvía a pedirle lo mismo: la ficha
+// que el detalle trajo se pedía de nuevo para los episodios y comía el
+// 403 del ritmo («IvAnime no entregó la serie»), el «Ver más» de la
+// portada caía en el corta-corriente, y volver a la fuente daba «Nada
+// por ahora» porque cada fila sin relevo marcaba la caída (la negación
+// de Kino sobre .buzz es permanente, no una caída de red). Ahora: MEMORIA
+// de iva — las páginas ya servidas (directo o espejo) se reusan 10 min
+// (tope 20 páginas, 300 KB c/u); una sola victoria del traductor alimenta
+// ficha + episodios + hoja; la memoria vale aunque haya corta-corriente;
+// y solo la fila con relevo («/») puede marcar la caída.
 
-const VERSION = '0.6.86';
+const VERSION = '0.6.87';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -6145,11 +6159,47 @@ function ivaMotivo(r) {
   if (r.error) return String((r.error && r.error.message) || r.error);
   return 'status ' + r.status + (ivaEsReto(r.text) ? ' (reto CF)' : '') + (r.text && r.text.length <= 300 ? ' (respuesta corta)' : '');
 }
+/* v0.6.87 «La memoria de iva» — el Registro del teléfono (20:18) contó
+ * la vida real con el relevo de uno: la portada arma (¡ya no tumba!),
+ * pero el traductor de Google sirve ~UNA página por minuto y la ficha
+ * que detalles() ya trajo se volvía a pedir para episodios() — y esa
+ * segunda petición comía el 403 del ritmo de Google («IvAnime no
+ * entregó la serie»). La memoria guarda las páginas ya servidas
+ * (directo o espejo) y las reusa por 10 minutos: una sola victoria del
+ * traductor alimenta ficha + episodios + la hoja del riel, y el
+ * refresco de portada no vuelve a rogarle a Google por lo que ya tiene
+ * en casa. En memoria viva (se limpia sola al reiniciar Kino), tope de
+ * 20 páginas y 300 KB por página para no afanar la RAM del teléfono. */
+const IVA_MEM = new Map();
+function ivaMemoriaDe(url) {
+  const m = IVA_MEM.get(url);
+  if (!m) return null;
+  if (Date.now() - m.t > 10 * 60 * 1000) { IVA_MEM.delete(url); return null; }
+  return m.text;
+}
+function ivaGuarda(url, text) {
+  try {
+    if (!text || text.length > 300000) return;
+    if (IVA_MEM.size >= 20 && !IVA_MEM.has(url)) {
+      const masVieja = IVA_MEM.keys().next().value;
+      IVA_MEM.delete(masVieja);
+    }
+    IVA_MEM.delete(url);
+    IVA_MEM.set(url, { t: Date.now(), text: text });
+  } catch (eM) {}
+}
 async function traerIva(url, opciones) {
   const o = opciones || {};
+  /* v0.6.87: la memoria primero — una página ya traída no se pide de
+   * nuevo (TTL 10 min). Con o.fresco se fuerza la lectura por si un día
+   * hace falta. */
+  if (o.fresco !== true) {
+    const mem = ivaMemoriaDe(url);
+    if (mem) return { ok: true, status: 200, text: mem, headers: {} };
+  }
   let r = null;
   try { r = await traer(url, o); } catch (eD) { r = { ok: false, status: 0, text: '', error: eD }; }
-  if (r && r.ok && r.text && r.text.length > 300 && !ivaEsReto(r.text)) return r;
+  if (r && r.ok && r.text && r.text.length > 300 && !ivaEsReto(r.text)) { ivaGuarda(url, r.text); return r; }
   /* v0.6.86: relevo opcional — la portada de iva pide 6 filas a la vez
    * y el traductor solo aguanta una: 6 tandas = 30 s = Kino corta el
    * screenEvent a los 20 s («tumbó el plugin»). Las filas de la portada
@@ -6169,6 +6219,7 @@ async function traerIva(url, opciones) {
   for (let i = 0; i < rts.length; i++) {
     const rj = rts[i].r;
     if (rj && rj.ok && rj.text && rj.text.length > 300 && !ivaEsReto(rj.text)) {
+      ivaGuarda(url, rj.text);
       log('iva relevo: ' + rts[i].nombre + ' sirvió para ' + url);
       return rj;
     }
@@ -6422,8 +6473,10 @@ registrarFuente({
       try {
         /* v0.6.62: corta-corriente — si IvAnime está caída, las filas se
          * saltan sin esperar y el timeout baja de 13 s a 8 s para no
-         * pisar el tope de 20 s del screenEvent de Kino. */
-        if (!ivaViva()) {
+         * pisar el tope de 20 s del screenEvent de Kino.
+         * v0.6.87: la memoria vale aunque haya corta-corriente — lo ya
+         * traído se sirve sin rogarle de nuevo a Google. */
+        if (!ivaViva() && !ivaMemoriaDe(BASE_IVA + def.camino)) {
           ivaSalta('iva corta-corriente: filas saltadas (caída reciente)');
           return null;
         }
@@ -6432,7 +6485,12 @@ registrarFuente({
          * viajan con relevo:false: fallan rápido y la portada arma en
          * <20 s aunque IvAnime esté negada por Kino. */
         const r = await traerIva(BASE_IVA + def.camino, { headers: ivaCabeceras(), timeoutMs: 8000, cuerpoSiempre: true, relevo: def.camino === '/' });
-        if (r.status === 0) ivaCayo();
+        /* v0.6.87: solo la fila con relevo («/») puede marcar la caída —
+         * la negación de Kino sobre .buzz es PERMANENTE y las filas sin
+         * relevo fallan rápido por ella; marcar caída por cada una
+         * convertía el siguiente refresco en «Nada por ahora» (captura
+         * 20:20 del teléfono). */
+        if (r.status === 0 && def.camino === '/') ivaCayo();
         const items = ivaTarjetas(r.text).slice(0, 20);
         if (!items.length && r.text) {
           log('iva fila «' + def.camino + '»: status ' + r.status + ', ' + r.text.length + ' letras, 0 tarjetas' +
@@ -6472,12 +6530,14 @@ registrarFuente({
     const paginado = ref === 'iva-directorio' || ref.indexOf('iva-genero-') === 0;
     const pag = parseInt(String(cursor || '1'), 10) || 1;
     const num = paginado && pag > 1 ? pag : 1;
-    /* v0.6.62: corta-corriente también en la hoja (espera 12 s → 8 s). */
-    if (!ivaViva()) {
+    const urlHoja = BASE_IVA + camino + (paginado && num > 1 ? '?p=' + num : '');
+    /* v0.6.62: corta-corriente también en la hoja (espera 12 s → 8 s).
+     * v0.6.87: la memoria vale aunque haya corta-corriente. */
+    if (!ivaViva() && !ivaMemoriaDe(urlHoja)) {
       ivaSalta('iva corta-corriente: hoja «' + ref + '» saltada (caída reciente)');
       return { items: [], next: null };
     }
-    const r = await traerIva(BASE_IVA + camino + (paginado && num > 1 ? '?p=' + num : ''), { headers: ivaCabeceras(), timeoutMs: 8000 });
+    const r = await traerIva(urlHoja, { headers: ivaCabeceras(), timeoutMs: 8000 });
     if (r.status === 0) ivaCayo();
     if (!r.ok) {
       if (paginado && num > 1) return { items: [], next: null };
