@@ -1209,7 +1209,17 @@
 // página de reproducción (la captura pesca las fuentes por JavaScript,
 // igual que en las series).
 
-const VERSION = '0.6.82';
+// v0.6.83 «La cadena completa» — el Registro de la 0.6.82 confesó cada
+// eslabón: codetabs status 0 desde el teléfono, allorigins status 200
+// PERO con reto de Cloudflare (al espejo lo desafió a él). La cadena de
+// traerIva ahora es: directo .buzz → directo .top (el sitio original,
+// ya aprobado en hosts, aquí responde sin reto) → traductor de Google
+// (IPs de Google, las que CF menos desafía) → codetabs → allorigins;
+// y CADA fallo confiesa su motivo real (traer esconde la excepción en
+// status 0). El póster vuelve al kino.fetch directo: traer aplana la
+// respuesta y el base64() de los bytes se perdía (bug de la 0.6.82).
+
+const VERSION = '0.6.83';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4106,7 +4116,7 @@ registrarFuente({
     const servers = servidoresDePagina(r.text);
     /* v0.6.3: los players viven en el contenedor mytsumi, que solo entrega
      * sus botones data-player-url si se le pide con open=1 (el sondeo de
-     * la 0.6.1 pedía la página sin ese toque y salía vacío). Si ni así
+     * la 0.6.1 pedía la página sin ese toque y salía vac��o). Si ni así
      * aparecen, probarConCaptura cae a la captura del navegador. */
     const extra = await aytSondearMytsumi(r.text);
     const todos = servers.concat(extra);
@@ -6048,28 +6058,50 @@ function ivaCabeceras(extra) {
 function ivaEsReto(texto) {
   return /performing security verification|just a moment|cf-browser-verification|cf-chl/i.test(texto || '');
 }
+/* v0.6.83 «La cadena completa»: el Registro de la 0.6.82 dijo la verdad
+ * de cada eslabón — codetabs status 0 desde el teléfono, allorigins
+ * status 200 PERO con reto de Cloudflare (le tocó a la IP del espejo,
+ * no a la nuestra). La cadena ahora: (1) directo a ivanime.buzz;
+ * (2) directo a ivanime.top (el sitio original — el manifiesto ya lo
+ * aprueba y aquí responde SIN reto); (3) el traductor de Google
+ * (<host-con-guiones>.translate.goog — IPs de Google, las que
+ * Cloudflare menos desafía); (4) codetabs; (5) allorigins. Y CADA
+ * fallo deja su motivo real en el log (traer esconde la excepción en
+ * status 0 — aquí se confiesa). */
+function ivaAlternas(url) {
+  const s = String(url || '');
+  const enc = encodeURIComponent(s);
+  const enTop = s.replace('https://ivanime.buzz', 'https://ivanime.top');
+  const enTrad = s.replace('https://ivanime.buzz', 'https://ivanime-buzz.translate.goog')
+    + (s.indexOf('?') >= 0 ? '&' : '?') + '_x_tr_sl=auto&_x_tr_tl=es&_x_tr_hl=es';
+  return [
+    ['directo .top', enTop],
+    ['espejo traductor', enTrad],
+    ['espejo codetabs', 'https://api.codetabs.com/v1/proxy/?quest=' + enc],
+    ['espejo allorigins', 'https://api.allorigins.win/raw?url=' + enc]
+  ];
+}
+function ivaMotivo(r) {
+  if (!r) return 'sin respuesta';
+  if (r.error) return String((r.error && r.error.message) || r.error);
+  return 'status ' + r.status + (ivaEsReto(r.text) ? ' (reto CF)' : '') + (r.text && r.text.length <= 300 ? ' (respuesta corta)' : '');
+}
 async function traerIva(url, opciones) {
   const o = opciones || {};
   let r = null;
-  try { r = await traer(url, o); } catch (eD) { r = null; }
-  if (r && r.ok && r.text && (r.text.length > 300 || !ivaEsReto(r.text))) return r;
-  /* El directo falló (o trajo un reto): relevo con espejos de lectura. */
-  const enc = encodeURIComponent(url);
-  const espejos = [
-    'https://api.codetabs.com/v1/proxy/?quest=' + enc,
-    'https://api.allorigins.win/raw?url=' + enc
-  ];
-  for (let i = 0; i < espejos.length; i++) {
+  try { r = await traer(url, o); } catch (eD) { r = { ok: false, status: 0, text: '', error: eD }; }
+  if (r && r.ok && r.text && r.text.length > 300 && !ivaEsReto(r.text)) return r;
+  /* El directo falló: se confiesa el porqué y se releva. */
+  log('iva directo falló para ' + url + ': ' + ivaMotivo(r));
+  const opts = { timeoutMs: Math.min(Number(o.timeoutMs) || 10000, 15000), maxBytes: o.maxBytes, headers: o.headers };
+  for (const par of ivaAlternas(url)) {
     let rj = null;
-    try { rj = await traer(espejos[i], { timeoutMs: Math.min(Number(o.timeoutMs) || 10000, 15000), maxBytes: o.maxBytes }); } catch (eM) { rj = null; }
+    try { rj = await traer(par[1], opts); } catch (eM) { rj = { ok: false, status: 0, text: '', error: eM }; }
     if (rj && rj.ok && rj.text && rj.text.length > 300 && !ivaEsReto(rj.text)) {
-      log('iva relevo: espejo ' + i + ' sirvió para ' + url);
+      log('iva relevo: ' + par[0] + ' sirvió para ' + url);
       return rj;
     }
-    /* v0.6.82: el relevo fallido deja su línea — sin esto el Registro
-     * no dice por qué el espejo no sirvió (host negado, reto CF,
-     * respuesta corta). */
-    log('iva relevo: espejo ' + i + ' no sirvió (' + (rj ? 'status ' + rj.status + (ivaEsReto(rj.text) ? ', reto CF' : '') + (rj.text && rj.text.length <= 300 ? ', respuesta corta' : '') : 'excepción') + ')');
+    log('iva relevo: ' + par[0] + ' no sirvió (' + ivaMotivo(rj) + ')');
   }
   if (r) return r; /* el fallo original manda (para status/ivaCayo). */
   throw kino.error('unavailable', 'IvAnime no alcanzable ni por espejos', {
@@ -8797,11 +8829,13 @@ async function image(arg) {
     throw kino.error('not_found', 'imagen que no es de IvAnime');
   }
   const nombre = handle.split('/').pop() || handle;
-  /* v0.6.82: el póster también viaja por el relevo — si el directo no
-   * llega (red o host), el espejo lo trae desde su red. */
+  /* v0.6.83: el póster vuelve al kino.fetch DIRECTO — traer() aplana la
+   * respuesta (solo text) y el base64() de los bytes se pierde; un
+   * espejo que no reenvía el Referer recibiría 403 del muro. Si el
+   * directo no llega, placeholder honesto y al log. */
   let r = null;
   try {
-    r = await traerIva(handle, {
+    r = await kino.fetch(handle, {
       headers: { Referer: 'https://ivanime.buzz/', 'User-Agent': UA },
       timeoutMs: 9000,
       maxBytes: 262145
