@@ -1267,8 +1267,18 @@
 // (tope 20 páginas, 300 KB c/u); una sola victoria del traductor alimenta
 // ficha + episodios + hoja; la memoria vale aunque haya corta-corriente;
 // y solo la fila con relevo («/») puede marcar la caída.
+//
+// v0.6.88 «El mensaje que guía» — el Registro de la 0.6.87 mostró el
+// ritmo de Google con precisión de reloj: una victoria cada ~30-40 s
+// (20:06:14, 20:06:54, 20:07:21, 20:08:00, 20:33:29) y 403 seguro en
+// todo reintento antes de tiempo (los tres fichazos del usuario fueron
+// a los 10-18 s). La memoria ya conserva cada victoria; lo que faltaba
+// era el MENSAJE: decía «revisa tu conexión» cuando la conexión está
+// bien y el que espera 40 s y toca Reintentar GANA. Ahora los tres
+// avisos de iva (traerIva, hoja, episodios) enseñan el ritmo: espera un
+// minuto y toca Reintentar — lo ya cargado queda guardado.
 
-const VERSION = '0.6.87';
+const VERSION = '0.6.88';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -6229,7 +6239,7 @@ async function traerIva(url, opciones) {
   }
   if (r) return r; /* el fallo original manda (para status/ivaCayo). */
   throw kino.error('unavailable', 'IvAnime no alcanzable ni por espejos', {
-    userMessage: 'IvAnime no responde desde tu conexión ahora mismo. Prueba en un rato o con otra red (datos/wifi).'
+    userMessage: 'IvAnime va al ritmo de Google (~1 página por minuto). Espera un minuto y toca Reintentar: lo que ya cargó queda guardado.'
   });
 }
 /* v0.6.62 «El corta-corriente»: IvAnime respondió status 0 en TODAS sus
@@ -6577,7 +6587,7 @@ registrarFuente({
     const r = await traerIva(BASE_IVA + '/anime/' + slug + '/', { headers: ivaCabeceras(), timeoutMs: 10000 });
     if (!r.ok || !r.text) {
       throw kino.error('unavailable', 'IvAnime no entregó la serie', {
-        userMessage: 'IvAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
+        userMessage: 'IvAnime va al ritmo de Google (~1 página por minuto). Espera un minuto y toca Reintentar: lo que ya cargó queda guardado.'
       });
     }
     /* v0.6.12: los capítulos viven en /ver/<epslug>-episodio-N SIN
