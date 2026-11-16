@@ -1219,7 +1219,18 @@
 // status 0). El póster vuelve al kino.fetch directo: traer aplana la
 // respuesta y el base64() de los bytes se perdía (bug de la 0.6.82).
 
-const VERSION = '0.6.83';
+// v0.6.84 «Los espejos aprobados» — el Registro de la 0.6.83 sentenció:
+// «host not allowed: ivanime.buzz» y «...: ivanime.top» con AMBOS en el
+// manifiesto, mientras los hosts NUEVOS sí pasan — el almacén de
+// aprobación de Kino del teléfono perdió los dominios viejos (no es la
+// red: es Kino). Los espejos ahora van EN PARALELO y solo por hosts
+// aprobados: traductor y allorigins contra .buzz Y contra .top (CF de
+// .top es intermitente), codetabs con margen extra. El póster también
+// releva (kino.fetch crudo, que el .base64() sobreviva). Sin hosts
+// nuevos: SIN re-aprobación. El camino corto para el usuario: reinstalar
+// el plugin re-aprueba TODOS los hosts de una vez.
+
+const VERSION = '0.6.84';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -4116,7 +4127,7 @@ registrarFuente({
     const servers = servidoresDePagina(r.text);
     /* v0.6.3: los players viven en el contenedor mytsumi, que solo entrega
      * sus botones data-player-url si se le pide con open=1 (el sondeo de
-     * la 0.6.1 pedía la página sin ese toque y salía vac��o). Si ni así
+     * la 0.6.1 pedía la página sin ese toque y salía vacío). Si ni así
      * aparecen, probarConCaptura cae a la captura del navegador. */
     const extra = await aytSondearMytsumi(r.text);
     const todos = servers.concat(extra);
@@ -6068,17 +6079,30 @@ function ivaEsReto(texto) {
  * Cloudflare menos desafía); (4) codetabs; (5) allorigins. Y CADA
  * fallo deja su motivo real en el log (traer esconde la excepción en
  * status 0 — aquí se confiesa). */
-function ivaAlternas(url) {
+/* v0.6.84 «Los espejos que sí están aprobados»: el Registro de la
+ * 0.6.83 sentenció — «host not allowed: ivanime.buzz» y «host not
+ * allowed: ivanime.top» con AMBOS en el manifiesto, mientras los hosts
+ * NUEVOS (allorigins, translate.goog) sí pasan: el almacén de
+ * aprobación de Kino del teléfono perdió los dominios viejos. La
+ * cadena ya no toca los dominios negados salvo el directo de cortesía:
+ * los espejos van EN PARALELO (una tanda, gana el mejor) y todos
+ * apuntan a hosts aprobados — traductor y allorigins contra .buzz Y
+ * contra .top (el original, cuya nube de CF es intermitente: aquí
+ * responde sin reto). codetabs, lento, con un poco más de margen. */
+function ivaAlternas(url, opciones) {
   const s = String(url || '');
-  const enc = encodeURIComponent(s);
   const enTop = s.replace('https://ivanime.buzz', 'https://ivanime.top');
-  const enTrad = s.replace('https://ivanime.buzz', 'https://ivanime-buzz.translate.goog')
-    + (s.indexOf('?') >= 0 ? '&' : '?') + '_x_tr_sl=auto&_x_tr_tl=es&_x_tr_hl=es';
+  const colaB = s.slice('https://ivanime.buzz'.length);
+  const colaT = enTop.slice('https://ivanime.top'.length);
+  const qB = colaB.indexOf('?') >= 0 ? '&' : '?';
+  const qT = colaT.indexOf('?') >= 0 ? '&' : '?';
+  const base = Math.min(Number(opciones && opciones.timeoutMs) || 10000, 15000);
   return [
-    ['directo .top', enTop],
-    ['espejo traductor', enTrad],
-    ['espejo codetabs', 'https://api.codetabs.com/v1/proxy/?quest=' + enc],
-    ['espejo allorigins', 'https://api.allorigins.win/raw?url=' + enc]
+    ['traductor (.top)', 'https://ivanime-top.translate.goog' + colaT + qT + '_x_tr_sl=auto&_x_tr_tl=es&_x_tr_hl=es', Math.min(base, 8000)],
+    ['allorigins (.top)', 'https://api.allorigins.win/raw?url=' + encodeURIComponent(enTop), Math.min(base, 8000)],
+    ['traductor (.buzz)', 'https://ivanime-buzz.translate.goog' + colaB + qB + '_x_tr_sl=auto&_x_tr_tl=es&_x_tr_hl=es', Math.min(base, 8000)],
+    ['allorigins (.buzz)', 'https://api.allorigins.win/raw?url=' + encodeURIComponent(s), Math.min(base, 8000)],
+    ['codetabs (.buzz)', 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(s), Math.min(base + 4000, 12000)]
   ];
 }
 function ivaMotivo(r) {
@@ -6091,17 +6115,26 @@ async function traerIva(url, opciones) {
   let r = null;
   try { r = await traer(url, o); } catch (eD) { r = { ok: false, status: 0, text: '', error: eD }; }
   if (r && r.ok && r.text && r.text.length > 300 && !ivaEsReto(r.text)) return r;
-  /* El directo falló: se confiesa el porqué y se releva. */
+  /* El directo falló: se confiesa el porqué y salta la tanda de
+   * espejos EN PARALELO — gana el primero que traiga la página buena. */
   log('iva directo falló para ' + url + ': ' + ivaMotivo(r));
-  const opts = { timeoutMs: Math.min(Number(o.timeoutMs) || 10000, 15000), maxBytes: o.maxBytes, headers: o.headers };
-  for (const par of ivaAlternas(url)) {
-    let rj = null;
-    try { rj = await traer(par[1], opts); } catch (eM) { rj = { ok: false, status: 0, text: '', error: eM }; }
+  const tandas = ivaAlternas(url, o);
+  const rts = await Promise.all(tandas.map(async function (par) {
+    try {
+      return { nombre: par[0], r: await traer(par[1], { timeoutMs: par[2], maxBytes: o.maxBytes, headers: o.headers }) };
+    } catch (eM) {
+      return { nombre: par[0], r: { ok: false, status: 0, text: '', error: eM } };
+    }
+  }));
+  for (let i = 0; i < rts.length; i++) {
+    const rj = rts[i].r;
     if (rj && rj.ok && rj.text && rj.text.length > 300 && !ivaEsReto(rj.text)) {
-      log('iva relevo: ' + par[0] + ' sirvió para ' + url);
+      log('iva relevo: ' + rts[i].nombre + ' sirvió para ' + url);
       return rj;
     }
-    log('iva relevo: ' + par[0] + ' no sirvió (' + ivaMotivo(rj) + ')');
+  }
+  for (let i = 0; i < rts.length; i++) {
+    log('iva relevo: ' + rts[i].nombre + ' no sirvió (' + ivaMotivo(rts[i].r) + ')');
   }
   if (r) return r; /* el fallo original manda (para status/ivaCayo). */
   throw kino.error('unavailable', 'IvAnime no alcanzable ni por espejos', {
@@ -8842,6 +8875,35 @@ async function image(arg) {
     });
   } catch (eF) {
     log('iva póster «' + nombre + '»: ni siquiera llegó (' + ((eF && eF.message) || String(eF)) + ')');
+    /* v0.6.84: relevo del póster con espejos APROBADOS — kino.fetch
+     * CRUDO (no traer) para conservar el .base64() de los bytes. Sin
+     * Referer el muro puede contestar 403 en HTML: se descarta y se
+     * sigue. Si nada sirve, placeholder honesto. */
+    const enTopI = handle.replace('https://ivanime.buzz', 'https://ivanime.top');
+    const espejosImg = [
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(enTopI),
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(handle),
+      'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(handle)
+    ];
+    for (let i = 0; i < espejosImg.length; i++) {
+      let ri = null;
+      try { ri = await kino.fetch(espejosImg[i], { timeoutMs: 9000, maxBytes: 262145 }); } catch (eE) { ri = null; }
+      if (ri && ri.status === 200 && ri.truncated !== true) {
+        const cti = ((ri.headers && (ri.headers['content-type'] || ri.headers['Content-Type'])) || '');
+        if (/text\/html/i.test(cti)) continue;
+        let b64 = '';
+        try { b64 = ri.base64(); } catch (eB) { b64 = ''; }
+        if (b64) {
+          let mi = 'image/jpeg';
+          if (/webp/i.test(cti)) mi = 'image/webp';
+          else if (/png/i.test(cti)) mi = 'image/png';
+          else if (/\.webp(\?|$)/i.test(handle)) mi = 'image/webp';
+          else if (/\.png(\?|$)/i.test(handle)) mi = 'image/png';
+          log('iva póster «' + nombre + '»: servido por espejo (' + Math.round(b64.length * 3 / 4 / 102.4) / 10 + ' KB)');
+          return { bytes: b64, mime: mi };
+        }
+      }
+    }
     throw kino.error('unavailable', 'IvAnime no entregó la imagen');
   }
   /* v0.6.17 unificado: la portada puede fallar porque pese más del
