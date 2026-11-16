@@ -1230,7 +1230,18 @@
 // nuevos: SIN re-aprobación. El camino corto para el usuario: reinstalar
 // el plugin re-aprueba TODOS los hosts de una vez.
 
-const VERSION = '0.6.84';
+// v0.6.85 «La barra de más» — el catálogo de SeriesDonghua pedía sus
+// páginas con la barra DESPUÉS de la query («/todos-los-donghuas?page=
+// 2/»): página sucia, el sitio devuelve la 1 de nuevo o nada, y el
+// «Ver más» se moría en la primera página («no muestra todo el
+// catálogo»). La barra va antes de la query; el catálogo deja su línea
+// en el Registro (tarjetas, página, muestras) y la sonda donghua prueba
+// la página 2 exacta y cuenta repetidas. IvAnime: el Registro se borra
+// con la reinstalación — falta la prueba POST-reinstalación (con los
+// hosts aprobados de fresco, el directo debería vivir; si un espejo
+// sirve, tampoco deja línea: el log solo confiesa fracasos).
+
+const VERSION = '0.6.85';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -5649,7 +5660,10 @@ registrarFuente({
     if (!camino) return null;
     const pagina = parseInt(cursor, 10);
     const num = Number.isFinite(pagina) && pagina > 1 ? pagina : 1;
-    const r = await traer(BASE_SDH + camino + (num > 1 ? '?page=' + num : '') + '/', { timeoutMs: 12000, cuerpoSiempre: true });
+    /* v0.6.85: la barra iba DESPUÉS de la query («?page=2/») — el sitio
+     * puede tomarla como página sucia y devolver la 1 de nuevo: el
+     * catálogo «se acababa» en la primera página. La barra va antes. */
+    const r = await traer(BASE_SDH + camino + '/' + (num > 1 ? '?page=' + num : ''), { timeoutMs: 12000, cuerpoSiempre: true });
     if (!r.ok) {
       if (num > 1) return { items: [], next: null };
       throw kino.error('unavailable', 'SeriesDonghua no respondió (status ' + r.status + ')', {
@@ -5663,6 +5677,10 @@ registrarFuente({
     }
     const items = sdhTarjetas(r.text).slice(0, 60);
     const next = items.length >= 8 ? String(num + 1) : null;
+    /* v0.6.85: el catálogo de sdh deja su línea (escuela jara) — sin esto
+     * el Registro no dice ni cuántas tarjetas llegaron ni si la página
+     * encadena. */
+    log('sdh catálogo «' + ref + '»: ' + items.length + ' tarjetas (página ' + num + (next ? ', sigue en ' + next : ', FIN') + '): ' + items.slice(0, 4).map(function (x) { return x.title; }).join(' | '));
     return { items: items, next: next };
   },
 
@@ -9115,6 +9133,15 @@ async function action(key) {
       const iS = ts.search(/href\s*=\s*["'][^"']*\/[a-z0-9-]+\/["']/i);
       if (iS >= 0) log('sonda sdh muestra de tarjeta: ' + ts.slice(Math.max(0, iS - 100), iS + 900).replace(/\s+/g, ' '));
       partes.push('sdh cat ' + miasS.length + '/' + anclasS.length);
+      /* v0.6.85: la página 2 EXACTA que pide el catálogo (con la barra
+       * antes de la query, como quedó arreglada) — si trae series
+       * distintas de la 1, el encadenado del «Ver más» vive. */
+      const rs2 = await traer(BASE_SDH + '/todos-los-donghuas/?page=2', { timeoutMs: 12000, cuerpoSiempre: true });
+      const ts2 = rs2 && rs2.text ? rs2.text : '';
+      const miasS2 = sdhTarjetas(ts2);
+      const repetidas = miasS2.filter(function (x) { return miasS.some(function (y) { return y.id === x.id; }); }).length;
+      log('sonda sdh pág2: status ' + (rs2 ? rs2.status : 'sin') + ', ' + ts2.length + ' letras, ' + miasS2.length + ' tarjetas, ' + repetidas + ' repetidas de la pág1: ' + miasS2.slice(0, 6).map(function (x) { return x.title; }).join(' | '));
+      partes.push('sdh pág2 ' + miasS2.length + ' (rep ' + repetidas + ')');
     } catch (eS) { log('sonda sdh catálogo FALLO: ' + ((eS && eS.message) || eS)); partes.push('sdh FALLO'); }
     return { message: 'Sondeo donghua: ' + partes.join(' · ') + '. Mándame el Registro (Ajustes ▸ Registro de AniJing) y con eso afino las dos fuentes.' };
   }
