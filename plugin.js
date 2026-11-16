@@ -1183,7 +1183,19 @@
 // prueba la página 2 y disecciona la página de reproducción — todo al
 // Registro para afinar con la verdad del teléfono.
 
-const VERSION = '0.6.79';
+// v0.6.80 «La revisión de IvAnime» — dos frentes del teléfono: (1)
+// IvAnime se puso tras Cloudflare y su catálogo dejó de cargar: vuelve
+// la ventanita de la revisión (escuela VerAnime) — «Pasar la revisión
+// de IvAnime» gana cf_clearance una vez y la galleta viaja con cada
+// petición con el MISMO disfraz de navegador con el que se ganó
+// (IVA_UA, Chrome 140 móvil); (2) DonghuaLife seguía corta: su HTML
+// crudo trae ~10 tarjetas por página (el resto carga por JavaScript) y
+// el «Ver más» exigía 20 para encadenar — el umbral baja a 8 (también
+// en sdh, md y jl, que comparten línea). El sondeo de tarjetas fuera
+// del ancla de la 0.6.79 queda; la sonda «Sondear Donghua» sigue
+// disponible para ver la verdad del teléfono.
+
+const VERSION = '0.6.80';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -5086,7 +5098,7 @@ registrarFuente({
     const items = jlTarjetas(r.text).slice(0, 60);
     /* El catálogo no anuncia «Página X de Y»: hay siguiente si la página
      * vino llena (Kino corta solo cuando una página vuelve vacía). */
-    const next = items.length >= 20 ? String(num + 1) : null;
+    const next = items.length >= 8 ? String(num + 1) : null;
     return { items: items, next: next };
   },
 
@@ -5335,7 +5347,7 @@ registrarFuente({
       });
     }
     const items = mdTarjetas(r.text).slice(0, 60);
-    const next = items.length >= 20 ? String(num + 1) : null;
+    const next = items.length >= 8 ? String(num + 1) : null;
     return { items: items, next: next };
   },
 
@@ -5612,7 +5624,7 @@ registrarFuente({
       return { items: sdhTarjetasNuevos(r.text).slice(0, 24), next: null };
     }
     const items = sdhTarjetas(r.text).slice(0, 60);
-    const next = items.length >= 20 ? String(num + 1) : null;
+    const next = items.length >= 8 ? String(num + 1) : null;
     return { items: items, next: next };
   },
 
@@ -5863,7 +5875,7 @@ registrarFuente({
       });
     }
     const items = dlfTarjetas(r.text).slice(0, 60);
-    const next = items.length >= 20 ? String(num + 1) : null;
+    const next = items.length >= 8 ? String(num + 1) : null;
     return { items: items, next: next };
   },
 
@@ -5975,6 +5987,18 @@ registrarFuente({
 /* ---------- fuente: IvAnime (ivanime.buzz, espejo de ivanime.top) ---------- */
 
 const BASE_IVA = 'https://ivanime.buzz';
+/* v0.6.80 «La revisión de IvAnime»: el sitio se puso tras Cloudflare y
+ * kino.fetch quedó fuera. Escuela VerAnime: la galleta cf_clearance se
+ * gana UNA VEZ en la ventanita («Pasar la revisión de IvAnime») y viaja
+ * con cada petición — con el MISMO disfraz de navegador con el que se
+ * ganó, porque una cf_clearance solo vale para el UA que la pasó. */
+const IVA_UA = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36';
+function ivaCabeceras(extra) {
+  const h = Object.assign({ Referer: BASE_IVA + '/', 'User-Agent': IVA_UA }, extra || {});
+  const g = configDe('ivaCookie');
+  if (g) h.Cookie = String(g);
+  return h;
+}
 /* v0.6.62 «El corta-corriente»: IvAnime respondió status 0 en TODAS sus
  * filas y sus esperas de 13 s tumbaron el screenEvent de Kino (tope de
  * 20 s) con la pantalla roja «Tardó demasiado». Si el sitio no responde,
@@ -6147,7 +6171,7 @@ registrarFuente({
     try {
       /* Se prueba el ?s= de siempre; si el sitio lo ignora, se filtra el
        * Inicio por título como plan B honesto. */
-      const r = await traer(BASE_IVA + '/?s=' + encodeURIComponent(texto), { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 10000 });
+      const r = await traer(BASE_IVA + '/?s=' + encodeURIComponent(texto), { headers: ivaCabeceras(), timeoutMs: 10000 });
       if (r.ok) {
         /* v0.6.1: las anclas de IvAnime también casan con el patrón de
          * AnimeYT (ambos son /anime/<slug>/); esas tarjetas son de aquí:
@@ -6175,7 +6199,7 @@ registrarFuente({
       log('iva buscar', (e && e.message) || String(e));
     }
     try {
-      const r2 = await traer(BASE_IVA + '/', { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 10000 });
+      const r2 = await traer(BASE_IVA + '/', { headers: ivaCabeceras(), timeoutMs: 10000 });
       const items = ivaTarjetas(r2.text).filter((it) => titulosParecen(texto, it.title));
       for (const it of items) it.badges = ['IvAnime'];
       return items.slice(0, 25);
@@ -6212,7 +6236,7 @@ registrarFuente({
           log('iva corta-corriente: fila «' + def.camino + '» saltada (caída reciente)');
           return null;
         }
-        const r = await traer(BASE_IVA + def.camino, { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 8000, cuerpoSiempre: true });
+        const r = await traer(BASE_IVA + def.camino, { headers: ivaCabeceras(), timeoutMs: 8000, cuerpoSiempre: true });
         if (r.status === 0) ivaCayo();
         const items = ivaTarjetas(r.text).slice(0, 20);
         if (!items.length && r.text) {
@@ -6258,12 +6282,16 @@ registrarFuente({
       log('iva corta-corriente: hoja «' + ref + '» saltada (caída reciente)');
       return { items: [], next: null };
     }
-    const r = await traer(BASE_IVA + camino + (paginado && num > 1 ? '?p=' + num : ''), { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 8000 });
+    const r = await traer(BASE_IVA + camino + (paginado && num > 1 ? '?p=' + num : ''), { headers: ivaCabeceras(), timeoutMs: 8000 });
     if (r.status === 0) ivaCayo();
     if (!r.ok) {
       if (paginado && num > 1) return { items: [], next: null };
-      throw kino.error('unavailable', 'IvAnime no respondió (status ' + r.status + ')', {
-        userMessage: 'IvAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
+      const reto = /cloudflare|just a moment|cf-chl|cf-browser-verification/i.test(r.text || '');
+      log('iva hoja «' + ref + '»: status ' + r.status + (reto ? ' (reto de Cloudflare)' : ''));
+      throw kino.error('unavailable', 'IvAnime no respondió (status ' + r.status + (reto ? ', reto CF' : '') + ')', {
+        userMessage: reto
+          ? 'IvAnime está tras un reto de Cloudflare: usa «Pasar la revisión de IvAnime» en los ajustes de AniJing.'
+          : 'IvAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
       });
     }
     const items = ivaTarjetas(r.text).slice(0, 60);
@@ -6273,7 +6301,7 @@ registrarFuente({
   },
 
   async detalle(slug) {
-    const r = await traer(BASE_IVA + '/anime/' + slug + '/', { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 10000 });
+    const r = await traer(BASE_IVA + '/anime/' + slug + '/', { headers: ivaCabeceras(), timeoutMs: 10000 });
     if (!r.ok || !r.text) return null;
     const serie = { title: slugATitulo(slug) };
     const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
@@ -6291,7 +6319,7 @@ registrarFuente({
   },
 
   async episodios(slug) {
-    const r = await traer(BASE_IVA + '/anime/' + slug + '/', { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 10000 });
+    const r = await traer(BASE_IVA + '/anime/' + slug + '/', { headers: ivaCabeceras(), timeoutMs: 10000 });
     if (!r.ok || !r.text) {
       throw kino.error('unavailable', 'IvAnime no entregó la serie', {
         userMessage: 'IvAnime no respondió. Revisa tu conexión o inténtalo en un rato.'
@@ -6314,7 +6342,7 @@ registrarFuente({
     async function ivaExisteCap(n) {
       try {
         const p = await traer(BASE_IVA + '/ver/' + prefijo + '-episodio-' + n,
-          { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 7000 });
+          { headers: ivaCabeceras(), timeoutMs: 7000 });
         return !!(p && p.ok && p.text && /data-player|Cap\u00edtulo/i.test(p.text));
       } catch (e) { return false; }
     }
@@ -6363,7 +6391,7 @@ registrarFuente({
      * que enseña su propio HTML. */
     let prefijo = IVA_EPS[slug];
     if (!prefijo) {
-      const r0 = await traer(BASE_IVA + '/anime/' + slug + '/', { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 10000 });
+      const r0 = await traer(BASE_IVA + '/anime/' + slug + '/', { headers: ivaCabeceras(), timeoutMs: 10000 });
       const em = r0.ok && r0.text ? /href\s*=\s*["'][^"']*\/ver\/([^"'\/?#]+)-episodio-(\d+)/i.exec(r0.text) : null;
       if (!em) {
         throw kino.error('not_found', 'IvAnime no entregó el episodio', {
@@ -6374,7 +6402,7 @@ registrarFuente({
       IVA_EPS[slug] = prefijo;
     }
     const epUrl = BASE_IVA + '/ver/' + prefijo + '-episodio-' + num;
-    const r = await traer(epUrl, { headers: { Referer: BASE_IVA + '/' }, timeoutMs: 10000 });
+    const r = await traer(epUrl, { headers: ivaCabeceras(), timeoutMs: 10000 });
     if (!r.ok || !r.text) {
       throw kino.error('not_found', 'IvAnime no entregó el episodio', {
         userMessage: 'No se pudo abrir este episodio en IvAnime.'
@@ -8959,6 +8987,25 @@ async function action(key) {
       partes.push('padrón FALLO');
     }
     return { message: 'Sondeo de BeatZ: ' + partes.join(' · ') + '. Mándame el log del teléfono y con eso arreglo la fuente.' };
+  }
+  if (key === 'ivaRevision') {
+    /* v0.6.80: la ventanita de la revisión de Cloudflare (escuela
+     * VerAnime): se gana cf_clearance con el navegador de Kino y queda
+     * guardada; desde ahí viaja con cada petición a IvAnime. */
+    if (!kino.visualBrowser || !kino.visualBrowser.available) {
+      return { message: 'Este aparato no puede abrir la ventanita (solo en el teléfono o la tablet).' };
+    }
+    const rv = await kino.visualBrowser.open({
+      url: BASE_IVA + '/animes',
+      title: 'Pasa la revisión de IvAnime',
+      doneWhen: { cookies: ['cf_clearance'] },
+      collect: { cookies: ['cf_clearance'], storeAs: { setting: 'ivaCookie', format: 'header' } },
+      userAgent: 'browser',
+      timeoutMs: 600000
+    });
+    if (rv.status === 'done' && rv.stored) return { message: 'Revisión pasada: IvAnime vuelve a cargar. Abre su catálogo de nuevo.' };
+    if (rv.status === 'timeout') return { message: 'La ventanita se quedó esperando. Vuelve a «Pasar la revisión de IvAnime».' };
+    return { message: 'No se guardó la galleta (¿cerraste sin pasar la revisión?). Inténtalo de nuevo.' };
   }
   if (key !== 'teraboxLogin' && key !== 'fireloadPrep') return null;
   if (!kino.visualBrowser || !kino.visualBrowser.available) {
