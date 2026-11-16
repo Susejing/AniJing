@@ -1194,7 +1194,22 @@
 // respuestas que traigan reto de Cloudflare. Si tu red bloquea el
 // dominio, el espejo lo trae desde la suya.
 
-const VERSION = '0.6.81';
+// v0.6.82 «Los papeles del relevo» — el Registro de la 0.6.81 dijo
+// TODO: (1) el relevo de IvAnime nunca disparó porque los espejos
+// (api.codetabs.com, api.allorigins.win) NO estaban en los hosts del
+// manifiesto — y Kino le niega el host a lo no aprobado (el póster lo
+// cantó: «host not allowed: ivanime.buzz»); entran los dos espejos al
+// manifiesto (re-aprobar una vez) y el póster también viaja por el
+// relevo. (2) El corta-corriente inundaba el Registro (una línea por
+// fila saltada en cada refresco): ahora anuncia la caída UNA vez por
+// ventana. (3) DonghuaLife: la fila «Películas» daba 0 tarjetas porque
+// las películas viven en /peliculas/<slug> y el cosechador solo miraba
+// /series/ — entran al catálogo (kind movie), su ficha no usa /watch:
+// un solo título cuyo ref es la ficha, y el resolver la trata como
+// página de reproducción (la captura pesca las fuentes por JavaScript,
+// igual que en las series).
+
+const VERSION = '0.6.82';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -1331,6 +1346,9 @@ async function traer(url, opciones) {
     headers: cabeceras,
     timeoutMs: Math.min(Number(o.timeoutMs) || FETCH_MS, 30000)
   };
+  /* v0.6.82: el tope de bytes viaja también por traer (el póster de
+   * IvAnime vive con el tope de 256 KB de Kino). */
+  if (o.maxBytes) opts.maxBytes = o.maxBytes;
   if (o.metodo === 'POST') {
     opts.method = 'POST';
     opts.body = { form: o.form || {} };
@@ -5729,14 +5747,20 @@ function dlfPoster(ventana) {
 }
 
 function dlfTarjetas(html) {
-  const re = /<a\b[^>]*href\s*=\s*["'](?:https?:\/\/donghualife\.com)?\/series\/([a-z0-9-]+)\/?["'][^>]*>([\s\S]{0,6000}?)<\/a>/gi;
+  /* v0.6.82: las PELÍCULAS viven en /peliculas/<slug> — la fila
+   * «Películas» daba 0 tarjetas porque aquí solo se miraba /series/.
+   * El ref guarda el tramo completo ('dlf:series/<slug>' o
+   * 'dlf:peliculas/<slug>') para que detalle/episodios/resolver
+   * sepan a dónde ir sin adivinar. */
+  const re = /<a\b[^>]*href\s*=\s*["'](?:https?:\/\/donghualife\.com)?\/(series|peliculas)\/([a-z0-9-]+)\/?["'][^>]*>([\s\S]{0,6000}?)<\/a>/gi;
   const items = [];
   const indice = {};
   let m;
   while ((m = re.exec(String(html || ''))) && items.length < 40) {
-    const slug = m[1];
+    const esPeli = m[1] === 'peliculas';
+    const slug = m[2];
     if (indice[slug]) continue;
-    const ventana = m[2];
+    const ventana = m[3];
     let titulo = '';
     const h = /<h[1-6][^>]*>([\s\S]{1,200}?)<\/h[1-6]>/i.exec(ventana);
     if (h) titulo = limpio(h[1]);
@@ -5754,7 +5778,7 @@ function dlfTarjetas(html) {
     const conCara = /<img\b/i.test(ventana) || !!poster || !!titulo;
     if (!conCara) continue;
     if (!titulo || titulo.length < 2) titulo = slugATitulo(slug);
-    const item = { id: 'dlf-' + slug, ref: 'dlf:' + slug, title: titulo.slice(0, 200), kind: 'series' };
+    const item = { id: 'dlf-' + slug, ref: 'dlf:' + (esPeli ? 'peliculas/' : '') + slug, title: titulo.slice(0, 200), kind: esPeli ? 'movie' : 'series' };
     if (poster) item.poster = poster;
     indice[slug] = item;
     items.push(item);
@@ -5879,7 +5903,9 @@ registrarFuente({
   },
 
   async detalle(slug) {
-    const r = await traer(BASE_DLF + '/series/' + slug, { timeoutMs: 12000, cuerpoSiempre: true });
+    /* v0.6.82: las películas viajan con el tramo 'peliculas/<slug>'. */
+    const esPeli = String(slug).indexOf('peliculas/') === 0;
+    const r = await traer(BASE_DLF + '/' + (esPeli ? '' : 'series/') + slug, { timeoutMs: 12000, cuerpoSiempre: true });
     if (!r.ok || !r.text) return null;
     const serie = { title: slugATitulo(slug) };
     const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
@@ -5898,7 +5924,9 @@ registrarFuente({
   },
 
   async episodios(slug) {
-    const r = await traer(BASE_DLF + '/series/' + slug, { timeoutMs: 12000, cuerpoSiempre: true });
+    /* v0.6.82: las películas viajan con el tramo 'peliculas/<slug>'. */
+    const esPeli = String(slug).indexOf('peliculas/') === 0;
+    const r = await traer(BASE_DLF + '/' + (esPeli ? '' : 'series/') + slug, { timeoutMs: 12000, cuerpoSiempre: true });
     if (!r.ok || !r.text) {
       throw kino.error('unavailable', 'DonghuaLife no entregó la serie', {
         userMessage: 'DonghuaLife no respondió. Revisa tu conexión o inténtalo en un rato.'
@@ -5925,6 +5953,18 @@ registrarFuente({
       lista.push({ t: t, e: e });
     }
     log('dlf ficha «' + slug + '»: ' + lista.length + ' capítulos de ' + (texto.match(/\/watch\//g) || []).length + ' menciones /watch (' + texto.length + ' letras)');
+    if (!lista.length && esPeli) {
+      /* v0.6.82: la película no usa /watch — su ficha ES la página de
+       * reproducción (fuentes por JavaScript, las pesca la captura).
+       * Un solo "episodio" con el ref de la ficha. */
+      const serieP = { title: slugATitulo(slug) };
+      const hP = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(texto);
+      if (hP) serieP.title = limpio(hP[1]) || serieP.title;
+      const posterP = dlfPoster(texto.slice(0, 12000));
+      if (posterP) serieP.poster = posterP;
+      log('dlf película «' + slug + '»: 1 título (fuentes por JavaScript)');
+      return { series: serieP, episodes: [{ season: 1, number: 1, ref: 'dlf:peliculas/' + slug, title: 'Ver película' }] };
+    }
     if (!lista.length) {
       const w = texto.indexOf('/watch/');
       log('dlf diagnóstico: ' + (w >= 0 ? texto.slice(Math.max(0, w - 250), w + 350).replace(/\s+/g, ' ') : 'sin menciones /watch en el HTML'));
@@ -5946,8 +5986,11 @@ registrarFuente({
 
   async resolver(codigo, n, idx) {
     /* El ref del episodio ES el código de la página de reproducción:
-     * '<slug>-<temporada>-<episodio>', el mismo tramo de /watch/. */
-    const epUrl = BASE_DLF + '/watch/' + String(codigo || '');
+     * '<slug>-<temporada>-<episodio>', el mismo tramo de /watch/.
+     * v0.6.82: las películas viajan con 'peliculas/<slug>' — su ficha
+     * ES la página de reproducción. */
+    const codigoS = String(codigo || '');
+    const epUrl = codigoS.indexOf('peliculas/') === 0 ? BASE_DLF + '/' + codigoS : BASE_DLF + '/watch/' + codigoS;
     const r = await traer(epUrl, { timeoutMs: 12000, cuerpoSiempre: true, headers: { Referer: BASE_DLF + '/' } });
     if (!r.ok || !r.text) {
       throw kino.error('not_found', 'DonghuaLife no entregó el episodio', {
@@ -6018,11 +6061,15 @@ async function traerIva(url, opciones) {
   ];
   for (let i = 0; i < espejos.length; i++) {
     let rj = null;
-    try { rj = await traer(espejos[i], { timeoutMs: Math.min(Number(o.timeoutMs) || 10000, 15000) }); } catch (eM) { rj = null; }
+    try { rj = await traer(espejos[i], { timeoutMs: Math.min(Number(o.timeoutMs) || 10000, 15000), maxBytes: o.maxBytes }); } catch (eM) { rj = null; }
     if (rj && rj.ok && rj.text && rj.text.length > 300 && !ivaEsReto(rj.text)) {
       log('iva relevo: espejo ' + i + ' sirvió para ' + url);
       return rj;
     }
+    /* v0.6.82: el relevo fallido deja su línea — sin esto el Registro
+     * no dice por qué el espejo no sirvió (host negado, reto CF,
+     * respuesta corta). */
+    log('iva relevo: espejo ' + i + ' no sirvió (' + (rj ? 'status ' + rj.status + (ivaEsReto(rj.text) ? ', reto CF' : '') + (rj.text && rj.text.length <= 300 ? ', respuesta corta' : '') : 'excepción') + ')');
   }
   if (r) return r; /* el fallo original manda (para status/ivaCayo). */
   throw kino.error('unavailable', 'IvAnime no alcanzable ni por espejos', {
@@ -6037,7 +6084,16 @@ async function traerIva(url, opciones) {
  * del tope. */
 let IVA_CAIDA = 0;
 function ivaViva() { return Date.now() >= IVA_CAIDA; }
-function ivaCayo() { IVA_CAIDA = Date.now() + 5 * 60 * 1000; }
+function ivaCayo() { IVA_CAIDA = Date.now() + 5 * 60 * 1000; IVA_CAIDA_LOG = false; }
+/* v0.6.82: el Registro se inundaba — cada fila saltada escribía su línea
+ * y la portada de iva repite filas en cada refresco (decenas por
+ * segundo). Ahora la caída se anuncia UNA vez por ventana de 5 min. */
+let IVA_CAIDA_LOG = false;
+function ivaSalta(mensaje) {
+  if (IVA_CAIDA_LOG) return;
+  IVA_CAIDA_LOG = true;
+  log(mensaje);
+}
 /* v0.6.12: el epslug de los capítulos de IvAnime NO es el slug de la
  * serie (la ficha de «…-sub-espanol» enlaza /ver/… SIN el sufijo): el
  * prefijo real se aprende en episodios() y se guarda aquí para que
@@ -6195,7 +6251,7 @@ registrarFuente({
     if (texto.length < 2) return [];
     /* v0.6.62: corta-corriente en la búsqueda también. */
     if (!ivaViva()) {
-      log('iva corta-corriente: búsqueda saltada (caída reciente)');
+      ivaSalta('iva corta-corriente: búsqueda saltada (caída reciente)');
       return [];
     }
     try {
@@ -6263,7 +6319,7 @@ registrarFuente({
          * saltan sin esperar y el timeout baja de 13 s a 8 s para no
          * pisar el tope de 20 s del screenEvent de Kino. */
         if (!ivaViva()) {
-          log('iva corta-corriente: fila «' + def.camino + '» saltada (caída reciente)');
+          ivaSalta('iva corta-corriente: filas saltadas (caída reciente)');
           return null;
         }
         const r = await traerIva(BASE_IVA + def.camino, { headers: ivaCabeceras(), timeoutMs: 8000, cuerpoSiempre: true });
@@ -6309,7 +6365,7 @@ registrarFuente({
     const num = paginado && pag > 1 ? pag : 1;
     /* v0.6.62: corta-corriente también en la hoja (espera 12 s → 8 s). */
     if (!ivaViva()) {
-      log('iva corta-corriente: hoja «' + ref + '» saltada (caída reciente)');
+      ivaSalta('iva corta-corriente: hoja «' + ref + '» saltada (caída reciente)');
       return { items: [], next: null };
     }
     const r = await traerIva(BASE_IVA + camino + (paginado && num > 1 ? '?p=' + num : ''), { headers: ivaCabeceras(), timeoutMs: 8000 });
@@ -8741,9 +8797,11 @@ async function image(arg) {
     throw kino.error('not_found', 'imagen que no es de IvAnime');
   }
   const nombre = handle.split('/').pop() || handle;
+  /* v0.6.82: el póster también viaja por el relevo — si el directo no
+   * llega (red o host), el espejo lo trae desde su red. */
   let r = null;
   try {
-    r = await kino.fetch(handle, {
+    r = await traerIva(handle, {
       headers: { Referer: 'https://ivanime.buzz/', 'User-Agent': UA },
       timeoutMs: 9000,
       maxBytes: 262145
@@ -8927,6 +8985,12 @@ async function action(key) {
       const mias2 = dlfTarjetas(t2);
       log('sonda dlf pág2: status ' + (r2 ? r2.status : 'sin') + ', ' + t2.length + ' letras, ' + mias2.length + ' tarjetas: ' + mias2.slice(0, 5).map(function (x) { return x.title; }).join(' | '));
       partes.push('pág2 ' + mias2.length);
+      /* v0.6.82: la fila «Películas» (/peliculas/<slug>). */
+      const rp = await traer(BASE_DLF + '/peliculas', { timeoutMs: 12000, cuerpoSiempre: true });
+      const tp = rp && rp.text ? rp.text : '';
+      const miasP = dlfTarjetas(tp);
+      log('sonda dlf películas: status ' + (rp ? rp.status : 'sin') + ', ' + tp.length + ' letras, ' + miasP.length + ' tarjetas: ' + miasP.slice(0, 5).map(function (x) { return x.title + ' (' + x.kind + ')'; }).join(' | '));
+      partes.push('pelis ' + miasP.length);
     } catch (eD) { log('sonda dlf catálogo FALLO: ' + ((eD && eD.message) || eD)); partes.push('dlf cat FALLO'); }
     try {
       const rf = await traer(BASE_DLF + '/series/martial-master', { timeoutMs: 12000, cuerpoSiempre: true });
