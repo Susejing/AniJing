@@ -1240,8 +1240,21 @@
 // con la reinstalación — falta la prueba POST-reinstalación (con los
 // hosts aprobados de fresco, el directo debería vivir; si un espejo
 // sirve, tampoco deja línea: el log solo confiesa fracasos).
+//
+// v0.6.86 «El relevo de uno» — el log del teléfono (20:06) mostró el
+// «tumbo»: la portada de IvAnime lanza 6 filas × 5 espejos en paralelo,
+// el traductor de Google solo aguanta ~1 petición a la vez (las demás
+// 403), el lote entero tardaba 30 s y Kino corta el screenEvent a los
+// 20 s («screenEvent didn't answer in 20000 ms»). Ahora SOLO la fila
+// «/» (Últimos agregados) lleva relevo — la única que el traductor
+// sirvió en vivo; las otras cinco viajan con relevo:false y fallan
+// rápido. codetabs sale de la tanda (cuatro Registros seguidos «took
+// too long», nunca sirvió para iva). El póster también prueba el
+// traductor primero. El directo de ivanime.buzz/.top sigue negado por
+// Kino («host not allowed») AUN tras reinstalar — negación por debajo
+// del manifiesto; el traductor es el único puente vivo.
 
-const VERSION = '0.6.85';
+const VERSION = '0.6.86';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -6115,12 +6128,16 @@ function ivaAlternas(url, opciones) {
   const qB = colaB.indexOf('?') >= 0 ? '&' : '?';
   const qT = colaT.indexOf('?') >= 0 ? '&' : '?';
   const base = Math.min(Number(opciones && opciones.timeoutMs) || 10000, 15000);
+  /* v0.6.86: codetabs FUERA de la tanda — cuatro Registros seguidos lo
+   * muestran «took too long» (nunca sirvió para iva) y su espera de 12 s
+   * es peso muerto en cada lote. El traductor es el que sirve (probeta
+   * en vivo: la portada de .top via translate llegó entera) pero Google
+   * le pone ritmo: ~1 petición a la vez, las demás 403. */
   return [
-    ['traductor (.top)', 'https://ivanime-top.translate.goog' + colaT + qT + '_x_tr_sl=auto&_x_tr_tl=es&_x_tr_hl=es', Math.min(base, 8000)],
+    ['traductor (.top)', 'https://ivanime-top.translate.goog' + colaT + qT + '_x_tr_sl=auto&_x_tr_tl=es&_x_tr_hl=es', Math.min(base + 4000, 15000)],
     ['allorigins (.top)', 'https://api.allorigins.win/raw?url=' + encodeURIComponent(enTop), Math.min(base, 8000)],
-    ['traductor (.buzz)', 'https://ivanime-buzz.translate.goog' + colaB + qB + '_x_tr_sl=auto&_x_tr_tl=es&_x_tr_hl=es', Math.min(base, 8000)],
-    ['allorigins (.buzz)', 'https://api.allorigins.win/raw?url=' + encodeURIComponent(s), Math.min(base, 8000)],
-    ['codetabs (.buzz)', 'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(s), Math.min(base + 4000, 12000)]
+    ['traductor (.buzz)', 'https://ivanime-buzz.translate.goog' + colaB + qB + '_x_tr_sl=auto&_x_tr_tl=es&_x_tr_hl=es', Math.min(base + 4000, 15000)],
+    ['allorigins (.buzz)', 'https://api.allorigins.win/raw?url=' + encodeURIComponent(s), Math.min(base, 8000)]
   ];
 }
 function ivaMotivo(r) {
@@ -6133,6 +6150,11 @@ async function traerIva(url, opciones) {
   let r = null;
   try { r = await traer(url, o); } catch (eD) { r = { ok: false, status: 0, text: '', error: eD }; }
   if (r && r.ok && r.text && r.text.length > 300 && !ivaEsReto(r.text)) return r;
+  /* v0.6.86: relevo opcional — la portada de iva pide 6 filas a la vez
+   * y el traductor solo aguanta una: 6 tandas = 30 s = Kino corta el
+   * screenEvent a los 20 s («tumbó el plugin»). Las filas de la portada
+   * que no son la primera viajan con relevo:false y fallan rápido. */
+  if (o.relevo === false) return r;
   /* El directo falló: se confiesa el porqué y salta la tanda de
    * espejos EN PARALELO — gana el primero que traiga la página buena. */
   log('iva directo falló para ' + url + ': ' + ivaMotivo(r));
@@ -6405,7 +6427,11 @@ registrarFuente({
           ivaSalta('iva corta-corriente: filas saltadas (caída reciente)');
           return null;
         }
-        const r = await traerIva(BASE_IVA + def.camino, { headers: ivaCabeceras(), timeoutMs: 8000, cuerpoSiempre: true });
+        /* v0.6.86: solo la fila «/» (Últimos agregados) lleva relevo —
+         * es la única que el traductor sirvió en vivo. Las otras cinco
+         * viajan con relevo:false: fallan rápido y la portada arma en
+         * <20 s aunque IvAnime esté negada por Kino. */
+        const r = await traerIva(BASE_IVA + def.camino, { headers: ivaCabeceras(), timeoutMs: 8000, cuerpoSiempre: true, relevo: def.camino === '/' });
         if (r.status === 0) ivaCayo();
         const items = ivaTarjetas(r.text).slice(0, 20);
         if (!items.length && r.text) {
@@ -8896,12 +8922,15 @@ async function image(arg) {
     /* v0.6.84: relevo del póster con espejos APROBADOS — kino.fetch
      * CRUDO (no traer) para conservar el .base64() de los bytes. Sin
      * Referer el muro puede contestar 403 en HTML: se descarta y se
-     * sigue. Si nada sirve, placeholder honesto. */
+     * sigue. v0.6.86: el traductor de Google entra primero (sirvió la
+     * portada de .top en vivo) y codetabs sale (nunca sirvió para
+     * iva: cuatro Registros seguidos «took too long»). */
     const enTopI = handle.replace('https://ivanime.buzz', 'https://ivanime.top');
     const espejosImg = [
+      'https://ivanime-top.translate.goog' + enTopI.slice('https://ivanime.top'.length) + '?_x_tr_sl=auto&_x_tr_tl=es&_x_tr_hl=es',
+      'https://ivanime-buzz.translate.goog' + handle.slice('https://ivanime.buzz'.length) + '?_x_tr_sl=auto&_x_tr_tl=es&_x_tr_hl=es',
       'https://api.allorigins.win/raw?url=' + encodeURIComponent(enTopI),
-      'https://api.allorigins.win/raw?url=' + encodeURIComponent(handle),
-      'https://api.codetabs.com/v1/proxy/?quest=' + encodeURIComponent(handle)
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(handle)
     ];
     for (let i = 0; i < espejosImg.length; i++) {
       let ri = null;
