@@ -1278,7 +1278,7 @@
 // avisos de iva (traerIva, hoja, episodios) enseñan el ritmo: espera un
 // minuto y toca Reintentar — lo ya cargado queda guardado.
 
-const VERSION = '0.6.91';
+const VERSION = '0.6.92';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -6209,7 +6209,7 @@ registrarFuente({
      * ES la página de reproducción. */
     const codigoS = String(codigo || '');
     const epUrl = codigoS.indexOf('peliculas/') === 0 ? BASE_DLF + '/' + codigoS : BASE_DLF + '/watch/' + codigoS;
-    const r = await traer(epUrl, { timeoutMs: 12000, cuerpoSiempre: true, headers: { Referer: BASE_DLF + '/' } });
+    const r = await traerDlf(epUrl, { timeoutMs: 12000, cuerpoSiempre: true, headers: { Referer: BASE_DLF + '/' } });
     if (!r.ok || !r.text) {
       throw kino.error('not_found', 'DonghuaLife no entregó el episodio', {
         userMessage: 'No se pudo abrir este episodio en DonghuaLife.'
@@ -9119,6 +9119,45 @@ async function image(arg) {
    * la ficha después. */
   if (handle.indexOf('btz-poster-') === 0) {
     return await btzPosterDe(handle.slice('btz-poster-'.length));
+  }
+  /* v0.6.92 «La cara de DonghuaLife»: sus pósters son URL directa
+   * (donghualife.com/...) que Kino trae.plugin-side porque el plugin
+   * registra el export de imágenes — y el directo está negado por el
+   * almacén de hosts (el mismo bug que niega la página). Si la URL
+   * trae el _next/image del sitio, la imagen real viaja en su param
+   * url= — se destapa y se sirve por el puente del traductor, con
+   * kino.fetch CRUDO para conservar el .base64() de los bytes. */
+  if (handle.indexOf('donghualife.com') >= 0) {
+    const dnombre = handle.split('/').pop() || handle;
+    let destino = handle.replace(/^https?:\/\/donghualife\.com/i, 'https://donghualife-com.translate.goog');
+    const nxImg = /[?&]url=([^&"'\s]+)/i.exec(handle);
+    if (nxImg) {
+      try {
+        const real = decodeURIComponent(nxImg[1]);
+        if (/^https?:\/\//i.test(real)) destino = real.replace(/^https?:\/\/donghualife\.com/i, 'https://donghualife-com.translate.goog');
+        else if (/^\//.test(real)) destino = 'https://donghualife-com.translate.goog' + real;
+      } catch (eN) {}
+    }
+    if (destino.indexOf('_x_tr_') < 0) destino += (destino.indexOf('?') >= 0 ? '&' : '?') + '_x_tr_sl=auto&_x_tr_tl=es&_x_tr_hl=es';
+    try {
+      const rd = await kino.fetch(destino, { headers: { 'User-Agent': UA }, timeoutMs: 12000, maxBytes: 262145 });
+      const ctd = ((rd && rd.headers && (rd.headers['content-type'] || rd.headers['Content-Type'])) || '');
+      if (rd && rd.status === 200 && rd.truncated !== true && !/text\/html/i.test(ctd)) {
+        const bd = rd.base64 ? String(rd.base64()) : '';
+        if (bd) {
+          let md = 'image/webp';
+          if (/jpe?g/i.test(ctd)) md = 'image/jpeg';
+          else if (/png/i.test(ctd)) md = 'image/png';
+          else if (/gif/i.test(ctd)) md = 'image/gif';
+          log('dlf póster «' + dnombre + '»: servido por el puente (' + Math.round(bd.length * 3 / 4 / 102.4) / 10 + ' KB, ' + md + ')');
+          return { bytes: bd, mime: md };
+        }
+      }
+      log('dlf póster «' + dnombre + '»: el puente no lo trajo (status ' + (rd ? rd.status : 'sin') + (rd && rd.truncated ? ', truncado' : '') + ')');
+    } catch (eD2) {
+      log('dlf póster «' + dnombre + '»: el puente rebotó (' + ((eD2 && eD2.message) || String(eD2)) + ')');
+    }
+    throw kino.error('unavailable', 'DonghuaLife no entregó la imagen');
   }
   if (handle.indexOf('https://ivanime.buzz/') !== 0) {
     throw kino.error('not_found', 'imagen que no es de IvAnime');
