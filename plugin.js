@@ -1278,7 +1278,7 @@
 // avisos de iva (traerIva, hoja, episodios) enseñan el ritmo: espera un
 // minuto y toca Reintentar — lo ya cargado queda guardado.
 
-const VERSION = '0.6.89';
+const VERSION = '0.6.90';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -3817,6 +3817,29 @@ async function otvServersDe(html) {
   return servers;
 }
 
+/* v0.6.90 «La paciencia de OtakusTV»: el Registro del teléfono (21:55)
+ * enseñó la herida — Kino la DEJA pasar, pero el origen revienta: tres
+ * «took too long» y un status 520 (Cloudflare: el servidor de origen no
+ * respondió). Un solo intento nunca alcanza: reintento ante 520 o
+ * silencio, con esperas medidas para no pasarse del tope de 20 s del
+ * screenEvent (10 s + 1,5 s de respiro + 8 s). */
+function otvEnfermo(r) {
+  if (!r) return true;
+  if (!r.ok && r.status === 520) return true;
+  if (!r.ok && r.status === 0 && (!r.text || !r.text.length)) return true;
+  return false;
+}
+async function traerOtv(url, opciones) {
+  const o = opciones || {};
+  const r = await traer(url, o);
+  if (!otvEnfermo(r)) return r;
+  try { await new Promise(function (listo) { setTimeout(listo, 1500); }); } catch (eW) {}
+  log('otv reintento: ' + ivaMotivo(r) + ' — reprobando ' + url);
+  const r2 = await traer(url, Object.assign({}, o, { timeoutMs: 8000 }));
+  if (!otvEnfermo(r2)) return r2;
+  return r2.status ? r2 : r;
+}
+
 registrarFuente({
   id: 'otv',
   etiqueta: 'OtakusTV',
@@ -3828,7 +3851,7 @@ registrarFuente({
     if (texto.length < 2) return [];
     const paginas = await Promise.all([1, 2, 3, 4].map(async (p) => {
       try {
-        const r = await traer(BASE_OTV + '/animes?pag=' + p, { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 9000 });
+        const r = await traerOtv(BASE_OTV + '/animes?pag=' + p, { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 9000 });
         return r.ok ? otvTarjetas(r.text, 'anime') : [];
       } catch (e) { return []; }
     }));
@@ -3850,7 +3873,7 @@ registrarFuente({
   async portada() {
     const tareas = [
       (async () => {
-        const r = await traer(BASE_OTV + '/animes-en-emision', { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 9000 });
+        const r = await traerOtv(BASE_OTV + '/animes-en-emision', { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 10000 });
         const items = otvTarjetas(r.text, 'portada').slice(0, 20);
         /* v0.6.89: los flecos silenciosos se nombran — si el sitio
          * cambió su HTML o la red revienta, el Registro lo guarda. */
@@ -3858,13 +3881,13 @@ registrarFuente({
         return items.length ? { id: 'otv-emision', title: 'En emisión · OtakusTV', ref: 'otv-emision', items: items } : null;
       })(),
       (async () => {
-        const r = await traer(BASE_OTV + '/', { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 9000 });
+        const r = await traerOtv(BASE_OTV + '/', { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 10000 });
         const items = otvEpisodiosDe(r.text).slice(0, 20);
         if (!items.length) log('otv fila «Últimos episodios»: ' + motivoDeR(r) + ', ' + (r && r.text ? r.text.length + ' letras' : 'sin cuerpo') + ', 0 tarjetas');
         return items.length ? { id: 'otv-eps', title: 'Últimos episodios · OtakusTV', ref: 'otv-eps', items: items } : null;
       })(),
       (async () => {
-        const r = await traer(BASE_OTV + '/animes?pag=1', { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 9000 });
+        const r = await traerOtv(BASE_OTV + '/animes?pag=1', { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 10000 });
         const items = otvTarjetas(r.text, 'anime').slice(0, 20);
         if (!items.length) log('otv fila «Directorio»: ' + motivoDeR(r) + ', ' + (r && r.text ? r.text.length + ' letras' : 'sin cuerpo') + ', 0 tarjetas');
         return items.length ? { id: 'otv-animes', title: 'Directorio · OtakusTV', ref: 'otv-animes', items: items } : null;
@@ -3879,17 +3902,17 @@ registrarFuente({
   async hoja(ref, cursor) {
     const num = Math.max(1, parseInt(String(cursor || '1'), 10) || 1);
     if (ref === 'otv-emision') {
-      const r = await traer(BASE_OTV + '/animes-en-emision', { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 10000 });
+      const r = await traerOtv(BASE_OTV + '/animes-en-emision', { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 10000 });
       const items = otvTarjetas(r.text, 'portada').slice(0, 40);
       return { items: items, next: null };
     }
     if (ref === 'otv-eps') {
-      const r = await traer(BASE_OTV + '/', { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 10000 });
+      const r = await traerOtv(BASE_OTV + '/', { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 10000 });
       const items = otvEpisodiosDe(r.text).slice(0, 40);
       return { items: items, next: null };
     }
     if (ref === 'otv-animes') {
-      const r = await traer(BASE_OTV + '/animes?pag=' + num, { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 10000 });
+      const r = await traerOtv(BASE_OTV + '/animes?pag=' + num, { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 10000 });
       const items = otvTarjetas(r.text, 'anime');
       if (!items.length) return { items: [], next: null };
       return { items: items.slice(0, 40), next: String(num + 1) };
@@ -5845,7 +5868,7 @@ function dlfTarjetas(html) {
    * El ref guarda el tramo completo ('dlf:series/<slug>' o
    * 'dlf:peliculas/<slug>') para que detalle/episodios/resolver
    * sepan a dónde ir sin adivinar. */
-  const re = /<a\b[^>]*href\s*=\s*["'](?:https?:\/\/donghualife\.com)?\/(series|peliculas)\/([a-z0-9-]+)\/?["'][^>]*>([\s\S]{0,6000}?)<\/a>/gi;
+  const re = /<a\b[^>]*href\s*=\s*["'](?:https?:\/\/)?(?:donghualife\.com|donghualife-[a-z]+\.translate\.goog)?\/(series|peliculas)\/([a-z0-9-]+)\/?["'][^>]*>([\s\S]{0,6000}?)<\/a>/gi;
   const items = [];
   const indice = {};
   let m;
@@ -5928,6 +5951,75 @@ function dlfServidores(html) {
   return servers;
 }
 
+/* v0.6.90 «El puente de DonghuaLife»: el Registro de la 0.6.89 (teléfono
+ * 21:55) habló claro — Kino niega donghualife.com ANTES de salir
+ * («host not allowed: donghualife.com») con el dominio DENTRO del
+ * manifiesto: el mismo bug del almacén de hosts que vive IvAnime. El
+ * puente que salva a iva (el traductor de Google, host permitido) sirve
+ * igual: cuando el directo no sale, la página viaja por espejos EN
+ * PARALELO — gana el primero que traiga HTML bueno — con memoria de
+ * 10 minutos para no rogarle dos veces a Google por lo mismo. */
+const DLF_MEM = new Map();
+function dlfMemoriaDe(url) {
+  const m = DLF_MEM.get(url);
+  if (!m) return null;
+  if (Date.now() - m.t > 10 * 60 * 1000) { DLF_MEM.delete(url); return null; }
+  return m.text;
+}
+function dlfGuarda(url, text) {
+  try {
+    if (!text || text.length > 300000) return;
+    if (DLF_MEM.size >= 20 && !DLF_MEM.has(url)) {
+      const masVieja = DLF_MEM.keys().next().value;
+      DLF_MEM.delete(masVieja);
+    }
+    DLF_MEM.delete(url);
+    DLF_MEM.set(url, { t: Date.now(), text: text });
+  } catch (eM) {}
+}
+function dlfAlternas(url) {
+  const s = String(url || '');
+  const cola = s.slice('https://donghualife.com'.length);
+  const q = cola.indexOf('?') >= 0 ? '&' : '?';
+  return [
+    ['traductor', 'https://donghualife-com.translate.goog' + cola + q + '_x_tr_sl=auto&_x_tr_tl=es&_x_tr_hl=es', 14000],
+    ['codetabs', 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(s), 9000],
+    ['allorigins', 'https://api.allorigins.win/raw?url=' + encodeURIComponent(s), 9000]
+  ];
+}
+async function traerDlf(url, opciones) {
+  const o = opciones || {};
+  if (o.fresco !== true) {
+    const mem = dlfMemoriaDe(url);
+    if (mem) return { ok: true, status: 200, text: mem, headers: {} };
+  }
+  let r = null;
+  try { r = await traer(url, o); } catch (eD) { r = { ok: false, status: 0, text: '', error: eD }; }
+  if (r && r.ok && r.text && r.text.length > 300 && !ivaEsReto(r.text)) { dlfGuarda(url, r.text); return r; }
+  if (o.relevo === false) return r;
+  log('dlf directo no salió (' + ivaMotivo(r) + ') — salta el puente para ' + url);
+  const tandas = dlfAlternas(url);
+  const rts = await Promise.all(tandas.map(async function (par) {
+    try {
+      return { nombre: par[0], r: await traer(par[1], { timeoutMs: par[2], cuerpoSiempre: true, headers: o.headers }) };
+    } catch (eM) {
+      return { nombre: par[0], r: { ok: false, status: 0, text: '', error: eM } };
+    }
+  }));
+  for (let i = 0; i < rts.length; i++) {
+    const rj = rts[i].r;
+    if (rj && rj.ok && rj.text && rj.text.length > 300 && !ivaEsReto(rj.text)) {
+      dlfGuarda(url, rj.text);
+      log('dlf relevo: ' + rts[i].nombre + ' sirvió para ' + url);
+      return rj;
+    }
+  }
+  for (let i = 0; i < rts.length; i++) {
+    log('dlf relevo: ' + rts[i].nombre + ' no sirvió (' + ivaMotivo(rts[i].r) + ')');
+  }
+  return r || { ok: false, status: 0, text: '' }; /* el fallo original manda (status/mensaje). */
+}
+
 registrarFuente({
   id: 'dlf',
   etiqueta: 'DonghuaLife',
@@ -5938,7 +6030,7 @@ registrarFuente({
     try {
       /* el sitio busca EN EL SERVIDOR con ?q= (verificado: «martial»
        * trae 9 resultados). */
-      const r = await traer(BASE_DLF + '/series?q=' + encodeURIComponent(texto), { timeoutMs: 12000, cuerpoSiempre: true });
+      const r = await traerDlf(BASE_DLF + '/series?q=' + encodeURIComponent(texto), { timeoutMs: 12000, cuerpoSiempre: true });
       if (!r.ok) return [];
       const items = dlfTarjetas(r.text).slice(0, 25);
       for (const it of items) it.badges = (it.badges || []).concat(['DonghuaLife']);
@@ -5961,7 +6053,7 @@ registrarFuente({
     }
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
-        const r = await traer(BASE_DLF + def.camino, { timeoutMs: 12000, cuerpoSiempre: true });
+        const r = await traerDlf(BASE_DLF + def.camino, { timeoutMs: 12000, cuerpoSiempre: true });
         const items = r && r.ok ? dlfTarjetas(r.text).slice(0, 24) : [];
         /* v0.6.89: ANTES solo logueaba si llegaba cuerpo — un rechazo
          * de red (status 0, texto vacío) moría en silencio total. */
@@ -5985,7 +6077,7 @@ registrarFuente({
     if (!camino) return null;
     const pagina = parseInt(cursor, 10);
     const num = Number.isFinite(pagina) && pagina > 1 ? pagina : 1;
-    const r = await traer(BASE_DLF + camino + (num > 1 ? (camino.indexOf('?') >= 0 ? '&' : '?') + 'page=' + num : ''), { timeoutMs: 12000, cuerpoSiempre: true });
+    const r = await traerDlf(BASE_DLF + camino + (num > 1 ? (camino.indexOf('?') >= 0 ? '&' : '?') + 'page=' + num : ''), { timeoutMs: 12000, cuerpoSiempre: true });
     if (!r.ok) {
       if (num > 1) return { items: [], next: null };
       throw kino.error('unavailable', 'DonghuaLife no respondió (status ' + r.status + ')', {
@@ -6000,7 +6092,7 @@ registrarFuente({
   async detalle(slug) {
     /* v0.6.82: las películas viajan con el tramo 'peliculas/<slug>'. */
     const esPeli = String(slug).indexOf('peliculas/') === 0;
-    const r = await traer(BASE_DLF + '/' + (esPeli ? '' : 'series/') + slug, { timeoutMs: 12000, cuerpoSiempre: true });
+    const r = await traerDlf(BASE_DLF + '/' + (esPeli ? '' : 'series/') + slug, { timeoutMs: 12000, cuerpoSiempre: true });
     if (!r.ok || !r.text) return null;
     const serie = { title: slugATitulo(slug) };
     const h = /<h1[^>]*>([\s\S]{1,300}?)<\/h1>/i.exec(r.text);
@@ -6021,7 +6113,7 @@ registrarFuente({
   async episodios(slug) {
     /* v0.6.82: las películas viajan con el tramo 'peliculas/<slug>'. */
     const esPeli = String(slug).indexOf('peliculas/') === 0;
-    const r = await traer(BASE_DLF + '/' + (esPeli ? '' : 'series/') + slug, { timeoutMs: 12000, cuerpoSiempre: true });
+    const r = await traerDlf(BASE_DLF + '/' + (esPeli ? '' : 'series/') + slug, { timeoutMs: 12000, cuerpoSiempre: true });
     if (!r.ok || !r.text) {
       throw kino.error('unavailable', 'DonghuaLife no entregó la serie', {
         userMessage: 'DonghuaLife no respondió. Revisa tu conexión o inténtalo en un rato.'
@@ -9209,45 +9301,52 @@ async function action(key) {
      * en el HTML crudo, cómo se ven, si la página 2 es otra y qué trae
      * la página de reproducción. Todo al log; el mensaje es el resumen. */
     const partes = [];
-    try {
-      const r = await traer(BASE_DLF + '/series', { timeoutMs: 12000, cuerpoSiempre: true });
-      const t = r && r.text ? r.text : '';
-      const anclas = (t.match(/href\s*=\s*["'][^"']*\/series\/[a-z0-9-]+/gi) || []);
-      const mias = dlfTarjetas(t);
-      log('sonda dlf catálogo: status ' + (r ? r.status : 'sin') + ', ' + t.length + ' letras, ' + anclas.length + ' anclas /series/, ' + mias.length + ' tarjetas mías: ' + mias.slice(0, 6).map(function (x) { return x.title; }).join(' | '));
-      partes.push('dlf cat ' + mias.length + '/' + anclas.length);
-      const iA = t.search(/href\s*=\s*["'][^"']*\/series\/[a-z0-9-]+/i);
-      if (iA >= 0) log('sonda dlf muestra de tarjeta: ' + t.slice(Math.max(0, iA - 100), iA + 900).replace(/\s+/g, ' '));
-      const r2 = await traer(BASE_DLF + '/series?page=2', { timeoutMs: 12000, cuerpoSiempre: true });
-      const t2 = r2 && r2.text ? r2.text : '';
-      const mias2 = dlfTarjetas(t2);
-      log('sonda dlf pág2: status ' + (r2 ? r2.status : 'sin') + ', ' + t2.length + ' letras, ' + mias2.length + ' tarjetas: ' + mias2.slice(0, 5).map(function (x) { return x.title; }).join(' | '));
-      partes.push('pág2 ' + mias2.length);
+    /* v0.6.90: las cuatro páginas de dlf van EN PARALELO (en fila se
+     * pasaba del tope de 30 s de los action cuando salían por espejos). */
+    const rtasDlf = await Promise.all([
+      ['catálogo', BASE_DLF + '/series'],
+      ['pág2', BASE_DLF + '/series?page=2'],
       /* v0.6.82: la fila «Películas» (/peliculas/<slug>). */
-      const rp = await traer(BASE_DLF + '/peliculas', { timeoutMs: 12000, cuerpoSiempre: true });
-      const tp = rp && rp.text ? rp.text : '';
-      const miasP = dlfTarjetas(tp);
-      log('sonda dlf películas: status ' + (rp ? rp.status : 'sin') + ', ' + tp.length + ' letras, ' + miasP.length + ' tarjetas: ' + miasP.slice(0, 5).map(function (x) { return x.title + ' (' + x.kind + ')'; }).join(' | '));
-      partes.push('pelis ' + miasP.length);
-    } catch (eD) { log('sonda dlf catálogo FALLO: ' + ((eD && eD.message) || eD)); partes.push('dlf cat FALLO'); }
-    try {
-      const rf = await traer(BASE_DLF + '/series/martial-master', { timeoutMs: 12000, cuerpoSiempre: true });
-      const tf = rf && rf.text ? rf.text : '';
-      const codes = (tf.match(/\/watch\/[a-z0-9-]+-\d+-\d+/gi) || []);
-      log('sonda dlf ficha: status ' + (rf ? rf.status : 'sin') + ', ' + tf.length + ' letras, ' + codes.length + ' códigos /watch/ (primero: ' + (codes[0] || 'ninguno') + ')');
-      partes.push('ficha ' + codes.length);
-      if (codes.length) {
-        const rw = await traer(BASE_DLF + codes[0].replace(/^\/watch\//, '/watch/'), { timeoutMs: 12000, cuerpoSiempre: true, headers: { Referer: BASE_DLF + '/' } });
-        const tw = rw && rw.text ? rw.text : '';
-        const cuenta = function (re) { return (tw.match(re) || []).length; };
-        log('sonda dlf watch ' + codes[0] + ': status ' + (rw ? rw.status : 'sin') + ', ' + tw.length + ' letras, ok.ru ' + cuenta(/ok\.ru/gi) + ', dailymotion ' + cuenta(/dailymotion/gi) + ', rumble ' + cuenta(/rumble/gi) + ', iframes ' + cuenta(/<iframe/gi) + ', __next_f ' + cuenta(/__next_f/g) + ', «Fuentes» ' + cuenta(/Fuentes/g));
-        const iF = tw.indexOf('Fuentes');
-        if (iF >= 0) log('sonda dlf watch muestra: ' + tw.slice(iF, iF + 700).replace(/\s+/g, ' '));
-        const servs = dlfServidores(tw);
-        log('sonda dlf watch servidores míos: ' + (servs.length ? servs.map(function (s) { return s.tipo + ' ' + s.url; }).join(' | ') : 'NINGUNO'));
-        partes.push('watch ' + servs.length);
+      ['películas', BASE_DLF + '/peliculas'],
+      ['ficha', BASE_DLF + '/series/martial-master']
+    ].map(async function (par) {
+      try {
+        const r = await traerDlf(par[1], { timeoutMs: 12000, cuerpoSiempre: true });
+        const t = r && r.text ? r.text : '';
+        const mias = dlfTarjetas(t);
+        log('sonda dlf ' + par[0] + ': status ' + (r ? r.status : 'sin') + ', ' + t.length + ' letras, ' + mias.length + ' tarjetas: ' + (mias.length ? mias.slice(0, 5).map(function (x) { return x.title + (par[0] === 'películas' ? ' (' + x.kind + ')' : ''); }).join(' | ') : 'ninguna') + ' (' + ivaMotivo(r) + ')');
+        return { nombre: par[0], r: r, t: t };
+      } catch (eD2) {
+        log('sonda dlf ' + par[0] + ' FALLO: ' + ((eD2 && eD2.message) || eD2));
+        return { nombre: par[0], r: null, t: '' };
       }
-    } catch (eW) { log('sonda dlf watch FALLO: ' + ((eW && eW.message) || eW)); partes.push('watch FALLO'); }
+    }));
+    const porNombre = {};
+    for (const rd of rtasDlf) {
+      porNombre[rd.nombre] = rd;
+      partes.push('dlf ' + rd.nombre + ' ' + (rd.r && rd.r.ok ? 'sirvió (' + dlfTarjetas(rd.t).length + ' tarjetas)' : 'SIN RESPUESTA'));
+      if (rd.nombre === 'catálogo') {
+        const iA = rd.t.search(/href\s*=\s*["'][^"']*\/series\/[a-z0-9-]+/i);
+        if (iA >= 0) log('sonda dlf muestra de tarjeta: ' + rd.t.slice(Math.max(0, iA - 100), iA + 900).replace(/\s+/g, ' '));
+      }
+      if (rd.nombre === 'ficha' && rd.r) {
+        const codes = (rd.t.match(/\/watch\/[a-z0-9-]+-\d+-\d+/gi) || []);
+        partes.push('ficha ' + codes.length + ' códigos /watch/');
+        if (codes.length) {
+          try {
+            const rw = await traerDlf(BASE_DLF + codes[0].replace(/^\/watch\//, '/watch/'), { timeoutMs: 12000, cuerpoSiempre: true, headers: { Referer: BASE_DLF + '/' } });
+            const tw = rw && rw.text ? rw.text : '';
+            const cuenta = function (re) { return (tw.match(re) || []).length; };
+            log('sonda dlf watch ' + codes[0] + ': status ' + (rw ? rw.status : 'sin') + ', ' + tw.length + ' letras, ok.ru ' + cuenta(/ok\.ru/gi) + ', dailymotion ' + cuenta(/dailymotion/gi) + ', rumble ' + cuenta(/rumble/gi) + ', iframes ' + cuenta(/<iframe/gi) + ', __next_f ' + cuenta(/__next_f/g) + ', «Fuentes» ' + cuenta(/Fuentes/g));
+            const iF = tw.indexOf('Fuentes');
+            if (iF >= 0) log('sonda dlf watch muestra: ' + tw.slice(iF, iF + 700).replace(/\s+/g, ' '));
+            const servs = dlfServidores(tw);
+            log('sonda dlf watch servidores míos: ' + (servs.length ? servs.map(function (s) { return s.tipo + ' ' + s.url; }).join(' | ') : 'NINGUNO'));
+            partes.push('watch ' + servs.length);
+          } catch (eW) { log('sonda dlf watch FALLO: ' + ((eW && eW.message) || eW)); partes.push('watch FALLO'); }
+        }
+      }
+    }
     try {
       const rs = await traer(BASE_SDH + '/todos-los-donghuas/', { timeoutMs: 12000, cuerpoSiempre: true });
       const ts = rs && rs.text ? rs.text : '';
@@ -9340,18 +9439,21 @@ async function action(key) {
       ['emisión', BASE_OTV + '/animes-en-emision', 'portada'],
       ['directorio', BASE_OTV + '/animes?pag=1', 'anime']
     ];
-    for (const d of destinos) {
+    /* v0.6.90: EN PARALELO — en fila se pasaba del tope de 30 s de los
+     * action (el teléfono lo mostró: «action didn't answer in 30000 ms»). */
+    const rtasSonda = await Promise.all(destinos.map(async function (d) {
       try {
-        const r = await traer(d[1], { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 12000, cuerpoSiempre: true });
+        const r = await traerOtv(d[1], { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 10000, cuerpoSiempre: true });
         const t = r && r.text ? r.text : '';
         const mias = otvTarjetas(t, d[2]);
         log('sonda otv ' + d[0] + ': ' + motivoDeR(r) + ', ' + t.length + ' letras, ' + mias.length + ' tarjetas' + (mias.length ? ' | ' + mias.slice(0, 4).map(function (x) { return x.title; }).join(' · ') : ''));
-        partes.push(d[0] + ' ' + mias.length);
+        return d[0] + ' ' + mias.length;
       } catch (eO) {
         log('sonda otv ' + d[0] + ' FALLO: ' + ((eO && eO.message) || String(eO)));
-        partes.push(d[0] + ' FALLO');
+        return d[0] + ' FALLO';
       }
-    }
+    }));
+    for (const p of rtasSonda) partes.push(p);
     return { message: 'Sondeo de OtakusTV: ' + partes.join(' · ') + '. Mándame el log del teléfono y con eso arreglo la fuente.' };
   }
   /* v0.6.81: la ventanita «Pasa la revisión de IvAnime» (ivaRevision/
