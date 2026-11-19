@@ -1278,7 +1278,7 @@
 // avisos de iva (traerIva, hoja, episodios) enseñan el ritmo: espera un
 // minuto y toca Reintentar — lo ya cargado queda guardado.
 
-const VERSION = '0.6.92';
+const VERSION = '0.6.94';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -3847,17 +3847,31 @@ function otvEnfermo(r) {
 }
 async function traerOtv(url, opciones) {
   const o = opciones || {};
-  const r1 = await traer(url, Object.assign({}, o, { timeoutMs: Math.min(o.timeoutMs || 7000, 7000) }));
-  if (!otvEnfermo(r1)) return r1;
-  log('otv directo no salió (' + ivaMotivo(r1) + ') — salta el puente para ' + url);
+  /* v0.6.94 «La fila en paralelo»: el registro del teléfono (19 nov,
+   * 5:10) sentenció que otv directo MUERTO es la regla, no el accidente
+   * (520 o «took too long» SIEMPRE). En fila, el directo era 7 s de
+   * espera muerta ANTES del puente: 4+ páginas del inicio en fila se
+   * pasaban de los 20 s de Kino («home didn't answer in 20000 ms»).
+   * Ahora directo y puente van EN PARALELO y gana el primero bueno; si
+   * el directo revive, gana igual (el puente se descarta). */
+  let r1 = null;
+  const directoD = traer(url, Object.assign({}, o, { timeoutMs: Math.min(o.timeoutMs || 7000, 7000) })).then(function (x) { r1 = x; return x; }).catch(function (e) { r1 = { ok: false, status: 0, text: '', error: e }; return r1; });
   const tandas = otvAlternas(url);
-  const rts = await Promise.all(tandas.map(async function (par) {
+  const puenteD = Promise.all(tandas.map(async function (par) {
     try {
-      return { nombre: par[0], r: await traer(par[1], { timeoutMs: par[2], cuerpoSiempre: true, headers: o.headers }) };
+      const esTr = par[0] === 'traductor';
+      if (esTr) await esperarDlf(); /* v0.6.94: el traductor de otv también hace la fila única ante Google. */
+      const rr = await traer(par[1], { timeoutMs: par[2], cuerpoSiempre: true, headers: o.headers });
+      if (esTr) dlfTrabajar(rr && rr.ok ? true : (rr && rr.status === 429 ? false : undefined));
+      return { nombre: par[0], r: rr };
     } catch (eM) {
       return { nombre: par[0], r: { ok: false, status: 0, text: '', error: eM } };
     }
   }));
+  const d1 = await directoD;
+  if (!otvEnfermo(d1)) return d1;
+  log('otv directo no salió (' + ivaMotivo(d1) + ') — el puente ya corría en paralelo para ' + url);
+  const rts = await puenteD;
   for (let i = 0; i < rts.length; i++) {
     const rj = rts[i].r;
     if (rj && rj.ok && rj.text && rj.text.length > 300 && !ivaEsReto(rj.text)) {
@@ -3868,7 +3882,7 @@ async function traerOtv(url, opciones) {
   for (let i = 0; i < rts.length; i++) {
     log('otv puente: ' + rts[i].nombre + ' no sirvió (' + ivaMotivo(rts[i].r) + ')');
   }
-  return r1; /* el fallo original manda (para el mensaje del Registro). */
+  return d1; /* el fallo original manda (para el mensaje del Registro). */
 }
 
 registrarFuente({
@@ -6008,6 +6022,92 @@ function dlfGuarda(url, text) {
     DLF_MEM.set(url, { t: Date.now(), text: text });
   } catch (eM) {}
 }
+/* v0.6.93 «La despensa»: el Registro del teléfono (19 nov, 5:10) puso
+ * nombre al mal — el traductor contestó 429 (Google tasa las
+ * peticiones) porque dlf le rogaba por lo mismo varias veces: las
+ * fichas grandes (3 MB) NO caben en DLF_MEM (tope 300 KB) y cada
+ * visita repetía el viaje entero. Ahora se recuerda lo DESMENUZADO,
+ * no el crudo: filas, fichas y listas de capítulos ya parseadas pesan
+ * pocos KB, caben y duran 30 minutos. */
+const DLF_DAT = new Map();
+function dlfDatosDe(llave) {
+  const m = DLF_DAT.get(llave);
+  if (!m) return null;
+  if (Date.now() - m.t > 30 * 60 * 1000) { DLF_DAT.delete(llave); return null; }
+  return m.datos;
+}
+function dlfDatosGuarda(llave, datos) {
+  try {
+    if (!datos) return;
+    if (DLF_DAT.size >= 40 && !DLF_DAT.has(llave)) {
+      DLF_DAT.delete(DLF_DAT.keys().next().value);
+    }
+    DLF_DAT.delete(llave);
+    DLF_DAT.set(llave, { t: Date.now(), datos: datos });
+  } catch (eAD) {}
+}
+
+/* v0.6.93 «El semáforo»: la primera vez que se pinta una fila, Kino
+ * pide sus pósters CASI a la vez — una docena de peticiones
+ * simultáneas al traductor y Google contesta 429 (lo hizo en el
+ * Registro de las 5:10). Los pósters de dlf salen ahora por un
+ * semáforo: máximo 3 en vuelo y una separación de 250 ms entre
+ * arranques — la estampida se vuelve goteo. Kino cachea cada handle,
+ * así que el goteo solo cobra la primera vez. */
+let DLF_VUELO = 0;
+let DLF_ULTIMA = 0;
+const DLF_POR_ATERRIZAR = [];
+function dlfTicket() {
+  return new Promise(function (ok) {
+    const arrancar = function () {
+      if (DLF_VUELO >= 3) { DLF_POR_ATERRIZAR.push(arrancar); return; }
+      const espera = Math.max(0, DLF_ULTIMA + 250 - Date.now());
+      DLF_VUELO++;
+      if (espera > 0) setTimeout(function () { DLF_ULTIMA = Date.now(); ok(); }, espera);
+      else { DLF_ULTIMA = Date.now(); ok(); }
+    };
+    arrancar();
+  });
+}
+function dlfLibera() {
+  DLF_VUELO = Math.max(0, DLF_VUELO - 1);
+  const s = DLF_POR_ATERRIZAR.shift();
+  if (s) s();
+}
+
+/* v0.6.94 «La fila única ante Google»: TODOS los viajes a translate.goog
+ * de DonghuaLife (páginas Y pósters) hacen fila: máximo 2 en vuelo con
+ * 350 ms entre arranques — el solo semáforo de pósters dejaba pasar las
+ * páginas en paralelo (3 filas dlf + 2 otv + pósters = estampida igual)
+ * y Google contestó 429 en el Registro de las 5:10. Y cuando Google
+ * mete el 429, se asienta 45 s de descanso: las peticiones que llegan
+ * durante la multa fallan RÁPIDO (enganan la respuesta en 300 ms) en
+ * vez de gastar el tope de cada pantalla esperando otra multa. La nota
+ * de 0.6.86 lo sabía: el traductor pide ~1 a la vez; con tope 2 y
+ * separación nos acercamos sin saltarla. */
+let DLG_VUELO = 0;
+let DLG_ULTIMA = 0;
+let DLG_429_HASTA = 0;
+const DLG_FILA = [];
+function dlfTrabajar(bien) {
+  DLG_VUELO = Math.max(0, DLG_VUELO - 1);
+  if (bien !== true && bien !== undefined) DLG_429_HASTA = Date.now() + 45000;
+  const s = DLG_FILA.shift();
+  if (s) s();
+}
+function esperarDlf() {
+  return new Promise(function (ok) {
+    const arrancar = function () {
+      if (DLG_VUELO >= 2) { DLG_FILA.push(arrancar); return; }
+      const espera = Math.max(DLG_429_HASTA, DLG_ULTIMA + 350) - Date.now();
+      DLG_VUELO++;
+      if (espera > 0) setTimeout(function () { DLG_ULTIMA = Date.now(); ok(); }, Math.min(espera, 45000));
+      else { DLG_ULTIMA = Date.now(); ok(); }
+    };
+    arrancar();
+  });
+}
+
 function dlfAlternas(url) {
   const s = String(url || '');
   const cola = s.slice('https://donghualife.com'.length);
@@ -6024,19 +6124,29 @@ async function traerDlf(url, opciones) {
     const mem = dlfMemoriaDe(url);
     if (mem) return { ok: true, status: 200, text: mem, headers: {} };
   }
-  let r = null;
-  try { r = await traer(url, o); } catch (eD) { r = { ok: false, status: 0, text: '', error: eD }; }
-  if (r && r.ok && r.text && r.text.length > 300 && !ivaEsReto(r.text)) { dlfGuarda(url, r.text); return r; }
-  if (o.relevo === false) return r;
-  log('dlf directo no salió (' + ivaMotivo(r) + ') — salta el puente para ' + url);
-  const tandas = dlfAlternas(url);
-  const rts = await Promise.all(tandas.map(async function (par) {
+  /* v0.6.94 «La fila en paralelo»: mismo juicio que en otv — el directo
+   * de dlf lo niega el almacén de hosts de Kino (bug reportado, dos
+   * víctimas) y su espera era peso muerto ANTES del puente. Directo y
+   * puente corren a la vez; gana el primero bueno. */
+  let rD = null;
+  const directoP = traer(url, o).then(function (x) { rD = x; return x; }).catch(function (eD) { rD = { ok: false, status: 0, text: '', error: eD }; return rD; });
+  const tandasP = dlfAlternas(url);
+  const puenteP = Promise.all(tandasP.map(async function (par) {
     try {
-      return { nombre: par[0], r: await traer(par[1], { timeoutMs: par[2], cuerpoSiempre: true, headers: o.headers }) };
+      const esTr = par[0] === 'traductor';
+      if (esTr) await esperarDlf(); /* v0.6.94: la fila única ante Google. */
+      const rr = await traer(par[1], { timeoutMs: par[2], cuerpoSiempre: true, headers: o.headers });
+      if (esTr) dlfTrabajar(rr && rr.ok ? true : (rr && rr.status === 429 ? false : undefined));
+      return { nombre: par[0], r: rr };
     } catch (eM) {
       return { nombre: par[0], r: { ok: false, status: 0, text: '', error: eM } };
     }
   }));
+  let r = await directoP;
+  if (r && r.ok && r.text && r.text.length > 300 && !ivaEsReto(r.text)) { dlfGuarda(url, r.text); return r; }
+  if (o.relevo === false) return r;
+  log('dlf directo no salió (' + ivaMotivo(r) + ') — el puente ya corría en paralelo para ' + url);
+  const rts = await puenteP;
   for (let i = 0; i < rts.length; i++) {
     const rj = rts[i].r;
     if (rj && rj.ok && rj.text && rj.text.length > 300 && !ivaEsReto(rj.text)) {
@@ -6044,6 +6154,26 @@ async function traerDlf(url, opciones) {
       log('dlf relevo: ' + rts[i].nombre + ' sirvió para ' + url);
       return rj;
     }
+  }
+  /* v0.6.93 «Los modales»: si el traductor contestó 429 (Google tasa),
+   * UN solo reintento tras 2 s de respiro — el 429 suele contestar
+   * enseguida, así que el rescate cabe aún en un resolve. Solo se
+   * vuelve a pedir al traductor (los otros espejos ya murieron o
+   * redirigen a dominios negados). */
+  const dominante = rts.filter(function (x) { return x.nombre === 'traductor'; })[0];
+  if (dominante && dominante.r && dominante.r.status === 429) {
+    log('dlf relevo: el traductor rateó (429) — 2 s de respiro y un reintento para ' + url);
+    await new Promise(function (ok) { setTimeout(ok, 2000); });
+    await esperarDlf();
+    let r2 = null;
+    try { r2 = await traer(dlfAlternas(url)[0][1], { timeoutMs: 7000, cuerpoSiempre: true, headers: o.headers }); } catch (eR2) { r2 = { ok: false, status: 0, text: '' }; }
+    dlfTrabajar(r2 && r2.ok ? true : (r2 && r2.status === 429 ? false : undefined));
+    if (r2 && r2.ok && r2.text && r2.text.length > 300 && !ivaEsReto(r2.text)) {
+      dlfGuarda(url, r2.text);
+      log('dlf relevo: traductor sirvió al 2.º intento para ' + url);
+      return r2;
+    }
+    log('dlf relevo: el traductor sigue sin servir al 2.º intento (' + ivaMotivo(r2) + ')');
   }
   for (let i = 0; i < rts.length; i++) {
     log('dlf relevo: ' + rts[i].nombre + ' no sirvió (' + ivaMotivo(rts[i].r) + ')');
@@ -6060,10 +6190,16 @@ registrarFuente({
     if (texto.length < 2) return [];
     try {
       /* el sitio busca EN EL SERVIDOR con ?q= (verificado: «martial»
-       * trae 9 resultados). */
-      const r = await traerDlf(BASE_DLF + '/series?q=' + encodeURIComponent(texto), { timeoutMs: 12000, cuerpoSiempre: true });
-      if (!r.ok) return [];
-      const items = dlfTarjetas(r.text).slice(0, 25);
+       * trae 9 resultados). La despensa (0.6.93) recuerda lo ya
+       * parseado 30 min. */
+      const llaveB = 'buscar:' + texto;
+      let items = dlfDatosDe(llaveB);
+      if (!items) {
+        const r = await traerDlf(BASE_DLF + '/series?q=' + encodeURIComponent(texto), { timeoutMs: 12000, cuerpoSiempre: true });
+        if (!r.ok) return [];
+        items = dlfTarjetas(r.text).slice(0, 25);
+        if (items.length) dlfDatosGuarda(llaveB, items);
+      }
       for (const it of items) it.badges = (it.badges || []).concat(['DonghuaLife']);
       return items;
     } catch (e) {
@@ -6084,8 +6220,20 @@ registrarFuente({
     }
     const rtas = await Promise.all(defs.map(async (def) => {
       try {
-        const r = await traerDlf(BASE_DLF + def.camino, { timeoutMs: 12000, cuerpoSiempre: true });
-        const items = r && r.ok ? dlfTarjetas(r.text).slice(0, 24) : [];
+        /* v0.6.93: la despensa recuerda la fila parseada 30 min. */
+        const llaveF = 'fila:' + def.camino;
+        let items = dlfDatosDe(llaveF);
+        let r = null;
+        if (!items) {
+          r = await traerDlf(BASE_DLF + def.camino, { timeoutMs: 12000, cuerpoSiempre: true });
+          items = r && r.ok ? dlfTarjetas(r.text).slice(0, 24) : [];
+          if (items.length) {
+            dlfDatosGuarda(llaveF, items);
+            log('dlf despensa: fila guardada «' + def.titulo + '» (' + items.length + ' tarjetas)');
+          }
+        } else {
+          log('dlf despensa: fila servida «' + def.titulo + '»');
+        }
         /* v0.6.89: ANTES solo logueaba si llegaba cuerpo — un rechazo
          * de red (status 0, texto vacío) moría en silencio total. */
         if (!items.length) {
@@ -6108,6 +6256,10 @@ registrarFuente({
     if (!camino) return null;
     const pagina = parseInt(cursor, 10);
     const num = Number.isFinite(pagina) && pagina > 1 ? pagina : 1;
+    /* v0.6.93: la despensa recuerda cada página parseada 30 min. */
+    const llaveH = 'hoja:' + camino + ':' + num;
+    const enH = dlfDatosDe(llaveH);
+    if (enH) { log('dlf despensa: página servida ' + llaveH); return enH; }
     const r = await traerDlf(BASE_DLF + camino + (num > 1 ? (camino.indexOf('?') >= 0 ? '&' : '?') + 'page=' + num : ''), { timeoutMs: 12000, cuerpoSiempre: true });
     if (!r.ok) {
       if (num > 1) return { items: [], next: null };
@@ -6117,11 +6269,15 @@ registrarFuente({
     }
     const items = dlfTarjetas(r.text).slice(0, 60);
     const next = items.length >= 8 ? String(num + 1) : null;
-    return { items: items, next: next };
+    const hoja = { items: items, next: next };
+    if (items.length) dlfDatosGuarda(llaveH, hoja);
+    return hoja;
   },
 
   async detalle(slug) {
     /* v0.6.82: las películas viajan con el tramo 'peliculas/<slug>'. */
+    const enFD = dlfDatosDe('ficha:' + slug);
+    if (enFD) { log('dlf despensa: ficha servida «' + slug + '»'); return enFD; }
     const esPeli = String(slug).indexOf('peliculas/') === 0;
     const r = await traerDlf(BASE_DLF + '/' + (esPeli ? '' : 'series/') + slug, { timeoutMs: 12000, cuerpoSiempre: true });
     if (!r.ok || !r.text) return null;
@@ -6138,10 +6294,17 @@ registrarFuente({
       if (s2) sinopsis = limpio(s2[1]);
     }
     if (sinopsis) serie.overview = sinopsis.slice(0, 400);
+    dlfDatosGuarda('ficha:' + slug, serie);
     return serie;
   },
 
   async episodios(slug) {
+    /* v0.6.93: la despensa recuerda la LISTA parseada 30 min — la
+     * ficha cruda puede pesar 3 MB (no cabe en DLF_MEM) y era la
+     * que re-rogaba a Google en cada visita hasta el 429. Verificado
+     * en el Registro (19 nov, 5:10). */
+    const enED = dlfDatosDe('eps:' + slug);
+    if (enED) { log('dlf despensa: episodios servidos «' + slug + '»'); return enED; }
     /* v0.6.82: las películas viajan con el tramo 'peliculas/<slug>'. */
     const esPeli = String(slug).indexOf('peliculas/') === 0;
     const r = await traerDlf(BASE_DLF + '/' + (esPeli ? '' : 'series/') + slug, { timeoutMs: 12000, cuerpoSiempre: true });
@@ -6181,7 +6344,9 @@ registrarFuente({
       const posterP = dlfPoster(texto.slice(0, 12000));
       if (posterP) serieP.poster = posterP;
       log('dlf película «' + slug + '»: 1 título (fuentes por JavaScript)');
-      return { series: serieP, episodes: [{ season: 1, number: 1, ref: 'dlf:peliculas/' + slug, title: 'Ver película' }] };
+      const salidaP = { series: serieP, episodes: [{ season: 1, number: 1, ref: 'dlf:peliculas/' + slug, title: 'Ver película' }] };
+      dlfDatosGuarda('eps:' + slug, salidaP);
+      return salidaP;
     }
     if (!lista.length) {
       const w = texto.indexOf('/watch/');
@@ -6199,7 +6364,9 @@ registrarFuente({
     if (h) serie.title = limpio(h[1]) || serie.title;
     const poster = dlfPoster(texto.slice(0, 12000));
     if (poster) serie.poster = poster;
-    return { series: serie, episodes: eps };
+    const salidaE = { series: serie, episodes: eps };
+    dlfDatosGuarda('eps:' + slug, salidaE);
+    return salidaE;
   },
 
   async resolver(codigo, n, idx) {
@@ -8463,7 +8630,28 @@ async function search(query) {
   return salida.slice(0, MAX_ITEMS);
 }
 
+/* v0.6.93 «La despensa de casa»: el Inicio de Kino se abre a cada rato
+ * y cada vez rogaba a TODAS las fuentes — con dlf y otv por espejo se
+ * pasaba de los 20 s de Kino (Registro 19 nov, 5:08: «home didn't
+ * answer in 20000 ms»). memoriza el resultado armado 5 minutos en
+ * kino.storage; abrir Casa otra vez ahora es al instante. */
+function casaDe() {
+  try {
+    const g = kino.storage.get('ajCasa:' + VERSION);
+    if (g && g.t && Date.now() - g.t < 5 * 60 * 1000 && Array.isArray(g.filas) && g.filas.length) return g.filas;
+  } catch (eC) {}
+  return null;
+}
+function casaGuarda(filas) {
+  try {
+    const p = JSON.stringify(filas);
+    if (p && p.length <= 48000) kino.storage.set('ajCasa:' + VERSION, { t: Date.now(), filas: filas });
+  } catch (eC2) {}
+}
+
 async function home() {
+  const enCasa = casaDe();
+  if (enCasa) { log('home: servida de la despensa de casa (' + enCasa.length + ' filas)'); return enCasa; }
   const fuentes = Object.values(FUENTES);
   const errores = [];
   const rtas = await Promise.all(fuentes.map(async (f) => {
@@ -8486,6 +8674,7 @@ async function home() {
       userMessage: 'Ninguna fuente respondió. Revisa tu conexión o inténtalo en un rato.'
     });
   }
+  if (filas.length) casaGuarda(filas);
   return filas;
 }
 
@@ -9139,8 +9328,16 @@ async function image(arg) {
       } catch (eN) {}
     }
     if (destino.indexOf('_x_tr_') < 0) destino += (destino.indexOf('?') >= 0 ? '&' : '?') + '_x_tr_sl=auto&_x_tr_tl=es&_x_tr_hl=es';
+    /* v0.6.93 «El semáforo»: cada póster pide su turno (máximo 3 en
+     * vuelo, 250 ms entre arranques) — la docena simultánea que
+     * provocaba el 429 de Google se vuelve goteo. v0.6.94: el póster
+     * también hace la FILA ÚNICA ante Google (el semáforo de pósters
+     * solo no bastó: las páginas viajaban en paralelo a la vez). */
+    await dlfTicket();
     try {
+      await esperarDlf();
       const rd = await kino.fetch(destino, { headers: { 'User-Agent': UA }, timeoutMs: 12000, maxBytes: 262145 });
+      dlfTrabajar(rd && rd.status === 200 ? true : (rd && rd.status === 429 ? false : undefined));
       const ctd = ((rd && rd.headers && (rd.headers['content-type'] || rd.headers['Content-Type'])) || '');
       if (rd && rd.status === 200 && rd.truncated !== true && !/text\/html/i.test(ctd)) {
         const bd = rd.base64 ? String(rd.base64()) : '';
@@ -9155,7 +9352,10 @@ async function image(arg) {
       }
       log('dlf póster «' + dnombre + '»: el puente no lo trajo (status ' + (rd ? rd.status : 'sin') + (rd && rd.truncated ? ', truncado' : '') + ')');
     } catch (eD2) {
+      dlfTrabajar(undefined); /* suelta el turno: un rebote no muta a Google. */
       log('dlf póster «' + dnombre + '»: el puente rebotó (' + ((eD2 && eD2.message) || String(eD2)) + ')');
+    } finally {
+      dlfLibera();
     }
     throw kino.error('unavailable', 'DonghuaLife no entregó la imagen');
   }
