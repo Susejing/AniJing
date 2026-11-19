@@ -1278,7 +1278,7 @@
 // avisos de iva (traerIva, hoja, episodios) enseñan el ritmo: espera un
 // minuto y toca Reintentar — lo ya cargado queda guardado.
 
-const VERSION = '0.6.88';
+const VERSION = '0.6.89';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -1448,6 +1448,18 @@ function noRespondio(status) {
   throw kino.error('unavailable', 'AnimeAV1 no respondió (status ' + status + ')', {
     userMessage: 'AnimeAV1 no respondió. Revisa tu conexión o inténtalo en un rato.'
   });
+}
+
+/* v0.6.89 «La voz en el silencio»: traer() atrapa TODA excepción de
+ * kino.fetch y devuelve {ok:false, text:''} — así una fuente muerta no
+ * logueaba NADA (otv y dlf pasaron días sin una sola línea en el
+ * Registro). motivoDeR nombra la causa: red, timeout, host o estado. */
+function motivoDeR(r) {
+  if (!r) return 'sin respuesta';
+  const err = r.error ? ((r.error.message || r.error.code) || String(r.error)) : '';
+  if (err) return 'petición rebotó (' + String(err).slice(0, 120) + ', status ' + r.status + ')';
+  if (!r.ok) return 'status ' + r.status + (r.text ? '' : ' sin cuerpo');
+  return 'status ' + r.status;
 }
 
 function configDe(clave) {
@@ -3840,16 +3852,21 @@ registrarFuente({
       (async () => {
         const r = await traer(BASE_OTV + '/animes-en-emision', { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 9000 });
         const items = otvTarjetas(r.text, 'portada').slice(0, 20);
+        /* v0.6.89: los flecos silenciosos se nombran — si el sitio
+         * cambió su HTML o la red revienta, el Registro lo guarda. */
+        if (!items.length) log('otv fila «En emisión»: ' + motivoDeR(r) + ', ' + (r && r.text ? r.text.length + ' letras' : 'sin cuerpo') + ', 0 tarjetas');
         return items.length ? { id: 'otv-emision', title: 'En emisión · OtakusTV', ref: 'otv-emision', items: items } : null;
       })(),
       (async () => {
         const r = await traer(BASE_OTV + '/', { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 9000 });
         const items = otvEpisodiosDe(r.text).slice(0, 20);
+        if (!items.length) log('otv fila «Últimos episodios»: ' + motivoDeR(r) + ', ' + (r && r.text ? r.text.length + ' letras' : 'sin cuerpo') + ', 0 tarjetas');
         return items.length ? { id: 'otv-eps', title: 'Últimos episodios · OtakusTV', ref: 'otv-eps', items: items } : null;
       })(),
       (async () => {
         const r = await traer(BASE_OTV + '/animes?pag=1', { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 9000 });
         const items = otvTarjetas(r.text, 'anime').slice(0, 20);
+        if (!items.length) log('otv fila «Directorio»: ' + motivoDeR(r) + ', ' + (r && r.text ? r.text.length + ' letras' : 'sin cuerpo') + ', 0 tarjetas');
         return items.length ? { id: 'otv-animes', title: 'Directorio · OtakusTV', ref: 'otv-animes', items: items } : null;
       })()
     ];
@@ -5946,8 +5963,10 @@ registrarFuente({
       try {
         const r = await traer(BASE_DLF + def.camino, { timeoutMs: 12000, cuerpoSiempre: true });
         const items = r && r.ok ? dlfTarjetas(r.text).slice(0, 24) : [];
-        if (!items.length && r && r.text) {
-          log('dlf fila «' + def.titulo + '»: status ' + r.status + ', ' + r.text.length + ' letras, 0 tarjetas');
+        /* v0.6.89: ANTES solo logueaba si llegaba cuerpo — un rechazo
+         * de red (status 0, texto vacío) moría en silencio total. */
+        if (!items.length) {
+          log('dlf fila «' + def.titulo + '»: ' + motivoDeR(r) + ', ' + (r && r.text ? r.text.length + ' letras' : 'sin cuerpo') + ', 0 tarjetas');
         }
         return items.length ? { id: def.id, title: def.titulo, ref: def.id, items: items } : null;
       } catch (e) {
@@ -8585,8 +8604,14 @@ async function cargarPantalla(fuente) {
   } else {
     const f = FUENTES[fuente];
     if (!f) return { filas: [], hero: null };
+    /* v0.6.89: la pantalla que ARRANCA y la que QUEDA VACÍA se nombran —
+     * una fuente muerta ya no desaparece del Registro. */
+    log('pantalla «' + fuente + '» pidiendo al sitio…');
     filas = await f.portada();
-    if (!Array.isArray(filas) || !filas.length) return { filas: [], hero: null };
+    if (!Array.isArray(filas) || !filas.length) {
+      log('pantalla «' + fuente + '» queda VACÍA: la portada de ' + f.id + ' no trajo filas');
+      return { filas: [], hero: null };
+    }
     for (const fila of filas) {
       fila.title = sinSufijoFuente(fila.title, f.etiqueta);
       fila.fuente = f.id;
@@ -9303,6 +9328,31 @@ async function action(key) {
       partes.push('padrón FALLO');
     }
     return { message: 'Sondeo de BeatZ: ' + partes.join(' · ') + '. Mándame el log del teléfono y con eso arreglo la fuente.' };
+  }
+  if (key === 'otvSonda') {
+    /* v0.6.89: diagnóstico de OtakusTV desde el teléfono de verdad —
+     * si el sitio está vivo desde la red de la persona, si sigue
+     * sirviendo el HTML que el lector sabe leer y cuántas tarjetas
+     * sobreviven a las tres páginas de la portada. Todo al log. */
+    const partes = [];
+    const destinos = [
+      ['raíz', BASE_OTV + '/', 'portada'],
+      ['emisión', BASE_OTV + '/animes-en-emision', 'portada'],
+      ['directorio', BASE_OTV + '/animes?pag=1', 'anime']
+    ];
+    for (const d of destinos) {
+      try {
+        const r = await traer(d[1], { headers: { Referer: BASE_OTV + '/' }, timeoutMs: 12000, cuerpoSiempre: true });
+        const t = r && r.text ? r.text : '';
+        const mias = otvTarjetas(t, d[2]);
+        log('sonda otv ' + d[0] + ': ' + motivoDeR(r) + ', ' + t.length + ' letras, ' + mias.length + ' tarjetas' + (mias.length ? ' | ' + mias.slice(0, 4).map(function (x) { return x.title; }).join(' · ') : ''));
+        partes.push(d[0] + ' ' + mias.length);
+      } catch (eO) {
+        log('sonda otv ' + d[0] + ' FALLO: ' + ((eO && eO.message) || String(eO)));
+        partes.push(d[0] + ' FALLO');
+      }
+    }
+    return { message: 'Sondeo de OtakusTV: ' + partes.join(' · ') + '. Mándame el log del teléfono y con eso arreglo la fuente.' };
   }
   /* v0.6.81: la ventanita «Pasa la revisión de IvAnime» (ivaRevision/
    * ivaCookie) se retiró: en el teléfono dio net::ERR_CONNECTION_REFUSED,

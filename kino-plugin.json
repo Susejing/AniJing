@@ -1,7 +1,7 @@
 {
   "id": "anijing",
   "name": "AniJing",
-  "version": "0.6.88",
+  "version": "0.6.89",
   "apiVersion": 20,
   "entry": "plugin.js",
   "description": "Anime en español: AnimeAV1, MonosChinos, LataAnime, OtakusTV, AnimeYT, EstrenosAnime, AnimeJara, Anime-JL, MundoDonghua, SeriesDonghua, DonghuaLife, IvAnime, Az-Animex y BeatZ-Anime, con pantalla propia, búsqueda, fichas, episodios y extractores. El anime con la firma de Susejing.",
@@ -404,6 +404,12 @@
       "type": "action",
       "label": "Sondear Donghua",
       "hint": "Prueba los catálogos de DonghuaLife y SeriesDonghua y escribe al log"
+    },
+    {
+      "key": "otvSonda",
+      "type": "action",
+      "label": "Sondear OtakusTV",
+      "hint": "Prueba la portada y el directorio de OtakusTV y escribe al log"
     }
   ]
 }
