@@ -1278,7 +1278,7 @@
 // avisos de iva (traerIva, hoja, episodios) enseñan el ritmo: espera un
 // minuto y toca Reintentar — lo ya cargado queda guardado.
 
-const VERSION = '0.6.90';
+const VERSION = '0.6.91';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -3823,6 +3823,22 @@ async function otvServersDe(html) {
  * respondió). Un solo intento nunca alcanza: reintento ante 520 o
  * silencio, con esperas medidas para no pasarse del tope de 20 s del
  * screenEvent (10 s + 1,5 s de respiro + 8 s). */
+/* v0.6.91 «La segunda cuerda de OtakusTV»: el Registro de la 0.6.90
+ * (22:11-23:06) mostró que el reintento directo no alcanza — el sitio
+ * sigue muriendo (took too long, 520). Le tiende el PUENTE como a dlf:
+ * si el directo no sale, la página viaja por el traductor con codetabs
+ * y allorigins de rejilla, EN PARALELO. Tiempos medidos para el tope de
+ * 20 s del screenEvent: 7 s directo + 11 s de espejos. */
+function otvAlternas(url) {
+  const s = String(url || '');
+  const cola = s.slice('https://www.otakustv.net'.length);
+  const q = cola.indexOf('?') >= 0 ? '&' : '?';
+  return [
+    ['traductor', 'https://www-otakustv-net.translate.goog' + cola + q + '_x_tr_sl=auto&_x_tr_tl=es&_x_tr_hl=es', 11000],
+    ['codetabs', 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(s), 8000],
+    ['allorigins', 'https://api.allorigins.win/raw?url=' + encodeURIComponent(s), 8000]
+  ];
+}
 function otvEnfermo(r) {
   if (!r) return true;
   if (!r.ok && r.status === 520) return true;
@@ -3831,13 +3847,28 @@ function otvEnfermo(r) {
 }
 async function traerOtv(url, opciones) {
   const o = opciones || {};
-  const r = await traer(url, o);
-  if (!otvEnfermo(r)) return r;
-  try { await new Promise(function (listo) { setTimeout(listo, 1500); }); } catch (eW) {}
-  log('otv reintento: ' + ivaMotivo(r) + ' — reprobando ' + url);
-  const r2 = await traer(url, Object.assign({}, o, { timeoutMs: 8000 }));
-  if (!otvEnfermo(r2)) return r2;
-  return r2.status ? r2 : r;
+  const r1 = await traer(url, Object.assign({}, o, { timeoutMs: Math.min(o.timeoutMs || 7000, 7000) }));
+  if (!otvEnfermo(r1)) return r1;
+  log('otv directo no salió (' + ivaMotivo(r1) + ') — salta el puente para ' + url);
+  const tandas = otvAlternas(url);
+  const rts = await Promise.all(tandas.map(async function (par) {
+    try {
+      return { nombre: par[0], r: await traer(par[1], { timeoutMs: par[2], cuerpoSiempre: true, headers: o.headers }) };
+    } catch (eM) {
+      return { nombre: par[0], r: { ok: false, status: 0, text: '', error: eM } };
+    }
+  }));
+  for (let i = 0; i < rts.length; i++) {
+    const rj = rts[i].r;
+    if (rj && rj.ok && rj.text && rj.text.length > 300 && !ivaEsReto(rj.text)) {
+      log('otv puente: ' + rts[i].nombre + ' sirvió para ' + url);
+      return rj;
+    }
+  }
+  for (let i = 0; i < rts.length; i++) {
+    log('otv puente: ' + rts[i].nombre + ' no sirvió (' + ivaMotivo(rts[i].r) + ')');
+  }
+  return r1; /* el fallo original manda (para el mensaje del Registro). */
 }
 
 registrarFuente({
@@ -5868,7 +5899,7 @@ function dlfTarjetas(html) {
    * El ref guarda el tramo completo ('dlf:series/<slug>' o
    * 'dlf:peliculas/<slug>') para que detalle/episodios/resolver
    * sepan a dónde ir sin adivinar. */
-  const re = /<a\b[^>]*href\s*=\s*["'](?:https?:\/\/)?(?:donghualife\.com|donghualife-[a-z]+\.translate\.goog)?\/(series|peliculas)\/([a-z0-9-]+)\/?["'][^>]*>([\s\S]{0,6000}?)<\/a>/gi;
+  const re = /<a\b[^>]*href\s*=\s*["'](?:https?:\/\/)?(?:donghualife\.com|donghualife-[a-z]+\.translate\.goog)?\/(series|peliculas)\/([a-z0-9-]+)[^"']*["'][^>]*>([\s\S]{0,6000}?)<\/a>/gi;
   const items = [];
   const indice = {};
   let m;
