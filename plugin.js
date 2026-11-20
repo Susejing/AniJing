@@ -1278,7 +1278,7 @@
 // avisos de iva (traerIva, hoja, episodios) enseñan el ritmo: espera un
 // minuto y toca Reintentar — lo ya cargado queda guardado.
 
-const VERSION = '0.6.94';
+const VERSION = '0.6.95';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -3859,11 +3859,10 @@ async function traerOtv(url, opciones) {
   const tandas = otvAlternas(url);
   const puenteD = Promise.all(tandas.map(async function (par) {
     try {
-      const esTr = par[0] === 'traductor';
-      if (esTr) await esperarDlf(); /* v0.6.94: el traductor de otv también hace la fila única ante Google. */
-      const rr = await traer(par[1], { timeoutMs: par[2], cuerpoSiempre: true, headers: o.headers });
-      if (esTr) dlfTrabajar(rr && rr.ok ? true : (rr && rr.status === 429 ? false : undefined));
-      return { nombre: par[0], r: rr };
+      /* v0.6.95: la pata del traductor de otv también viaja por
+       * dlegTraductor (fila única ante Google, rescate ante 429). */
+      if (par[0] === 'traductor') return { nombre: par[0], r: await dlegTraductor(par[1], { timeoutMs: par[2], cuerpoSiempre: true, headers: o.headers }) };
+      return { nombre: par[0], r: await traer(par[1], { timeoutMs: par[2], cuerpoSiempre: true, headers: o.headers }) };
     } catch (eM) {
       return { nombre: par[0], r: { ok: false, status: 0, text: '', error: eM } };
     }
@@ -5258,7 +5257,7 @@ registrarFuente({
     let r = await traer(BASE_JL + jlCaminoConPagina(camino, num), { timeoutMs: 12000, cuerpoSiempre: true });
     if (!r.ok) {
       log('jl hoja «' + ref + '» página ' + num + ': status ' + r.status + ' — segundo intento');
-      await new Promise(function (ok) { setTimeout(ok, 1500); });
+      await pausa(1500); /* v0.6.95: kino.sleep si está — el runtime no tiene setTimeout. */
       r = await traer(BASE_JL + jlCaminoConPagina(camino, num), { timeoutMs: 12000, cuerpoSiempre: true });
     }
     if (!r.ok) {
@@ -6047,51 +6046,25 @@ function dlfDatosGuarda(llave, datos) {
   } catch (eAD) {}
 }
 
-/* v0.6.93 «El semáforo»: la primera vez que se pinta una fila, Kino
- * pide sus pósters CASI a la vez — una docena de peticiones
- * simultáneas al traductor y Google contesta 429 (lo hizo en el
- * Registro de las 5:10). Los pósters de dlf salen ahora por un
- * semáforo: máximo 3 en vuelo y una separación de 250 ms entre
- * arranques — la estampida se vuelve goteo. Kino cachea cada handle,
- * así que el goteo solo cobra la primera vez. */
-let DLF_VUELO = 0;
-let DLF_ULTIMA = 0;
-const DLF_POR_ATERRIZAR = [];
-function dlfTicket() {
-  return new Promise(function (ok) {
-    const arrancar = function () {
-      if (DLF_VUELO >= 3) { DLF_POR_ATERRIZAR.push(arrancar); return; }
-      const espera = Math.max(0, DLF_ULTIMA + 250 - Date.now());
-      DLF_VUELO++;
-      if (espera > 0) setTimeout(function () { DLF_ULTIMA = Date.now(); ok(); }, espera);
-      else { DLF_ULTIMA = Date.now(); ok(); }
-    };
-    arrancar();
-  });
-}
-function dlfLibera() {
-  DLF_VUELO = Math.max(0, DLF_VUELO - 1);
-  const s = DLF_POR_ATERRIZAR.shift();
-  if (s) s();
-}
+/* v0.6.95 «El reloj de arena»: el runtime de plugins de Kino NO tiene
+ * setTimeout — el Registro del teléfono (18:20) lo escribió entero:
+ * «'setTimeout' is not defined», y con esa herida los turnos que quedaban
+ * en fila se colgaban para siempre (el home entero se pasaba de los 20 s
+ * y una docena de pósters moría). La pausa legal del plugin es kino.sleep
+ * (0..5000 ms, cuenta dentro del tope de la propia llamada). Todo el
+ * orden ante Google queda SIN RELOJ: turnos estructurales (una fila que
+ * se libera al aterrizar cada viaje, no a los X ms) y, para el rescate
+ * tras un 429, un solo respiro de 1,5 s con kino.sleep si está — sin
+ * reloj, honesto igual. */
 
-/* v0.6.94 «La fila única ante Google»: TODOS los viajes a translate.goog
- * de DonghuaLife (páginas Y pósters) hacen fila: máximo 2 en vuelo con
- * 350 ms entre arranques — el solo semáforo de pósters dejaba pasar las
- * páginas en paralelo (3 filas dlf + 2 otv + pósters = estampida igual)
- * y Google contestó 429 en el Registro de las 5:10. Y cuando Google
- * mete el 429, se asienta 45 s de descanso: las peticiones que llegan
- * durante la multa fallan RÁPIDO (enganan la respuesta en 300 ms) en
- * vez de gastar el tope de cada pantalla esperando otra multa. La nota
- * de 0.6.86 lo sabía: el traductor pide ~1 a la vez; con tope 2 y
- * separación nos acercamos sin saltarla. */
+/* LA FILA ÚNICA ante Google (páginas y pósters de dlf y otv): máximo 2
+ * en vuelo y libera AL ATERRIZAR (dlfTrabajar), no a los 350 ms — la
+ * separación de la 0.6.94 necesitaba setTimeout y el runtime no lo trae.
+ * El tope de concurrencia es la parte que sirve contra el 429. */
 let DLG_VUELO = 0;
-let DLG_ULTIMA = 0;
-let DLG_429_HASTA = 0;
 const DLG_FILA = [];
-function dlfTrabajar(bien) {
+function dlfTrabajar() {
   DLG_VUELO = Math.max(0, DLG_VUELO - 1);
-  if (bien !== true && bien !== undefined) DLG_429_HASTA = Date.now() + 45000;
   const s = DLG_FILA.shift();
   if (s) s();
 }
@@ -6099,13 +6072,34 @@ function esperarDlf() {
   return new Promise(function (ok) {
     const arrancar = function () {
       if (DLG_VUELO >= 2) { DLG_FILA.push(arrancar); return; }
-      const espera = Math.max(DLG_429_HASTA, DLG_ULTIMA + 350) - Date.now();
       DLG_VUELO++;
-      if (espera > 0) setTimeout(function () { DLG_ULTIMA = Date.now(); ok(); }, Math.min(espera, 45000));
-      else { DLG_ULTIMA = Date.now(); ok(); }
+      ok();
     };
     arrancar();
   });
+}
+/* Pausa honesta: kino.sleep si el aparato la trae; si no, cede el turno
+ * de microtareas y sigue (sin reloj no hay milagro, pero tampoco atasco). */
+async function pausa(ms) {
+  try {
+    if (kino && typeof kino.sleep === 'function') { await kino.sleep(ms); return; }
+  } catch (eP) {}
+  await Promise.resolve();
+}
+/* El turno del traductor: fila única + UN reintento tras 1,5 s si Google
+ * contesta 429 (el Registro de las 18:20 mostró que el rateo es pasajero:
+ * segundos después el traductor sirvió). El turno se libera SIEMPRE. */
+async function dlegTraductor(url, opciones) {
+  await esperarDlf();
+  try {
+    const r1 = await traer(url, opciones);
+    if (!(r1 && r1.status === 429)) return r1;
+    log('Google rateó (429) — 1,5 s de respiro y un reintento para ' + url);
+    await pausa(1500);
+    return await traer(url, opciones);
+  } finally {
+    dlfTrabajar();
+  }
 }
 
 function dlfAlternas(url) {
@@ -6133,11 +6127,10 @@ async function traerDlf(url, opciones) {
   const tandasP = dlfAlternas(url);
   const puenteP = Promise.all(tandasP.map(async function (par) {
     try {
-      const esTr = par[0] === 'traductor';
-      if (esTr) await esperarDlf(); /* v0.6.94: la fila única ante Google. */
-      const rr = await traer(par[1], { timeoutMs: par[2], cuerpoSiempre: true, headers: o.headers });
-      if (esTr) dlfTrabajar(rr && rr.ok ? true : (rr && rr.status === 429 ? false : undefined));
-      return { nombre: par[0], r: rr };
+      /* v0.6.95: la pata del traductor viaja por dlegTraductor (fila única
+       * ante Google y rescate propio ante 429); las demás, llanas. */
+      if (par[0] === 'traductor') return { nombre: par[0], r: await dlegTraductor(par[1], { timeoutMs: par[2], cuerpoSiempre: true, headers: o.headers }) };
+      return { nombre: par[0], r: await traer(par[1], { timeoutMs: par[2], cuerpoSiempre: true, headers: o.headers }) };
     } catch (eM) {
       return { nombre: par[0], r: { ok: false, status: 0, text: '', error: eM } };
     }
@@ -6155,26 +6148,10 @@ async function traerDlf(url, opciones) {
       return rj;
     }
   }
-  /* v0.6.93 «Los modales»: si el traductor contestó 429 (Google tasa),
-   * UN solo reintento tras 2 s de respiro — el 429 suele contestar
-   * enseguida, así que el rescate cabe aún en un resolve. Solo se
-   * vuelve a pedir al traductor (los otros espejos ya murieron o
-   * redirigen a dominios negados). */
-  const dominante = rts.filter(function (x) { return x.nombre === 'traductor'; })[0];
-  if (dominante && dominante.r && dominante.r.status === 429) {
-    log('dlf relevo: el traductor rateó (429) — 2 s de respiro y un reintento para ' + url);
-    await new Promise(function (ok) { setTimeout(ok, 2000); });
-    await esperarDlf();
-    let r2 = null;
-    try { r2 = await traer(dlfAlternas(url)[0][1], { timeoutMs: 7000, cuerpoSiempre: true, headers: o.headers }); } catch (eR2) { r2 = { ok: false, status: 0, text: '' }; }
-    dlfTrabajar(r2 && r2.ok ? true : (r2 && r2.status === 429 ? false : undefined));
-    if (r2 && r2.ok && r2.text && r2.text.length > 300 && !ivaEsReto(r2.text)) {
-      dlfGuarda(url, r2.text);
-      log('dlf relevo: traductor sirvió al 2.º intento para ' + url);
-      return r2;
-    }
-    log('dlf relevo: el traductor sigue sin servir al 2.º intento (' + ivaMotivo(r2) + ')');
-  }
+  /* v0.6.95: el rescate ante 429 vive ADENTRO de dlegTraductor (fila
+   * única + un reintento tras 1,5 s con kino.sleep), así que aquí ya
+   * no hay bloque de modales: o el rts trajo la página buena o se
+   * confiesan los motivos tal cual. */
   for (let i = 0; i < rts.length; i++) {
     log('dlf relevo: ' + rts[i].nombre + ' no sirvió (' + ivaMotivo(rts[i].r) + ')');
   }
@@ -9328,16 +9305,23 @@ async function image(arg) {
       } catch (eN) {}
     }
     if (destino.indexOf('_x_tr_') < 0) destino += (destino.indexOf('?') >= 0 ? '&' : '?') + '_x_tr_sl=auto&_x_tr_tl=es&_x_tr_hl=es';
-    /* v0.6.93 «El semáforo»: cada póster pide su turno (máximo 3 en
-     * vuelo, 250 ms entre arranques) — la docena simultánea que
-     * provocaba el 429 de Google se vuelve goteo. v0.6.94: el póster
-     * también hace la FILA ÚNICA ante Google (el semáforo de pósters
-     * solo no bastó: las páginas viajaban en paralelo a la vez). */
-    await dlfTicket();
+    /* v0.6.95: sin el semáforo de pósters con reloj (el runtime de Kino
+     * no tiene setTimeout — Registro 18:20) — el póster toma su turno en
+     * la FILA ÚNICA ante Google (tope 2 en vuelo, liberado al aterrizar)
+     * y, ante un 429, un solo respiro de 1,5 s con kino.sleep y rebusca. */
     try {
       await esperarDlf();
-      const rd = await kino.fetch(destino, { headers: { 'User-Agent': UA }, timeoutMs: 12000, maxBytes: 262145 });
-      dlfTrabajar(rd && rd.status === 200 ? true : (rd && rd.status === 429 ? false : undefined));
+      let rd = null;
+      try {
+        rd = await kino.fetch(destino, { headers: { 'User-Agent': UA }, timeoutMs: 12000, maxBytes: 262145 });
+        if (rd && rd.status === 429) {
+          log('dlf póster «' + dnombre + '»: 429 de Google — 1,5 s de respiro y un reintento');
+          await pausa(1500);
+          rd = await kino.fetch(destino, { headers: { 'User-Agent': UA }, timeoutMs: 12000, maxBytes: 262145 });
+        }
+      } finally {
+        dlfTrabajar();
+      }
       const ctd = ((rd && rd.headers && (rd.headers['content-type'] || rd.headers['Content-Type'])) || '');
       if (rd && rd.status === 200 && rd.truncated !== true && !/text\/html/i.test(ctd)) {
         const bd = rd.base64 ? String(rd.base64()) : '';
@@ -9352,10 +9336,7 @@ async function image(arg) {
       }
       log('dlf póster «' + dnombre + '»: el puente no lo trajo (status ' + (rd ? rd.status : 'sin') + (rd && rd.truncated ? ', truncado' : '') + ')');
     } catch (eD2) {
-      dlfTrabajar(undefined); /* suelta el turno: un rebote no muta a Google. */
       log('dlf póster «' + dnombre + '»: el puente rebotó (' + ((eD2 && eD2.message) || String(eD2)) + ')');
-    } finally {
-      dlfLibera();
     }
     throw kino.error('unavailable', 'DonghuaLife no entregó la imagen');
   }
