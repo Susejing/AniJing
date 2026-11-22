@@ -1278,7 +1278,7 @@
 // avisos de iva (traerIva, hoja, episodios) enseñan el ritmo: espera un
 // minuto y toca Reintentar — lo ya cargado queda guardado.
 
-const VERSION = '0.6.95';
+const VERSION = '0.6.96';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
