@@ -1134,9 +1134,9 @@
 // tienen hintMaxChars 80 y el hint del sondeador de EstrenosAnime
 // (0.6.73) traía 94; y descriptionMaxChars es 300 y la descripción
 // llevaba ~700 creciendo fuente a fuente. Manifiesto a dieta:
-// descripción ≤300, hint ≤80, y versión al día en los DOS manifiestos
-// (kino-plugin.json y anijing-kino-plugin.json, idénticos). El código
-// no cambia: solo VERSION.
+// descripción ≤300, hint ≤80. El segundo manifiesto duplicado se
+// RETIRÓ del repo el 24 nov (pedido expreso): AniJing solo lleva
+// kino-plugin.json + plugin.js. El código no cambia: solo VERSION.
 
 // v0.6.73 «El id escondido» — la cascada de la 0.6.72 no bastaba: el
 // AJAX de la lista (episode/list) no pide el id del EPISODIO (data-epid,
@@ -1300,7 +1300,16 @@
  * tiene más a dónde ir). Los swipes giran SIN tocar la red otra vez:
  * filas y fuentes del estado quedan en pie. apiVersion 20 intacta. */
 
-const VERSION = '0.6.98';
+/* v0.6.99 «LA BODEGA SUPERVIVIENTE»: la versión deja de cobrar peaje.
+ * Desde la 0.6.71 las llaves de bodega viajan con VERSION para no servir
+ * pantallas viejas; el peaje era que CADA actualización vaciaba la bodega
+ * y «Todas» fría volvía a ser la carrera pesada (timeout de las 20:00).
+ * Ahora: si la llave actual está vacía, se hereda la bodega de la versión
+ * que guardó última (el índice ajViviendas la confiesa) y SOLO entra si
+ * pasa la revisión de FORMA: la misma estructura de filas, items y
+ * vitrinas que arma hoy el plugin. Cambia la forma en el código → la
+ * herencia se descarta y se re-arma; la versión no invalida sola. */
+const VERSION = '0.6.99';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -8636,15 +8645,40 @@ async function search(query) {
  * kino.storage; abrir Casa otra vez ahora es al instante. */
 function casaDe() {
   try {
-    const g = kino.storage.get('ajCasa:' + VERSION);
-    if (g && g.t && Date.now() - g.t < 5 * 60 * 1000 && Array.isArray(g.filas) && g.filas.length) return g.filas;
+    let g = null;
+    const d = kino.storage.get('ajCasa:' + VERSION);
+    if (d && d.t && Array.isArray(d.filas) && d.filas.length && d.filas.every(formaFilaSana)) g = d;
+    if (!g) {
+      /* v0.6.99: la casa también hereda la bodega de la versión que
+       * guardó última (índice ajViviendasCasa), con revisión de forma. */
+      const madre = viviendasDe('ajViviendasCasa').casa;
+      if (madre && madre !== VERSION) {
+        const dh = kino.storage.get('ajCasa:' + madre);
+        if (dh && dh.t && Array.isArray(dh.filas) && dh.filas.length && dh.filas.every(formaFilaSana)) {
+          g = dh;
+          log('casa heredada de la ' + madre + ' (misma forma): sin peaje');
+          /* v0.6.99: la heredada migra de una a la llave de la versión
+           * actual y el índice apunta a la casa nueva. */
+          try {
+            kino.storage.set('ajCasa:' + VERSION, { t: dh.t, filas: dh.filas, llave: VERSION });
+            const hv5 = viviendasDe('ajViviendasCasa');
+            if (hv5.casa !== VERSION) { hv5.casa = VERSION; try { kino.storage.set('ajViviendasCasa', hv5); } catch (eV6) {} }
+          } catch (eC5) {}
+        }
+      }
+    }
+    if (g && Date.now() - g.t < 5 * 60 * 1000) return g.filas;
   } catch (eC) {}
   return null;
 }
 function casaGuarda(filas) {
   try {
     const p = JSON.stringify(filas);
-    if (p && p.length <= 48000) kino.storage.set('ajCasa:' + VERSION, { t: Date.now(), filas: filas });
+    if (p && p.length <= 48000) {
+      kino.storage.set('ajCasa:' + VERSION, { t: Date.now(), filas: filas, llave: VERSION });
+      const hv = viviendasDe('ajViviendasCasa');
+      if (hv.casa !== VERSION) { hv.casa = VERSION; try { kino.storage.set('ajViviendasCasa', hv); } catch (eV4) {} }
+    }
   } catch (eC2) {}
 }
 
@@ -8880,6 +8914,61 @@ function idiomaDeFila(id, fuente) {
   return '';
 }
 
+/* v0.6.99: la revisión de FORMA — una bodega heredada (o la propia)
+ * solo se sirve si confiesa la misma estructura que arma hoy el
+ * plugin: filas con id/title/items, items con id/ref/title, vitrinas
+ * con id/ref/title/texto. La forma manda; el número, no. */
+function formaFilaSana(fila) {
+  if (!fila || typeof fila !== 'object') return false;
+  if (typeof fila.id !== 'string' || !fila.id) return false;
+  if (typeof fila.title !== 'string' || !fila.title) return false;
+  if (!Array.isArray(fila.items) || !fila.items.length) return false;
+  for (const it of fila.items) {
+    if (!it || typeof it !== 'object') return false;
+    if (typeof it.id !== 'string' || !it.id) return false;
+    if (typeof it.ref !== 'string' || !it.ref) return false;
+    if (typeof it.title !== 'string' || !it.title) return false;
+  }
+  return true;
+}
+function formaDePantalla(g) {
+  if (!g || typeof g !== 'object' || !g.datos || typeof g.datos !== 'object') return null;
+  const d = g.datos;
+  if (!Array.isArray(d.filas) || !d.filas.length || !d.filas.every(formaFilaSana)) return null;
+  if (!Array.isArray(d.heroes)) return null;
+  for (const h of d.heroes) {
+    if (!h || typeof h !== 'object') return null;
+    if (typeof h.id !== 'string' || !h.id) return null;
+    if (typeof h.ref !== 'string' || !h.ref) return null;
+    if (typeof h.title !== 'string' || !h.title) return null;
+    if (typeof h.texto !== 'string') return null;
+  }
+  if (d.ausentes !== undefined && !Array.isArray(d.ausentes)) return null;
+  return g;
+}
+function viviendasDe(clave) {
+  try { const v = kino.storage.get(clave); return v && typeof v === 'object' ? v : {}; } catch (eV) { return {}; }
+}
+function bodegaMadre(clave, fkey, hayMadre) {
+  /* v0.6.99: herencia de la bodega de la versión que guardó última. */
+  if (hayMadre) return null;
+  const madre = viviendasDe('ajViviendas')[fkey];
+  if (!madre || madre === VERSION) return null;
+  let g = null;
+  try { g = formaDePantalla(kino.storage.get('ajPantalla:' + madre + ':' + fkey)); } catch (eM) { g = null; }
+  if (g) log('pantalla «' + fkey + '» hereda la bodega de la ' + madre + ' (misma forma): sin peaje');
+  return g;
+}
+function bodegaGuardada(fkey, datos, vida) {
+  try {
+    const entrada = { t: Date.now(), datos: datos, vida: vida, llave: VERSION };
+    kino.storage.set('ajPantalla:' + VERSION + ':' + fkey, entrada);
+    /* v0.6.99: el índice de viviendas confiesa qué versión guardó
+     * última cada pantalla (la llave del puente entre versiones). */
+    const hv = viviendasDe('ajViviendas');
+    if (hv[fkey] !== VERSION) { hv[fkey] = VERSION; try { kino.storage.set('ajViviendas', hv); } catch (eV3) {} }
+  } catch (eS3) {}
+}
 async function cargarPantalla(fuente, saltarCache) {
   /* v0.6.31 «El galerista»: la portada se guarda 10 minutos en
    * kino.storage — el Inicio repetido no gasta peticiones ni
@@ -8892,10 +8981,24 @@ async function cargarPantalla(fuente, saltarCache) {
    * que llegue entero. */
   if (!saltarCache) try {
     /* v0.6.71: la llave de caché lleva la versión — al actualizar el
-     * plugin el Inicio se rearma de una, sin servir la pantalla vieja. */
-    const g = kino.storage.get('ajPantalla:' + VERSION + ':' + (fuente || 'todas'));
-    if (g && typeof g === 'object' && g.datos && Array.isArray(g.datos.filas) && g.datos.filas.length && Date.now() - (g.t || 0) < (g.vida || 600000)) {
-      log('pantalla «' + (fuente || 'todas') + '» servida de caché (' + g.datos.filas.length + ' filas)');
+     * plugin el Inicio se rearma de una, sin servir la pantalla vieja.
+     * v0.6.99: la versión YA NO INVALIDA SOLA: si la llave actual está
+     * vacía, se hereda la bodega de la versión anterior (ajViviendas)
+     * y solo entra si pasa la revisión de forma (la forma manda). */
+    const fkey = fuente || 'todas';
+    const revisada = formaDePantalla(kino.storage.get('ajPantalla:' + VERSION + ':' + fkey));
+    const g = revisada || bodegaMadre('ajViviendas', fkey, !!revisada);
+    if (g && Array.isArray(g.datos.filas) && g.datos.filas.length && Date.now() - (g.t || 0) < (g.vida || 600000)) {
+      if (g.llave !== VERSION) {
+        /* v0.6.99: la heredada migra a la llave de la versión actual y
+         * el índice de viviendas apunta a la nueva casa de una vez. */
+        try {
+          kino.storage.set('ajPantalla:' + VERSION + ':' + fkey, { t: g.t, datos: g.datos, vida: g.vida, llave: VERSION });
+          const hv2 = viviendasDe('ajViviendas');
+          if (hv2[fkey] !== VERSION) { hv2[fkey] = VERSION; try { kino.storage.set('ajViviendas', hv2); } catch (eV5) {} }
+        } catch (eM3) {}
+      }
+      log('pantalla «' + fkey + '» servida de caché (' + g.datos.filas.length + ' filas)');
       return g.datos;
     }
   } catch (eS) {}
@@ -9002,7 +9105,7 @@ async function cargarPantalla(fuente, saltarCache) {
     /* v0.6.98: el retrato incompleto también entra a bodega, con tope
      * corto de 3 min (vida): sirve instantáneo pero vuelta a intentar;
      * el completo guarda 10 min como siempre (la 0.6.31). */
-    try { kino.storage.set('ajPantalla:' + VERSION + ':' + (fuente || 'todas'), { t: Date.now(), datos: datos, vida: ausentes.length ? 180000 : 600000 }); } catch (eS3) {}
+    try { bodegaGuardada(fuente || 'todas', datos, ausentes.length ? 180000 : 600000); } catch (eS3) {}
   }
   log('pantalla «' + (fuente || 'todas') + '» armada: ' + ((datos && datos.filas) ? datos.filas.length : 0) + ' filas, ' + (Math.round(pesoFin / 102.4) / 10) + ' KB de estado');
   return datos;
