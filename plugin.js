@@ -1278,6 +1278,18 @@
 // avisos de iva (traerIva, hoja, episodios) enseñan el ritmo: espera un
 // minuto y toca Reintentar — lo ya cargado queda guardado.
 
+/* v0.6.98 «EL RELOJ DE LA JORNADA»: «Todas» fría reventó el límite de
+ * 20 s de Kino (captura 20:00: las 14 fuentes de una, la bodega recién
+ * vaciada por el sube-de-versión). Ahora la fan-out corre Bajo RELOJ:
+ * a los 10 s corta y armar con lo que llegó; los ausentes viajan en el
+ * estado (ausentes[]) con marca honesta en la pantalla y el botón
+ * «Traer las que faltan» (re-arma SIN servir bodega). La bodega guarda
+ * el retrato incompleto con tope corto (3 min) para que la próxima
+ * apertura sea instantánea y volver a armar no espere los 10 de nuevo.
+ * El reloj necesita kino.sleep (0..5000 ms por llamada: ticitos de
+ * 2 s): sin sleep, el viejo camino queda INTACTO (guardia del
+ * contrato, escuela captureAll). apiVersion 20 intacta. */
+
 /* v0.6.97 «EL CARRUSEL DE LA VITRINA»: el destacado de AnimeAV1 en el
  * inicio propio YA NO ES UNO. heroesDeAv1(tope) arma hasta 4 vitrinas
  * distintas con UNA sola lectura del /__data.json (la despensa _datos
@@ -1288,7 +1300,7 @@
  * tiene más a dónde ir). Los swipes giran SIN tocar la red otra vez:
  * filas y fuentes del estado quedan en pie. apiVersion 20 intacta. */
 
-const VERSION = '0.6.97';
+const VERSION = '0.6.98';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -8868,34 +8880,57 @@ function idiomaDeFila(id, fuente) {
   return '';
 }
 
-async function cargarPantalla(fuente) {
+async function cargarPantalla(fuente, saltarCache) {
   /* v0.6.31 «El galerista»: la portada se guarda 10 minutos en
    * kino.storage — el Inicio repetido no gasta peticiones ni
-   * espera (y si una fuente tarda, la caché la salva). */
-  try {
+   * espera (y si una fuente tarda, la caché la salva).
+   * v0.6.98 «EL RELOJ DE LA JORNADA»: saltarCache=true re-arma sin
+   * mirar la bodega (el botón «Traer las que faltan»); el retrato
+   * incompleto (con ausentes) se guarda con tope corto de 3 min
+   * (vida) para que la próxima apertura sea instantánea sin
+   * congelar el retrato: el completo manda y lo pisa el primero
+   * que llegue entero. */
+  if (!saltarCache) try {
     /* v0.6.71: la llave de caché lleva la versión — al actualizar el
      * plugin el Inicio se rearma de una, sin servir la pantalla vieja. */
     const g = kino.storage.get('ajPantalla:' + VERSION + ':' + (fuente || 'todas'));
-    if (g && typeof g === 'object' && g.datos && Array.isArray(g.datos.filas) && g.datos.filas.length && Date.now() - (g.t || 0) < 600000) {
+    if (g && typeof g === 'object' && g.datos && Array.isArray(g.datos.filas) && g.datos.filas.length && Date.now() - (g.t || 0) < (g.vida || 600000)) {
       log('pantalla «' + (fuente || 'todas') + '» servida de caché (' + g.datos.filas.length + ' filas)');
       return g.datos;
     }
   } catch (eS) {}
   let filas = [];
+  let ausentes = [];
   if (fuente === 'todas') {
     const fuentes = Object.values(FUENTES);
-    const rtas = await Promise.all(fuentes.map(async (f) => {
+    /* v0.6.98 «EL RELOJ DE LA JORNADA»: a los 10 s suena la campana y
+     * cada fuente responde lo que tenga; las que no llegaron quedan en
+     * ausentes (el estado las marca y el botón las re-arma). La
+     * campana es de ticitos: kino.sleep cobra a lo más 5000 ms por
+     * llamada. SIN sleep (un Kino que no la traiga): el viejo camino,
+     * esperar a todas, INTACTO (la campana nunca suena). */
+    const hayReloj = !!(kino && typeof kino.sleep === 'function');
+    const campana = hayReloj ? (async () => {
+      const tic = 2000;
+      for (let t = 0; t < 10000; t += tic) { await kino.sleep(tic); }
+    })() : null;
+    const oficios = await Promise.all(fuentes.map(async (f) => {
       try {
-        return await f.portada(true);
+        let taras = false;
+        let rta;
+        if (campana) rta = await Promise.race([f.portada(true), campana.then(() => { taras = true; return null; })]);
+        else rta = await f.portada(true);
+        return { filas: Array.isArray(rta) ? rta : null, taras: taras };
       } catch (e) {
         log('portada de ' + f.id + ' falló', (e && e.message) || String(e));
-        return null;
+        return { filas: null, taras: false };
       }
     }));
     for (let i = 0; i < fuentes.length; i++) {
-      if (!rtas[i]) continue;
       const f = fuentes[i];
-      for (const fila of rtas[i]) {
+      const rta = oficios[i] && oficios[i].filas;
+      if (!rta) { ausentes.push(oficios[i] && oficios[i].taras ? f.id + ' (lenta)' : f.id); continue; }
+      for (const fila of rta) {
         const nucleo = NUCLEO_TODAS[f.id];
         if (nucleo && nucleo.indexOf(fila.id) < 0) continue;
         filas.push({
@@ -8907,6 +8942,7 @@ async function cargarPantalla(fuente) {
         });
       }
     }
+    if (ausentes.length) log('pantalla «todas» con reloj: no llegaron ' + ausentes.join(', '));
     if (!filas.length) {
       throw kino.error('unavailable', 'ninguna fuente armó la portada', {
         userMessage: 'Ninguna fuente respondió. Revisa tu conexión o inténtalo en un rato.'
@@ -8955,7 +8991,7 @@ async function cargarPantalla(fuente) {
       if (!items.length) continue;
       fuera.push({ id: fila.id, title: fila.title, ref: fila.ref || null, fuente: fila.fuente || '', items: items });
     }
-    datos = { filas: fuera, hero: hero, heroes: heroes };
+    datos = { filas: fuera, hero: hero, heroes: heroes, ausentes: ausentes };
     let peso = 0;
     try { peso = JSON.stringify(datos).length; } catch (eJ) { peso = 0; }
     if (peso <= 55000) break;
@@ -8963,7 +8999,10 @@ async function cargarPantalla(fuente) {
   let pesoFin = 0;
   try { pesoFin = JSON.stringify(datos).length; } catch (eJ2) { pesoFin = 0; }
   if (datos && pesoFin > 0 && pesoFin <= 45000) {
-    try { kino.storage.set('ajPantalla:' + VERSION + ':' + (fuente || 'todas'), { t: Date.now(), datos: datos }); } catch (eS3) {}
+    /* v0.6.98: el retrato incompleto también entra a bodega, con tope
+     * corto de 3 min (vida): sirve instantáneo pero vuelta a intentar;
+     * el completo guarda 10 min como siempre (la 0.6.31). */
+    try { kino.storage.set('ajPantalla:' + VERSION + ':' + (fuente || 'todas'), { t: Date.now(), datos: datos, vida: ausentes.length ? 180000 : 600000 }); } catch (eS3) {}
   }
   log('pantalla «' + (fuente || 'todas') + '» armada: ' + ((datos && datos.filas) ? datos.filas.length : 0) + ' filas, ' + (Math.round(pesoFin / 102.4) / 10) + ' KB de estado');
   return datos;
@@ -9166,6 +9205,12 @@ async function screen(arg) {
     } else {
       for (const fila of filas) cuerpo.push(rielDe(fila));
     }
+    /* v0.6.98 «EL RELOJ DE LA JORNADA»: los que no llegaron viajan en
+     * el estado con su marca; el re-arma no sirve bodega. */
+    if (Array.isArray(state.ausentes) && state.ausentes.length) {
+      cuerpo.push({ type: 'Text', text: 'El reloj de «Todas» cortó a los 10 s y no llegaron: ' + state.ausentes.join(', ') + '.', textEn: 'The «All» clock cut at 10 s and some sources missed it: ' + state.ausentes.join(', ') + '.', style: 'caption' });
+      cuerpo.push({ type: 'TextButton', labelText: 'Traer las que faltan', labelTextEn: 'Retry the missing sources', onPressed: 'rearmarTodas', alignSelf: 'center' });
+    }
     /* v0.6.70 «La vitrina pulida»: pie con la firma y el «Acerca de» —
      * un AlertDialog declarado en el árbol que el evento 'acerca' abre
      * con su { open: key }. */
@@ -9222,11 +9267,13 @@ async function screenEvent(e) {
   const ev = e || {};
   const state = ev.state && typeof ev.state === 'object' ? ev.state : {};
   const nombre = String(ev.name || '');
-  if (nombre === 'open' || nombre === 'recargar') {
+  if (nombre === 'open' || nombre === 'recargar' || nombre === 'rearmarTodas') {
     const fuente = fuenteDePantalla(state);
+    /* v0.6.98: «rearmarTodas» re-arma SIN servir bodega (el reloj
+     * vuelve a sonar y las faltantes se cobran ahora sí). */
     try {
-      const datos = await cargarPantalla(fuente);
-      return { state: { fuente: fuente, filas: datos.filas, hero: datos.hero, heroes: Array.isArray(datos.heroes) && datos.heroes.length ? datos.heroes : (datos.hero ? [datos.hero] : []), heroIdx: 0, errorPantalla: false } };
+      const datos = await cargarPantalla(fuente, nombre === 'rearmarTodas');
+      return { state: { fuente: fuente, filas: datos.filas, hero: datos.hero, heroes: Array.isArray(datos.heroes) && datos.heroes.length ? datos.heroes : (datos.hero ? [datos.hero] : []), ausentes: Array.isArray(datos.ausentes) ? datos.ausentes : [], heroIdx: 0, errorPantalla: false } };
     } catch (err) {
       log('cargar la pantalla falló', (err && err.message) || String(err));
 

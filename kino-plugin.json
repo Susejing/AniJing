@@ -1,7 +1,7 @@
 {
   "id": "anijing",
   "name": "AniJing",
-  "version": "0.6.97",
+  "version": "0.6.98",
   "apiVersion": 20,
   "entry": "plugin.js",
   "description": "Anime en español: AnimeAV1, MonosChinos, LataAnime, OtakusTV, AnimeYT, EstrenosAnime, AnimeJara, Anime-JL, MundoDonghua, SeriesDonghua, DonghuaLife, IvAnime, Az-Animex y BeatZ-Anime, con pantalla propia, búsqueda, fichas, episodios y extractores. El anime con la firma de Susejing.",
