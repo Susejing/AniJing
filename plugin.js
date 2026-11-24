@@ -1278,7 +1278,17 @@
 // avisos de iva (traerIva, hoja, episodios) enseñan el ritmo: espera un
 // minuto y toca Reintentar — lo ya cargado queda guardado.
 
-const VERSION = '0.6.96';
+/* v0.6.97 «EL CARRUSEL DE LA VITRINA»: el destacado de AnimeAV1 en el
+ * inicio propio YA NO ES UNO. heroesDeAv1(tope) arma hasta 4 vitrinas
+ * distintas con UNA sola lectura del /__data.json (la despensa _datos
+ * de la 0.6.31-escuela las conserva); el índice viaja en el estado
+ * (heroIdx) y el heroCard gira con onSwipeLeft/onSwipeRight (agregado
+ * de Kino 0.9.82: un Kino viejo los ignora y la vitrina queda como
+ * siempre; en la TV responden a Izquierda/Derecha cuando el foco no
+ * tiene más a dónde ir). Los swipes giran SIN tocar la red otra vez:
+ * filas y fuentes del estado quedan en pie. apiVersion 20 intacta. */
+
+const VERSION = '0.6.97';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -8752,13 +8762,19 @@ function compactarItem(it) {
   return o;
 }
 
-async function heroDeAv1() {
+/* v0.6.97 «EL CARRUSEL DE LA VITRINA»: UNA lectura del /__data.json
+ * arma hasta 4 destacados distintos (el despacho _datos la conserva);
+ * heroesDeAv1 devuelve la lista y heroDeAv1 conserva su firma de
+ * siempre (offset = la vitrina n-ésima del giro del día). */
+async function heroesDeAv1(tope) {
   try {
     const datos = await datosDe('/__data.json');
     const feat = datos && Array.isArray(datos.featured) ? datos.featured : [];
-    if (!feat.length) return null;
+    if (!feat.length) return [];
     const dia = Math.floor(Date.now() / 86400000);
-    for (let i = 0; i < feat.length; i++) {
+    const querr = Math.max(1, Math.min(4, tope || 4));
+    const salida = [];
+    for (let i = 0; i < feat.length && salida.length < querr; i++) {
       const m = feat[(dia + i) % feat.length];
       if (m && m.slug && m.title && m.id != null) {
         /* v0.6.70 «La vitrina pulida»: el destacado se presenta como en
@@ -8773,19 +8789,25 @@ async function heroDeAv1() {
           const generos = m.genres.map(function (g) { return g && typeof g === 'object' && g.name ? String(g.name) : (typeof g === 'string' ? g : ''); }).filter(Boolean).slice(0, 3);
           if (generos.length) vitrina.push(generos.join(', '));
         }
-        return {
+        salida.push({
           id: 'av1-' + m.slug,
           ref: 'av1:' + m.slug,
           title: limpio(m.title).slice(0, 120),
           texto: (vitrina.length ? vitrina.join(' · ') + ' — ' : '') + (m.synopsis ? limpio(m.synopsis).slice(0, 200) : 'Anime destacado de hoy en AnimeAV1.'),
           imagen: backdropDe(m.id)
-        };
+        });
       }
     }
+    return salida;
   } catch (e) {
-    log('el destacado falló', (e && e.message) || String(e));
+    log('los destacados fallaron', (e && e.message) || String(e));
   }
-  return null;
+  return [];
+}
+
+async function heroDeAv1(offset) {
+  const lista = await heroesDeAv1((offset | 0) + 1);
+  return lista[offset | 0] || null;
 }
 
 function sinSufijoFuente(titulo, etiqueta) {
@@ -8892,21 +8914,29 @@ async function cargarPantalla(fuente) {
     }
   } else {
     const f = FUENTES[fuente];
-    if (!f) return { filas: [], hero: null };
+    if (!f) return { filas: [], hero: null, heroes: [] };
     /* v0.6.89: la pantalla que ARRANCA y la que QUEDA VACÍA se nombran —
      * una fuente muerta ya no desaparece del Registro. */
     log('pantalla «' + fuente + '» pidiendo al sitio…');
     filas = await f.portada();
     if (!Array.isArray(filas) || !filas.length) {
       log('pantalla «' + fuente + '» queda VACÍA: la portada de ' + f.id + ' no trajo filas');
-      return { filas: [], hero: null };
+      return { filas: [], hero: null, heroes: [] };
     }
     for (const fila of filas) {
       fila.title = sinSufijoFuente(fila.title, f.etiqueta);
       fila.fuente = f.id;
     }
   }
-  const hero = fuente === 'todas' || fuente === 'av1' ? await heroDeAv1() : null;
+  /* v0.6.97 «EL CARRUSEL DE LA VITRINA»: hasta 4 destacados con UNA
+   * lectura (datosDe despensa); el primero queda de hero como siempre
+   * y la lista completa viaja en el estado para el carrusel. */
+  let heroes = [];
+  if (fuente === 'todas' || fuente === 'av1') {
+    try { heroes = await heroesDeAv1(4); }
+    catch (eH) { heroes = []; log('los destacados fallaron', (eH && eH.message) || String(eH)); }
+  }
+  const hero = heroes[0] || null;
   /* v0.6.55: el tope sube — se arma con 16/12/8/6/4 tarjetas por riel
    * y se queda con la PRIMERA versión que quepa bajo 55 KB (pasarse del
    * tope de 64 KB deja el Inicio en blanco). Con muchas filas el
@@ -8925,7 +8955,7 @@ async function cargarPantalla(fuente) {
       if (!items.length) continue;
       fuera.push({ id: fila.id, title: fila.title, ref: fila.ref || null, fuente: fila.fuente || '', items: items });
     }
-    datos = { filas: fuera, hero: hero };
+    datos = { filas: fuera, hero: hero, heroes: heroes };
     let peso = 0;
     try { peso = JSON.stringify(datos).length; } catch (eJ) { peso = 0; }
     if (peso <= 55000) break;
@@ -8954,7 +8984,13 @@ async function screen(arg) {
   const a = arg || {};
   const state = a.state && typeof a.state === 'object' ? a.state : {};
   const filas = Array.isArray(state.filas) ? state.filas : null;
-  const hero = state.hero && state.hero.ref ? state.hero : null;
+  /* v0.6.97 «EL CARRUSEL DE LA VITRINA»: la vitrina se elige de la
+   * lista (hasta 4) con el índice del estado; sin lista, el destacado
+   * de siempre que ya viajaba en el estado. */
+  const heroLista = Array.isArray(state.heroes) && state.heroes.length ? state.heroes : (state.hero && state.hero.ref ? [state.hero] : []);
+  let heroIdxSafe = 0;
+  if (heroLista.length > 1) heroIdxSafe = Math.max(0, Number(state.heroIdx) || 0) % heroLista.length;
+  const hero = heroLista.length ? (heroLista[heroIdxSafe] || heroLista[0]) : null;
   const cuerpo = [];
   /* v0.6.11 «La lista completa»: el menú nativo de Kino corta en 8
    * entradas y no se desplaza — con diez fuentes, VerAnime e IvAnime
@@ -8986,11 +9022,23 @@ async function screen(arg) {
     if (hero) {
       const heroNodo = { type: 'heroCard', title: hero.title, text: hero.texto };
       if (hero.imagen) heroNodo.image = hero.imagen;
+      /* v0.6.97 «EL CARRUSEL DE LA VITRINA»: los swipes del heroCard
+       * giran la vitrina (Kino 0.9.82: en la TV responden a
+       * Izquierda/Derecha cuando el foco no tiene más a dónde ir; un
+       * Kino viejo los ignora y los botones siguen mandando). La
+       * izquierda del dedo pasa al siguiente, la derecha al previo. */
+      if (heroLista.length > 1) {
+        heroNodo.onSwipeLeft = 'heroAvanza';
+        heroNodo.onSwipeRight = 'heroRetrocede';
+      }
       /* v0.6.20: el go.title del destacado también viaja con su
        * pasaporte completo (id + title) — un botón no es un item
        * del lienzo y Kino necesita las señas para abrirlo. */
       heroNodo.buttons = [{ type: 'ElevatedButton', labelText: 'Ver la serie', onPressed: { go: { title: { ref: hero.ref, kind: 'series', id: String(hero.id || hero.ref), title: String(hero.title || '') } } } }];
       cuerpo.push(heroNodo);
+      if (heroLista.length > 1) {
+        cuerpo.push({ type: 'Text', text: 'Desliza la vitrina para otro destacado · ' + (heroIdxSafe + 1) + ' de ' + heroLista.length, textEn: 'Swipe the showcase for another featured · ' + (heroIdxSafe + 1) + ' of ' + heroLista.length, style: 'caption' });
+      }
     }
     const rielDe = function (fila) {
       /* v0.6.17 «La ventanilla del lienzo»: el titleRail nativo está
@@ -9178,7 +9226,7 @@ async function screenEvent(e) {
     const fuente = fuenteDePantalla(state);
     try {
       const datos = await cargarPantalla(fuente);
-      return { state: { fuente: fuente, filas: datos.filas, hero: datos.hero, errorPantalla: false } };
+      return { state: { fuente: fuente, filas: datos.filas, hero: datos.hero, heroes: Array.isArray(datos.heroes) && datos.heroes.length ? datos.heroes : (datos.hero ? [datos.hero] : []), heroIdx: 0, errorPantalla: false } };
     } catch (err) {
       log('cargar la pantalla falló', (err && err.message) || String(err));
 
@@ -9189,6 +9237,17 @@ async function screenEvent(e) {
    * viejo de la pantalla lo manda, se recarga sin ventanitas. */
   if (nombre === 'revisionAon') {
     return { toast: 'AnimeOnline ya no está en AniJing. Elige otra fuente.' };
+  }
+  /* v0.6.97 «EL CARRUSEL DE LA VITRINA»: los swipes del heroCard giran
+   * la vitrina SIN tocar la red (el estado completo viaja: filas y
+   * fuentes quedan en pie); el índice da la vuelta (el 4 vuelve a 1). */
+  if (nombre === 'heroAvanza' || nombre === 'heroRetrocede') {
+    const heroes = Array.isArray(state.heroes) && state.heroes.length ? state.heroes : (state.hero && state.hero.ref ? [state.hero] : []);
+    if (heroes.length < 2) return { state: Object.assign({}, state) };
+    const d = nombre === 'heroAvanza' ? 1 : -1;
+    const n = heroes.length;
+    const idx = ((((Number(state.heroIdx) || 0) + d) % n) + n) % n;
+    return { state: Object.assign({}, state, { heroIdx: idx }) };
   }
   /* v0.6.36 «El recadero»: la lupa mandaba una búsqueda VACÍA y
    * Kino la descartaba — el botón era un adorno. Ahora el botón
