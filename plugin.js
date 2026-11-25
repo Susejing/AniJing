@@ -1309,7 +1309,14 @@
  * pasa la revisión de FORMA: la misma estructura de filas, items y
  * vitrinas que arma hoy el plugin. Cambia la forma en el código → la
  * herencia se descarta y se re-arma; la versión no invalida sola. */
-const VERSION = '0.6.99';
+/* v0.7.0 «SIGUE POR AQUÍ»: lo que se reproduce queda anotado en la
+ * despensa (una escritura, cero red, jamás falla por anotar) y el
+ * Inicio gana el riel «Sigue por aquí»: la serie exacta, el episodio
+ * donde quedaste como chip EP y el póster si la ficha lo dio. El
+ * resolve ANOTA ANTES de resolver (una resolución fallida también
+ * es «aquí voy») y la ficha vistada anota su título real para
+ * vestir la tarjeta. apiVersion 20 intacta. */
+const VERSION = '0.7.0';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -8726,14 +8733,28 @@ async function episodes(ref) {
       userMessage: 'Ese título ya no es válido. Búscalo de nuevo.'
     });
   }
-  return FUENTES[p.fuente].episodios(p.partes[0]);
+  const rta = await FUENTES[p.fuente].episodios(p.partes[0]);
+  /* v0.7.0: anota título y póster de la serie para vestir la tarjeta
+   * del riel «Sigue por aquí» (la forma {series, episodes} del
+   * agregador; lista plana: solo el póster del primer item). */
+  try {
+    if (rta && rta.series && rta.series.title) {
+      titulosAnota(p.fuente, p.partes[0], rta.series.title, rta.series.poster);
+    } else if (Array.isArray(rta) && rta.length && rta[0] && typeof rta[0].poster === 'string' && rta[0].poster) {
+      titulosAnota(p.fuente, p.partes[0], null, rta[0].poster);
+    }
+  } catch (eTT12) {}
+  return rta;
 }
 
 async function details(ref) {
   const p = partirRef(ref);
   if (!p || !FUENTES[p.fuente] || !p.partes[0]) return null;
   try {
-    return await FUENTES[p.fuente].detalle(p.partes[0]);
+    const det = await FUENTES[p.fuente].detalle(p.partes[0]);
+    /* v0.7.0: la ficha anota su título real y su póster para el riel. */
+    if (det && det.title) titulosAnota(p.fuente, p.partes[0], det.title, det.poster);
+    return det;
   } catch (e) {
     log('detalle falló', (e && e.message) || String(e));
     return null;
@@ -8751,6 +8772,9 @@ async function resolve(ref, options) {
   }
   const f = FUENTES[p.fuente];
   const n = p.partes[1] !== undefined ? parseInt(p.partes[1], 10) : 1;
+  /* v0.7.0: anota ANTES de resolver: una resolución que muere también
+   * es «aquí voy». Cero red: solo despensa. */
+  sigueGuarda(p.fuente, p.partes[0], n);
   const idx = p.partes[2] !== undefined ? parseInt(p.partes[2], 10) : null;
   return f.resolver(p.partes[0], Number.isFinite(n) && n >= 1 ? n : 1, Number.isFinite(idx) && idx >= 0 ? idx : null);
 }
@@ -8918,6 +8942,74 @@ function idiomaDeFila(id, fuente) {
  * solo se sirve si confiesa la misma estructura que arma hoy el
  * plugin: filas con id/title/items, items con id/ref/title, vitrinas
  * con id/ref/title/texto. La forma manda; el número, no. */
+/* v0.7.0: anotación de seguimiento. La llave ajSigue (mapa
+ * fuente:slug → {fuente, slug, ep, t}) y ajTitulos (el título real
+ * y el póster de la ficha sobreviviente); ambas SIN versión: el
+ * seguimiento sobrevive a actualizaciones. */
+const SIGUE_TOPE = 12;
+function sigueLlave(fuente, slug) { return fuente + ':' + slug; }
+function sigueGuarda(fId, slug, ep) {
+  try {
+    if (!fId || !slug || !Number.isFinite(ep) || ep < 1) return;
+    let mapa = null;
+    try { const v = kino.storage.get('ajSigue'); mapa = v && typeof v === 'object' ? v : {}; } catch (eSg) { mapa = {}; }
+    mapa[sigueLlave(fId, slug)] = { fuente: fId, slug: slug, ep: Math.floor(ep), t: Date.now() };
+    const pares = Object.keys(mapa).map(k => mapa[k]).sort(function (a, b) { return (b.t || 0) - (a.t || 0); });
+    const limpio = {};
+    for (const p of pares.slice(0, SIGUE_TOPE)) limpio[sigueLlave(p.fuente, p.slug)] = p;
+    kino.storage.set('ajSigue', limpio);
+  } catch (eSg2) {}
+}
+function titulosAnota(fId, slug, titulo, poster) {
+  try {
+    if (!fId || !slug || (!titulo && !poster)) return;
+    let mapa = null;
+    try { const v = kino.storage.get('ajTitulos'); mapa = v && typeof v === 'object' ? v : {}; } catch (eTT9) { mapa = {}; }
+    const k = sigueLlave(fId, slug);
+    const previa = mapa[k] || {};
+    const tituloNuevo = titulo ? String(titulo).slice(0, 200) : (previa.titulo || '');
+    const posterNuevo = typeof poster === 'string' && poster ? poster.slice(0, 300) : (previa.poster || '');
+    if (previa.titulo === tituloNuevo && previa.poster === posterNuevo) return;
+    mapa[k] = { titulo: tituloNuevo, poster: posterNuevo };
+    const claves = Object.keys(mapa);
+    if (claves.length > 300) {
+      const limpio2 = {};
+      for (const c of claves.slice(-300)) limpio2[c] = mapa[c];
+      kino.storage.set('ajTitulos', limpio2);
+    } else {
+      kino.storage.set('ajTitulos', mapa);
+    }
+  } catch (eTT10) {}
+}
+function siguesPantalla(fuenteFiltro) {
+  /* el riel: lo anotado, lo más fresco primero, con título (el de la
+   * ficha, o vestido del slug) y su marca de episodio en el chip. */
+  try {
+    let mapa = null;
+    try { mapa = kino.storage.get('ajSigue'); } catch (eSg3) {}
+    if (!mapa || typeof mapa !== 'object') return [];
+    let titulos = null;
+    try { const t = kino.storage.get('ajTitulos'); titulos = t && typeof t === 'object' ? t : {}; } catch (eTt11) {}
+    return Object.keys(mapa).map(k => mapa[k])
+      .filter(function (s) { return s && FUENTES[s.fuente] && s.slug && (!fuenteFiltro || s.fuente === fuenteFiltro); })
+      .sort(function (a, b) { return (b.t || 0) - (a.t || 0); })
+      .slice(0, 8)
+      .map(function (s) {
+        const k = sigueLlave(s.fuente, s.slug);
+        const meta = titulos && titulos[k] ? titulos[k] : {};
+        const item = {
+          id: 'sig-' + k,
+          ref: s.fuente + ':' + s.slug,
+          kind: 'series',
+          title: String(meta.titulo || slugATitulo(s.slug)).slice(0, 120),
+          badges: ['EP ' + s.ep]
+        };
+        if (meta.poster) item.poster = meta.poster;
+        return item;
+      });
+  } catch (eSg4) {}
+  return [];
+}
 function formaFilaSana(fila) {
   if (!fila || typeof fila !== 'object') return false;
   if (typeof fila.id !== 'string' || !fila.id) return false;
@@ -8944,6 +9036,7 @@ function formaDePantalla(g) {
     if (typeof h.texto !== 'string') return null;
   }
   if (d.ausentes !== undefined && !Array.isArray(d.ausentes)) return null;
+  if (d.sigues !== undefined && !Array.isArray(d.sigues)) return null;
   return g;
 }
 function viviendasDe(clave) {
@@ -9080,6 +9173,7 @@ async function cargarPantalla(fuente, saltarCache) {
    * y se queda con la PRIMERA versión que quepa bajo 55 KB (pasarse del
    * tope de 64 KB deja el Inicio en blanco). Con muchas filas el
    * presupuesto manda y degrada solo, igual que siempre. */
+  const siguesPara = siguesPantalla(fuente === 'todas' ? null : fuente);
   let datos = null;
   const anchos = [16, 12, 8, 6, 4];
   for (let ia = 0; ia < anchos.length; ia++) {
@@ -9094,7 +9188,7 @@ async function cargarPantalla(fuente, saltarCache) {
       if (!items.length) continue;
       fuera.push({ id: fila.id, title: fila.title, ref: fila.ref || null, fuente: fila.fuente || '', items: items });
     }
-    datos = { filas: fuera, hero: hero, heroes: heroes, ausentes: ausentes };
+    datos = { filas: fuera, hero: hero, heroes: heroes, ausentes: ausentes, sigues: siguesPara };
     let peso = 0;
     try { peso = JSON.stringify(datos).length; } catch (eJ) { peso = 0; }
     if (peso <= 55000) break;
@@ -9181,6 +9275,29 @@ async function screen(arg) {
       if (heroLista.length > 1) {
         cuerpo.push({ type: 'Text', text: 'Desliza la vitrina para otro destacado · ' + (heroIdxSafe + 1) + ' de ' + heroLista.length, textEn: 'Swipe the showcase for another featured · ' + (heroIdxSafe + 1) + ' of ' + heroLista.length, style: 'caption' });
       }
+    }
+    /* v0.7.0 «SIGUE POR AQUÍ»: el riel de lo anotado, arriba de las
+     * secciones, con su chip del episodio donde quedó. La tarjeta
+     * abre la SERIE (ref, kind, id, title: el pasaporte completo de
+     * siempre) y el chip dice el episodio. */
+    const sigues = (Array.isArray(state.sigues) ? state.sigues : []).filter(s => s && s.ref && s.title);
+    if (sigues.length) {
+      cuerpo.push({
+        type: 'titleRail',
+        title: 'Sigue por aquí',
+        items: sigues.map(s => {
+          const it = {
+            id: String(s.id || s.ref),
+            ref: String(s.ref),
+            kind: 'series',
+            title: String(s.title).slice(0, 120)
+          };
+          if (Number.isFinite(s.ep) && s.ep >= 1) it.badges = ['EP ' + s.ep];
+          else if (Array.isArray(s.badges) && s.badges.length) it.badges = s.badges.slice(0, 2);
+          if (typeof s.poster === 'string' && s.poster) it.poster = s.poster;
+          return it;
+        })
+      });
     }
     const rielDe = function (fila) {
       /* v0.6.17 «La ventanilla del lienzo»: el titleRail nativo está
@@ -9376,7 +9493,7 @@ async function screenEvent(e) {
      * vuelve a sonar y las faltantes se cobran ahora sí). */
     try {
       const datos = await cargarPantalla(fuente, nombre === 'rearmarTodas');
-      return { state: { fuente: fuente, filas: datos.filas, hero: datos.hero, heroes: Array.isArray(datos.heroes) && datos.heroes.length ? datos.heroes : (datos.hero ? [datos.hero] : []), ausentes: Array.isArray(datos.ausentes) ? datos.ausentes : [], heroIdx: 0, errorPantalla: false } };
+      return { state: { fuente: fuente, filas: datos.filas, hero: datos.hero, heroes: Array.isArray(datos.heroes) && datos.heroes.length ? datos.heroes : (datos.hero ? [datos.hero] : []), ausentes: Array.isArray(datos.ausentes) ? datos.ausentes : [], sigues: Array.isArray(datos.sigues) ? datos.sigues : [], heroIdx: 0, errorPantalla: false } };
     } catch (err) {
       log('cargar la pantalla falló', (err && err.message) || String(err));
 
