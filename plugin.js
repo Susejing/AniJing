@@ -1316,7 +1316,25 @@
  * resolve ANOTA ANTES de resolver (una resolución fallida también
  * es «aquí voy») y la ficha vistada anota su título real para
  * vestir la tarjeta. apiVersion 20 intacta. */
-const VERSION = '0.7.0';
+
+/* v0.8.0 «NUEVO A LA VISTA»: lo fresco se anuncia y los géneros se
+ * ven de una. (1) INSIGNIAS «NUEVO»: la cabeza de las filas que por
+ * definición traen lo más reciente (Últimos episodios, Últimos
+ * agregados, recientes, novedades) viaja con el chip «NUEVO» (Item
+ * badges: a lo sumo 3, cada una a 20 letras; el idioma de la fila
+ * manda y nunca se pierde). (2) CONTADORES POR FILA: el título de
+ * cada riel muestra cuántas tarjetas trae («Últimos episodios · 16»),
+ * en el Inicio propio y en el home nativo de Kino. (3) CHIPS DE
+ * GÉNERO: en la pantalla de una fuente con catálogo de género
+ * (AnimeAV1, LataAnime, Az-Animex) una fila de Chips (agregado del
+ * lienzo) lista sus géneros; tocar uno carga SU catálogo de género
+ * por el mismo camino de «Ver más» (hoja, una petición) y «Todos»
+ * devuelve el catálogo entero servido de bodega. Sin catálogo de
+ * género declarado, la fuente no dibuja chips: cero decoración
+ * muerta. apiVersion 20 intacta, sin enhancements: Chips y badges
+ * son del lienzo viejo; un Kino que no los dibujara los ignora con
+ * log. */
+const VERSION = '0.8.0';
 const BASE_AV1 = 'https://animeav1.com';
 const CDN_AV1 = 'https://cdn.animeav1.com';
 const BASE_MC = 'https://monoschinos.st';
@@ -8705,7 +8723,8 @@ async function home() {
   }));
   const filas = [];
   for (let i = 0; i < fuentes.length; i++) {
-    if (rtas[i]) for (const fila of rtas[i]) filas.push(fila);
+    /* v0.8.0: los contadores también en el home nativo de Kino. */
+    if (rtas[i]) for (const fila of rtas[i]) filas.push(Object.assign({}, fila, { title: tituloContado(fila.title, Array.isArray(fila.items) ? fila.items.length : 0) }));
   }
   if (!filas.length && errores.length) {
     const e = errores[0];
@@ -8936,6 +8955,101 @@ function idiomaDeFila(id, fuente) {
   if (/^(eas|jara)-lat$|-latino$/i.test(i)) return 'Latino';
   if (/^(eas|jara)-sub$|^sdh-/.test(i)) return 'Sub';
   return '';
+}
+
+/* v0.8.0 «NUEVO A LA VISTA»: las filas que por su propia definición
+ * traen lo más nuevo del sitio (últimos episodios, últimos agregados,
+ * recientes, novedades). La CABEZA de esas filas viaja con el chip
+ * «NUEVO»: no inventamos fechas que los sitios no confiesan; la
+ * cabeza de la fila de novedades ES lo nuevo por definición. */
+const FRESCA_RE = /(^|-)(eps|latest|recientes|novedades|ultimos)$/i;
+const NUEVO_TOPE = 3;
+
+/* v0.8.0: el título de cada riel cuenta sus tarjetas (« · 16») — el
+ * contador que la persona pidió por fila. En un riel sin tarjetas no
+ * se pinta (Kino no muestra filas vacías). */
+function tituloContado(titulo, n) {
+  const s = String(titulo || '');
+  if (!s || !n) return s;
+  return s + ' · ' + n;
+}
+
+/* v0.8.0: los géneros que cada fuente sabe servir por catálogo (el
+ * MISMO camino de «Ver más», la hoja de la fila de género). Solo
+ * fuentes con catálogo real de género declaran chips: las demás no
+ * dibujan la fila de chips (honesto, cero decoración muerta). Los
+ * slugs son los que cada sitio confiesa; AnimeAV1 los confiesa en el
+ * genresIdsMap de su propio /catalogo/__data.json (leído en vivo el
+ * 25 nov 2026). */
+const GENEROS_FUENTE = {
+  av1: [
+    { slug: 'accion', label: 'Acción' },
+    { slug: 'aventura', label: 'Aventura' },
+    { slug: 'ciencia-ficcion', label: 'Ciencia Ficción' },
+    { slug: 'comedia', label: 'Comedia' },
+    { slug: 'deportes', label: 'Deportes' },
+    { slug: 'drama', label: 'Drama' },
+    { slug: 'fantasia', label: 'Fantasía' },
+    { slug: 'isekai', label: 'Isekai' },
+    { slug: 'mecha', label: 'Mecha' },
+    { slug: 'misterio', label: 'Misterio' },
+    { slug: 'psicologico', label: 'Psicológico' },
+    { slug: 'recuentos-de-la-vida', label: 'Recuentos de la Vida' },
+    { slug: 'romance', label: 'Romance' },
+    { slug: 'seinen', label: 'Seinen' },
+    { slug: 'sobrenatural', label: 'Sobrenatural' },
+    { slug: 'terror', label: 'Terror' }
+  ],
+  lat: [
+    { slug: 'accion', label: 'Acción' },
+    { slug: 'ciencia-ficcion', label: 'Ciencia Ficción' },
+    { slug: 'comedia', label: 'Comedia' },
+    { slug: 'deportes', label: 'Deportes' },
+    { slug: 'drama', label: 'Drama' },
+    { slug: 'fantasia', label: 'Fantasía' },
+    { slug: 'misterio', label: 'Misterio' },
+    { slug: 'musica', label: 'Música' },
+    { slug: 'romance', label: 'Romance' },
+    { slug: 'terror', label: 'Terror' }
+  ],
+  az: [
+    { slug: 'accion', label: 'Acción' },
+    { slug: 'aventura', label: 'Aventura' },
+    { slug: 'ciencia-ficcion', label: 'Ciencia Ficción' },
+    { slug: 'comedia', label: 'Comedia' },
+    { slug: 'drama', label: 'Drama' },
+    { slug: 'escolar', label: 'Escolar' },
+    { slug: 'fantasia', label: 'Fantasía' },
+    { slug: 'harem', label: 'Harem' },
+    { slug: 'mecha', label: 'Mecha' },
+    { slug: 'misterio', label: 'Misterio' },
+    { slug: 'psicologico', label: 'Psicológico' },
+    { slug: 'romance', label: 'Romance' },
+    { slug: 'seinen', label: 'Seinen' },
+    { slug: 'shounen', label: 'Shounen' },
+    { slug: 'sobrenatural', label: 'Sobrenatural' },
+    { slug: 'superpoderes', label: 'Superpoderes' }
+  ]
+};
+function generosDeFuente(fId) {
+  const g = fId ? GENEROS_FUENTE[fId] : null;
+  if (!Array.isArray(g) || !g.length) return [];
+  const refDe = fId === 'av1' ? (s) => 'av1-gen:' + s
+    : fId === 'lat' ? (s) => 'lat-genero-' + s
+    : fId === 'az' ? (s) => 'az-genero-' + s
+    : null;
+  if (!refDe) return [];
+  /* refs únicas (defensivo): un slug repetido no viaja dos veces. */
+  const vistas = new Set();
+  const salida = [];
+  for (const g2 of g) {
+    if (!g2 || !g2.slug || !g2.label) continue;
+    const r = refDe(g2.slug);
+    if (vistas.has(r)) continue;
+    vistas.add(r);
+    salida.push({ slug: g2.slug, label: String(g2.label), ref: r });
+  }
+  return salida;
 }
 
 /* v0.6.99: la revisión de FORMA — una bodega heredada (o la propia)
@@ -9185,8 +9299,18 @@ async function cargarPantalla(fuente, saltarCache) {
       for (const it of items) {
         if (idioma) it.badges = [idioma].concat((it.badges || []).filter(function (b) { return b !== idioma; })).slice(0, 2);
       }
+      /* v0.8.0 «NUEVO A LA VISTA»: la cabeza de las filas frescas
+       * viaja con su chip. El badge entra SOLO si hay sitio (el
+       * contrato permite 3 por tarjeta; aquí viajan 2: idioma o EP
+       * manda primero). Sin fila fresca, nada. */
+      if (FRESCA_RE.test(fila.id)) {
+        for (let ni = 0; ni < NUEVO_TOPE; ni++) {
+          const itN = items[ni];
+          if (itN && (!itN.badges || itN.badges.length < 2)) itN.badges = ['NUEVO'].concat(itN.badges || []).slice(0, 2);
+        }
+      }
       if (!items.length) continue;
-      fuera.push({ id: fila.id, title: fila.title, ref: fila.ref || null, fuente: fila.fuente || '', items: items });
+      fuera.push({ id: fila.id, title: tituloContado(fila.title, items.length), ref: fila.ref || null, fuente: fila.fuente || '', items: items });
     }
     datos = { filas: fuera, hero: hero, heroes: heroes, ausentes: ausentes, sigues: siguesPara };
     let peso = 0;
@@ -9297,6 +9421,23 @@ async function screen(arg) {
           if (typeof s.poster === 'string' && s.poster) it.poster = s.poster;
           return it;
         })
+      });
+    }
+    /* v0.8.0 «NUEVO A LA VISTA»: los chips de género — SOLO en la
+     * vista de una fuente con catálogo real de género (av1/lat/az);
+     * «Todos» es el valor vacío, tocado devuelve el catálogo entero
+     * (servido de bodega). El valor vive en el estado (genero) y el
+     * evento 'generoChip' responde: Kino manda el value del chip. */
+    const generosFuente = state.fuente && state.fuente !== 'todas' ? generosDeFuente(state.fuente) : [];
+    if (generosFuente.length) {
+      cuerpo.push({
+        type: 'Chips',
+        key: 'generosFila',
+        options: [{ value: '', label: 'Todos', labelEn: 'All' }].concat(generosFuente.map(function (g) {
+          return { value: g.ref, label: String(g.label).slice(0, 30) };
+        })),
+        value: String(state.genero || ''),
+        onChanged: 'generoChip'
       });
     }
     const rielDe = function (fila) {
@@ -9578,6 +9719,49 @@ async function screenEvent(e) {
     } catch (err) {
       log('cargar «' + nueva + '» falló', (err && err.message) || String(err));
       return { state: { fuente: nueva, errorPantalla: true, elegirFuentes: false } };
+    }
+  }
+  /* v0.8.0 «NUEVO A LA VISTA»: el chip de género tocado. Tomar un
+   * género carga SU catálogo por el mismo camino de «Ver más» (UNA
+   * petición con la hoja de la fila de género); «Todos» (value '')
+   * devuelve el catálogo entero SIN forzar re-arma de nuevo (la
+   * bodega lo sirve instantáneo). La lista original NO viaja en el
+   * estado (era doblarla y chocar el tope de 64 KB): la bodega ya la
+   * tiene, así que «Todos» vuelve por ella. Un género que no
+   * responde dice SU nombre con toast honesto y el estado no cambia
+   * (los chips redibujan con el valor de siempre). */
+  if (nombre === 'generoChip') {
+    const fId = fuenteDePantalla(state);
+    const refSel = String(ev.value || '');
+    const listaG = generosDeFuente(fId);
+    const gSel = listaG.filter(function (x) { return x.ref === refSel; })[0] || null;
+    const fSel = FUENTES[fId] || null;
+    if (!refSel || !gSel) {
+      /* «Todos»: el catálogo entero de la fuente (bodega o re-arma). */
+      try {
+        const datos = await cargarPantalla(fId, false);
+        return { state: { fuente: fId, filas: datos.filas, hero: datos.hero, heroes: Array.isArray(datos.heroes) && datos.heroes.length ? datos.heroes : (datos.hero ? [datos.hero] : []), ausentes: Array.isArray(datos.ausentes) ? datos.ausentes : [], sigues: Array.isArray(datos.sigues) ? datos.sigues : [], heroIdx: 0, errorPantalla: false, elegirFuentes: false } };
+      } catch (err) {
+        log('volver a «Todos» en ' + fId + ' falló', (err && err.message) || String(err));
+        return { toast: 'No pude volver al catálogo entero: revisa tu conexión.', state: Object.assign({}, state) };
+      }
+    }
+    if (!fSel || typeof fSel.hoja !== 'function') return { toast: 'Esta fuente no sabe servir ese género.', state: Object.assign({}, state) };
+    try {
+      const hoja = await fSel.hoja(gSel.ref, 1);
+      const items = (hoja && Array.isArray(hoja.items) ? hoja.items : []).slice(0, 16).map(compactarItem);
+      if (!items.length) return { toast: 'El género «' + gSel.label + '» no trajo títulos ahora mismo.', state: Object.assign({}, state) };
+      log('chips de género: «' + fId + '» ' + gSel.label + ' → ' + items.length + ' tarjetas');
+      return {
+        toast: 'Género: ' + gSel.label,
+        state: Object.assign({}, state, {
+          genero: gSel.ref,
+          filas: [{ id: fId + '-genero-' + gSel.slug, title: gSel.label + ' · ' + items.length, ref: gSel.ref, fuente: fId, items: items }]
+        })
+      };
+    } catch (err) {
+      log('género «' + gSel.label + '» de ' + fId + ' falló', (err && err.message) || String(err));
+      return { toast: 'El género «' + gSel.label + '» no respondió. Vuelve a tocarlo.', state: Object.assign({}, state) };
     }
   }
   return null;
